@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, PlusCircle, UserPlus } from "lucide-react";
+import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, UserPlus, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
 import { analyzeLogoAction, generateTermsAction } from './actions';
@@ -49,6 +49,8 @@ const formSchema = z.object({
   city: z.string().min(2, { message: "City is required." }),
   state: z.string().min(2, { message: "State is required." }),
   pincode: z.string().regex(/^[1-9][0-9]{5}$/, { message: "Invalid pincode." }),
+  invoicePrefix: z.string().optional(),
+  invoiceNextNumber: z.coerce.number().int().positive({ message: "Must be a positive number."}).optional(),
   defaultPaymentTerms: z.string().optional(),
   terms: z.string().optional(),
   professionals: z.array(professionalSchema).optional(),
@@ -78,6 +80,8 @@ export default function BrandingPage() {
             city: "",
             state: "",
             pincode: "",
+            invoicePrefix: "INV-",
+            invoiceNextNumber: 1,
             defaultPaymentTerms: "net30",
             terms: "",
             professionals: [],
@@ -151,6 +155,10 @@ export default function BrandingPage() {
             setIsAnalyzingLogo(false);
         }
     }
+
+    const watchInvoicePrefix = form.watch("invoicePrefix", "INV-");
+    const watchInvoiceNextNumber = form.watch("invoiceNextNumber", 1);
+    const nextInvoiceNumberFormatted = `${watchInvoicePrefix}${watchInvoiceNextNumber}`;
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         console.log(values);
@@ -294,9 +302,44 @@ export default function BrandingPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Invoice & Payment Settings</CardTitle>
-                            <CardDescription>Set default terms and conditions for your invoices.</CardDescription>
+                            <CardDescription>Set default numbering, payment terms, and conditions for your invoices.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-medium mb-4">Invoice Numbering</h3>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="invoicePrefix"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Invoice Prefix</FormLabel>
+                                                <FormControl><Input placeholder="INV-" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="invoiceNextNumber"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Next Number</FormLabel>
+                                                <FormControl><Input type="number" min="1" placeholder="1" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <Alert variant="default" className="mt-4">
+                                    <Info className="h-4 w-4" />
+                                    <AlertTitle>Next Invoice Number</AlertTitle>
+                                    <AlertDescription>
+                                        The next invoice you create will be numbered: <span className="font-semibold font-mono">{nextInvoiceNumberFormatted}</span>
+                                    </AlertDescription>
+                                </Alert>
+                            </div>
+                             <Separator/>
                             <FormField
                                 control={form.control}
                                 name="defaultPaymentTerms"
@@ -443,5 +486,7 @@ export default function BrandingPage() {
         </div>
     );
 }
+
+    
 
     
