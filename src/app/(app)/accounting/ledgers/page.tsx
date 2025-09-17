@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, FileDown } from "lucide-react";
+import { Search, FileDown, FileText } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { StatCard } from "@/components/dashboard/stat-card";
 
@@ -138,14 +138,3 @@ export default function LedgersPage() {
     </div>
   );
 }
-
-// Dummy component for the date range picker
-function DateRangePicker({ className }: { className?: string }) {
-    return (
-        <div className={cn("flex items-center gap-2", className)}>
-            <Input type="text" placeholder="From: 01-04-2024" className="w-full" />
-            <Input type="text" placeholder="To: 31-03-2025" className="w-full" />
-        </div>
-    )
-}
-
