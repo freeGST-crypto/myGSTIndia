@@ -70,7 +70,7 @@ export default function ProfitAndLossPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Trading and Profit &amp; Loss Account</h1>
+          <h1 className="text-3xl font-bold">Trading and Profit & Loss Account</h1>
           <p className="text-muted-foreground">
             Summary of revenues, costs, and expenses in a horizontal T-form.
           </p>
@@ -98,7 +98,7 @@ export default function ProfitAndLossPage() {
       
       <Card>
           <CardHeader>
-              <CardTitle>Trading and Profit &amp; Loss Account</CardTitle>
+              <CardTitle>Trading and Profit & Loss Account</CardTitle>
               <CardDescription>For the period from 01-Apr-2023 to 31-Mar-2024</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
@@ -144,16 +144,16 @@ export default function ProfitAndLossPage() {
 
             {/* Profit & Loss Account Section */}
              <div>
-                <h3 className="text-xl font-semibold mb-4 text-center">Profit &amp; Loss Account</h3>
+                <h3 className="text-xl font-semibold mb-4 text-center">Profit & Loss Account</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                     {/* Debits Column */}
                     <Table>
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                              {grossProfit < 0 && <ReportRow label="To Gross Loss b/d" value={-grossProfit} />}
-                            <ReportRow label="To Salaries &amp; Wages" value={data.operatingExpenses.salaries} />
+                            <ReportRow label="To Salaries & Wagages" value={data.operatingExpenses.salaries} />
                             <ReportRow label="To Rent Expense" value={data.operatingExpenses.rent} />
-                            <ReportRow label="To Marketing &amp; Advertising" value={data.operatingExpenses.marketing} />
+                            <ReportRow label="To Marketing & Advertising" value={data.operatingExpenses.marketing} />
                             <ReportRow label="To Depreciation" value={data.operatingExpenses.depreciation} />
                             <ReportRow label="To Other Operating Expenses" value={data.operatingExpenses.other} />
                              {netProfit > 0 && <ReportRow label="To Net Profit" value={netProfit} />}
