@@ -82,10 +82,12 @@ export default function CreditNotesPage() {
             Issue and manage credit notes for sales returns or adjustments.
           </p>
         </div>
-        <Button disabled>
-            <PlusCircle className="mr-2"/>
-            New Credit Note
-        </Button>
+        <Link href="/billing/credit-notes/new" passHref>
+          <Button>
+              <PlusCircle className="mr-2"/>
+              New Credit Note
+          </Button>
+        </Link>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
