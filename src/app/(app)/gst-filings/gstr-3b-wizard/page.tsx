@@ -90,6 +90,16 @@ const initialStep2Data = [
     }
 ];
 
+const initialStep3Data = {
+    importGoods: { igst: 15000, cess: 0 },
+    importServices: { igst: 8000, cess: 0 },
+    inwardReverseCharge: { igst: 1440, cgst: 0, sgst: 0, cess: 0 },
+    inwardISD: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+    allOtherITC: { igst: 25000, cgst: 12000, sgst: 12000, cess: 500 },
+    rule42_43: { igst: 800, cgst: 200, sgst: 200, cess: 0 },
+    othersReversed: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+};
+
 const states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
     "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
@@ -118,6 +128,13 @@ export default function Gstr3bWizardPage() {
     setStep2Data(newData);
   };
   const addStep2Row = () => setStep2Data([...step2Data, { placeOfSupply: "", taxableValue: 0, integratedTax: 0 }]);
+
+  const [step3Data, setStep3Data] = useState(initialStep3Data);
+  const handleStep3Change = (section: keyof typeof step3Data, field: 'igst' | 'cgst' | 'sgst' | 'cess', value: string) => {
+      const newData = {...step3Data};
+      (newData[section] as any)[field] = parseFloat(value) || 0;
+      setStep3Data(newData);
+  }
 
 
   const handleNext = () => {
@@ -290,8 +307,84 @@ export default function Gstr3bWizardPage() {
         case 3:
             return (
                 <Card>
+                    <CardHeader>
+                        <CardTitle>Step 3: Eligible ITC</CardTitle>
+                        <CardDescription>Table 4: Details of Eligible Input Tax Credit.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-1/2">Details</TableHead>
+                                    <TableHead className="text-right">Integrated Tax</TableHead>
+                                    <TableHead className="text-right">Central Tax</TableHead>
+                                    <TableHead className="text-right">State/UT Tax</TableHead>
+                                    <TableHead className="text-right">Cess</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow className="bg-muted/50"><TableCell colSpan={5} className="font-bold"> (A) ITC Available (whether in full or part)</TableCell></TableRow>
+                                <TableRow><TableCell>(1) Import of goods</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.importGoods.igst} onChange={(e) => handleStep3Change('importGoods', 'igst', e.target.value)} /></TableCell>
+                                    <TableCell colSpan={2} className="bg-muted"></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.importGoods.cess} onChange={(e) => handleStep3Change('importGoods', 'cess', e.target.value)} /></TableCell>
+                                </TableRow>
+                                 <TableRow><TableCell>(2) Import of services</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.importServices.igst} onChange={(e) => handleStep3Change('importServices', 'igst', e.target.value)} /></TableCell>
+                                     <TableCell colSpan={2} className="bg-muted"></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.importServices.cess} onChange={(e) => handleStep3Change('importServices', 'cess', e.target.value)}/></TableCell>
+                                </TableRow>
+                                <TableRow><TableCell>(3) Inward supplies liable to reverse charge (other than 1 & 2 above)</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardReverseCharge.igst} onChange={(e) => handleStep3Change('inwardReverseCharge', 'igst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardReverseCharge.cgst} onChange={(e) => handleStep3Change('inwardReverseCharge', 'cgst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardReverseCharge.sgst} onChange={(e) => handleStep3Change('inwardReverseCharge', 'sgst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardReverseCharge.cess} onChange={(e) => handleStep3Change('inwardReverseCharge', 'cess', e.target.value)} /></TableCell>
+                                </TableRow>
+                                <TableRow><TableCell>(4) Inward supplies from ISD</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardISD.igst} onChange={(e) => handleStep3Change('inwardISD', 'igst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardISD.cgst} onChange={(e) => handleStep3Change('inwardISD', 'cgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardISD.sgst} onChange={(e) => handleStep3Change('inwardISD', 'sgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.inwardISD.cess} onChange={(e) => handleStep3Change('inwardISD', 'cess', e.target.value)}/></TableCell>
+                                </TableRow>
+                                <TableRow><TableCell>(5) All other ITC</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.allOtherITC.igst} onChange={(e) => handleStep3Change('allOtherITC', 'igst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.allOtherITC.cgst} onChange={(e) => handleStep3Change('allOtherITC', 'cgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.allOtherITC.sgst} onChange={(e) => handleStep3Change('allOtherITC', 'sgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.allOtherITC.cess} onChange={(e) => handleStep3Change('allOtherITC', 'cess', e.target.value)}/></TableCell>
+                                </TableRow>
+
+                                <TableRow className="bg-muted/50"><TableCell colSpan={5} className="font-bold">(B) ITC Reversed</TableCell></TableRow>
+                                <TableRow><TableCell>(1) As per rules 42 & 43 of CGST Rules</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.rule42_43.igst} onChange={(e) => handleStep3Change('rule42_43', 'igst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.rule42_43.cgst} onChange={(e) => handleStep3Change('rule42_43', 'cgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.rule42_43.sgst} onChange={(e) => handleStep3Change('rule42_43', 'sgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.rule42_43.cess} onChange={(e) => handleStep3Change('rule42_43', 'cess', e.target.value)}/></TableCell>
+                                </TableRow>
+                                <TableRow><TableCell>(2) Others</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.othersReversed.igst} onChange={(e) => handleStep3Change('othersReversed', 'igst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.othersReversed.cgst} onChange={(e) => handleStep3Change('othersReversed', 'cgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.othersReversed.sgst} onChange={(e) => handleStep3Change('othersReversed', 'sgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={step3Data.othersReversed.cess} onChange={(e) => handleStep3Change('othersReversed', 'cess', e.target.value)}/></TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                        <Button variant="outline" onClick={handleBack}>
+                            <ArrowLeft className="mr-2" /> Back
+                        </Button>
+                        <Button onClick={handleNext}>
+                            Save & Continue
+                            <ArrowRight className="ml-2" />
+                        </Button>
+                    </CardFooter>
+                </Card>
+            );
+        case 4:
+            return (
+                <Card>
                      <CardHeader>
-                        <CardTitle>Step 3: Confirm and Proceed</CardTitle>
+                        <CardTitle>Step 4: Confirm and Proceed</CardTitle>
                         <CardDescription>
                            You are about to finalize your GSTR-3B data. The next step is to calculate tax payment and file the return.
                         </CardDescription>
@@ -340,3 +433,4 @@ export default function Gstr3bWizardPage() {
     </div>
   );
 }
+
