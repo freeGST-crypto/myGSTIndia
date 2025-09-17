@@ -22,10 +22,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 
 const initialInvoices = [
@@ -155,8 +156,30 @@ export default function InvoicesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <FileText className="mr-2 h-4 w-4" />
+                          <FileText />
                           View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit />
+                          Edit Invoice
+                        </DropdownMenuItem>
+                         <DropdownMenuItem>
+                          <Download />
+                          Download PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Copy />
+                          Duplicate Invoice
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                         <DropdownMenuItem>
+                          <FileJson />
+                          Generate E-Waybill JSON
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 />
+                          Cancel Invoice
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
