@@ -19,6 +19,7 @@ import {
   Library,
   Scale,
   BookCopy,
+  BookOpen,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -75,6 +76,14 @@ const menuItems = [
       { href: "/accounting/journal", label: "Journal Vouchers" },
       { href: "/accounting/ledgers", label: "General Ledger" },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale },
+      {
+        label: "Financial Statements",
+        icon: BookOpen,
+        subItems: [
+          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss" },
+          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet" },
+        ],
+      },
     ],
   },
   { href: "/reports", label: "Reports", icon: Landmark },
@@ -87,6 +96,49 @@ const menuItems = [
     ],
   },
 ];
+
+const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
+  return (
+    <SidebarMenu>
+      {items.map((item) =>
+        item.subItems ? (
+          <Collapsible key={item.label} className="w-full" defaultOpen={item.subItems.some((sub:any) => sub.href && pathname.startsWith(sub.href)) || item.subItems.some((sub:any) => sub.subItems?.some((ss:any) => ss.href && pathname.startsWith(ss.href)))}>
+            <CollapsibleTrigger asChild>
+              <div
+                className={cn(
+                  "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <item.icon className="h-4 w-4" />
+                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+               <NavMenu items={item.subItems} pathname={pathname}/>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          <SidebarMenuItem key={item.label}>
+              <SidebarMenuButton
+                as={Link}
+                href={item.href}
+                isActive={pathname === item.href}
+                tooltip={item.label}
+              >
+                {item.icon && <item.icon />}
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+          </SidebarMenuItem>
+        )
+      )}
+    </SidebarMenu>
+  );
+};
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -101,56 +153,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            {menuItems.map((item) =>
-              item.subItems ? (
-                <Collapsible key={item.label} className="w-full">
-                  <CollapsibleTrigger asChild>
-                    <div
-                      className={cn(
-                        "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                        "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
-                      )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenu className="pl-6">
-                      {item.subItems.map((sub) => (
-                        <SidebarMenuItem key={sub.label}>
-                          <SidebarMenuButton
-                            as={Link}
-                            href={sub.href}
-                            isActive={pathname === sub.href}
-                          >
-                            {sub.icon && <sub.icon/>}
-                            <span>{sub.label}</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </CollapsibleContent>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      as={Link}
-                      href={item.href}
-                      isActive={pathname === item.href}
-                      tooltip={item.label}
-                    >
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            )}
-          </SidebarMenu>
+          <NavMenu items={menuItems} pathname={pathname}/>
         </SidebarContent>
         <SidebarFooter>
           <Separator className="my-2 bg-sidebar-border" />
