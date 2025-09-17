@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Search, FileDown, FileText } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { StatCard } from "@/components/dashboard/stat-card";
-
+import { useToast } from "@/hooks/use-toast";
 
 const accounts = [
     { code: "1010", name: "Cash on Hand" },
@@ -40,20 +40,31 @@ const accounts = [
 ];
 
 const initialLedgerEntries = [
-    { date: "2024-05-01", particulars: "Opening Balance", type: "", debit: 50000.00, credit: 0, balance: 50000.00 },
-    { date: "2024-05-05", particulars: "Cash Sales (INV-001)", type: "Sales", debit: 0, credit: 25000.00, balance: 25000.00 },
-    { date: "2024-05-10", particulars: "Cash Purchase (PUR-001)", type: "Purchase", debit: 8500.00, credit: 0, balance: 33500.00 },
-    { date: "2024-05-15", particulars: "Office Rent", type: "Journal", debit: 25000.00, credit: 0, balance: 58500.00 },
-    { date: "2024-05-25", particulars: "Received from Global Tech", type: "Receipt", debit: 0, credit: 15000.00, balance: 43500.00 },
+    { date: "2024-05-01", particulars: "Opening Balance", type: "N/A", debit: 50000.00, credit: 0, balance: 50000.00, link: "#" },
+    { date: "2024-05-05", particulars: "Sale to Innovate Solutions (INV-002)", type: "Sales", debit: 0, credit: 15000.00, balance: 35000.00, link: "/invoices/INV-002" },
+    { date: "2024-05-10", particulars: "Purchase from Supplier Alpha (PUR-001)", type: "Purchase", debit: 8500.00, credit: 0, balance: 26500.00, link: "/purchases/PUR-001" },
+    { date: "2024-05-15", particulars: "Office Rent Payment", type: "Journal", debit: 25000.00, credit: 0, balance: 1500.00, link: "/accounting/journal/JV-001" },
+    { date: "2024-05-25", particulars: "Payment from Global Tech (INV-001)", type: "Receipt", debit: 0, credit: 25000.00, balance: 26500.00, link: "/invoices/INV-001" },
 ];
 
 export default function LedgersPage() {
     const [selectedAccount, setSelectedAccount] = useState("1010"); // Default to Cash on Hand
+    const { toast } = useToast();
 
     const openingBalance = 50000.00;
-    const closingBalance = 43500.00;
+    const closingBalance = 26500.00;
     const totalDebits = initialLedgerEntries.reduce((acc, entry) => acc + entry.debit, 0);
     const totalCredits = initialLedgerEntries.reduce((acc, entry) => acc + entry.credit, 0);
+
+    const handleRowClick = (entry: typeof initialLedgerEntries[0]) => {
+        if (entry.type === 'N/A') return;
+        toast({
+            title: "Navigating to Transaction",
+            description: `You clicked on ${entry.particulars}. You would now be taken to view the original ${entry.type} document.`,
+        });
+        // In a real app, you would use Next.js router to navigate:
+        // router.push(entry.link);
+    }
 
   return (
     <div className="space-y-8">
@@ -120,7 +131,7 @@ export default function LedgersPage() {
                         </TableHeader>
                         <TableBody>
                         {initialLedgerEntries.map((entry, index) => (
-                            <TableRow key={index}>
+                            <TableRow key={index} onClick={() => handleRowClick(entry)} className={entry.type !== 'N/A' ? 'cursor-pointer' : ''}>
                             <TableCell>{entry.date}</TableCell>
                             <TableCell className="font-medium">{entry.particulars}</TableCell>
                             <TableCell>{entry.type}</TableCell>
@@ -137,3 +148,5 @@ export default function LedgersPage() {
     </div>
   );
 }
+
+    
