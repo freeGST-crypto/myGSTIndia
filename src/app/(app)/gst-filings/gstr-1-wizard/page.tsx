@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 const states = [
@@ -131,7 +132,14 @@ const initialB2COthers = [
         sgst: 0,
         cess: 0
     }
-]
+];
+
+const initialNilRated = [
+    { description: "Inter-State supplies to Registered persons", nilRated: 5000, exempted: 0, nonGst: 0 },
+    { description: "Intra-State supplies to Registered persons", nilRated: 12000, exempted: 2000, nonGst: 0 },
+    { description: "Inter-State supplies to Unregistered persons", nilRated: 0, exempted: 3000, nonGst: 0 },
+    { description: "Intra-State supplies to Unregistered persons", nilRated: 8000, exempted: 1500, nonGst: 500 },
+];
 
 export default function Gstr1WizardPage() {
   const { toast } = useToast();
@@ -140,6 +148,7 @@ export default function Gstr1WizardPage() {
   const [b2cLargeInvoices, setB2cLargeInvoices] = useState(initialB2CLargeInvoices);
   const [exportInvoices, setExportInvoices] = useState(initialExportInvoices);
   const [b2cOther, setB2cOther] = useState(initialB2COthers);
+  const [nilRated, setNilRated] = useState(initialNilRated);
 
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
@@ -213,6 +222,12 @@ export default function Gstr1WizardPage() {
     newRows.splice(index, 1);
     setB2cOther(newRows);
   }
+
+  const handleNilRatedChange = (index: number, field: keyof typeof nilRated[0], value: string | number) => {
+    const newRows = [...nilRated];
+    (newRows[index] as any)[field] = value;
+    setNilRated(newRows);
+  };
 
 
   const handleNext = () => {
@@ -481,6 +496,82 @@ export default function Gstr1WizardPage() {
               </Button>
             </CardFooter>
           </Card>
+        );
+    case 5:
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Step 5: Nil Rated, Exempted, and Non-GST Supplies (Table 8)</CardTitle>
+                    <CardDescription>
+                        Consolidated details of supplies that are nil rated, exempted, or not covered under GST.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-1/2">Description</TableHead>
+                                <TableHead className="text-right">Nil Rated Supplies</TableHead>
+                                <TableHead className="text-right">Exempted Supplies</TableHead>
+                                <TableHead className="text-right">Non-GST Supplies</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {nilRated.map((row, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">{row.description}</TableCell>
+                                    <TableCell>
+                                        <Input type="number" className="text-right" value={row.nilRated} onChange={(e) => handleNilRatedChange(index, 'nilRated', parseFloat(e.target.value))} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input type="number" className="text-right" value={row.exempted} onChange={(e) => handleNilRatedChange(index, 'exempted', parseFloat(e.target.value))} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input type="number" className="text-right" value={row.nonGst} onChange={(e) => handleNilRatedChange(index, 'nonGst', parseFloat(e.target.value))} />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2" /> Back
+                    </Button>
+                    <Button onClick={handleNext}>
+                        Save & Continue
+                        <ArrowRight className="ml-2" />
+                    </Button>
+                </CardFooter>
+            </Card>
+        );
+    case 6:
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Step 6: Amendments to Outward Supplies (Table 9)</CardTitle>
+                    <CardDescription>
+                        Report amendments to details of taxable outward supplies furnished in returns for earlier tax periods.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Alert variant="default">
+                        <AlertTitle>Under Development</AlertTitle>
+                        <AlertDescription>
+                           This section for amendments (Table 9A, 9B, 9C) is complex and will be built out in a future step. It will allow you to modify B2B invoices, B2C Large invoices, export invoices, and credit/debit notes from previous periods.
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2" /> Back
+                    </Button>
+                    <Button onClick={handleNext}>
+                        Save & Continue
+                        <ArrowRight className="ml-2" />
+                    </Button>
+                </CardFooter>
+            </Card>
         );
       default:
         return (
