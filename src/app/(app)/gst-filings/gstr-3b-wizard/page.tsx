@@ -18,6 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,6 +106,17 @@ const initialStep4Data = [
     { description: "Non GST supply", interState: 0, intraState: 500.00 },
 ];
 
+const initialStep5Data = {
+    liability: { igst: 95940.00, cgst: 0, sgst: 0, cess: 0 },
+    availableItc: { igst: 48640.00, cgst: 11800, sgst: 11800, cess: 500 },
+    paidThroughItc: {
+        igst: { igst: 48640, cgst: 0, sgst: 0 },
+        cgst: { igst: 0, cgst: 11800, sgst: 0 },
+        sgst: { igst: 0, cgst: 0, sgst: 11800 },
+        cess: { igst: 0, cess: 500 },
+    }
+};
+
 const states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
     "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
@@ -147,6 +159,8 @@ export default function Gstr3bWizardPage() {
     (newData[index] as any)[field] = parseFloat(value) || 0;
     setStep4Data(newData);
   };
+  
+  const [step5Data, setStep5Data] = useState(initialStep5Data);
 
 
   const handleNext = () => {
@@ -447,10 +461,97 @@ export default function Gstr3bWizardPage() {
                 </Card>
             );
         case 5:
+            const liability = step5Data.liability;
+            const availableItc = step5Data.availableItc;
+            const paidThroughItc = step5Data.paidThroughItc;
+            // In a real app, these totals and the logic would be much more complex
+            const totalPaidItcIgst = paidThroughItc.igst.igst + paidThroughItc.cgst.igst + paidThroughItc.sgst.igst + paidThroughItc.cess.igst;
+
+            return (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Step 5: Payment of Tax</CardTitle>
+                        <CardDescription>Table 6.1: Enter ITC amounts to be utilized for tax payment. Balance will be payable in cash.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="min-w-[200px]">Description</TableHead>
+                                    <TableHead className="text-right">Total Tax Liability</TableHead>
+                                    <TableHead className="text-right">Paid through ITC (IGST)</TableHead>
+                                    <TableHead className="text-right">Paid through ITC (CGST)</TableHead>
+                                    <TableHead className="text-right">Paid through ITC (SGST)</TableHead>
+                                    <TableHead className="text-right">Paid through ITC (Cess)</TableHead>
+                                    <TableHead className="text-right">Tax to be paid in cash</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                 <TableRow>
+                                    <TableCell className="font-medium">IGST</TableCell>
+                                    <TableCell className="text-right font-mono">{liability.igst.toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.igst.igst} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.igst - paidThroughItc.igst.igst).toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">CGST</TableCell>
+                                    <TableCell className="text-right font-mono">{liability.cgst.toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cgst.cgst} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.cgst - paidThroughItc.cgst.cgst).toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">SGST</TableCell>
+                                    <TableCell className="text-right font-mono">{liability.sgst.toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.sgst.sgst} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.sgst - paidThroughItc.sgst.sgst).toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Cess</TableCell>
+                                    <TableCell className="text-right font-mono">{liability.cess.toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cess.cess} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.cess - paidThroughItc.cess.cess).toFixed(2)}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                            <TableFooter>
+                                 <TableRow>
+                                    <TableCell colSpan={2} className="text-right font-bold">Available ITC</TableCell>
+                                    <TableCell className="text-right font-mono">{availableItc.igst.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono">{availableItc.cgst.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono">{availableItc.sgst.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono">{availableItc.cess.toFixed(2)}</TableCell>
+                                    <TableCell></TableCell>
+                                </TableRow>
+                            </TableFooter>
+                        </Table>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                        <Button variant="outline" onClick={handleBack}>
+                            <ArrowLeft className="mr-2" /> Back
+                        </Button>
+                        <Button onClick={handleNext}>
+                            Save & Continue
+                            <ArrowRight className="ml-2" />
+                        </Button>
+                    </CardFooter>
+                 </Card>
+            );
+        case 6:
             return (
                 <Card>
                      <CardHeader>
-                        <CardTitle>Step 5: Confirm and Proceed</CardTitle>
+                        <CardTitle>Step 6: Confirm and Proceed</CardTitle>
                         <CardDescription>
                            You are about to finalize your GSTR-3B data. The next step is to calculate tax payment and file the return.
                         </CardDescription>
