@@ -141,6 +141,30 @@ const initialNilRated = [
     { description: "Intra-State supplies to Unregistered persons", nilRated: 8000, exempted: 1500, nonGst: 500 },
 ];
 
+const initialDocumentsIssued = [
+    {
+        type: "Invoices for outward supply",
+        from: "INV-001",
+        to: "INV-055",
+        total: 55,
+        cancelled: 2,
+    },
+     {
+        type: "Credit Notes",
+        from: "CN-001",
+        to: "CN-005",
+        total: 5,
+        cancelled: 0,
+    },
+     {
+        type: "Debit Notes",
+        from: "DN-001",
+        to: "DN-002",
+        total: 2,
+        cancelled: 0,
+    },
+];
+
 export default function Gstr1WizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -149,6 +173,7 @@ export default function Gstr1WizardPage() {
   const [exportInvoices, setExportInvoices] = useState(initialExportInvoices);
   const [b2cOther, setB2cOther] = useState(initialB2COthers);
   const [nilRated, setNilRated] = useState(initialNilRated);
+  const [documentsIssued, setDocumentsIssued] = useState(initialDocumentsIssued);
 
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
@@ -227,6 +252,22 @@ export default function Gstr1WizardPage() {
     const newRows = [...nilRated];
     (newRows[index] as any)[field] = value;
     setNilRated(newRows);
+  };
+
+  const handleDocumentsIssuedChange = (index: number, field: keyof typeof documentsIssued[0], value: string | number) => {
+    const newRows = [...documentsIssued];
+    (newRows[index] as any)[field] = value;
+    setDocumentsIssued(newRows);
+  };
+
+  const handleAddDocumentsIssued = () => {
+    setDocumentsIssued([...documentsIssued, { type: "", from: "", to: "", total: 0, cancelled: 0 }]);
+  };
+
+  const handleRemoveDocumentsIssued = (index: number) => {
+    const newRows = [...documentsIssued];
+    newRows.splice(index, 1);
+    setDocumentsIssued(newRows);
   };
 
 
@@ -699,6 +740,75 @@ export default function Gstr1WizardPage() {
                 </CardFooter>
             </Card>
         );
+      case 10:
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Step 10: Documents Issued (Table 13)</CardTitle>
+                    <CardDescription>
+                        Summary of documents issued during the tax period.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Alert variant="default">
+                        <AlertTitle>Auto-Generated Summary</AlertTitle>
+                        <AlertDescription>
+                            This table is automatically populated based on the documents you've created in GSTEase (invoices, credit notes, etc.). Review the summary below.
+                        </AlertDescription>
+                    </Alert>
+                    <Table className="mt-4">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Document Type</TableHead>
+                                <TableHead>Sr. No. From</TableHead>
+                                <TableHead>Sr. No. To</TableHead>
+                                <TableHead className="text-right">Total Number</TableHead>
+                                <TableHead className="text-right">Cancelled</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {documentsIssued.map((doc, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                         <Input value={doc.type} onChange={(e) => handleDocumentsIssuedChange(index, 'type', e.target.value)} />
+                                    </TableCell>
+                                     <TableCell>
+                                         <Input value={doc.from} onChange={(e) => handleDocumentsIssuedChange(index, 'from', e.target.value)} />
+                                    </TableCell>
+                                    <TableCell>
+                                         <Input value={doc.to} onChange={(e) => handleDocumentsIssuedChange(index, 'to', e.target.value)} />
+                                    </TableCell>
+                                    <TableCell>
+                                         <Input type="number" className="text-right" value={doc.total} onChange={(e) => handleDocumentsIssuedChange(index, 'total', parseInt(e.target.value))} />
+                                    </TableCell>
+                                    <TableCell>
+                                         <Input type="number" className="text-right" value={doc.cancelled} onChange={(e) => handleDocumentsIssuedChange(index, 'cancelled', parseInt(e.target.value))} />
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveDocumentsIssued(index)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                     <Button variant="outline" size="sm" className="mt-4" onClick={handleAddDocumentsIssued}>
+                        <PlusCircle className="mr-2 h-4 w-4"/> Add Document Series
+                    </Button>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2" /> Back
+                    </Button>
+                    <Button onClick={handleNext}>
+                        Save & Continue
+                        <ArrowRight className="ml-2" />
+                    </Button>
+                </CardFooter>
+            </Card>
+        );
       default:
         return (
              <Card>
@@ -707,7 +817,7 @@ export default function Gstr1WizardPage() {
                     <CardDescription>You've finished the GSTR-1 preparation wizard.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>More steps will be added here for other tables (e.g. Table 13 - Documents Issued).</p>
+                    <p>You have completed all the data entry steps for your GSTR-1 return. The next step would be to generate the final JSON file for uploading to the GST portal.</p>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
@@ -738,5 +848,7 @@ export default function Gstr1WizardPage() {
     </div>
   );
 }
+
+    
 
     
