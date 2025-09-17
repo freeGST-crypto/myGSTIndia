@@ -15,6 +15,7 @@ import {
   Calculator,
   FilePlus,
   FileMinus,
+  Library,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -66,6 +67,7 @@ const menuItems = [
     label: "Accounting",
     icon: Calculator,
     subItems: [
+      { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library },
       { href: "/accounting/journal", label: "Journal Vouchers" },
       { href: "/accounting/ledgers", label: "General Ledger" },
     ],
