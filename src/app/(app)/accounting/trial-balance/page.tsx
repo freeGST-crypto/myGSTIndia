@@ -51,7 +51,7 @@ const trialBalanceData = [
   { account: "Rent Expense", code: "5010", debit: 25000.00, credit: 0 },
   { account: "Salaries and Wages", code: "5020", debit: 30000.00, credit: 0 },
   { account: "Office Supplies Expense", code: "5030", debit: 4000.00, credit: 0 },
-  { account: "Bank Charges", code: "5040", debit: 5000.00, credit: 0 },
+  { account: "Bank Charges", code: "5040", debit: 500.00, credit: 0 },
   // This entry is intentionally added to cause a mismatch for demonstration
   { account: "Suspense Account", code: "9999", debit: 100.00, credit: 0 },
 ];
@@ -137,14 +137,14 @@ export default function TrialBalancePage() {
                     </TableRow>
                 </TableFooter>
             </Table>
-            {totalDebits !== totalCredits && (
+            {difference !== 0 && (
                 <div 
                     className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center cursor-pointer hover:bg-destructive/20"
                     onClick={() => setIsMismatchDialogOpen(true)}
                 >
                     <div className="flex items-center justify-center gap-2">
                          <AlertTriangle className="h-5 w-5" />
-                        <span>Warning: Debits and Credits do not match! Click to see discrepancies.</span>
+                        <span>Warning: Debits and Credits do not match! Difference: ₹{Math.abs(difference).toFixed(2)}. Click to see discrepancies.</span>
                     </div>
                 </div>
             )}
