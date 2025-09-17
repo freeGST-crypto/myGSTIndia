@@ -67,7 +67,13 @@ const menuItems = [
     ],
   },
   { href: "/reports", label: "Reports", icon: Landmark },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { 
+    label: "Settings", 
+    icon: Settings,
+    subItems: [
+      { href: "/settings/branding", label: "Company Branding" },
+    ],
+  },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
