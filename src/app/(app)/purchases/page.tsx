@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -89,10 +90,12 @@ export default function PurchasesPage() {
             Manage your purchase bills and payments.
           </p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2"/>
-          Add Purchase Bill
-        </Button>
+        <Link href="/purchases/new" passHref>
+          <Button>
+            <PlusCircle className="mr-2"/>
+            Add Purchase Bill
+          </Button>
+        </Link>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
