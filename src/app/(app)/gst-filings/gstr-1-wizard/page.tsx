@@ -573,6 +573,132 @@ export default function Gstr1WizardPage() {
                 </CardFooter>
             </Card>
         );
+      case 7:
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Step 7: Amendments to B2C (Others) (Table 10)</CardTitle>
+                    <CardDescription>
+                        Report amendments to taxable outward supplies to unregistered persons from earlier tax periods.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Alert variant="default">
+                        <AlertTitle>Under Development</AlertTitle>
+                        <AlertDescription>
+                           This section is for making corrections to the B2C (Others) summary data reported in previous GSTR-1 filings. The functionality to select a previous period and amend the POS-wise summary will be implemented here.
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2" /> Back
+                    </Button>
+                    <Button onClick={handleNext}>
+                        Save & Continue
+                        <ArrowRight className="ml-2" />
+                    </Button>
+                </CardFooter>
+            </Card>
+        );
+      case 8:
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Step 8: Advances Received/Adjusted (Table 11)</CardTitle>
+                    <CardDescription>
+                        Consolidated statement of advances received, advances adjusted, and amendments.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Alert variant="default">
+                        <AlertTitle>Under Development</AlertTitle>
+                        <AlertDescription>
+                           This section will contain two parts: Part I for reporting gross advances received on which tax is payable, and Part II for reporting adjustments of advances against supplies made in the current period. Functionality to add and amend these details will be built here.
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2" /> Back
+                    </Button>
+                    <Button onClick={handleNext}>
+                        Save & Continue
+                        <ArrowRight className="ml-2" />
+                    </Button>
+                </CardFooter>
+            </Card>
+        );
+      case 9:
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Step 9: HSN-wise Summary of Outward Supplies (Table 12)</CardTitle>
+                    <CardDescription>
+                        A summary of supplies reported in this return, categorized by HSN/SAC code.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Alert variant="default">
+                        <AlertTitle>Auto-Generated Summary</AlertTitle>
+                        <AlertDescription>
+                            This table would be automatically populated based on the items you've sold in your invoices. Below is a representation of how it would look.
+                        </AlertDescription>
+                    </Alert>
+                    <Table className="mt-4">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>HSN</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>UQC</TableHead>
+                                <TableHead className="text-right">Total Quantity</TableHead>
+                                <TableHead className="text-right">Total Value</TableHead>
+                                <TableHead className="text-right">Taxable Value</TableHead>
+                                <TableHead className="text-right">IGST</TableHead>
+                                <TableHead className="text-right">CGST</TableHead>
+                                <TableHead className="text-right">SGST</TableHead>
+                                <TableHead className="text-right">Cess</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                             <TableRow>
+                                <TableCell>9401</TableCell>
+                                <TableCell>Office Chairs</TableCell>
+                                <TableCell>NOS</TableCell>
+                                <TableCell className="text-right">10</TableCell>
+                                <TableCell className="text-right">75000.00</TableCell>
+                                <TableCell className="text-right">75000.00</TableCell>
+                                <TableCell className="text-right">13500.00</TableCell>
+                                <TableCell className="text-right">0.00</TableCell>
+                                <TableCell className="text-right">0.00</TableCell>
+                                <TableCell className="text-right">0.00</TableCell>
+                             </TableRow>
+                             <TableRow>
+                                <TableCell>9982</TableCell>
+                                <TableCell>Accounting Services</TableCell>
+                                <TableCell>OTH</TableCell>
+                                <TableCell className="text-right">1</TableCell>
+                                <TableCell className="text-right">15000.00</TableCell>
+                                <TableCell className="text-right">15000.00</TableCell>
+                                <TableCell className="text-right">0.00</TableCell>
+                                <TableCell className="text-right">1350.00</TableCell>
+                                <TableCell className="text-right">1350.00</TableCell>
+                                <TableCell className="text-right">0.00</TableCell>
+                             </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2" /> Back
+                    </Button>
+                    <Button onClick={handleNext}>
+                        Save & Continue
+                        <ArrowRight className="ml-2" />
+                    </Button>
+                </CardFooter>
+            </Card>
+        );
       default:
         return (
              <Card>
@@ -581,7 +707,7 @@ export default function Gstr1WizardPage() {
                     <CardDescription>You've finished the GSTR-1 preparation wizard.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>More steps will be added here for other tables (Credit/Debit Notes, Amendments etc.).</p>
+                    <p>More steps will be added here for other tables (e.g. Table 13 - Documents Issued).</p>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
