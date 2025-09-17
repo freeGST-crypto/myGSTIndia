@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FileUp, GitCompareArrows, Loader2, Wand2, ArrowRight } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
-import { reconcileItcAction, compareGstrReportsAction } from './actions';
+import { reconcileItcAction } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 
@@ -30,24 +30,13 @@ const itcSchema = z.object({
     // We are simulating purchase bills being fetched from the DB in the action
 });
 
-const gstrCompareSchema = z.object({
-    gstr1: z.custom<File>(val => val instanceof File, "GSTR-1 file is required."),
-    gstr3b: z.custom<File>(val => val instanceof File, "GSTR-3B file is required."),
-});
-
 export default function ReconciliationPage() {
     const { toast } = useToast();
     const [itcResult, setItcResult] = useState<string | null>(null);
-    const [gstrCompareResult, setGstrCompareResult] = useState<string | null>(null);
     const [isItcLoading, setIsItcLoading] = useState(false);
-    const [isGstrLoading, setIsGstrLoading] = useState(false);
 
     const itcForm = useForm<z.infer<typeof itcSchema>>({
         resolver: zodResolver(itcSchema),
-    });
-
-    const gstrCompareForm = useForm<z.infer<typeof gstrCompareSchema>>({
-        resolver: zodResolver(gstrCompareSchema),
     });
 
     async function onItcSubmit(values: z.infer<typeof itcSchema>) {
@@ -70,30 +59,6 @@ export default function ReconciliationPage() {
         }
     }
 
-    async function onGstrCompareSubmit(values: z.infer<typeof gstrCompareSchema>) {
-        setIsGstrLoading(true);
-        setGstrCompareResult(null);
-        try {
-            const [gstr1DataUri, gstr3BDataUri] = await Promise.all([
-                fileToDataUri(values.gstr1),
-                fileToDataUri(values.gstr3b),
-            ]);
-
-            const result = await compareGstrReportsAction({ gstr1DataUri, gstr3BDataUri });
-            if (result?.report) {
-                setGstrCompareResult(result.report);
-                toast({ title: "GSTR Comparison Complete" });
-            } else {
-                toast({ variant: 'destructive', title: 'Comparison Failed', description: 'Could not get GSTR comparison results.' });
-            }
-        } catch (error: any) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'An Error Occurred', description: error.message || 'An unexpected error occurred during GSTR comparison.' });
-        } finally {
-            setIsGstrLoading(false);
-        }
-    }
-
     return (
         <div className="space-y-8">
             <div className="flex flex-col items-center text-center">
@@ -106,7 +71,7 @@ export default function ReconciliationPage() {
                 </p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2 items-start">
+            <div className="grid gap-8 md:grid-cols-1 items-start">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><FileUp className="text-primary"/> AI-Powered ITC Reconciliation</CardTitle>
@@ -157,68 +122,17 @@ export default function ReconciliationPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><GitCompareArrows className="text-primary"/> AI-Powered GSTR Comparison</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><GitCompareArrows className="text-primary"/> GSTR-1 vs GSTR-3B Comparison</CardTitle>
                         <CardDescription>Compare GSTR-1 and GSTR-3B filings to find variances and get AI-driven suggestions for resolution.</CardDescription>
                     </CardHeader>
-                     <Form {...gstrCompareForm}>
-                        <form onSubmit={gstrCompareForm.handleSubmit(onGstrCompareSubmit)}>
-                            <CardContent className="space-y-4">
-                                <FormField
-                                    control={gstrCompareForm.control}
-                                    name="gstr1"
-                                    render={({ field: { onChange, value, ...rest } }) => (
-                                        <FormItem>
-                                            <FormLabel>GSTR-1 (.csv)</FormLabel>
-                                            <FormControl>
-                                                <Input 
-                                                    type="file" 
-                                                    accept=".csv"
-                                                    onChange={(e) => onChange(e.target.files?.[0])}
-                                                    {...rest}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={gstrCompareForm.control}
-                                    name="gstr3b"
-                                    render={({ field: { onChange, value, ...rest } }) => (
-                                        <FormItem>
-                                            <FormLabel>GSTR-3B (.csv)</FormLabel>
-                                            <FormControl>
-                                                <Input 
-                                                    type="file" 
-                                                    accept=".csv"
-                                                    onChange={(e) => onChange(e.target.files?.[0])}
-                                                    {...rest}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </CardContent>
-                            <CardFooter>
-                                <Button type="submit" disabled={isGstrLoading}>
-                                     {isGstrLoading ? <Loader2 className="mr-2 animate-spin" /> : null}
-                                    Compare Filings
-                                </Button>
-                            </CardFooter>
-                        </form>
-                    </Form>
-                     {gstrCompareResult && (
-                        <CardContent>
-                             <Alert>
-                                <Wand2 className="h-4 w-4" />
-                                <AlertTitle>GSTR Comparison Report</AlertTitle>
-                                <AlertDescription className="prose prose-sm dark:prose-invert whitespace-pre-wrap">
-                                   {gstrCompareResult}
-                                </AlertDescription>
-                            </Alert>
-                        </CardContent>
-                    )}
+                    <CardContent>
+                        <Link href="/reconciliation/gstr-comparison" passHref>
+                           <Button>
+                                <span>Launch GSTR Comparison Tool</span>
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                           </Button>
+                        </Link>
+                    </CardContent>
                 </Card>
             </div>
              <Card>
