@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, Save, CircleDollarSign, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, FileJson, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -175,10 +175,10 @@ export default function Gstr3bWizardPage() {
      setStep(prev => prev - 1);
   };
   
-  const handleProceedToPayment = () => {
+  const handleGenerateJson = () => {
       toast({
-          title: "GSTR-3B Saved!",
-          description: "Proceeding to tax payment calculation (not yet implemented)."
+          title: "JSON Generation Started",
+          description: "Your GSTR-3B JSON file is being generated and will be downloaded shortly. (This is a simulation)."
       })
   }
 
@@ -551,9 +551,9 @@ export default function Gstr3bWizardPage() {
             return (
                 <Card>
                      <CardHeader>
-                        <CardTitle>Step 6: Confirm and Proceed</CardTitle>
+                        <CardTitle>Step 6: Generate JSON for Filing</CardTitle>
                         <CardDescription>
-                           You are about to finalize your GSTR-3B data. The next step is to calculate tax payment and file the return.
+                           You have reviewed your GSTR-3B data. The final step is to generate the JSON file for uploading to the GST portal.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -561,7 +561,7 @@ export default function Gstr3bWizardPage() {
                             <AlertTriangle className="h-4 w-4" />
                             <AlertTitle>Final Check</AlertTitle>
                             <AlertDescription>
-                                Please review all the data entered in the previous steps carefully. Once you proceed to payment, you cannot edit these details. This action is not yet implemented.
+                                Please review all the data entered in the previous steps carefully. Once you generate the JSON file, you should upload it to the GST portal to complete your filing.
                             </AlertDescription>
                         </Alert>
                     </CardContent>
@@ -569,9 +569,9 @@ export default function Gstr3bWizardPage() {
                         <Button variant="outline" onClick={handleBack}>
                             <ArrowLeft className="mr-2" /> Back
                         </Button>
-                        <Button onClick={handleProceedToPayment}>
-                           <CircleDollarSign className="mr-2" />
-                           Proceed to Payment
+                        <Button onClick={handleGenerateJson}>
+                           <FileJson className="mr-2" />
+                           Generate GSTR-3B JSON
                         </Button>
                     </CardFooter>
                 </Card>
