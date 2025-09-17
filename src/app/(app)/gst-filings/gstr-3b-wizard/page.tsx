@@ -100,6 +100,11 @@ const initialStep3Data = {
     othersReversed: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
 };
 
+const initialStep4Data = [
+    { description: "From a supplier under composition scheme, exempt and nil rated supply", interState: 4500.00, intraState: 12000.00 },
+    { description: "Non GST supply", interState: 0, intraState: 500.00 },
+];
+
 const states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
     "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
@@ -135,6 +140,13 @@ export default function Gstr3bWizardPage() {
       (newData[section] as any)[field] = parseFloat(value) || 0;
       setStep3Data(newData);
   }
+
+  const [step4Data, setStep4Data] = useState(initialStep4Data);
+  const handleStep4Change = (index: number, field: keyof typeof step4Data[0], value: string) => {
+    const newData = [...step4Data];
+    (newData[index] as any)[field] = parseFloat(value) || 0;
+    setStep4Data(newData);
+  };
 
 
   const handleNext = () => {
@@ -383,8 +395,62 @@ export default function Gstr3bWizardPage() {
         case 4:
             return (
                 <Card>
+                    <CardHeader>
+                        <CardTitle>Step 4: Exempt, nil and Non-GST inward supplies</CardTitle>
+                        <CardDescription>Table 5: Values of exempt, nil-rated and non-GST inward supplies.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                       <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-2/3">Nature of Supplies</TableHead>
+                                    <TableHead className="text-right">Inter-State supplies</TableHead>
+                                    <TableHead className="text-right">Intra-State supplies</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {step4Data.map((row, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <Label className="font-normal">{row.description}</Label>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                            type="number"
+                                            className="text-right"
+                                            value={row.interState}
+                                            onChange={(e) => handleStep4Change(index, 'interState', e.target.value)}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                            type="number"
+                                            className="text-right"
+                                            value={row.intraState}
+                                            onChange={(e) => handleStep4Change(index, 'intraState', e.target.value)}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                     <CardFooter className="flex justify-between">
+                        <Button variant="outline" onClick={handleBack}>
+                            <ArrowLeft className="mr-2" /> Back
+                        </Button>
+                        <Button onClick={handleNext}>
+                            Save & Continue
+                            <ArrowRight className="ml-2" />
+                        </Button>
+                    </CardFooter>
+                </Card>
+            );
+        case 5:
+            return (
+                <Card>
                      <CardHeader>
-                        <CardTitle>Step 4: Confirm and Proceed</CardTitle>
+                        <CardTitle>Step 5: Confirm and Proceed</CardTitle>
                         <CardDescription>
                            You are about to finalize your GSTR-3B data. The next step is to calculate tax payment and file the return.
                         </CardDescription>
@@ -434,3 +500,4 @@ export default function Gstr3bWizardPage() {
   );
 }
 
+    
