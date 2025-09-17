@@ -1,6 +1,7 @@
 
 "use client";
 
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -18,7 +19,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
+import { FileDown, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const trialBalanceData = [
   // Assets
@@ -40,12 +43,33 @@ const trialBalanceData = [
   { account: "Salaries and Wages", code: "5020", debit: 30000.00, credit: 0 },
   { account: "Office Supplies Expense", code: "5030", debit: 4000.00, credit: 0 },
   { account: "Bank Charges", code: "5040", debit: 5000.00, credit: 0 },
+  // This entry is intentionally added to cause a mismatch for demonstration
+  { account: "Suspense Account", code: "9999", debit: 100.00, credit: 0 },
 ];
 
 export default function TrialBalancePage() {
     
+    const { toast } = useToast();
+    const router = useRouter();
     const totalDebits = trialBalanceData.reduce((acc, item) => acc + item.debit, 0);
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
+
+    const handleAccountClick = (code: string) => {
+        // In a real app, this would be: router.push(`/accounting/ledgers?account=${code}`);
+        router.push('/accounting/ledgers');
+        toast({
+            title: `Navigating to Ledger`,
+            description: `You would now be viewing the ledger for account ${code}.`
+        });
+    }
+
+    const handleMismatchClick = () => {
+        toast({
+            variant: "destructive",
+            title: "Displaying Unreconciled Entries",
+            description: "A modal would open here showing transactions causing the imbalance.",
+        });
+    }
 
   return (
     <div className="space-y-8">
@@ -81,7 +105,12 @@ export default function TrialBalancePage() {
                     {trialBalanceData.map((item) => (
                         <TableRow key={item.code}>
                             <TableCell>{item.code}</TableCell>
-                            <TableCell className="font-medium">{item.account}</TableCell>
+                            <TableCell 
+                                className="font-medium hover:underline cursor-pointer"
+                                onClick={() => handleAccountClick(item.code)}
+                            >
+                                {item.account}
+                            </TableCell>
                             <TableCell className="text-right font-mono">{item.debit > 0 ? item.debit.toFixed(2) : "-"}</TableCell>
                             <TableCell className="text-right font-mono">{item.credit > 0 ? item.credit.toFixed(2) : "-"}</TableCell>
                         </TableRow>
@@ -96,8 +125,14 @@ export default function TrialBalancePage() {
                 </TableFooter>
             </Table>
             {totalDebits !== totalCredits && (
-                <div className="pt-4 text-center text-destructive font-semibold">
-                    Warning: Debits and Credits do not match!
+                <div 
+                    className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center cursor-pointer hover:bg-destructive/20"
+                    onClick={handleMismatchClick}
+                >
+                    <div className="flex items-center justify-center gap-2">
+                         <AlertTriangle className="h-5 w-5" />
+                        <span>Warning: Debits and Credits do not match! Click to see discrepancies.</span>
+                    </div>
                 </div>
             )}
           </CardContent>
