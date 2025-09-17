@@ -110,6 +110,27 @@ const initialExportInvoices = [
         igst: 9000,
         cess: 0,
     }
+];
+
+const initialB2COthers = [
+    {
+        pos: "27-Maharashtra",
+        taxableValue: 125000.00,
+        taxRate: 18,
+        igst: 0,
+        cgst: 11250,
+        sgst: 11250,
+        cess: 0
+    },
+    {
+        pos: "29-Karnataka",
+        taxableValue: 80000.00,
+        taxRate: 12,
+        igst: 9600.00,
+        cgst: 0,
+        sgst: 0,
+        cess: 0
+    }
 ]
 
 export default function Gstr1WizardPage() {
@@ -118,6 +139,8 @@ export default function Gstr1WizardPage() {
   const [b2bInvoices, setB2bInvoices] = useState(initialB2BInvoices);
   const [b2cLargeInvoices, setB2cLargeInvoices] = useState(initialB2CLargeInvoices);
   const [exportInvoices, setExportInvoices] = useState(initialExportInvoices);
+  const [b2cOther, setB2cOther] = useState(initialB2COthers);
+
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
     const newInvoices = [...b2bInvoices];
@@ -175,6 +198,20 @@ export default function Gstr1WizardPage() {
     const newInvoices = [...exportInvoices];
     newInvoices.splice(index, 1);
     setExportInvoices(newInvoices);
+  }
+
+  const handleB2cOtherChange = (index: number, field: keyof typeof b2cOther[0], value: string | number) => {
+    const newRows = [...b2cOther];
+    (newRows[index] as any)[field] = value;
+    setB2cOther(newRows);
+  };
+  const handleAddB2cOther = () => {
+    setB2cOther([...b2cOther, { pos: "", taxableValue: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0, cess: 0 }]);
+  }
+  const handleRemoveB2cOther = (index: number) => {
+    const newRows = [...b2cOther];
+    newRows.splice(index, 1);
+    setB2cOther(newRows);
   }
 
 
@@ -383,6 +420,68 @@ export default function Gstr1WizardPage() {
             </CardFooter>
           </Card>
         );
+    case 4:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 4: B2C (Others) (Table 7)</CardTitle>
+              <CardDescription>
+                Consolidated details of B2C supplies (intra-state and inter-state up to ₹2.5 lakh).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Place Of Supply</TableHead>
+                    <TableHead className="text-right">Taxable Value</TableHead>
+                    <TableHead className="text-right">Rate (%)</TableHead>
+                    <TableHead className="text-right">IGST</TableHead>
+                    <TableHead className="text-right">CGST</TableHead>
+                    <TableHead className="text-right">SGST</TableHead>
+                    <TableHead className="text-right">Cess</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {b2cOther.map((row, index) => (
+                    <TableRow key={index}>
+                        <TableCell>
+                            <Select value={row.pos} onValueChange={(value) => handleB2cOtherChange(index, 'pos', value)}>
+                                <SelectTrigger><SelectValue placeholder="Select State"/></SelectTrigger>
+                                <SelectContent>{states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </TableCell>
+                        <TableCell><Input type="number" className="text-right" value={row.taxableValue} onChange={(e) => handleB2cOtherChange(index, 'taxableValue', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={row.taxRate} onChange={(e) => handleB2cOtherChange(index, 'taxRate', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={row.igst} onChange={(e) => handleB2cOtherChange(index, 'igst', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={row.cgst} onChange={(e) => handleB2cOtherChange(index, 'cgst', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={row.sgst} onChange={(e) => handleB2cOtherChange(index, 'sgst', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={row.cess} onChange={(e) => handleB2cOtherChange(index, 'cess', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveB2cOther(index)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+               <Button variant="outline" size="sm" className="mt-4" onClick={handleAddB2cOther}>
+                <PlusCircle className="mr-2 h-4 w-4"/> Add Summary Row
+              </Button>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="mr-2" /> Back
+              </Button>
+              <Button onClick={handleNext}>
+                  Save & Continue
+                  <ArrowRight className="ml-2" />
+              </Button>
+            </CardFooter>
+          </Card>
+        );
       default:
         return (
              <Card>
@@ -391,7 +490,7 @@ export default function Gstr1WizardPage() {
                     <CardDescription>You've finished the GSTR-1 preparation wizard.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>More steps will be added here for other tables (B2C Small, Credit/Debit Notes, etc.).</p>
+                    <p>More steps will be added here for other tables (Credit/Debit Notes, Amendments etc.).</p>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
@@ -422,3 +521,5 @@ export default function Gstr1WizardPage() {
     </div>
   );
 }
+
+    
