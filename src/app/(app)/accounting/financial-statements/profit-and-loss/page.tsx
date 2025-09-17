@@ -15,67 +15,64 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  TableHeader,
+  TableHead,
+  TableFooter,
 } from "@/components/ui/table";
 import { FileDown, CalendarDays } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 
 const data = {
     revenue: {
         sales: 850000,
         otherIncome: 15000,
-        total: 865000,
     },
     cogs: {
         openingStock: 75000,
         purchases: 420000,
         directExpenses: 25000,
         closingStock: 90000,
-        total: 430000,
     },
-    grossProfit: 435000,
     operatingExpenses: {
         salaries: 120000,
         rent: 60000,
         marketing: 35000,
         depreciation: 45000,
         other: 20000,
-        total: 280000,
     },
-    operatingProfit: 155000,
-    nonOperating: {
-        interestIncome: 5000,
-        interestExpense: 12000,
-    },
-    netProfit: 148000,
 };
 
+const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export default function ProfitAndLossPage() {
+
+    const tradingDebits = data.cogs.openingStock + data.cogs.purchases + data.cogs.directExpenses;
+    const tradingCredits = data.revenue.sales + data.cogs.closingStock;
+    const grossProfit = tradingCredits - tradingDebits;
+    const tradingTotal = tradingCredits;
+
+    const plDebits = data.operatingExpenses.salaries + data.operatingExpenses.rent + data.operatingExpenses.marketing + data.operatingExpenses.depreciation + data.operatingExpenses.other;
+    const plCredits = grossProfit + data.revenue.otherIncome;
+    const netProfit = plCredits - plDebits;
+    const plTotal = plCredits;
     
-    const ReportRow = ({ label, value, isTotal = false, isSub = false }: { label: string; value: number, isTotal?: boolean, isSub?: boolean }) => (
-         <TableRow className={cn(isTotal && "font-bold", isSub && "text-muted-foreground")}>
-            <TableCell className={cn("pl-8", isSub && "pl-12")}>{label}</TableCell>
-            <TableCell></TableCell>
-            <TableCell className="text-right font-mono pr-8">{value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+    const ReportRow = ({ label, value }: { label: string; value: number }) => (
+         <TableRow>
+            <TableCell>{label}</TableCell>
+            <TableCell className="text-right font-mono">{formatCurrency(value)}</TableCell>
         </TableRow>
     );
-
-    const SectionHeader = ({ label, value }: { label: string, value: number }) => (
-        <TableRow className="font-semibold bg-muted/30">
-            <TableCell className="pl-4">{label}</TableCell>
-            <TableCell className="text-right font-mono pr-8">{value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-             <TableCell></TableCell>
-        </TableRow>
-    )
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Profit & Loss Account</h1>
+          <h1 className="text-3xl font-bold">Trading and Profit &amp; Loss Account</h1>
           <p className="text-muted-foreground">
-            Summary of revenues, costs, and expenses during a specific period.
+            Summary of revenues, costs, and expenses in a horizontal T-form.
           </p>
         </div>
         <Button>
@@ -89,7 +86,7 @@ export default function ProfitAndLossPage() {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                     <div>
                         <CardTitle>Report Period</CardTitle>
-                        <CardDescription>Select a date range to generate the P&L report.</CardDescription>
+                        <CardDescription>Select a date range to generate the report.</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                         <CalendarDays className="text-muted-foreground"/>
@@ -101,70 +98,98 @@ export default function ProfitAndLossPage() {
       
       <Card>
           <CardHeader>
-              <CardTitle>Profit & Loss Statement</CardTitle>
+              <CardTitle>Trading and Profit &amp; Loss Account</CardTitle>
               <CardDescription>For the period from 01-Apr-2023 to 31-Mar-2024</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Table>
-                <TableBody>
-                    {/* Revenue Section */}
-                    <SectionHeader label="Revenue" value={data.revenue.total} />
-                    <ReportRow label="Sales Revenue" value={data.revenue.sales} isSub />
-                    <ReportRow label="Other Income" value={data.revenue.otherIncome} isSub />
-
-                    {/* COGS Section */}
-                    <SectionHeader label="Cost of Goods Sold (COGS)" value={-data.cogs.total} />
-                    <ReportRow label="Opening Stock" value={data.cogs.openingStock} isSub />
-                    <ReportRow label="Purchases" value={data.cogs.purchases} isSub />
-                    <ReportRow label="Direct Expenses" value={data.cogs.directExpenses} isSub />
-                    <ReportRow label="Less: Closing Stock" value={-data.cogs.closingStock} isSub />
-                    
-                    {/* Gross Profit */}
-                    <TableRow className="bg-muted/50 font-bold text-lg">
-                        <TableCell className="pl-4">Gross Profit</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right font-mono pr-8">{data.grossProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    </TableRow>
-
-                    {/* Operating Expenses Section */}
-                    <SectionHeader label="Operating Expenses" value={-data.operatingExpenses.total} />
-                    <ReportRow label="Salaries & Wages" value={data.operatingExpenses.salaries} isSub />
-                    <ReportRow label="Rent Expense" value={data.operatingExpenses.rent} isSub />
-                    <ReportRow label="Marketing & Advertising" value={data.operatingExpenses.marketing} isSub />
-                    <ReportRow label="Depreciation" value={data.operatingExpenses.depreciation} isSub />
-                    <ReportRow label="Other Operating Expenses" value={data.operatingExpenses.other} isSub />
-
-                    {/* Operating Profit */}
-                    <TableRow className="bg-muted/50 font-bold text-lg">
-                        <TableCell className="pl-4">Operating Profit</TableCell>
-                        <TableCell></TableCell>
-                        <TableCell className="text-right font-mono pr-8">{data.operatingProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    </TableRow>
-
-                    {/* Non-Operating Income/Expenses */}
-                     <TableRow>
-                        <TableCell className="pl-8 text-muted-foreground">Add: Non-Operating Income</TableCell>
-                        <TableCell className="text-right font-mono pr-8 text-muted-foreground">{data.nonOperating.interestIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                        <TableCell></TableCell>
-                    </TableRow>
-                     <TableRow>
-                        <TableCell className="pl-8 text-muted-foreground">Less: Non-Operating Expenses</TableCell>
-                        <TableCell className="text-right font-mono pr-8 text-muted-foreground">({data.nonOperating.interestExpense.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</TableCell>
-                        <TableCell></TableCell>
-                    </TableRow>
-
-                </TableBody>
-            </Table>
-            <Separator className="my-4"/>
-             <div className="flex justify-between items-center p-4 bg-primary text-primary-foreground rounded-lg">
-                <span className="text-xl font-bold">Net Profit</span>
-                <span className="text-2xl font-bold font-mono">₹{data.netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <CardContent className="space-y-8">
+            {/* Trading Account Section */}
+            <div>
+                <h3 className="text-xl font-semibold mb-4 text-center">Trading Account</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    {/* Debits Column */}
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            <ReportRow label="To Opening Stock" value={data.cogs.openingStock} />
+                            <ReportRow label="To Purchases" value={data.cogs.purchases} />
+                            <ReportRow label="To Direct Expenses" value={data.cogs.directExpenses} />
+                            {grossProfit > 0 && <ReportRow label="To Gross Profit c/d" value={grossProfit} />}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(tradingTotal)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                    {/* Credits Column */}
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            <ReportRow label="By Sales Revenue" value={data.revenue.sales} />
+                            <ReportRow label="By Closing Stock" value={data.cogs.closingStock} />
+                            {grossProfit < 0 && <ReportRow label="By Gross Loss c/d" value={-grossProfit} />}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(tradingTotal)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
             </div>
+
+            <Separator/>
+
+            {/* Profit & Loss Account Section */}
+             <div>
+                <h3 className="text-xl font-semibold mb-4 text-center">Profit &amp; Loss Account</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    {/* Debits Column */}
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                             {grossProfit < 0 && <ReportRow label="To Gross Loss b/d" value={-grossProfit} />}
+                            <ReportRow label="To Salaries &amp; Wages" value={data.operatingExpenses.salaries} />
+                            <ReportRow label="To Rent Expense" value={data.operatingExpenses.rent} />
+                            <ReportRow label="To Marketing &amp; Advertising" value={data.operatingExpenses.marketing} />
+                            <ReportRow label="To Depreciation" value={data.operatingExpenses.depreciation} />
+                            <ReportRow label="To Other Operating Expenses" value={data.operatingExpenses.other} />
+                             {netProfit > 0 && <ReportRow label="To Net Profit" value={netProfit} />}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(plTotal)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                    {/* Credits Column */}
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {grossProfit > 0 && <ReportRow label="By Gross Profit b/d" value={grossProfit} />}
+                            <ReportRow label="By Other Income" value={data.revenue.otherIncome} />
+                            {netProfit < 0 && <ReportRow label="By Net Loss" value={-netProfit} />}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(plTotal)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
+            </div>
+            
           </CardContent>
            <CardFooter className="text-xs text-muted-foreground pt-4">
-              Note: This is a system-generated report based on the ledger balances. Figures are in INR.
+              Note: This is a system-generated report based on ledger balances. Figures are in INR.
           </CardFooter>
       </Card>
     </div>
   );
 }
+
+    
