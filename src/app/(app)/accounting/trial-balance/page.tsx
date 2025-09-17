@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -19,6 +20,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { FileDown, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -51,8 +60,13 @@ export default function TrialBalancePage() {
     
     const { toast } = useToast();
     const router = useRouter();
+    const [isMismatchDialogOpen, setIsMismatchDialogOpen] = useState(false);
+
     const totalDebits = trialBalanceData.reduce((acc, item) => acc + item.debit, 0);
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
+    const difference = totalDebits - totalCredits;
+
+    const suspenseEntries = trialBalanceData.filter(item => item.code === "9999");
 
     const handleAccountClick = (code: string) => {
         // In a real app, this would be: router.push(`/accounting/ledgers?account=${code}`);
@@ -63,11 +77,10 @@ export default function TrialBalancePage() {
         });
     }
 
-    const handleMismatchClick = () => {
+    const handleVerifyPost = (entry: any) => {
         toast({
-            variant: "destructive",
-            title: "Displaying Unreconciled Entries",
-            description: "A modal would open here showing transactions causing the imbalance.",
+            title: "Verification Action",
+            description: `You have clicked 'Verify' for the entry: ${entry.account}. A modal would open here to correct this posting.`,
         });
     }
 
@@ -127,7 +140,7 @@ export default function TrialBalancePage() {
             {totalDebits !== totalCredits && (
                 <div 
                     className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center cursor-pointer hover:bg-destructive/20"
-                    onClick={handleMismatchClick}
+                    onClick={() => setIsMismatchDialogOpen(true)}
                 >
                     <div className="flex items-center justify-center gap-2">
                          <AlertTriangle className="h-5 w-5" />
@@ -137,6 +150,45 @@ export default function TrialBalancePage() {
             )}
           </CardContent>
       </Card>
+      
+      <Dialog open={isMismatchDialogOpen} onOpenChange={setIsMismatchDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Trial Balance Discrepancies</DialogTitle>
+                <DialogDescription>
+                   The following entries are causing the Trial Balance to be out of balance by ₹{difference.toFixed(2)}. These are posted to a temporary Suspense Account.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Account</TableHead>
+                            <TableHead className="text-right">Debit</TableHead>
+                            <TableHead className="text-right">Credit</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {suspenseEntries.map((entry, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-medium">{entry.account}</TableCell>
+                                <TableCell className="text-right font-mono">{entry.debit > 0 ? entry.debit.toFixed(2) : "-"}</TableCell>
+                                <TableCell className="text-right font-mono">{entry.credit > 0 ? entry.credit.toFixed(2) : "-"}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button size="sm" onClick={() => handleVerifyPost(entry)}>Verify</Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsMismatchDialogOpen(false)}>Close</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
