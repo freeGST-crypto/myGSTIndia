@@ -93,8 +93,8 @@ export default function GstFilingsPage() {
 
             <Tabs defaultValue="gstr-1">
                 <TabsList className="grid w-full grid-cols-2 max-w-md">
-                    <TabsTrigger value="gstr-1">GSTR-1 Summary (Outward Supplies)</TabsTrigger>
-                    <TabsTrigger value="gstr-3b">GSTR-3B Summary (Tax Computation)</TabsTrigger>
+                    <TabsTrigger value="gstr-1">GSTR-1 Summary</TabsTrigger>
+                    <TabsTrigger value="gstr-3b">GSTR-3B Summary</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="gstr-1">
