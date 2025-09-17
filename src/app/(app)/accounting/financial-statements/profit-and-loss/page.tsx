@@ -19,6 +19,7 @@ import {
 import { FileDown, CalendarDays } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const data = {
     revenue: {
