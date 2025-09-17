@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ArrowRight, PlusCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, PlusCircle, Trash2, FileDown, FileJson } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -327,6 +327,13 @@ export default function Gstr1WizardPage() {
 
   const handleBack = () => {
     setStep(prev => prev - 1);
+  };
+
+  const handleGenerateAction = (type: 'JSON' | 'PDF') => {
+    toast({
+      title: `${type} Generation Started`,
+      description: `Your GSTR-1 ${type} file is being generated and will be downloaded shortly. (This is a simulation).`,
+    });
   };
 
   const renderStep = () => {
@@ -986,15 +993,31 @@ export default function Gstr1WizardPage() {
              <Card>
                 <CardHeader>
                     <CardTitle>Wizard Complete</CardTitle>
-                    <CardDescription>You've finished the GSTR-1 preparation wizard.</CardDescription>
+                    <CardDescription>You have finished preparing your GSTR-1 return.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>You have completed all the data entry steps for your GSTR-1 return. The next step would be to generate the final JSON file for uploading to the GST portal.</p>
+                    <p className="mb-4">You have completed all the data entry steps for your GSTR-1 return. The next step is to generate the files for uploading to the GST portal and for your records.</p>
+                    <Alert>
+                        <AlertTitle>Final Check</AlertTitle>
+                        <AlertDescription>
+                            Please ensure all data is accurate before generating the final files. You can go back to any step to review or make changes.
+                        </AlertDescription>
+                    </Alert>
                 </CardContent>
-                <CardFooter className="flex justify-between">
+                <CardFooter className="flex justify-between items-center">
                     <Button variant="outline" onClick={handleBack}>
                         <ArrowLeft className="mr-2" /> Back
                     </Button>
+                    <div className="flex gap-2">
+                        <Button onClick={() => handleGenerateAction('JSON')}>
+                           <FileJson className="mr-2" />
+                           Generate GSTR-1 JSON
+                        </Button>
+                         <Button variant="outline" onClick={() => handleGenerateAction('PDF')}>
+                           <FileDown className="mr-2" />
+                           Download GSTR-1 PDF
+                        </Button>
+                    </div>
                 </CardFooter>
             </Card>
         );
