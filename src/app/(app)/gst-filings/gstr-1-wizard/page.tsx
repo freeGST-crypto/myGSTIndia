@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -31,6 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 
 
 const states = [
@@ -141,6 +144,15 @@ const initialNilRated = [
     { description: "Intra-State supplies to Unregistered persons", nilRated: 8000, exempted: 1500, nonGst: 500 },
 ];
 
+const initialAdvancesReceived = [
+    { pos: "06-Haryana", taxRate: 18, grossAdvance: 50000, igst: 9000, cgst: 0, sgst: 0, cess: 0 },
+];
+
+const initialAdvancesAdjusted = [
+    { pos: "06-Haryana", taxRate: 18, grossAdvanceAdjusted: 30000, igst: 5400, cgst: 0, sgst: 0, cess: 0 },
+];
+
+
 const initialDocumentsIssued = [
     {
         type: "Invoices for outward supply",
@@ -174,6 +186,8 @@ export default function Gstr1WizardPage() {
   const [b2cOther, setB2cOther] = useState(initialB2COthers);
   const [nilRated, setNilRated] = useState(initialNilRated);
   const [documentsIssued, setDocumentsIssued] = useState(initialDocumentsIssued);
+  const [advancesReceived, setAdvancesReceived] = useState(initialAdvancesReceived);
+  const [advancesAdjusted, setAdvancesAdjusted] = useState(initialAdvancesAdjusted);
 
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
@@ -268,6 +282,38 @@ export default function Gstr1WizardPage() {
     const newRows = [...documentsIssued];
     newRows.splice(index, 1);
     setDocumentsIssued(newRows);
+  };
+
+  const handleAdvanceChange = (index: number, type: 'received' | 'adjusted', field: string, value: any) => {
+    if (type === 'received') {
+        const newAdvances = [...advancesReceived];
+        (newAdvances[index] as any)[field] = value;
+        setAdvancesReceived(newAdvances);
+    } else {
+        const newAdjusted = [...advancesAdjusted];
+        (newAdjusted[index] as any)[field] = value;
+        setAdvancesAdjusted(newAdjusted);
+    }
+  };
+  
+  const addAdvanceRow = (type: 'received' | 'adjusted') => {
+      if (type === 'received') {
+          setAdvancesReceived([...advancesReceived, { pos: "", taxRate: 18, grossAdvance: 0, igst: 0, cgst: 0, sgst: 0, cess: 0 }]);
+      } else {
+          setAdvancesAdjusted([...advancesAdjusted, { pos: "", taxRate: 18, grossAdvanceAdjusted: 0, igst: 0, cgst: 0, sgst: 0, cess: 0 }]);
+      }
+  };
+
+  const removeAdvanceRow = (index: number, type: 'received' | 'adjusted') => {
+      if (type === 'received') {
+          const newAdvances = [...advancesReceived];
+          newAdvances.splice(index, 1);
+          setAdvancesReceived(newAdvances);
+      } else {
+          const newAdjusted = [...advancesAdjusted];
+          newAdjusted.splice(index, 1);
+          setAdvancesAdjusted(newAdjusted);
+      }
   };
 
 
@@ -592,16 +638,61 @@ export default function Gstr1WizardPage() {
                 <CardHeader>
                     <CardTitle>Step 6: Amendments to Outward Supplies (Table 9)</CardTitle>
                     <CardDescription>
-                        Report amendments to details of taxable outward supplies furnished in returns for earlier tax periods.
+                        Report amendments to details of taxable outward supplies furnished in returns for earlier tax periods. Select the original month to see invoices to amend.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <Alert variant="default">
-                        <AlertTitle>Under Development</AlertTitle>
-                        <AlertDescription>
-                           This section for amendments (Table 9A, 9B, 9C) is complex and will be built out in a future step. It will allow you to modify B2B invoices, B2C Large invoices, export invoices, and credit/debit notes from previous periods.
-                        </AlertDescription>
-                    </Alert>
+                    <Tabs defaultValue="b2ba">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="b2ba">B2B (9A)</TabsTrigger>
+                            <TabsTrigger value="b2cla">B2C (Large) (9A)</TabsTrigger>
+                            <TabsTrigger value="cdra">Credit/Debit Notes (9C)</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="b2ba" className="pt-4">
+                           <div className="p-4 border rounded-lg space-y-4">
+                                <h3 className="font-medium">Amend B2B Invoice</h3>
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div><Label>Original Month</Label><Input type="month" defaultValue="2024-04" /></div>
+                                    <div><Label>Original Invoice No.</Label><Input placeholder="INV-OLD-001"/></div>
+                                    <div><Label>Original Invoice Date</Label><Input type="date"/></div>
+                                </div>
+                                 <div className="grid md:grid-cols-3 gap-4 pt-4">
+                                    <div><Label>Revised Invoice No.</Label><Input placeholder="INV-OLD-001-R1"/></div>
+                                    <div><Label>Revised Invoice Date</Label><Input type="date"/></div>
+                                    <div><Label>Revised Value</Label><Input type="number" placeholder="0.00"/></div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <Button size="sm">Add B2B Amendment</Button>
+                                </div>
+                           </div>
+                        </TabsContent>
+                         <TabsContent value="b2cla" className="pt-4">
+                           <div className="p-4 border rounded-lg space-y-4">
+                                <h3 className="font-medium">Amend B2C (Large) Invoice</h3>
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div><Label>Original Month</Label><Input type="month" defaultValue="2024-04" /></div>
+                                    <div><Label>Original Invoice No.</Label><Input placeholder="INV-BCL-OLD-01"/></div>
+                                    <div><Label>Original Place of Supply</Label><Select><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger><SelectContent>{states.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <Button size="sm" variant="secondary">Fetch Details to Amend</Button>
+                                </div>
+                           </div>
+                        </TabsContent>
+                         <TabsContent value="cdra" className="pt-4">
+                           <div className="p-4 border rounded-lg space-y-4">
+                                <h3 className="font-medium">Amend Credit/Debit Note (Registered)</h3>
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div><Label>Original Month</Label><Input type="month" defaultValue="2024-04" /></div>
+                                    <div><Label>Original Note No.</Label><Input placeholder="CN-OLD-01"/></div>
+                                    <div><Label>Original Note Date</Label><Input type="date"/></div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <Button size="sm">Add Note Amendment</Button>
+                                </div>
+                           </div>
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
@@ -624,12 +715,43 @@ export default function Gstr1WizardPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <Alert variant="default">
-                        <AlertTitle>Under Development</AlertTitle>
-                        <AlertDescription>
-                           This section is for making corrections to the B2C (Others) summary data reported in previous GSTR-1 filings. The functionality to select a previous period and amend the POS-wise summary will be implemented here.
-                        </AlertDescription>
-                    </Alert>
+                     <div className="p-4 border rounded-lg space-y-4">
+                        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <Label>Original Month</Label>
+                                <Input type="month" defaultValue="2024-04" />
+                            </div>
+                            <div>
+                                <Label>Place of Supply</Label>
+                                <Select><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger><SelectContent>{states.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
+                            </div>
+                             <div>
+                                <Label>Tax Rate (%)</Label>
+                                <Input type="number" placeholder="18"/>
+                            </div>
+                        </div>
+                        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                             <div>
+                                <Label>Revised Taxable Value</Label>
+                                <Input type="number" placeholder="0.00"/>
+                            </div>
+                            <div>
+                                <Label>Revised IGST</Label>
+                                <Input type="number" placeholder="0.00"/>
+                            </div>
+                            <div>
+                                <Label>Revised CGST</Label>
+                                <Input type="number" placeholder="0.00"/>
+                            </div>
+                            <div>
+                                <Label>Revised SGST</Label>
+                                <Input type="number" placeholder="0.00"/>
+                            </div>
+                        </div>
+                        <div className="flex justify-end pt-2">
+                           <Button size="sm">Add B2C Amendment</Button>
+                        </div>
+                    </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
@@ -651,13 +773,63 @@ export default function Gstr1WizardPage() {
                         Consolidated statement of advances received, advances adjusted, and amendments.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                     <Alert variant="default">
-                        <AlertTitle>Under Development</AlertTitle>
-                        <AlertDescription>
-                           This section will contain two parts: Part I for reporting gross advances received on which tax is payable, and Part II for reporting adjustments of advances against supplies made in the current period. Functionality to add and amend these details will be built here.
-                        </AlertDescription>
-                    </Alert>
+                <CardContent className="space-y-6">
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">Part I: Advances Received</h3>
+                        <Table>
+                            <TableHeader><TableRow>
+                                <TableHead>Place of Supply</TableHead>
+                                <TableHead>Tax Rate</TableHead>
+                                <TableHead className="text-right">Gross Advance Received</TableHead>
+                                <TableHead className="text-right">IGST</TableHead>
+                                <TableHead className="text-right">CGST</TableHead>
+                                <TableHead className="text-right">SGST</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                            </TableRow></TableHeader>
+                            <TableBody>
+                                {advancesReceived.map((row, index) => (
+                                <TableRow key={index}>
+                                    <TableCell><Select value={row.pos} onValueChange={v => handleAdvanceChange(index, 'received', 'pos', v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{states.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></TableCell>
+                                    <TableCell><Input type="number" value={row.taxRate} onChange={e => handleAdvanceChange(index, 'received', 'taxRate', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.grossAdvance} onChange={e => handleAdvanceChange(index, 'received', 'grossAdvance', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.igst} onChange={e => handleAdvanceChange(index, 'received', 'igst', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.cgst} onChange={e => handleAdvanceChange(index, 'received', 'cgst', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.sgst} onChange={e => handleAdvanceChange(index, 'received', 'sgst', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => removeAdvanceRow(index, 'received')}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                         <Button variant="outline" size="sm" className="mt-4" onClick={() => addAdvanceRow('received')}><PlusCircle className="mr-2"/>Add Advance Received</Button>
+                    </div>
+                     <div>
+                        <h3 className="text-lg font-semibold mb-2">Part II: Advances Adjusted</h3>
+                         <Table>
+                            <TableHeader><TableRow>
+                                <TableHead>Place of Supply</TableHead>
+                                <TableHead>Tax Rate</TableHead>
+                                <TableHead className="text-right">Gross Advance Adjusted</TableHead>
+                                <TableHead className="text-right">IGST</TableHead>
+                                <TableHead className="text-right">CGST</TableHead>
+                                <TableHead className="text-right">SGST</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                            </TableRow></TableHeader>
+                            <TableBody>
+                                {advancesAdjusted.map((row, index) => (
+                                <TableRow key={index}>
+                                    <TableCell><Select value={row.pos} onValueChange={v => handleAdvanceChange(index, 'adjusted', 'pos', v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{states.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></TableCell>
+                                    <TableCell><Input type="number" value={row.taxRate} onChange={e => handleAdvanceChange(index, 'adjusted', 'taxRate', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.grossAdvanceAdjusted} onChange={e => handleAdvanceChange(index, 'adjusted', 'grossAdvanceAdjusted', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.igst} onChange={e => handleAdvanceChange(index, 'adjusted', 'igst', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.cgst} onChange={e => handleAdvanceChange(index, 'adjusted', 'cgst', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={row.sgst} onChange={e => handleAdvanceChange(index, 'adjusted', 'sgst', parseFloat(e.target.value))}/></TableCell>
+                                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => removeAdvanceRow(index, 'adjusted')}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                         <Button variant="outline" size="sm" className="mt-4" onClick={() => addAdvanceRow('adjusted')}><PlusCircle className="mr-2"/>Add Advance Adjusted</Button>
+                    </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
@@ -848,7 +1020,3 @@ export default function Gstr1WizardPage() {
     </div>
   );
 }
-
-    
-
-    
