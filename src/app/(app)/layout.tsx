@@ -13,6 +13,8 @@ import {
   Warehouse,
   ChevronDown,
   Calculator,
+  FilePlus,
+  FileMinus,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -46,6 +48,8 @@ const menuItems = [
     subItems: [
       { href: "/invoices", label: "Invoices" },
       { href: "/purchases", label: "Purchases" },
+      { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus },
+      { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus },
     ],
   },
   { href: "/parties", label: "Parties", icon: Users },
@@ -63,7 +67,7 @@ const menuItems = [
     icon: Calculator,
     subItems: [
       { href: "/accounting/journal", label: "Journal Vouchers" },
-      { href: "/accounting/ledgers", label: "Ledgers" },
+      { href: "/accounting/ledgers", label: "General Ledger" },
     ],
   },
   { href: "/reports", label: "Reports", icon: Landmark },
@@ -117,7 +121,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                               isActive={pathname === sub.href}
                               asChild
                             >
-                              <a>{sub.label}</a>
+                              <a>
+                                {sub.icon && <sub.icon/>}
+                                <span>{sub.label}</span>
+                              </a>
                             </SidebarMenuButton>
                           </Link>
                         </SidebarMenuItem>
