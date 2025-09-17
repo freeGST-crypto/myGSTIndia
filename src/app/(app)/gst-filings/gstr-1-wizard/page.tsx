@@ -23,6 +23,26 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowRight, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+
+const states = [
+    "01-Jammu & Kashmir", "02-Himachal Pradesh", "03-Punjab", "04-Chandigarh", "05-Uttarakhand", "06-Haryana", "07-Delhi",
+    "08-Rajasthan", "09-Uttar Pradesh", "10-Bihar", "11-Sikkim", "12-Arunachal Pradesh", "13-Nagaland", "14-Manipur",
+    "15-Mizoram", "16-Tripura", "17-Meghalaya", "18-Assam", "19-West Bengal", "20-Jharkhand", "21-Odisha",
+    "22-Chhattisgarh", "23-Madhya Pradesh", "24-Gujarat", "25-Daman & Diu", "26-Dadra & Nagar Haveli",
+    "27-Maharashtra", "29-Karnataka", "30-Goa", "31-Lakshadweep", "32-Kerala", "33-Tamil Nadu", "34-Puducherry",
+    "35-Andaman & Nicobar Islands", "36-Telangana", "37-Andhra Pradesh", "97-Other Territory"
+];
+
+const exportTypes = ["WPAY", "WOPAY"];
+
 
 const initialB2BInvoices = [
   {
@@ -63,10 +83,41 @@ const initialB2BInvoices = [
   },
 ];
 
+const initialB2CLargeInvoices = [
+    {
+        pos: "07-Delhi",
+        invoiceNumber: "INV-B2CL-001",
+        invoiceDate: "2024-05-18",
+        invoiceValue: 300000.00,
+        taxableValue: 254237.29,
+        taxRate: 18,
+        igst: 45762.71,
+        cess: 0
+    }
+];
+
+const initialExportInvoices = [
+    {
+        exportType: "WPAY",
+        invoiceNumber: "EXP-001",
+        invoiceDate: "2024-05-22",
+        invoiceValue: 50000.00,
+        portCode: "INBOM1",
+        shippingBillNumber: "SB-12345",
+        shippingBillDate: "2024-05-23",
+        taxableValue: 50000.00,
+        taxRate: 18,
+        igst: 9000,
+        cess: 0,
+    }
+]
+
 export default function Gstr1WizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [b2bInvoices, setB2bInvoices] = useState(initialB2BInvoices);
+  const [b2cLargeInvoices, setB2cLargeInvoices] = useState(initialB2CLargeInvoices);
+  const [exportInvoices, setExportInvoices] = useState(initialExportInvoices);
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
     const newInvoices = [...b2bInvoices];
@@ -97,6 +148,35 @@ export default function Gstr1WizardPage() {
     newInvoices.splice(index, 1);
     setB2bInvoices(newInvoices);
   }
+  
+  const handleB2cLargeChange = (index: number, field: keyof typeof b2cLargeInvoices[0], value: string | number) => {
+    const newInvoices = [...b2cLargeInvoices];
+    (newInvoices[index] as any)[field] = value;
+    setB2cLargeInvoices(newInvoices);
+  };
+  const handleAddB2cLarge = () => {
+    setB2cLargeInvoices([...b2cLargeInvoices, { pos: "", invoiceNumber: "", invoiceDate: "", invoiceValue: 0, taxableValue: 0, taxRate: 18, igst: 0, cess: 0 }]);
+  }
+  const handleRemoveB2cLarge = (index: number) => {
+    const newInvoices = [...b2cLargeInvoices];
+    newInvoices.splice(index, 1);
+    setB2cLargeInvoices(newInvoices);
+  }
+
+  const handleExportChange = (index: number, field: keyof typeof exportInvoices[0], value: string | number) => {
+    const newInvoices = [...exportInvoices];
+    (newInvoices[index] as any)[field] = value;
+    setExportInvoices(newInvoices);
+  };
+  const handleAddExport = () => {
+    setExportInvoices([...exportInvoices, { exportType: "WPAY", invoiceNumber: "", invoiceDate: "", invoiceValue: 0, portCode: "", shippingBillNumber: "", shippingBillDate: "", taxableValue: 0, taxRate: 18, igst: 0, cess: 0 }]);
+  }
+  const handleRemoveExport = (index: number) => {
+    const newInvoices = [...exportInvoices];
+    newInvoices.splice(index, 1);
+    setExportInvoices(newInvoices);
+  }
+
 
   const handleNext = () => {
     toast({
@@ -116,11 +196,10 @@ export default function Gstr1WizardPage() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Step 1: B2B Invoices</CardTitle>
+              <CardTitle>Step 1: B2B Invoices (Table 4)</CardTitle>
               <CardDescription>
-                Table 4A, 4B, 4C, 6B, 6C: Review supplies made to registered persons (B2B).
-                <br />
-                The data is auto-populated from your sales. Review and make any necessary adjustments.
+                Review supplies made to registered persons (B2B).
+                Data is auto-populated from your sales. Review and adjust.
               </CardDescription>
             </CardHeader>
             <CardContent className="overflow-x-auto">
@@ -174,6 +253,136 @@ export default function Gstr1WizardPage() {
             </CardFooter>
           </Card>
         );
+      case 2:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 2: B2C (Large) Invoices (Table 5)</CardTitle>
+              <CardDescription>
+                Inter-state supplies to unregistered persons where invoice value is more than ₹2.5 lakh.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Place Of Supply</TableHead>
+                    <TableHead>Invoice No.</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Value</TableHead>
+                    <TableHead className="text-right">Taxable Value</TableHead>
+                    <TableHead className="text-right">Rate (%)</TableHead>
+                    <TableHead className="text-right">IGST</TableHead>
+                    <TableHead className="text-right">Cess</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {b2cLargeInvoices.map((invoice, index) => (
+                    <TableRow key={index}>
+                        <TableCell>
+                            <Select value={invoice.pos} onValueChange={(value) => handleB2cLargeChange(index, 'pos', value)}>
+                                <SelectTrigger><SelectValue placeholder="Select State"/></SelectTrigger>
+                                <SelectContent>{states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </TableCell>
+                        <TableCell><Input value={invoice.invoiceNumber} onChange={(e) => handleB2cLargeChange(index, 'invoiceNumber', e.target.value)} /></TableCell>
+                        <TableCell><Input type="date" value={invoice.invoiceDate} onChange={(e) => handleB2cLargeChange(index, 'invoiceDate', e.target.value)} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.invoiceValue} onChange={(e) => handleB2cLargeChange(index, 'invoiceValue', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.taxableValue} onChange={(e) => handleB2cLargeChange(index, 'taxableValue', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.taxRate} onChange={(e) => handleB2cLargeChange(index, 'taxRate', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.igst} onChange={(e) => handleB2cLargeChange(index, 'igst', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.cess} onChange={(e) => handleB2cLargeChange(index, 'cess', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveB2cLarge(index)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+               <Button variant="outline" size="sm" className="mt-4" onClick={handleAddB2cLarge}>
+                <PlusCircle className="mr-2 h-4 w-4"/> Add Invoice
+              </Button>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="mr-2" /> Back
+              </Button>
+              <Button onClick={handleNext}>
+                  Save & Continue
+                  <ArrowRight className="ml-2" />
+              </Button>
+            </CardFooter>
+          </Card>
+        );
+      case 3:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 3: Export Invoices (Table 6)</CardTitle>
+              <CardDescription>
+                Details of zero-rated supplies (exports) and deemed exports.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Export Type</TableHead>
+                    <TableHead>Invoice No.</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Value</TableHead>
+                    <TableHead>Port Code</TableHead>
+                    <TableHead>Shipping Bill No.</TableHead>
+                    <TableHead>Shipping Bill Date</TableHead>
+                    <TableHead className="text-right">Taxable Value</TableHead>
+                    <TableHead className="text-right">Rate (%)</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {exportInvoices.map((invoice, index) => (
+                    <TableRow key={index}>
+                        <TableCell>
+                            <Select value={invoice.exportType} onValueChange={(value) => handleExportChange(index, 'exportType', value)}>
+                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                <SelectContent>{exportTypes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </TableCell>
+                        <TableCell><Input value={invoice.invoiceNumber} onChange={(e) => handleExportChange(index, 'invoiceNumber', e.target.value)} /></TableCell>
+                        <TableCell><Input type="date" value={invoice.invoiceDate} onChange={(e) => handleExportChange(index, 'invoiceDate', e.target.value)} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.invoiceValue} onChange={(e) => handleExportChange(index, 'invoiceValue', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input value={invoice.portCode} onChange={(e) => handleExportChange(index, 'portCode', e.target.value)} /></TableCell>
+                        <TableCell><Input value={invoice.shippingBillNumber} onChange={(e) => handleExportChange(index, 'shippingBillNumber', e.target.value)} /></TableCell>
+                        <TableCell><Input type="date" value={invoice.shippingBillDate} onChange={(e) => handleExportChange(index, 'shippingBillDate', e.target.value)} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.taxableValue} onChange={(e) => handleExportChange(index, 'taxableValue', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell><Input type="number" className="text-right" value={invoice.taxRate} onChange={(e) => handleExportChange(index, 'taxRate', parseFloat(e.target.value))} /></TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveExport(index)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+               <Button variant="outline" size="sm" className="mt-4" onClick={handleAddExport}>
+                <PlusCircle className="mr-2 h-4 w-4"/> Add Export Invoice
+              </Button>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="mr-2" /> Back
+              </Button>
+              <Button onClick={handleNext}>
+                  Save & Continue
+                  <ArrowRight className="ml-2" />
+              </Button>
+            </CardFooter>
+          </Card>
+        );
       default:
         return (
              <Card>
@@ -182,7 +391,7 @@ export default function Gstr1WizardPage() {
                     <CardDescription>You've finished the GSTR-1 preparation wizard.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>More steps will be added here for B2C, Credit Notes, etc.</p>
+                    <p>More steps will be added here for other tables (B2C Small, Credit/Debit Notes, etc.).</p>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
@@ -213,7 +422,3 @@ export default function Gstr1WizardPage() {
     </div>
   );
 }
-
-    
-
-    
