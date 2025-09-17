@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -25,17 +25,33 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Wand2, Upload, Building, FileSignature } from "lucide-react";
+import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, PlusCircle, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
 import { analyzeLogoAction, generateTermsAction } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const professionalSchema = z.object({
+  name: z.string().min(2, "Name is required."),
+  role: z.enum(["CA", "Auditor", "Consultant"]),
+  email: z.string().email("Invalid email address."),
+  phone: z.string().optional(),
+});
 
 const formSchema = z.object({
   companyName: z.string().min(2, { message: "Company name must be at least 2 characters." }),
-  gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, { message: "Invalid GSTIN format." }),
-  address: z.string().min(10, { message: "Address must be at least 10 characters." }),
+  gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, { message: "Invalid GSTIN format." }).optional().or(z.literal("")),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: "Invalid PAN format." }).optional().or(z.literal("")),
+  addressLine1: z.string().min(5, { message: "Address line 1 is required." }),
+  addressLine2: z.string().optional(),
+  city: z.string().min(2, { message: "City is required." }),
+  state: z.string().min(2, { message: "State is required." }),
+  pincode: z.string().regex(/^[1-9][0-9]{5}$/, { message: "Invalid pincode." }),
+  defaultPaymentTerms: z.string().optional(),
   terms: z.string().optional(),
+  professionals: z.array(professionalSchema).optional(),
 });
 
 export default function BrandingPage() {
@@ -56,9 +72,21 @@ export default function BrandingPage() {
         defaultValues: {
             companyName: "",
             gstin: "",
-            address: "",
+            pan: "",
+            addressLine1: "",
+            addressLine2: "",
+            city: "",
+            state: "",
+            pincode: "",
+            defaultPaymentTerms: "net30",
             terms: "",
+            professionals: [],
         },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+      control: form.control,
+      name: "professionals",
     });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setPreview: (url: string) => void, setFile: (file: File) => void) => {
@@ -137,7 +165,7 @@ export default function BrandingPage() {
                 </div>
                 <h1 className="text-3xl font-bold">Company Branding</h1>
                 <p className="mt-2 max-w-2xl text-muted-foreground">
-                    Manage your company's branding assets and information. This information will be used across the application, including on invoices and reports.
+                    Manage your company's branding assets and information. This will be used on invoices, reports, and other documents.
                 </p>
             </div>
             <Form {...form}>
@@ -155,20 +183,59 @@ export default function BrandingPage() {
                                     <FormMessage />
                                 </FormItem>
                             )}/>
-                            <FormField control={form.control} name="gstin" render={({ field }) => (
+                             <div className="grid md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="gstin" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>GSTIN</FormLabel>
+                                        <FormControl><Input placeholder="22AAAAA0000A1Z5" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                 <FormField control={form.control} name="pan" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>PAN</FormLabel>
+                                        <FormControl><Input placeholder="ABCDE1234F" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
+                            <FormField control={form.control} name="addressLine1" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>GSTIN</FormLabel>
-                                    <FormControl><Input placeholder="22AAAAA0000A1Z5" {...field} /></FormControl>
+                                    <FormLabel>Address Line 1</FormLabel>
+                                    <FormControl><Input placeholder="123 Business Rd, Industrial Area" {...field} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}/>
-                            <FormField control={form.control} name="address" render={({ field }) => (
+                             <FormField control={form.control} name="addressLine2" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Company Address</FormLabel>
-                                    <FormControl><Textarea placeholder="123 Business Rd, Suite 456, Commerce City, 78901" {...field} /></FormControl>
+                                    <FormLabel>Address Line 2 (Optional)</FormLabel>
+                                    <FormControl><Input placeholder="Suite 456, Near Landmark" {...field} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}/>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <FormField control={form.control} name="city" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>City</FormLabel>
+                                        <FormControl><Input placeholder="Commerce City" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                <FormField control={form.control} name="state" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>State</FormLabel>
+                                        <FormControl><Input placeholder="Maharashtra" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                                 <FormField control={form.control} name="pincode" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Pincode</FormLabel>
+                                        <FormControl><Input placeholder="400001" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -226,13 +293,40 @@ export default function BrandingPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Default Terms & Conditions</CardTitle>
-                            <CardDescription>Set default T&amp;C for your invoices. You can also use our AI to generate them.</CardDescription>
+                            <CardTitle>Invoice & Payment Settings</CardTitle>
+                            <CardDescription>Set default terms and conditions for your invoices.</CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-6">
+                            <FormField
+                                control={form.control}
+                                name="defaultPaymentTerms"
+                                render={({ field }) => (
+                                    <FormItem className="max-w-xs">
+                                    <FormLabel>Default Payment Terms</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a due period" />
+                                        </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="net15">Net 15 (15 days)</SelectItem>
+                                            <SelectItem value="net30">Net 30 (30 days)</SelectItem>
+                                            <SelectItem value="net60">Net 60 (60 days)</SelectItem>
+                                            <SelectItem value="dueOnReceipt">Due on receipt</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                        This will be the default due date for new invoices.
+                                    </FormDescription>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Separator/>
                              <FormField control={form.control} name="terms" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="sr-only">Terms & Conditions</FormLabel>
+                                    <FormLabel>Default Terms & Conditions</FormLabel>
                                     <FormControl>
                                         <Textarea placeholder="e.g., 'Payment is due within 30 days...'" className="resize-y min-h-[150px]" {...field} />
                                     </FormControl>
@@ -243,12 +337,102 @@ export default function BrandingPage() {
                         <CardFooter className="flex-col items-start gap-4">
                             <Button type="button" onClick={handleGenerateTerms} disabled={isGeneratingTerms}>
                                 {isGeneratingTerms ? <Loader2 className="animate-spin mr-2"/> : <Wand2 className="mr-2" />}
-                                Generate with AI
+                                Generate T&C with AI
                             </Button>
                             <FormDescription>
                                 Our AI will generate standard terms and conditions based on your company name. You can edit them after generation.
                             </FormDescription>
                         </CardFooter>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Associated Professionals</CardTitle>
+                            <CardDescription>Manage contacts for your CA, Auditor, or other consultants.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {fields.map((field, index) => (
+                                <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                                     <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-2 right-2"
+                                        onClick={() => remove(index)}
+                                    >
+                                        <Trash2 className="size-4 text-destructive" />
+                                    </Button>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name={`professionals.${index}.name`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Name</FormLabel>
+                                                    <FormControl><Input placeholder="e.g. Anand Sharma" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name={`professionals.${index}.role`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Role</FormLabel>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select a role" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="CA">Chartered Accountant (CA)</SelectItem>
+                                                            <SelectItem value="Auditor">Auditor</SelectItem>
+                                                            <SelectItem value="Consultant">GST Consultant</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                     <div className="grid sm:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name={`professionals.${index}.email`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Email</FormLabel>
+                                                    <FormControl><Input type="email" placeholder="anand.sharma@example.com" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                         <FormField
+                                            control={form.control}
+                                            name={`professionals.${index}.phone`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Phone (Optional)</FormLabel>
+                                                    <FormControl><Input placeholder="+91 98765 43210" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                             <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => append({ name: "", role: "CA", email: "" })}
+                            >
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Add Professional
+                            </Button>
+                        </CardContent>
                     </Card>
 
                     <div className="flex justify-end">
@@ -259,3 +443,5 @@ export default function BrandingPage() {
         </div>
     );
 }
+
+    
