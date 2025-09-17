@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
+import Link from "next/link";
 
 const initialInvoices = [
   {
@@ -89,10 +90,12 @@ export default function InvoicesPage() {
             Create and manage your sales invoices.
           </p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2"/>
-          Create New Invoice
-        </Button>
+        <Link href="/invoices/new" passHref>
+          <Button>
+            <PlusCircle className="mr-2"/>
+            Create New Invoice
+          </Button>
+        </Link>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
