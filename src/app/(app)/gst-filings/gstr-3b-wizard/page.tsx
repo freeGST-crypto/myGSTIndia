@@ -110,10 +110,10 @@ const initialStep5Data = {
     liability: { igst: 95940.00, cgst: 0, sgst: 0, cess: 0 },
     availableItc: { igst: 48640.00, cgst: 11800, sgst: 11800, cess: 500 },
     paidThroughItc: {
-        igst: { igst: 48640, cgst: 0, sgst: 0 },
-        cgst: { igst: 0, cgst: 11800, sgst: 0 },
-        sgst: { igst: 0, cgst: 0, sgst: 11800 },
-        cess: { igst: 0, cess: 500 },
+        igst: { igst: 48640, cgst: 0, sgst: 0, cess: 0 },
+        cgst: { igst: 0, cgst: 11800, sgst: 0, cess: 0 },
+        sgst: { igst: 0, cgst: 0, sgst: 11800, cess: 0 },
+        cess: { igst: 0, cgst: 0, sgst: 0, cess: 500 },
     }
 };
 
@@ -161,6 +161,11 @@ export default function Gstr3bWizardPage() {
   };
   
   const [step5Data, setStep5Data] = useState(initialStep5Data);
+  const handleStep5Change = (taxType: 'igst' | 'cgst' | 'sgst' | 'cess', creditType: 'igst' | 'cgst' | 'sgst' | 'cess', value: string) => {
+    const newData = {...step5Data};
+    (newData.paidThroughItc[taxType] as any)[creditType] = parseFloat(value) || 0;
+    setStep5Data(newData);
+  }
 
 
   const handleNext = () => {
@@ -465,7 +470,7 @@ export default function Gstr3bWizardPage() {
             const availableItc = step5Data.availableItc;
             const paidThroughItc = step5Data.paidThroughItc;
             // In a real app, these totals and the logic would be much more complex
-            const totalPaidItcIgst = paidThroughItc.igst.igst + paidThroughItc.cgst.igst + paidThroughItc.sgst.igst + paidThroughItc.cess.igst;
+            const totalPaidItcIgst = paidThroughItc.igst.igst + paidThroughItc.cgst.igst + paidThroughItc.sgst.igst;
 
             return (
                  <Card>
@@ -490,38 +495,38 @@ export default function Gstr3bWizardPage() {
                                  <TableRow>
                                     <TableCell className="font-medium">IGST</TableCell>
                                     <TableCell className="text-right font-mono">{liability.igst.toFixed(2)}</TableCell>
-                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.igst.igst} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.igst.igst} onChange={(e) => handleStep5Change('igst', 'igst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
                                     <TableCell className="text-right font-mono">{(liability.igst - paidThroughItc.igst.igst).toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell className="font-medium">CGST</TableCell>
                                     <TableCell className="text-right font-mono">{liability.cgst.toFixed(2)}</TableCell>
-                                    <TableCell><Input type="number" className="text-right" /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cgst.cgst} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.cgst - paidThroughItc.cgst.cgst).toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cgst.igst} onChange={(e) => handleStep5Change('cgst', 'igst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cgst.cgst} onChange={(e) => handleStep5Change('cgst', 'cgst', e.target.value)}/></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.cgst - paidThroughItc.cgst.cgst - paidThroughItc.cgst.igst).toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell className="font-medium">SGST</TableCell>
                                     <TableCell className="text-right font-mono">{liability.sgst.toFixed(2)}</TableCell>
-                                    <TableCell><Input type="number" className="text-right" /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.sgst.sgst} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.sgst - paidThroughItc.sgst.sgst).toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.sgst.igst} onChange={(e) => handleStep5Change('sgst', 'igst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.sgst.sgst} onChange={(e) => handleStep5Change('sgst', 'sgst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.sgst - paidThroughItc.sgst.sgst - paidThroughItc.sgst.igst).toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell className="font-medium">Cess</TableCell>
                                     <TableCell className="text-right font-mono">{liability.cess.toFixed(2)}</TableCell>
-                                    <TableCell><Input type="number" className="text-right" /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cess.cess} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.cess - paidThroughItc.cess.cess).toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cess.igst} onChange={(e) => handleStep5Change('cess', 'igst', e.target.value)} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cess.cess} onChange={(e) => handleStep5Change('cess', 'cess', e.target.value)} /></TableCell>
+                                    <TableCell className="text-right font-mono">{(liability.cess - paidThroughItc.cess.cess - paidThroughItc.cess.igst).toFixed(2)}</TableCell>
                                 </TableRow>
                             </TableBody>
                             <TableFooter>
