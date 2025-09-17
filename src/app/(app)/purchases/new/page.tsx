@@ -150,7 +150,7 @@ export default function NewPurchasePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Vendor</Label>
               <Select>
@@ -165,6 +165,10 @@ export default function NewPurchasePage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="bill-no">Bill Number</Label>
+              <Input id="bill-no" placeholder="Enter vendor invoice number" />
             </div>
             <div className="space-y-2">
               <Label>Bill Date</Label>
@@ -333,3 +337,5 @@ export default function NewPurchasePage() {
     </div>
   );
 }
+
+    
