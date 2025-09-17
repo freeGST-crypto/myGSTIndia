@@ -92,7 +92,7 @@ export default function GstFilingsPage() {
             </div>
 
             <Tabs defaultValue="gstr-1">
-                <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsList className="max-w-md">
                     <TabsTrigger value="gstr-1">GSTR-1 Summary</TabsTrigger>
                     <TabsTrigger value="gstr-3b">GSTR-3B Summary</TabsTrigger>
                 </TabsList>
@@ -129,7 +129,9 @@ export default function GstFilingsPage() {
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
                             <Button variant="outline"><FileDown className="mr-2"/> Download GSTR-1 PDF</Button>
-                            <Button><FileJson className="mr-2"/> Generate JSON for Filing</Button>
+                            <Link href="/gst-filings/gstr-1-wizard">
+                                <Button>Prepare GSTR-1</Button>
+                            </Link>
                         </CardFooter>
                     </Card>
                 </TabsContent>
@@ -197,3 +199,5 @@ export default function GstFilingsPage() {
 
     
 }
+
+    
