@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -118,17 +119,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <SidebarMenu className="pl-6">
                       {item.subItems.map((sub) => (
                         <SidebarMenuItem key={sub.label}>
-                          <Link href={sub.href} passHref legacyBehavior>
-                            <SidebarMenuButton
-                              isActive={pathname === sub.href}
-                              asChild
-                            >
-                              <a>
-                                {sub.icon && <sub.icon/>}
-                                <span>{sub.label}</span>
-                              </a>
-                            </SidebarMenuButton>
-                          </Link>
+                          <SidebarMenuButton
+                            as={Link}
+                            href={sub.href}
+                            isActive={pathname === sub.href}
+                          >
+                            {sub.icon && <sub.icon/>}
+                            <span>{sub.label}</span>
+                          </SidebarMenuButton>
                         </SidebarMenuItem>
                       ))}
                     </SidebarMenu>
@@ -136,18 +134,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Collapsible>
               ) : (
                 <SidebarMenuItem key={item.label}>
-                  <Link href={item.href} passHref legacyBehavior>
                     <SidebarMenuButton
+                      as={Link}
+                      href={item.href}
                       isActive={pathname === item.href}
                       tooltip={item.label}
-                      asChild
                     >
-                      <a>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </a>
+                      <item.icon />
+                      <span>{item.label}</span>
                     </SidebarMenuButton>
-                  </Link>
                 </SidebarMenuItem>
               )
             )}
