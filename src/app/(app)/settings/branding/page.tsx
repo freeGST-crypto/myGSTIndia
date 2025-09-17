@@ -182,7 +182,7 @@ export default function BrandingPage() {
                                 <FormLabel>Company Logo</FormLabel>
                                 <div className="flex items-center gap-4">
                                     <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50">
-                                        {logoPreview ? <Image src={logoPreview} alt="Logo Preview" layout="fill" objectFit="contain" /> : <Upload className="size-8 text-muted-foreground" />}
+                                        {logoPreview ? <Image src={logoPreview} alt="Logo Preview" fill className="object-contain" /> : <Upload className="size-8 text-muted-foreground" />}
                                     </div>
                                     <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
                                         <Upload className="mr-2" /> Upload Logo
@@ -212,7 +212,7 @@ export default function BrandingPage() {
                                 <FormLabel>Digital Signature</FormLabel>
                                 <div className="flex items-center gap-4">
                                     <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50">
-                                        {signaturePreview ? <Image src={signaturePreview} alt="Signature Preview" layout="fill" objectFit="contain" /> : <FileSignature className="size-8 text-muted-foreground" />}
+                                        {signaturePreview ? <Image src={signaturePreview} alt="Signature Preview" fill className="object-contain" /> : <FileSignature className="size-8 text-muted-foreground" />}
                                     </div>
                                     <Button type="button" variant="outline" onClick={() => signatureInputRef.current?.click()}>
                                         <Upload className="mr-2" /> Upload Signature
