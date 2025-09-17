@@ -74,10 +74,12 @@ export default function DebitNotesPage() {
             Issue and manage debit notes for purchase returns or adjustments.
           </p>
         </div>
-        <Button disabled>
-            <PlusCircle className="mr-2"/>
-            New Debit Note
-        </Button>
+        <Link href="/billing/debit-notes/new" passHref>
+          <Button>
+              <PlusCircle className="mr-2"/>
+              New Debit Note
+          </Button>
+        </Link>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
