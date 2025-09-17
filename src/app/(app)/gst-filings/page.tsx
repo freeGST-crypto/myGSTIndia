@@ -185,7 +185,9 @@ export default function GstFilingsPage() {
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
                              <Button variant="outline"><FileDown className="mr-2"/> Download GSTR-3B PDF</Button>
-                             <Button>Proceed to Payment</Button>
+                             <Link href="/gst-filings/gstr-3b-wizard">
+                                <Button>Prepare GSTR-3B</Button>
+                             </Link>
                         </CardFooter>
                     </Card>
                 </TabsContent>
