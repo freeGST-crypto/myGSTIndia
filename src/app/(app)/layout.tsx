@@ -72,6 +72,7 @@ const menuItems = [
     icon: Settings,
     subItems: [
       { href: "/settings/branding", label: "Company Branding" },
+      { href: "/settings/users", label: "User Management" },
     ],
   },
 ];
