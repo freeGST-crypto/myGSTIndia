@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileDown, FileJson, GitCompareArrows, FileText } from "lucide-react";
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { useToast } from "@/hooks/use-toast";
 
 
 const gstr1Summary = [
@@ -52,6 +53,14 @@ const gstr3bSummary = {
 
 export default function GstFilingsPage() {
     const [period, setPeriod] = useState("2024-05");
+    const { toast } = useToast();
+
+    const handleDrillDown = (item: string) => {
+        toast({
+            title: `Viewing ${item} Transactions`,
+            description: `A dialog would open showing all transactions related to ${item}.`,
+        });
+    };
 
     return (
         <div className="space-y-8">
@@ -92,7 +101,7 @@ export default function GstFilingsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>GSTR-1 Summary for {period}</CardTitle>
-                            <CardDescription>Review your outward supplies before filing.</CardDescription>
+                            <CardDescription>Review your outward supplies before filing. Click a row to see details.</CardDescription>
                         </CardHeader>
                         <CardContent>
                              <Table>
@@ -107,7 +116,7 @@ export default function GstFilingsPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {gstr1Summary.map((row) => (
-                                        <TableRow key={row.type}>
+                                        <TableRow key={row.type} className="cursor-pointer" onClick={() => handleDrillDown(row.type)}>
                                             <TableCell className="font-medium">{row.type}</TableCell>
                                             <TableCell>{row.invoices}</TableCell>
                                             <TableCell className="text-right">{row.taxableValue.toFixed(2)}</TableCell>
@@ -136,11 +145,11 @@ export default function GstFilingsPage() {
                                 <div className="space-y-4">
                                      <h3 className="font-semibold text-lg">1. Outward Supplies & Tax Liability</h3>
                                      <div className="space-y-2 p-4 border rounded-lg">
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between cursor-pointer hover:bg-muted/50 p-1 rounded" onClick={() => handleDrillDown('Total Taxable Value')}>
                                             <span className="text-muted-foreground">Total Taxable Value</span>
                                             <span>₹{gstr3bSummary.outwardTaxable.toFixed(2)}</span>
                                         </div>
-                                        <div className="flex justify-between font-medium">
+                                        <div className="flex justify-between font-medium cursor-pointer hover:bg-muted/50 p-1 rounded" onClick={() => handleDrillDown('Total Tax on Outward Supplies')}>
                                             <span className="text-muted-foreground">Total Tax</span>
                                             <span>₹{gstr3bSummary.outwardTax.toFixed(2)}</span>
                                         </div>
@@ -149,15 +158,15 @@ export default function GstFilingsPage() {
                                  <div className="space-y-4">
                                      <h3 className="font-semibold text-lg">2. Eligible Input Tax Credit (ITC)</h3>
                                      <div className="space-y-2 p-4 border rounded-lg">
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between cursor-pointer hover:bg-muted/50 p-1 rounded" onClick={() => handleDrillDown('ITC Available')}>
                                             <span className="text-muted-foreground">ITC Available</span>
                                             <span className="text-green-600">+ ₹{gstr3bSummary.itcAvailable.toFixed(2)}</span>
                                         </div>
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between cursor-pointer hover:bg-muted/50 p-1 rounded" onClick={() => handleDrillDown('ITC Reversed')}>
                                             <span className="text-muted-foreground">ITC Reversed</span>
                                             <span className="text-red-600">- ₹{gstr3bSummary.itcReversed.toFixed(2)}</span>
                                         </div>
-                                         <div className="flex justify-between font-medium border-t pt-2">
+                                         <div className="flex justify-between font-medium border-t pt-2 mt-2 cursor-pointer hover:bg-muted/50 p-1 rounded" onClick={() => handleDrillDown('Net ITC')}>
                                             <span className="text-muted-foreground">Net ITC</span>
                                             <span>₹{gstr3bSummary.netItc.toFixed(2)}</span>
                                         </div>
@@ -170,7 +179,7 @@ export default function GstFilingsPage() {
                                     value={`₹${gstr3bSummary.taxPayable.toFixed(2)}`}
                                     description="(Total Tax - Net ITC)"
                                     icon={FileText}
-                                    className="max-w-sm w-full text-center"
+                                    className="max-w-sm w-full"
                                 />
                             </div>
                         </CardContent>
