@@ -26,9 +26,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import Link from "next/link";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const initialInvoices = [
   {
@@ -65,8 +69,29 @@ const initialInvoices = [
   },
 ];
 
+const customers = [
+  { id: "CUST-001", name: "Global Tech Inc." },
+  { id: "CUST-002", name: "Innovate Solutions" },
+  { id: "CUST-003", name: "Quantum Leap" },
+];
+
+const items = [
+  { id: "ITEM-001", name: "Standard Office Chair", price: 7500 },
+  { id: "ITEM-002", name: "Accounting Services", price: 15000 },
+  { id: "ITEM-003", name: "Wireless Mouse", price: 8999 },
+];
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState(initialInvoices);
+  const { toast } = useToast();
+
+  const handleQuickInvoiceCreate = () => {
+    toast({
+        title: "Quick Invoice Created!",
+        description: "The invoice has been saved and added to the list below."
+    });
+    // In a real app, you would add the new invoice to the state.
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -93,7 +118,7 @@ export default function InvoicesPage() {
         <Link href="/invoices/new" passHref>
           <Button>
             <PlusCircle className="mr-2"/>
-            Create New Invoice
+            Create Full Invoice
           </Button>
         </Link>
       </div>
@@ -119,6 +144,59 @@ export default function InvoicesPage() {
           description="From 1 invoice"
         />
       </div>
+
+      <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Zap className="text-primary" />
+                Quick Invoice
+            </CardTitle>
+            <CardDescription>
+                Create a simple invoice with just the essentials.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                 <div className="space-y-2">
+                    <Label htmlFor="quick-inv-num">Invoice #</Label>
+                    <Input id="quick-inv-num" placeholder="INV-005"/>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="quick-customer">Customer</Label>
+                    <Select>
+                        <SelectTrigger id="quick-customer">
+                            <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="quick-item">Item</Label>
+                    <Select>
+                        <SelectTrigger id="quick-item">
+                            <SelectValue placeholder="Select item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {items.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="quick-qty">Qty</Label>
+                    <Input id="quick-qty" type="number" placeholder="1" />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="quick-rate">Rate (₹)</Label>
+                    <Input id="quick-rate" type="number" placeholder="0.00" />
+                </div>
+            </div>
+        </CardContent>
+        <CardContent className="flex justify-end">
+             <Button onClick={handleQuickInvoiceCreate}>Create Quick Invoice</Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
