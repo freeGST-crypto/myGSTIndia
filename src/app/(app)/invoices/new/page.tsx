@@ -49,6 +49,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Switch } from "@/components/ui/switch";
 
 // Sample data - in a real app, this would come from an API
 const customers = [
@@ -76,6 +77,7 @@ const items = [
 export default function NewInvoicePage() {
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [isTdsApplicable, setIsTdsApplicable] = useState(false);
   const [lineItems, setLineItems] = useState([
     {
       itemId: "",
@@ -133,7 +135,8 @@ export default function NewInvoicePage() {
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
-  const totalAmount = subtotal + totalTax;
+  const tdsAmount = isTdsApplicable ? subtotal * 0.10 : 0; // Example: 10% on subtotal
+  const totalAmount = subtotal + totalTax - tdsAmount;
 
 
   return (
@@ -304,6 +307,12 @@ export default function NewInvoicePage() {
                 <span className="text-muted-foreground">Total Tax (e.g. IGST @18%)</span>
                 <span>₹{totalTax.toFixed(2)}</span>
               </div>
+              {isTdsApplicable && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">TDS (e.g. @10%)</span>
+                  <span className="text-red-500">- ₹{tdsAmount.toFixed(2)}</span>
+                </div>
+              )}
               <Separator/>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
@@ -313,11 +322,22 @@ export default function NewInvoicePage() {
           </div>
           
           <Separator />
-
+          
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Terms & Conditions</Label>
-              <Textarea placeholder="Payment is due within 30 days..." className="min-h-[120px]" />
+            <div className="space-y-4">
+              <div>
+                <Label>Terms & Conditions</Label>
+                <Textarea placeholder="Payment is due within 30 days..." className="mt-2 min-h-[120px]" />
+              </div>
+               <div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="tds-switch" checked={isTdsApplicable} onCheckedChange={setIsTdsApplicable} />
+                    <Label htmlFor="tds-switch">TDS Applicable</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enable this if the customer is liable to deduct TDS on this invoice.
+                  </p>
+               </div>
             </div>
             <div className="space-y-2">
                <Label>Attach Signature</Label>

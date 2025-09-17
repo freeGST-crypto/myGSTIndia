@@ -18,6 +18,7 @@ import {
   FileMinus,
   Library,
   Scale,
+  BookCopy,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -63,6 +64,7 @@ const menuItems = [
     subItems: [
       { href: "/gst-filings", label: "GST Filings" },
       { href: "/reconciliation", label: "Reconciliation" },
+      { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy },
     ],
   },
   {
