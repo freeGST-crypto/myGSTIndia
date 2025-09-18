@@ -196,7 +196,7 @@ const documentTypes = [
         description: "Generate mandatory statutory registers for your company.",
         href: "/legal-documents/statutory-registers",
         icon: BookCopy,
-        status: "wip"
+        status: "active"
     },
 ]
 
@@ -239,5 +239,3 @@ export default function LegalDocumentsPage() {
         </div>
     );
 }
-
-    
