@@ -154,7 +154,7 @@ const documentTypes = [
         description: "Define rights and obligations of shareholders.",
         href: "/legal-documents/shareholders-agreement",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "ESOP Trust Deed / Policy",
@@ -239,5 +239,3 @@ export default function LegalDocumentsPage() {
         </div>
     );
 }
-
-    
