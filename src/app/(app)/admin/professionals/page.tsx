@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -28,31 +29,54 @@ import { MoreHorizontal, Edit, Trash2, UserPlus, CheckCircle, XCircle } from "lu
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 
 const sampleProfessionals = [
   {
     id: "PRO-001",
     name: "Rohan Sharma, CA",
+    firmName: "Sharma & Associates",
     email: "rohan.sharma@ca-firm.com",
+    city: "Mumbai",
     specialization: "Startup Advisory, GST",
     clients: 15,
     status: "Active",
+    about: "A leading CA firm based in Mumbai, specializing in startup consultation, GST compliance, and audit services for over 10 years.",
+    experience: 10,
+    staffCount: 25,
+    proCount: 5,
+    avatarUrl: "https://picsum.photos/seed/pro1/100/100"
   },
   {
     id: "PRO-002",
     name: "Priya Mehta, Advocate",
+    firmName: "Mehta Legal",
     email: "priya.mehta@legal.com",
+    city: "Delhi",
     specialization: "Corporate Law, GST Litigation",
     clients: 8,
     status: "Active",
+    about: "Expert legal counsel for corporate law, mergers, and high-stakes GST litigation. Based in New Delhi.",
+    experience: 12,
+    staffCount: 10,
+    proCount: 3,
+    avatarUrl: "https://picsum.photos/seed/pro2/100/100"
   },
   {
     id: "PRO-003",
     name: "Anjali Singh, CS",
+    firmName: "Singh Corporate Services",
     email: "anjali.s@cs-practitioner.com",
+    city: "Bangalore",
     specialization: "LLP & Company Formation",
     clients: 22,
     status: "Pending Verification",
+    about: "Your one-stop solution for company and LLP formation, annual compliance, and secretarial audits in Bangalore.",
+    experience: 8,
+    staffCount: 8,
+    proCount: 2,
+    avatarUrl: "https://picsum.photos/seed/pro3/100/100"
   },
 ];
 
@@ -83,23 +107,47 @@ export default function ProfessionalsListPage() {
                     Add Professional
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Add New Professional</DialogTitle>
                     <DialogDescription>Manually add a new professional to the platform.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Full Name & Designation</Label>
-                        <Input id="name" placeholder="e.g., Rohan Sharma, CA" />
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">Name</Label>
+                        <Input id="name" placeholder="e.g., Rohan Sharma, CA" className="col-span-3"/>
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="professional@example.com" />
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="firm" className="text-right">Firm Name</Label>
+                        <Input id="firm" placeholder="e.g., Sharma & Associates" className="col-span-3"/>
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="specialization">Specialization</Label>
-                        <Input id="specialization" placeholder="e.g., GST, Corporate Law" />
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="email" className="text-right">Email</Label>
+                        <Input id="email" type="email" placeholder="professional@example.com" className="col-span-3"/>
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="city" className="text-right">City</Label>
+                        <Input id="city" placeholder="e.g., Mumbai" className="col-span-3"/>
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="specialization" className="text-right">Specialization</Label>
+                        <Input id="specialization" placeholder="e.g., GST, Corporate Law" className="col-span-3"/>
+                    </div>
+                     <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="about" className="text-right pt-2">About Firm</Label>
+                        <Textarea id="about" placeholder="A brief description of the firm and its services." className="col-span-3"/>
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="experience" className="text-right">Experience (Yrs)</Label>
+                        <Input id="experience" type="number" placeholder="10" className="col-span-3"/>
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="staff" className="text-right">Total Staff</Label>
+                        <Input id="staff" type="number" placeholder="25" className="col-span-3"/>
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="pros" className="text-right">Professionals</Label>
+                        <Input id="pros" type="number" placeholder="5" className="col-span-3"/>
                     </div>
                 </div>
                 <DialogFooter>
@@ -118,8 +166,8 @@ export default function ProfessionalsListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Professional</TableHead>
+                <TableHead>Location</TableHead>
                 <TableHead>Specialization</TableHead>
-                <TableHead>Clients</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -128,11 +176,19 @@ export default function ProfessionalsListPage() {
               {professionals.map((pro) => (
                 <TableRow key={pro.id}>
                   <TableCell>
-                    <div className="font-medium">{pro.name}</div>
-                    <div className="text-sm text-muted-foreground">{pro.email}</div>
+                    <div className='flex items-center gap-4'>
+                        <Avatar>
+                            <AvatarImage src={pro.avatarUrl} alt={pro.name} />
+                            <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <div className="font-medium">{pro.name}</div>
+                            <div className="text-sm text-muted-foreground">{pro.email}</div>
+                        </div>
+                    </div>
                   </TableCell>
+                  <TableCell>{pro.city}</TableCell>
                   <TableCell>{pro.specialization}</TableCell>
-                  <TableCell>{pro.clients}</TableCell>
                   <TableCell>{getStatusBadge(pro.status)}</TableCell>
                   <TableCell className="text-right">
                      <DropdownMenu>

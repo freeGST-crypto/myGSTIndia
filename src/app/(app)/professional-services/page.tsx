@@ -1,56 +1,147 @@
+
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CalendarPlus } from "lucide-react";
+import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User } from "lucide-react";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
-const services = [
-    {
-        name: "Book an Appointment",
-        description: "Schedule a consultation with a CA, CS, or Advocate.",
-        href: "/book-appointment",
-        icon: CalendarPlus,
-        status: "active",
-        price: 500,
-    },
+const sampleProfessionals = [
+  {
+    id: "PRO-001",
+    name: "Rohan Sharma, CA",
+    firmName: "Sharma & Associates",
+    email: "rohan.sharma@ca-firm.com",
+    specialization: ["Startup Advisory", "GST", "Audit"],
+    city: "Mumbai",
+    experience: 10,
+    rating: 4.8,
+    reviews: 32,
+    avatarUrl: "https://picsum.photos/seed/pro1/100/100",
+  },
+  {
+    id: "PRO-002",
+    name: "Priya Mehta, Advocate",
+    firmName: "Mehta Legal",
+    email: "priya.mehta@legal.com",
+    specialization: ["Corporate Law", "GST Litigation"],
+    city: "Delhi",
+    experience: 12,
+    rating: 4.9,
+    reviews: 45,
+    avatarUrl: "https://picsum.photos/seed/pro2/100/100",
+  },
+  {
+    id: "PRO-003",
+    name: "Anjali Singh, CS",
+    firmName: "Singh Corporate Services",
+    email: "anjali.s@cs-practitioner.com",
+    specialization: ["LLP & Company Formation", "Compliance"],
+    city: "Bangalore",
+    experience: 8,
+    rating: 4.7,
+    reviews: 28,
+     avatarUrl: "https://picsum.photos/seed/pro3/100/100",
+  },
+   {
+    id: "PRO-004",
+    name: "Vikram Reddy, CA",
+    firmName: "Reddy & Co.",
+    email: "vikram.r@ca.com",
+    specialization: ["Income Tax", "Project Finance"],
+    city: "Hyderabad",
+    experience: 15,
+    rating: 4.9,
+    reviews: 55,
+    avatarUrl: "https://picsum.photos/seed/pro4/100/100",
+  },
+   {
+    id: "PRO-005",
+    name: "Suresh Gupta, Advocate",
+    firmName: "Gupta & Associates",
+    email: "s.gupta@law.com",
+    specialization: ["Tax Litigation", "Contract Law"],
+    city: "Mumbai",
+    experience: 20,
+    rating: 4.6,
+    reviews: 60,
+    avatarUrl: "https://picsum.photos/seed/pro5/100/100",
+  },
 ];
 
+
 export default function ProfessionalServicesPage() {
+    const [city, setCity] = useState("Mumbai");
+
+    const filteredProfessionals = sampleProfessionals.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
+
     return (
         <div className="space-y-8">
             <div className="text-center">
-                <h1 className="text-3xl font-bold">On-Demand Professional Services</h1>
-                <p className="text-muted-foreground max-w-2xl mx-auto">Access expert advice and services whenever you need them, with transparent, pay-per-use pricing.</p>
+                <h1 className="text-3xl font-bold">Find a Professional</h1>
+                <p className="text-muted-foreground max-w-2xl mx-auto">Search our network of verified Chartered Accountants, Advocates, and Company Secretaries to find the right expert for your business needs.</p>
             </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                 {services.map(doc => (
-                     <Card key={doc.name} className="flex flex-col">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                               <doc.icon className="text-primary"/> {doc.name}
-                            </CardTitle>
-                            <CardDescription>
-                                {doc.description}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-grow flex items-end">
-                             {doc.status === 'active' ? (
-                                <Link href={doc.href} passHref>
-                                    <Button>
-                                        <span>
-                                            Proceed
-                                            {doc.price && ` - ₹${doc.price}`}
-                                        </span>
-                                        <ArrowRight className="ml-2 size-4" />
-                                    </Button>
-                                </Link>
-                             ) : (
-                                 <Button disabled variant="outline">Coming Soon</Button>
-                             )}
-                        </CardContent>
-                    </Card>
-                 ))}
+            
+             <Card className="max-w-2xl mx-auto">
+                <CardHeader>
+                    <CardTitle>Search by Location</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                             <Input placeholder="Enter a city (e.g., Mumbai, Delhi)" className="pl-10" value={city} onChange={(e) => setCity(e.target.value)} />
+                        </div>
+                        <Button><Search className="mr-2"/> Search</Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+                 <h2 className="text-2xl font-semibold text-center">Professionals in {city || "your area"}</h2>
+                <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+                    {filteredProfessionals.map(pro => (
+                        <Card key={pro.id} className="flex flex-col sm:flex-row items-start p-6 gap-6">
+                            <Avatar className="size-24 border">
+                                <AvatarImage src={pro.avatarUrl} alt={pro.name} />
+                                <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 space-y-3">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-xl">{pro.name}</CardTitle>
+                                    <CardDescription className="flex items-center gap-2"><Briefcase className="size-4"/>{pro.firmName}</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <MapPin className="size-4" />
+                                    <span>{pro.city}</span>
+                                    <span className="text-2xl leading-none">&middot;</span>
+                                    <span>{pro.experience} years experience</span>
+                                </div>
+                                 <div className="flex items-center gap-2 text-sm">
+                                    <Star className="size-4 text-yellow-500 fill-yellow-400" />
+                                    <span className="font-semibold">{pro.rating}</span>
+                                    <span className="text-muted-foreground">({pro.reviews} reviews)</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {pro.specialization.map(spec => (
+                                        <Badge key={spec} variant="secondary">{spec}</Badge>
+                                    ))}
+                                </div>
+                                <div className="pt-2">
+                                     <Link href="/book-appointment" passHref>
+                                        <Button>
+                                            <CalendarPlus className="mr-2"/> Book an Appointment
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
             </div>
         </div>
     );
