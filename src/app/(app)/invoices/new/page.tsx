@@ -63,7 +63,7 @@ const items = [
 ];
 
 export default function NewInvoicePage() {
-  const { addJournalVoucher } = useContext(AccountingContext)!;
+  const accountingContext = useContext(AccountingContext);
   const { toast } = useToast();
   
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
@@ -132,7 +132,10 @@ export default function NewInvoicePage() {
   const totalTax = totalIgst + totalCgst + totalSgst;
   const totalAmount = subtotal + totalTax;
 
-  const handleSaveInvoice = () => {
+  const handleSaveInvoice = async () => {
+    if (!accountingContext) return;
+    const { addJournalVoucher } = accountingContext;
+
     const selectedCustomer = customers.find(c => c.id === customer);
     if (!selectedCustomer || !invoiceNumber) {
         toast({ variant: "destructive", title: "Missing Details", description: "Please select a customer and enter an invoice number."});
@@ -145,16 +148,18 @@ export default function NewInvoicePage() {
         { account: '2110', debit: '0', credit: totalTax.toFixed(2) } // Credit GST Payable
     ];
 
-    addJournalVoucher({
-        id: `JV-${invoiceNumber}`,
-        date: invoiceDate ? format(invoiceDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-        narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceNumber}`,
-        lines: journalLines,
-        amount: totalAmount,
-    });
-
-    toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
-    // router.push("/invoices"); // In a real app, redirect after save
+    try {
+        await addJournalVoucher({
+            id: `JV-${invoiceNumber}`,
+            date: invoiceDate ? format(invoiceDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+            narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceNumber}`,
+            lines: journalLines,
+            amount: totalAmount,
+        });
+        toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
+    }
   }
 
   return (

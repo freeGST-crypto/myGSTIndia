@@ -49,6 +49,7 @@ import {
   Edit,
   Trash2,
   Calendar as CalendarIcon,
+  Loader2,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -78,7 +79,7 @@ const accounts = [
 
 
 export default function JournalVoucherPage() {
-    const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
+    const accountingContext = useContext(AccountingContext);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [narration, setNarration] = useState("");
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -87,6 +88,12 @@ export default function JournalVoucherPage() {
         { account: '', debit: '0', credit: '0' }
     ]);
     const { toast } = useToast();
+
+    if (!accountingContext) {
+        return <Loader2 className="animate-spin" />;
+    }
+    
+    const { journalVouchers, addJournalVoucher, loading } = accountingContext;
 
     const handleAddLine = () => {
         setLines([...lines, { account: '', debit: '0', credit: '0' }]);
@@ -119,7 +126,7 @@ export default function JournalVoucherPage() {
         });
     };
 
-    const handleSaveVoucher = () => {
+    const handleSaveVoucher = async () => {
         if (!date || !narration) {
             toast({ variant: "destructive", title: "Missing Details", description: "Please provide a date and narration." });
             return;
@@ -127,7 +134,7 @@ export default function JournalVoucherPage() {
 
         const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
         const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
-        const isBalanced = totalDebits === totalCredits && totalDebits > 0;
+        const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01 && totalDebits > 0;
         
         if (!isBalanced) {
             toast({ variant: "destructive", title: "Unbalanced Entry", description: "Debit and credit totals must match and be greater than zero." });
@@ -142,23 +149,25 @@ export default function JournalVoucherPage() {
             amount: totalDebits,
         };
 
-        addJournalVoucher(newVoucher);
-        
-        toast({
-            title: "Voucher Saved",
-            description: "Your journal voucher has been saved successfully."
-        });
-        
-        // Reset form
-        setIsAddDialogOpen(false);
-        setDate(new Date());
-        setNarration("");
-        setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
+        try {
+            await addJournalVoucher(newVoucher);
+            toast({
+                title: "Voucher Saved",
+                description: "Your journal voucher has been saved successfully."
+            });
+            // Reset form
+            setIsAddDialogOpen(false);
+            setDate(new Date());
+            setNarration("");
+            setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "Save failed", description: e.message });
+        }
     };
 
     const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
     const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
-    const isBalanced = totalDebits === totalCredits && totalDebits > 0;
+    const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01 && totalDebits > 0;
 
   return (
     <div className="space-y-8">
@@ -292,6 +301,7 @@ export default function JournalVoucherPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {loading && <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>}
               {journalVouchers.map((voucher) => (
                 <TableRow key={voucher.id}>
                   <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>

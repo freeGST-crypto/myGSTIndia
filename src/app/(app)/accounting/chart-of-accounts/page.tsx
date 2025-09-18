@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -53,6 +53,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, query, where, orderBy } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+
 
 type Account = {
   code: string;
@@ -63,24 +68,8 @@ type Account = {
   putToUseDate?: Date;
   depreciationRate?: number;
   openingWdv?: number;
+  userId: string;
 };
-
-const initialAccounts: Account[] = [
-  { code: "1010", name: "Cash on Hand", type: "Current Asset", category: "assets" },
-  { code: "1020", name: "HDFC Bank", type: "Bank", category: "assets" },
-  { code: "1210", name: "Accounts Receivable", type: "Accounts Receivable", category: "assets" },
-  { code: "1410", name: "Office Supplies", type: "Current Asset", category: "assets" },
-  { code: "2010", name: "Accounts Payable", type: "Accounts Payable", category: "liabilities" },
-  { code: "2110", name: "GST Payable", type: "Current Liability", category: "liabilities" },
-  { code: "3010", name: "Owner's Equity", type: "Equity", category: "equity" },
-  { code: "3020", name: "Retained Earnings", type: "Equity", category: "equity" },
-  { code: "4010", name: "Sales Revenue", type: "Revenue", category: "revenue" },
-  { code: "4020", name: "Service Revenue", type: "Revenue", category: "revenue" },
-  { code: "5010", name: "Rent Expense", type: "Expense", category: "expenses" },
-  { code: "5020", name: "Salaries and Wages", type: "Expense", category: "expenses" },
-  { code: "5030", name: "Office Supplies Expense", type: "Expense", category: "expenses" },
-  { code: "5040", name: "Bank Charges", type: "Expense", category: "expenses" },
-];
 
 const accountTypes = {
     assets: ["Bank", "Cash", "Accounts Receivable", "Current Asset", "Fixed Asset", "Inventory"],
@@ -89,8 +78,6 @@ const accountTypes = {
     revenue: ["Revenue", "Other Income"],
     expenses: ["Expense", "Cost of Goods Sold", "Depreciation"],
 };
-
-const allAccountTypes = Object.values(accountTypes).flat();
 
 const accountSchema = z.object({
     name: z.string().min(3, "Account name is required."),
@@ -111,9 +98,15 @@ const accountSchema = z.object({
 });
 
 export default function ChartOfAccountsPage() {
-  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [user] = useAuthState(auth);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  
+  const accountsRef = collection(db, "accounts");
+  const accountsQuery = user ? query(accountsRef, where("userId", "==", user.uid), orderBy("code")) : null;
+  const [accountsSnapshot, loading, error] = useCollection(accountsQuery);
+  
+  const accounts = accountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Account)) || [];
   
   const form = useForm<z.infer<typeof accountSchema>>({
     resolver: zodResolver(accountSchema),
@@ -126,7 +119,12 @@ export default function ChartOfAccountsPage() {
   
   const selectedAccountType = form.watch("type");
 
-  const onSubmit = (values: z.infer<typeof accountSchema>) => {
+  const onSubmit = async (values: z.infer<typeof accountSchema>) => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to add an account."});
+        return;
+    }
+
     const categoryMapping: Record<string, Account['category']> = {
         'Bank': 'assets', 'Cash': 'assets', 'Accounts Receivable': 'assets', 'Current Asset': 'assets', 'Fixed Asset': 'assets', 'Inventory': 'assets',
         'Accounts Payable': 'liabilities', 'Credit Card': 'liabilities', 'Current Liability': 'liabilities', 'Long Term Liability': 'liabilities',
@@ -135,19 +133,28 @@ export default function ChartOfAccountsPage() {
         'Expense': 'expenses', 'Cost of Goods Sold': 'expenses', 'Depreciation': 'expenses'
     };
     
-    const newAccount: Account = {
+    const newAccount: Omit<Account, 'id'> = {
         ...values,
         category: categoryMapping[values.type],
+        userId: user.uid,
     };
 
-    setAccounts(prev => [...prev, newAccount].sort((a,b) => a.code.localeCompare(b.code)));
-    toast({ title: "Account Added", description: `${values.name} has been added to your Chart of Accounts.` });
-    form.reset();
-    setIsAddDialogOpen(false);
+    try {
+        await addDoc(accountsRef, newAccount);
+        toast({ title: "Account Added", description: `${values.name} has been added to your Chart of Accounts.` });
+        form.reset();
+        setIsAddDialogOpen(false);
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not save the account. Please try again."})
+    }
   };
 
   const renderAccountCategory = (title: string, category: Account['category']) => {
     const categoryAccounts = accounts.filter(acc => acc.category === category);
+    if (loading) {
+        return <Loader2 className="animate-spin my-4"/>;
+    }
     return (
         <AccordionItem value={category}>
             <AccordionTrigger className="font-semibold text-lg hover:no-underline">{title}</AccordionTrigger>

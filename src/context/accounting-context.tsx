@@ -2,6 +2,10 @@
 "use client";
 
 import React, { createContext, useState, ReactNode } from 'react';
+import { db, auth } from '@/lib/firebase';
+import { collection, addDoc, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 type JournalLine = {
     account: string;
@@ -15,47 +19,34 @@ type JournalVoucher = {
     narration: string;
     lines: JournalLine[];
     amount: number;
+    userId: string;
 };
 
 type AccountingContextType = {
     journalVouchers: JournalVoucher[];
-    addJournalVoucher: (voucher: JournalVoucher) => void;
+    loading: boolean;
+    error: any;
+    addJournalVoucher: (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => Promise<void>;
 };
 
 export const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
 
-const initialVouchers: JournalVoucher[] = [
-  {
-    id: "JV-001",
-    date: "2024-05-30",
-    narration: "To record monthly office rent.",
-    amount: 25000.0,
-    lines: [
-        { account: '5010', debit: '25000', credit: '0' },
-        { account: '1020', debit: '0', credit: '25000' }
-    ]
-  },
-  {
-    id: "JV-002",
-    date: "2024-05-31",
-    narration: "To record depreciation on office equipment for the month.",
-    amount: 5000.0,
-    lines: [
-        { account: '5150', debit: '5000', credit: '0' },
-        { account: '1455', debit: '0', credit: '5000' }
-    ]
-  },
-];
-
 export const AccountingProvider = ({ children }: { children: ReactNode }) => {
-    const [journalVouchers, setJournalVouchers] = useState<JournalVoucher[]>(initialVouchers);
+    const [user] = useAuthState(auth);
 
-    const addJournalVoucher = (voucher: JournalVoucher) => {
-        setJournalVouchers(prevVouchers => [...prevVouchers, voucher]);
+    const journalVouchersRef = collection(db, "journalVouchers");
+    const journalVouchersQuery = user ? query(journalVouchersRef, where("userId", "==", user.uid)) : null;
+    const [journalVouchersSnapshot, loading, error] = useCollection(journalVouchersQuery);
+
+    const journalVouchers = journalVouchersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalVoucher)) || [];
+
+    const addJournalVoucher = async (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => {
+        if (!user) throw new Error("User not authenticated");
+        await addDoc(journalVouchersRef, { ...voucher, userId: user.uid });
     };
 
     return (
-        <AccountingContext.Provider value={{ journalVouchers, addJournalVoucher }}>
+        <AccountingContext.Provider value={{ journalVouchers, loading, error, addJournalVoucher }}>
             {children}
         </AccountingContext.Provider>
     );
