@@ -39,6 +39,7 @@ import {
   BadgePercent,
   Wallet,
   ShoppingCart,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +81,14 @@ const directorSchema = z.object({
   appointmentDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
   resignationDate: z.string().optional(),
   sharesHeld: z.coerce.number().min(0).default(0),
+});
+
+const directorShareholdingSchema = z.object({
+  directorName: z.string().min(2, "Director's name is required."),
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+  transactionType: z.enum(["Acquisition", "Transfer"]),
+  numberOfShares: z.coerce.number().positive("Must be a positive number."),
+  natureOfInterest: z.string().min(3, "Nature of interest is required."),
 });
 
 const chargeSchema = z.object({
@@ -126,6 +135,7 @@ const formSchema = z.object({
   members: z.array(memberSchema),
   debentureHolders: z.array(debentureHolderSchema),
   directors: z.array(directorSchema),
+  directorShareholdings: z.array(directorShareholdingSchema),
   charges: z.array(chargeSchema),
   loansGuaranteesInvestments: z.array(loanGuaranteeInvestmentSchema),
   relatedPartyContracts: z.array(relatedPartyContractSchema),
@@ -152,6 +162,9 @@ export default function StatutoryRegistersPage() {
         { name: "Rohan Sharma", din: "01234567", pan: "ABCDE1234F", address: "Mumbai, India", designation: "Director", appointmentDate: "2023-04-01", sharesHeld: 5000 },
         { name: "Priya Mehta", din: "76543210", pan: "FGHIJ5678K", address: "Delhi, India", designation: "Director", appointmentDate: "2023-04-01", sharesHeld: 5000 },
       ],
+      directorShareholdings: [
+        { directorName: "Rohan Sharma", date: "2023-04-01", transactionType: "Acquisition", numberOfShares: 5000, natureOfInterest: "Initial Subscriber" }
+      ],
       charges: [
         { creationDate: "2023-06-01", chargeHolder: "HDFC Bank", assetsCharged: "All current and future assets of the company", amountSecured: 10000000, modificationDate: "", satisfactionDate: "" },
       ],
@@ -171,6 +184,7 @@ export default function StatutoryRegistersPage() {
   const { fields: memberFields, append: appendMember, remove: removeMember } = useFieldArray({ control: form.control, name: "members" });
   const { fields: debentureHolderFields, append: appendDebentureHolder, remove: removeDebentureHolder } = useFieldArray({ control: form.control, name: "debentureHolders" });
   const { fields: directorFields, append: appendDirector, remove: removeDirector } = useFieldArray({ control: form.control, name: "directors" });
+  const { fields: directorShareholdingFields, append: appendDirectorShareholding, remove: removeDirectorShareholding } = useFieldArray({ control: form.control, name: "directorShareholdings" });
   const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({ control: form.control, name: "charges" });
   const { fields: lgiFields, append: appendLgi, remove: removeLgi } = useFieldArray({ control: form.control, name: "loansGuaranteesInvestments" });
   const { fields: rpcFields, append: appendRpc, remove: removeRpc } = useFieldArray({ control: form.control, name: "relatedPartyContracts" });
@@ -232,6 +246,20 @@ export default function StatutoryRegistersPage() {
     }));
      const headers = ["S. No.", "Name", "DIN", "PAN", "Address", "Designation", "Date of Appointment", "Date of Resignation", "No. of Shares Held", "Remarks"];
     exportToCsv(dataToExport, headers, "Register_of_Directors_KMP");
+  };
+
+   const handleExportDirectorShareholdings = () => {
+    const dataToExport = form.getValues("directorShareholdings").map((s, index) => ({
+      "S. No.": index + 1,
+      "Director Name": s.directorName,
+      "Date": s.date ? format(new Date(s.date), 'dd-MM-yyyy') : '',
+      "Transaction Type": s.transactionType,
+      "Number of Shares": s.numberOfShares,
+      "Nature of Interest": s.natureOfInterest,
+      "Remarks": "",
+    }));
+     const headers = ["S. No.", "Director Name", "Date", "Transaction Type", "Number of Shares", "Nature of Interest", "Remarks"];
+    exportToCsv(dataToExport, headers, "Register_of_Directors_Shareholding");
   };
 
   const handleExportCharges = () => {
@@ -319,10 +347,11 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="flex-wrap h-auto justify-start">
+            <TabsList className="h-auto justify-start flex-wrap">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
               <TabsTrigger value="debentureHolders"><FileKey className="mr-2" />Debentures</TabsTrigger>
-              <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
+              <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors & KMP</TabsTrigger>
+              <TabsTrigger value="directorShareholdings"><Briefcase className="mr-2"/>Directors' Shareholding</TabsTrigger>
               <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
               <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
               <TabsTrigger value="contracts"><BookUser className="mr-2"/>Contracts (Sec 189)</TabsTrigger>
@@ -414,6 +443,40 @@ export default function StatutoryRegistersPage() {
                   <Button type="button" variant="outline" onClick={() => appendDirector({ name: "", din: "", pan: "", address: "", designation: "", appointmentDate: "", sharesHeld: 0 })}><PlusCircle className="mr-2"/> Add Director/KMP</Button>
                 </CardContent>
                 <CardFooter><Button type="button" onClick={handleExportDirectors}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="directorShareholdings">
+              <Card>
+                <CardHeader><CardTitle>Register of Directors' Shareholding</CardTitle><CardDescription>Manage the details of shares and securities held by directors.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Director Name</TableHead><TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>No. of Shares</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {directorShareholdingFields.map((field, index) => (
+                           <TableRow key={field.id}>
+                              <TableCell><Input {...form.register(`directorShareholdings.${index}.directorName`)}/></TableCell>
+                              <TableCell><Input type="date" {...form.register(`directorShareholdings.${index}.date`)}/></TableCell>
+                              <TableCell>
+                                 <Select onValueChange={(value) => form.setValue(`directorShareholdings.${index}.transactionType`, value as "Acquisition" | "Transfer")} defaultValue={field.transactionType}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Acquisition">Acquisition</SelectItem>
+                                        <SelectItem value="Transfer">Transfer</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell><Input type="number" {...form.register(`directorShareholdings.${index}.numberOfShares`)}/></TableCell>
+                              <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeDirectorShareholding(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendDirectorShareholding({ directorName: "", date: "", transactionType: "Acquisition", numberOfShares: 0, natureOfInterest: "" })}><PlusCircle className="mr-2"/> Add Record</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportDirectorShareholdings}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
               </Card>
             </TabsContent>
 
@@ -552,5 +615,3 @@ export default function StatutoryRegistersPage() {
     </div>
   );
 }
-
-    
