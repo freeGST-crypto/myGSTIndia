@@ -144,16 +144,16 @@ const documentTypes = [
     {
         name: "Shareholders’ Agreement (SHA)",
         description: "Define rights and obligations of shareholders.",
-        href: "#",
+        href: "/legal-documents/shareholders-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "ESOP Trust Deed / Policy",
         description: "Establish an Employee Stock Option Plan.",
-        href: "#",
+        href: "/legal-documents/esop-policy",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Convertible Note / SAFE Agreement",
