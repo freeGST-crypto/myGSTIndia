@@ -50,15 +50,9 @@ export default function BalanceSheetPage() {
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
                 if (balances.hasOwnProperty(line.account)) {
-                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
                     const debit = parseFloat(line.debit);
                     const credit = parseFloat(line.credit);
-
-                    if (accountType === 'Asset' || accountType === 'Expense') {
-                        balances[line.account] += debit - credit;
-                    } else { // Liability, Equity, Revenue
-                        balances[line.account] += credit - debit;
-                    }
+                    balances[line.account] += debit - credit;
                 }
             });
         });
@@ -67,27 +61,30 @@ export default function BalanceSheetPage() {
     
     // Calculate P&L for Retained Earnings
     const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
-    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
-    const totalRevenue = revenueAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
+    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense' && a.code !== '5150').map(a => a.code); // Exclude Depreciation
+    
+    // Revenue is credit-positive, so we negate the balance (which is debit-positive)
+    const totalRevenue = revenueAccounts.reduce((sum, code) => sum + -(accountBalances[code] || 0), 0);
+    // Expenses are debit-positive, so we use the balance directly
     const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
     const netProfit = totalRevenue - totalExpenses;
 
     const data = useMemo(() => {
         return {
             equityAndLiabilities: {
-                capitalAccount: accountBalances['3010'] || 0,
-                reservesAndSurplus: (accountBalances['3020'] || 0) + netProfit,
-                longTermLoans: accountBalances['2210'] || 0,
+                capitalAccount: -(accountBalances['3010'] || 0),
+                reservesAndSurplus: -(accountBalances['3020'] || 0) + netProfit,
+                longTermLoans: -(accountBalances['2210'] || 0),
                 currentLiabilities: {
-                    sundryCreditors: accountBalances['2010'] || 0,
-                    gstPayable: accountBalances['2110'] || 0,
+                    sundryCreditors: -(accountBalances['2010'] || 0),
+                    gstPayable: -(accountBalances['2110'] || 0),
                     otherCurrentLiabilities: 0,
                 }
             },
             assets: {
                 fixedAssets: {
                     officeEquipment: accountBalances['1450'] || 0,
-                    lessAccumulatedDepreciation: -(accountBalances['1455'] || 0),
+                    lessAccumulatedDepreciation: accountBalances['1455'] || 0,
                 },
                 investments: 0,
                 currentAssets: {
@@ -333,5 +330,3 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
-
-    
