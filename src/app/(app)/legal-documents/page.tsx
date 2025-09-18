@@ -32,9 +32,9 @@ const documentTypes = [
     {
         name: "Self Affidavit for GST",
         description: "Generate a self-declaration affidavit for GST registration.",
-        href: "#",
+        href: "/legal-documents/self-affidavit-gst",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Society Registration Deed",
