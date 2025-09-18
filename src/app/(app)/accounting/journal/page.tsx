@@ -61,6 +61,14 @@ import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
 
+type JournalVoucher = {
+    id: string;
+    date: string;
+    narration: string;
+    lines: { account: string; debit: string; credit: string; }[];
+    amount: number;
+}
+
 export default function JournalVoucherPage() {
     const accountingContext = useContext(AccountingContext);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -71,6 +79,7 @@ export default function JournalVoucherPage() {
         { account: '', debit: '0', credit: '0' }
     ]);
     const { toast } = useToast();
+    const [selectedVoucher, setSelectedVoucher] = useState<JournalVoucher | null>(null);
 
     if (!accountingContext) {
         return <Loader2 className="animate-spin" />;
@@ -109,13 +118,16 @@ export default function JournalVoucherPage() {
         }
     };
 
-    const handleVoucherAction = (action: string, voucherId: string) => {
+    const handleVoucherAction = (action: string, voucher: JournalVoucher) => {
         if (action === 'Delete') {
-            handleDeleteJournalVoucher(voucherId);
-        } else {
+            handleDeleteJournalVoucher(voucher.id);
+        } else if (action === 'View') {
+            setSelectedVoucher(voucher);
+        }
+        else {
             toast({
                 title: `${action} Voucher`,
-                description: `Simulating ${action.toLowerCase()} action for voucher ${voucherId}.`,
+                description: `This would ${action.toLowerCase()} voucher ${voucher.id}. This feature is a placeholder.`,
             });
         }
     };
@@ -335,15 +347,15 @@ export default function JournalVoucherPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => handleVoucherAction("View Details", voucher.id)}>
+                        <DropdownMenuItem onSelect={() => handleVoucherAction("View", voucher)}>
                           <FileText className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleVoucherAction("Edit", voucher.id)}>
+                        <DropdownMenuItem onSelect={() => handleVoucherAction("Edit", voucher)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onSelect={() => handleVoucherAction("Delete", voucher.id)}>
+                        <DropdownMenuItem className="text-destructive" onSelect={() => handleVoucherAction("Delete", voucher)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -356,6 +368,47 @@ export default function JournalVoucherPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      {selectedVoucher && (
+        <Dialog open={!!selectedVoucher} onOpenChange={(open) => !open && setSelectedVoucher(null)}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Voucher Details: {selectedVoucher.id}</DialogTitle>
+                    <DialogDescription>
+                        {selectedVoucher.narration}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Account</TableHead>
+                                <TableHead className="text-right">Debit</TableHead>
+                                <TableHead className="text-right">Credit</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {selectedVoucher.lines.map((line, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{allAccounts.find(a => a.code === line.account)?.name || line.account}</TableCell>
+                                    <TableCell className="text-right font-mono">{parseFloat(line.debit) > 0 ? `₹${parseFloat(line.debit).toFixed(2)}` : '-'}</TableCell>
+                                    <TableCell className="text-right font-mono">{parseFloat(line.credit) > 0 ? `₹${parseFloat(line.credit).toFixed(2)}` : '-'}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">₹{selectedVoucher.amount.toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-mono">₹{selectedVoucher.amount.toFixed(2)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
+            </DialogContent>
+        </Dialog>
+      )}
+
     </div>
   );
 }

@@ -919,6 +919,7 @@ export default function Gstr1WizardPage() {
           <h1 className="text-3xl font-bold">GSTR-1 Filing Wizard</h1>
           <p className="text-muted-foreground">Period: May 2024</p>
         </div>
+        
       </div>
 
       {renderStep()}

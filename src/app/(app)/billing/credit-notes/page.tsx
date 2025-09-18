@@ -18,6 +18,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,11 +41,21 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 
+type CreditNote = {
+    id: string;
+    customer: string;
+    date: string;
+    originalInvoice: string;
+    amount: number;
+    status: string;
+}
+
 export default function CreditNotesPage() {
   const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
   const { toast } = useToast();
+  const [selectedNote, setSelectedNote] = useState<CreditNote | null>(null);
   
-  const creditNotes = useMemo(() => {
+  const creditNotes: CreditNote[] = useMemo(() => {
     const allCreditNotes = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
     const voidedCreditNoteIds = new Set(
         journalVouchers
@@ -111,11 +128,19 @@ export default function CreditNotesPage() {
     toast({ title: "Download Started", description: `Downloading PDF for credit note ${note.id}.` });
   };
   
-  const handleAction = (action: string, noteId: string) => {
-      toast({
-          title: `Action: ${action}`,
-          description: `This would ${action.toLowerCase()} Credit Note ${noteId}. This is a placeholder.`
-      });
+  const handleAction = (action: string, note: CreditNote) => {
+      if (action === 'View') {
+        setSelectedNote(note);
+      } else if (action === 'Void') {
+        handleVoidCreditNote(note.id);
+      } else if (action === 'Download') {
+        handleDownloadPdf(note);
+      } else {
+        toast({
+            title: `Action: ${action}`,
+            description: `This would ${action.toLowerCase()} Credit Note ${note.id}. This is a placeholder.`
+        });
+      }
   };
 
   const getStatusBadge = (status: string) => {
@@ -201,22 +226,22 @@ export default function CreditNotesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => handleAction('View Details', note.id)}>
+                        <DropdownMenuItem onSelect={() => handleAction('View', note)}>
                           <FileText className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAction('Edit', note.id)}>
+                        <DropdownMenuItem onSelect={() => handleAction('Edit', note)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                         <DropdownMenuItem onSelect={() => handleDownloadPdf(note)}>
+                         <DropdownMenuItem onSelect={() => handleAction('Download', note)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download PDF
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                             className="text-destructive" 
-                            onSelect={() => handleVoidCreditNote(note.id)}
+                            onSelect={() => handleAction('Void', note)}
                             disabled={note.status === 'Void'}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
@@ -231,6 +256,42 @@ export default function CreditNotesPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      {selectedNote && (
+        <Dialog open={!!selectedNote} onOpenChange={(open) => !open && setSelectedNote(null)}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Credit Note Details: {selectedNote.id}</DialogTitle>
+                    <DialogDescription>
+                        Details for the credit note issued to {selectedNote.customer}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4 text-sm">
+                    <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Customer:</span>
+                        <span>{selectedNote.customer}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Date:</span>
+                        <span>{format(new Date(selectedNote.date), "dd MMM, yyyy")}</span>
+                    </div>
+                    <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Original Invoice:</span>
+                        <span>{selectedNote.originalInvoice}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Status:</span>
+                        <div>{getStatusBadge(selectedNote.status)}</div>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Amount:</span>
+                        <span className="font-semibold">₹{selectedNote.amount.toFixed(2)}</span>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+      )}
+
     </div>
   );
 }

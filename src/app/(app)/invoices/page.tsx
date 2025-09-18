@@ -25,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search, FileCog } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -41,12 +48,22 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import jsPDF from 'jspdf';
 
+type Invoice = {
+  id: string;
+  customer: string;
+  date: string;
+  dueDate: string;
+  amount: number;
+  status: string;
+}
 
 export default function InvoicesPage() {
   const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   // State for the quick invoice form
   const [quickInvNum, setQuickInvNum] = useState("");
@@ -152,11 +169,19 @@ export default function InvoicesPage() {
         }
     };
     
-    const handleAction = (action: string, invoiceId: string) => {
-        toast({
-            title: `Action: ${action}`,
-            description: `This would ${action.toLowerCase()} invoice ${invoiceId}. This is a placeholder.`
-        });
+    const handleAction = (action: string, invoice: Invoice) => {
+        if (action === 'View') {
+            setSelectedInvoice(invoice);
+        } else if (action === 'Cancel') {
+            handleCancelInvoice(invoice.id);
+        } else if (action === 'Download') {
+            handleDownloadPdf(invoice);
+        } else {
+            toast({
+                title: `Action: ${action}`,
+                description: `This would ${action.toLowerCase()} invoice ${invoice.id}. This feature is a placeholder.`
+            });
+        }
     }
 
     const handleDownloadPdf = (invoice: any) => {
@@ -345,35 +370,29 @@ export default function InvoicesPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => handleAction('View', invoice.id)}>
-                            <FileText />
-                            View Details
+                            <DropdownMenuItem onSelect={() => handleAction('View', invoice)}>
+                              <FileText className="mr-2" /> View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Edit', invoice.id)}>
-                            <Edit />
-                            Edit Invoice
+                            <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)}>
+                              <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleDownloadPdf(invoice)}>
-                            <Download />
-                            Download PDF
+                            <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
+                              <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice.id)}>
-                            <Copy />
-                            Duplicate Invoice
+                            <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
+                              <Copy className="mr-2" /> Duplicate Invoice
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleAction('Generate E-Waybill JSON', invoice.id)}>
-                            <FileJson />
-                            Generate E-Waybill JSON
+                            <DropdownMenuItem onSelect={() => handleAction('Generate E-Waybill JSON', invoice)}>
+                              <FileJson className="mr-2" /> Generate E-Waybill JSON
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                                 className="text-destructive"
-                                onSelect={() => handleCancelInvoice(invoice.id)}
+                                onSelect={() => handleAction('Cancel', invoice)}
                                 disabled={invoice.status === 'Cancelled'}
                             >
-                            <Trash2 />
-                            Cancel Invoice
+                              <Trash2 className="mr-2" /> Cancel Invoice
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
@@ -385,6 +404,42 @@ export default function InvoicesPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {selectedInvoice && (
+        <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Invoice Details: {selectedInvoice.id}</DialogTitle>
+                    <DialogDescription>
+                        Details for the invoice issued to {selectedInvoice.customer}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4 text-sm">
+                    <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Customer:</span>
+                        <span>{selectedInvoice.customer}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Invoice Date:</span>
+                        <span>{format(new Date(selectedInvoice.date), "dd MMM, yyyy")}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Due Date:</span>
+                        <span>{format(new Date(selectedInvoice.dueDate), "dd MMM, yyyy")}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Status:</span>
+                        <div>{getStatusBadge(selectedInvoice.status)}</div>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Amount:</span>
+                        <span className="font-semibold">₹{selectedInvoice.amount.toFixed(2)}</span>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+      )}
+
     </div>
   );
 }

@@ -18,6 +18,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,12 +41,22 @@ import { AccountingContext } from "@/context/accounting-context";
 import { format, addDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
+type Purchase = {
+    id: string;
+    vendor: string;
+    date: string;
+    dueDate: string;
+    amount: number;
+    status: string;
+}
+
 export default function PurchasesPage() {
   const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
-  const purchases = useMemo(() => {
+  const purchases: Purchase[] = useMemo(() => {
     const allBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
     const deletedBillIds = new Set(
         journalVouchers
@@ -95,11 +112,17 @@ export default function PurchasesPage() {
     }
   };
   
-   const handleAction = (action: string, billId: string) => {
-        toast({
-            title: `Action: ${action}`,
-            description: `This would ${action.toLowerCase()} bill ${billId}. This is a placeholder.`
-        });
+   const handleAction = (action: string, purchase: Purchase) => {
+        if (action === 'View') {
+            setSelectedPurchase(purchase);
+        } else if (action === 'Delete') {
+            handleDeleteBill(purchase.id);
+        } else {
+            toast({
+                title: `Action: ${action}`,
+                description: `This would ${action.toLowerCase()} bill ${purchase.id}. This is a placeholder.`
+            });
+        }
     }
 
   const getStatusBadge = (status: string) => {
@@ -213,22 +236,18 @@ export default function PurchasesPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={() => handleAction('View', purchase.id)}>
-                                <FileText />
-                                View Details
+                                <DropdownMenuItem onSelect={() => handleAction('View', purchase)}>
+                                  <FileText className="mr-2" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleAction('Edit', purchase.id)}>
-                                <Edit />
-                                Edit Bill
+                                <DropdownMenuItem onSelect={() => handleAction('Edit', purchase)}>
+                                  <Edit className="mr-2" /> Edit Bill
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleAction('Duplicate', purchase.id)}>
-                                <Copy />
-                                Duplicate Bill
+                                <DropdownMenuItem onSelect={() => handleAction('Duplicate', purchase)}>
+                                  <Copy className="mr-2" /> Duplicate Bill
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteBill(purchase.id)} disabled={purchase.status === 'Deleted'}>
-                                <Trash2 />
-                                Delete Bill
+                                <DropdownMenuItem className="text-destructive" onSelect={() => handleAction('Delete', purchase)} disabled={purchase.status === 'Deleted'}>
+                                  <Trash2 className="mr-2" /> Delete Bill
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                             </DropdownMenu>
@@ -240,8 +259,42 @@ export default function PurchasesPage() {
             </div>
         </CardContent>
       </Card>
+
+      {selectedPurchase && (
+        <Dialog open={!!selectedPurchase} onOpenChange={(open) => !open && setSelectedPurchase(null)}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Purchase Bill Details: {selectedPurchase.id}</DialogTitle>
+                    <DialogDescription>
+                        Details for the bill received from {selectedPurchase.vendor}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4 text-sm">
+                    <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Vendor:</span>
+                        <span>{selectedPurchase.vendor}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Bill Date:</span>
+                        <span>{format(new Date(selectedPurchase.date), "dd MMM, yyyy")}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Due Date:</span>
+                        <span>{format(new Date(selectedPurchase.dueDate), "dd MMM, yyyy")}</span>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Status:</span>
+                        <div>{getStatusBadge(selectedPurchase.status)}</div>
+                    </div>
+                     <div className="grid grid-cols-2">
+                        <span className="text-muted-foreground">Amount:</span>
+                        <span className="font-semibold">₹{selectedPurchase.amount.toFixed(2)}</span>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+      )}
+
     </div>
   );
 }
-
-    
