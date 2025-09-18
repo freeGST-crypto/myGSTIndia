@@ -20,6 +20,7 @@ import {
   Scale,
   BookCopy,
   BookOpen,
+  Shield,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -87,6 +88,14 @@ const menuItems = [
     ],
   },
   { href: "/reports", label: "Reports", icon: Landmark },
+  {
+    label: "Admin",
+    icon: Shield,
+    subItems: [
+      { href: "/admin/dashboard", label: "Overview" },
+      { href: "/admin/users", label: "User Management" },
+    ],
+  },
   { 
     label: "Settings", 
     icon: Settings,
