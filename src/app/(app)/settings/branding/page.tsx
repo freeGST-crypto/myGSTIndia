@@ -57,7 +57,7 @@ const formSchema = z.object({
 });
 
 export default function BrandingPage() {
-    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>("https://picsum.photos/seed/logo/200/200");
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
     const [signatureFile, setSignatureFile] = useState<File | null>(null);
@@ -256,7 +256,7 @@ export default function BrandingPage() {
                             <div className="space-y-4">
                                 <FormLabel>Company Logo</FormLabel>
                                 <div className="flex items-center gap-4">
-                                    <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50">
+                                    <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50 overflow-hidden">
                                         {logoPreview ? <Image src={logoPreview} alt="Logo Preview" fill className="object-contain" /> : <Upload className="size-8 text-muted-foreground" />}
                                     </div>
                                     <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
@@ -286,8 +286,8 @@ export default function BrandingPage() {
                              <div className="space-y-4">
                                 <FormLabel>Digital Signature</FormLabel>
                                 <div className="flex items-center gap-4">
-                                    <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50">
-                                        {signaturePreview ? <Image src={signaturePreview} alt="Signature Preview" fill className="object-contain" /> : <FileSignature className="size-8 text-muted-foreground" />}
+                                    <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50 overflow-hidden">
+                                        {signaturePreview ? <Image src={signaturePreview} alt="Signature Preview" fill className="object-contain p-2" /> : <FileSignature className="size-8 text-muted-foreground" />}
                                     </div>
                                     <Button type="button" variant="outline" onClick={() => signatureInputRef.current?.click()}>
                                         <Upload className="mr-2" /> Upload Signature
@@ -486,5 +486,3 @@ export default function BrandingPage() {
         </div>
     );
 }
-
-    

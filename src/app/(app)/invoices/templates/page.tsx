@@ -13,19 +13,19 @@ const templates = [
     {
         id: "classic",
         name: "Classic Professional",
-        imageUrl: "/placeholders/invoice-classic.png",
+        imageUrl: "https://picsum.photos/seed/inv-classic/400/566",
         description: "A timeless, clean, and professional design suitable for any business."
     },
     {
         id: "modern",
         name: "Modern Minimalist",
-        imageUrl: "/placeholders/invoice-modern.png",
+        imageUrl: "https://picsum.photos/seed/inv-modern/400/566",
         description: "A sleek, contemporary design with a focus on typography and whitespace."
     },
     {
         id: "creative",
         name: "Creative Splash",
-        imageUrl: "/placeholders/invoice-creative.png",
+        imageUrl: "https://picsum.photos/seed/inv-creative/400/566",
         description: "A bold design with a splash of color, perfect for creative businesses."
     },
 ];
@@ -62,11 +62,13 @@ export default function InvoiceTemplatesPage() {
                             <CardDescription>{template.description}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="aspect-[1/1.414] border rounded-lg overflow-hidden bg-muted">
-                                {/* Using a placeholder div as image paths are not real */}
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                    [Template Preview]
-                                </div>
+                            <div className="relative aspect-[1/1.414] border rounded-lg overflow-hidden bg-muted">
+                                <Image
+                                    src={template.imageUrl}
+                                    alt={`${template.name} Preview`}
+                                    fill
+                                    className="object-cover"
+                                />
                             </div>
                         </CardContent>
                         <CardFooter>
