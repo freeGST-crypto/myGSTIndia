@@ -39,6 +39,7 @@ import {
   BadgePercent,
   Wallet,
   ShieldCheck,
+  Award,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -115,10 +116,15 @@ const menuItems = [
   {
     label: "Reports",
     icon: AreaChart,
-    href: "/reports/cma-report", // Added href for direct navigation
+    href: "/reports/cma-report",
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
     ],
+  },
+   { 
+    href: "/ca-certificates", 
+    label: "CA Certificates", 
+    icon: Award 
   },
   {
     href: "/legal-documents",
@@ -163,13 +169,15 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
 
   React.useEffect(() => {
     // Only run on client-side
-    const checkActive = (subItems: any[]): boolean => {
-        return subItems.some(sub => 
-            (sub.href && pathname.startsWith(sub.href)) || 
-            (sub.subItems && checkActive(sub.subItems))
-        );
-    };
-    setIsOpen(checkActive(item.subItems));
+    if (item.subItems) {
+      const checkActive = (subItems: any[]): boolean => {
+          return subItems.some(sub => 
+              (sub.href && pathname.startsWith(sub.href)) || 
+              (sub.subItems && checkActive(sub.subItems))
+          );
+      };
+      setIsOpen(checkActive(item.subItems));
+    }
   }, [pathname, item.subItems]);
 
 
@@ -250,7 +258,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
-            {/* This header title can be made dynamic later */}
             <h1 className="text-lg font-semibold">Dashboard</h1>
           </div>
           <UserNav />

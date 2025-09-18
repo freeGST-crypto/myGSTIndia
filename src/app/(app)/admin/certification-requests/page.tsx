@@ -38,6 +38,7 @@ const sampleRequests = [
     requestedBy: "Priya Mehta",
     requestDate: new Date(2024, 5, 10),
     status: "Pending",
+    draftUrl: "#", // Link to download draft
   },
   {
     id: "CERT-002",
@@ -46,15 +47,17 @@ const sampleRequests = [
     requestedBy: "Rohan Sharma",
     requestDate: new Date(2024, 5, 9),
     status: "Completed",
+    draftUrl: "#",
     signedDocumentUrl: "#"
   },
   {
     id: "CERT-003",
-    reportType: "CMA Report",
+    reportType: "Net Worth Certificate",
     clientName: "Synergy Corp",
-    requestedBy: "Priya Mehta",
-    requestDate: new Date(2024, 5, 11),
+    requestedBy: "Anjali Singh",
+    requestDate: new Date(2024, 5, 12),
     status: "Pending",
+    draftUrl: "#",
   },
 ];
 
@@ -83,6 +86,14 @@ export default function CertificationRequestsPage() {
       });
       // In a real app, you would use the signedDocumentUrl to fetch the file.
   }
+  
+   const handleDownloadDraft = (requestId: string) => {
+      toast({
+          title: 'Download Started',
+          description: `Downloading draft document for request ${requestId}.`
+      });
+      // In a real app, you would use the draftUrl to fetch the file.
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -104,20 +115,20 @@ export default function CertificationRequestsPage() {
                 Document Certification Requests
             </h1>
             <p className="text-muted-foreground">
-                Download reports, sign them offline using your DSC, and upload the certified document.
+                Download draft reports, sign them offline using your DSC, and upload the certified document.
             </p>
         </div>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Pending & Completed Requests</CardTitle>
-          <CardDescription>View all requests for document certification from your team.</CardDescription>
+          <CardDescription>View all requests for document certification from users and your team.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Client / Report</TableHead>
+                <TableHead>Client / Certificate Type</TableHead>
                 <TableHead>Requested By</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
@@ -148,8 +159,8 @@ export default function CertificationRequestsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Download className="mr-2" /> Download Report
+                            <DropdownMenuItem onSelect={() => handleDownloadDraft(req.id)}>
+                              <Download className="mr-2" /> Download Draft
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleUploadClick(req.id)}>
                               <Upload className="mr-2" /> Upload Signed Document
@@ -167,3 +178,4 @@ export default function CertificationRequestsPage() {
     </div>
   );
 }
+
