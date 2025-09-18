@@ -4,7 +4,7 @@
 import { useState, useMemo, useContext } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { DollarSign, IndianRupee, CreditCard, Users, Search } from "lucide-react";
-import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
+import { FinancialSummaryChart } from "@/components/dashboard/financial-summary-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 import Link from "next/link";
@@ -110,7 +110,7 @@ export default function DashboardPage() {
       
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-            <MarketingCarousel />
+            <FinancialSummaryChart />
         </div>
         <div>
             <ComplianceCalendar />
