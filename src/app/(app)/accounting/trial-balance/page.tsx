@@ -84,8 +84,8 @@ export default function TrialBalancePage() {
     const suspenseEntry = {
         account: "Suspense Account",
         code: "9999",
-        debit: difference > 0 ? difference : 0,
-        credit: difference < 0 ? -difference : 0
+        debit: difference > 0 ? 0 : -difference,
+        credit: difference > 0 ? difference : 0
     };
 
 
