@@ -30,6 +30,15 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Search, FileCog, Truck } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
 
 const initialPurchaseOrders = [
   {
@@ -61,6 +70,35 @@ const initialPurchaseOrders = [
 export default function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState(initialPurchaseOrders);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  const handleDownloadPdf = (po: typeof initialPurchaseOrders[0]) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(20);
+    doc.text("Purchase Order", 14, 22);
+
+    doc.setFontSize(12);
+    doc.text(`PO #: ${po.id}`, 14, 32);
+    doc.text(`Date: ${po.date}`, 14, 38);
+    doc.text(`Expected: ${po.expectedDate}`, 14, 44);
+
+    doc.text(`Vendor: ${po.vendor}`, 150, 32);
+
+    doc.autoTable({
+        startY: 60,
+        head: [['Description', 'Qty', 'Rate', 'Amount']],
+        body: [
+            ['Sample Item 1', '2', '5000', '10000'],
+            ['Sample Item 2', '1', '5000', '5000'],
+        ],
+        foot: [['', '', 'Total', po.amount.toFixed(2)]],
+        theme: 'striped',
+    });
+
+    doc.save(`PO_${po.id}.pdf`);
+    toast({ title: "Download Started", description: `PO ${po.id}.pdf is downloading.` });
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -178,7 +216,7 @@ export default function PurchaseOrdersPage() {
                             <FileText />
                             Convert to Bill
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleDownloadPdf(po)}>
                             <Download />
                             Download PDF
                             </DropdownMenuItem>
