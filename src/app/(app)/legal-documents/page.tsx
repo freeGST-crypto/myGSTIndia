@@ -80,7 +80,7 @@ const documentTypes = [
         description: "Formalize the terms of accounting services.",
         href: "/legal-documents/accounting-engagement-letter",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "NDA (Non-Disclosure Agreement)",
