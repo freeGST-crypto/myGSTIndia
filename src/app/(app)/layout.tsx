@@ -27,13 +27,12 @@ import {
   ShoppingCart,
   FileSpreadsheet,
   GitCompareArrows,
+  BookCopy,
   BookPlus,
   TrendingUp,
   Building,
   LayoutDashboard,
   AreaChart,
-  BookCopy,
-  Briefcase,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -112,13 +111,13 @@ const menuItems = [
     label: "Legal Documents",
     icon: BookCopy,
   },
-  { href: "/book-appointment", label: "Book Appointment", icon: CalendarPlus },
   {
     label: "Admin",
     icon: Shield,
     subItems: [
       { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/admin/users", label: "User Management", icon: Users },
+      { href: "/book-appointment", label: "Book Appointment", icon: CalendarPlus },
     ],
   },
   { 
