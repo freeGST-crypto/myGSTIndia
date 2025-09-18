@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -41,6 +42,7 @@ import {
   FileSpreadsheet,
   BookCopy,
   ShoppingCart,
+  ShoppingBag,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -81,6 +83,7 @@ const menuItems = [
     subItems: [
       { href: "/invoices", label: "Invoices", icon: Receipt },
       { href: "/purchases", label: "Purchases", icon: ShoppingCart },
+      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag },
       { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus },
       { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus },
     ],
@@ -207,74 +210,66 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
 };
 
 
-const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
-  return (
-    <SidebarMenu>
-      {items.map((item) =>
-        item.subItems ? (
-          <SidebarMenuItem key={item.label}>
-             <CollapsibleMenuItem item={item} pathname={pathname} />
-          </SidebarMenuItem>
+const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
+  <SidebarMenu>
+    {items.map((item, index) => (
+      <SidebarMenuItem key={index}>
+        {item.subItems ? (
+          <CollapsibleMenuItem item={item} pathname={pathname} />
         ) : (
-          <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton
-                as={Link}
-                href={item.href}
-                isActive={pathname === item.href}
-                tooltip={item.label}
-              >
-                {item.icon && <item.icon />}
-                <span>{item.label}</span>
-              </SidebarMenuButton>
-          </SidebarMenuItem>
-        )
-      )}
-    </SidebarMenu>
-  );
-};
+          <Link href={item.href}>
+            <SidebarMenuButton
+              isActive={pathname === item.href}
+              className="w-full"
+            >
+              <item.icon className="h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+            </SidebarMenuButton>
+          </Link>
+        )}
+      </SidebarMenuItem>
+    ))}
+  </SidebarMenu>
+);
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
-    return (
-        <SidebarProvider>
-        <Sidebar>
-            <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <GstEaseLogo className="size-8" />
-                <h1 className="text-xl font-semibold text-sidebar-primary">GSTEase</h1>
-            </div>
-            </SidebarHeader>
-            <SidebarContent>
-            <NavMenu items={menuItems} pathname={pathname}/>
-            </SidebarContent>
-            <SidebarFooter>
-            <Separator className="my-2 bg-sidebar-border" />
-            <p className="p-2 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-                © 2024 GSTEase Inc.
-            </p>
-            </SidebarFooter>
-        </Sidebar>
-        <SidebarInset>
-            <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
-            <SidebarTrigger className="md:hidden" />
-            <div className="flex-1">
-                <div className="hidden md:flex items-center gap-4 text-sm">
-                   <div className="flex items-center gap-1 font-medium text-muted-foreground">
-                        <span>Made with</span>
-                        <Heart className="size-4 text-red-500" />
-                        <span>in India</span>
-                    </div>
-                    <Separator orientation="vertical" className="h-6"/>
-                    <div>
-                        <p className="font-semibold text-foreground">Acme Innovations Pvt. Ltd.</p>
-                        <p className="text-xs text-muted-foreground font-mono">GSTIN: 27ABCDE1234F1Z5</p>
-                    </div>
-                </div>
-            </div>
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center gap-2 p-2">
+            <GstEaseLogo className="size-8 shrink-0" />
+            <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
+              GSTEase
+            </span>
+          </div>
+        </SidebarHeader>
+        <Separator />
+        <SidebarContent>
+            <NavMenu items={menuItems} pathname={pathname} />
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="p-2">
             <UserNav />
-            </header>
-            <main className="flex-1 p-4 md:p-8">{children}</main>
-        </SidebarInset>
-        </SidebarProvider>
-    )
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+          <SidebarTrigger className="md:hidden"/>
+          <div className="w-full flex-1">
+             {/* Can add a search bar here if needed */}
+          </div>
+        </header>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
