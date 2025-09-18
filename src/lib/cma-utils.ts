@@ -127,16 +127,59 @@ export const exportToExcel = (reportData: any) => {
         if (key === 'aiObservations' || key === 'loanDetails') return;
 
         const sheetData = reportData[key];
-        const ws = XLSX.utils.aoa_to_sheet([sheetData.headers, ...sheetData.body]);
-        XLSX.utils.book_append_sheet(wb, ws, sheetData.title.substring(0, 31)); // Sheet names have a 31 char limit
+        const sheetTitle = sheetData.title.substring(0, 31);
+        
+        // Add company name and report title to the sheet
+        const headerData = [
+            [companyBranding.name],
+            [sheetTitle],
+            [] // Empty row for spacing
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(headerData);
+        XLSX.utils.sheet_add_aoa(ws, [sheetData.headers, ...sheetData.body], { origin: -1 }); // Append data after header
+
+        // Auto-fit column widths
+        const colWidths = sheetData.headers.map((_: any, i: number) => {
+            let maxWidth = 0;
+            const allRows = [sheetData.headers, ...sheetData.body];
+            allRows.forEach((row: any[]) => {
+                const cellValue = row[i] ? String(row[i]) : "";
+                if (cellValue.length > maxWidth) {
+                    maxWidth = cellValue.length;
+                }
+            });
+            return { wch: maxWidth + 2 }; // +2 for a little padding
+        });
+        ws['!cols'] = colWidths;
+        
+        // Right-align numeric columns
+        const dataStartIndex = headerData.length + 1; // Row where data starts
+        sheetData.body.forEach((row: any[], r: number) => {
+            row.forEach((cell: any, c: number) => {
+                // Skip the first column (Particulars)
+                if (c > 0 && !isNaN(parseFloat(cell))) {
+                     const cellRef = XLSX.utils.encode_cell({ r: r + dataStartIndex, c: c });
+                     if(ws[cellRef]) {
+                         ws[cellRef].s = { alignment: { horizontal: "right" } };
+                     }
+                }
+            });
+        });
+
+        XLSX.utils.book_append_sheet(wb, ws, sheetTitle);
     });
     
     // Add AI Observations to a separate sheet
     const obsWs = XLSX.utils.aoa_to_sheet([
         ["AI Generated Observations"],
+        [],
         [reportData.aiObservations]
     ]);
+    obsWs['!cols'] = [{ wch: 100 }];
+    obsWs['C3'].s = { alignment: { wrapText: true } };
     XLSX.utils.book_append_sheet(wb, obsWs, "AI Observations");
 
     XLSX.writeFile(wb, `CMA_Report_${companyBranding.name}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
+
