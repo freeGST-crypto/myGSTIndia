@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -61,7 +60,13 @@ import { GstEaseLogo } from "@/components/icons";
 import { UserNav } from "@/components/layout/user-nav";
 import { Separator } from "@/components/ui/separator";
 
+
+// --- Menu Items Definition ---
+// The following array defines the structure of the sidebar navigation.
+// Comments indicate the intended user roles for each section.
+
 const menuItems = [
+  // == COMMON FEATURES (For both Business Owners & Professionals) ==
   { href: "/", label: "Dashboard", icon: Gauge },
   {
     label: "Billing",
@@ -119,6 +124,10 @@ const menuItems = [
     label: "Book Appointment", 
     icon: CalendarPlus 
   },
+
+  // == PROFESSIONAL / ADMIN FEATURES ==
+  // This section is intended for Professionals (to manage their clients) and Super Admins.
+  // It would be hidden from Direct Business Owners.
   {
     label: "Admin",
     icon: Shield,
@@ -130,6 +139,8 @@ const menuItems = [
       { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign },
     ],
   },
+
+  // == COMMON SETTINGS ==
   { 
     label: "Settings", 
     icon: Settings,
@@ -144,32 +155,36 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    const isActive = item.subItems.some((sub:any) => sub.href && pathname.startsWith(sub.href)) || item.subItems.some((sub:any) => sub.subItems?.some((ss:any) => ss.href && pathname.startsWith(ss.href)));
-    setIsOpen(isActive);
+    const checkActive = (subItems: any[]): boolean => {
+        return subItems.some(sub => 
+            (sub.href && pathname.startsWith(sub.href)) || 
+            (sub.subItems && checkActive(sub.subItems))
+        );
+    };
+    setIsOpen(checkActive(item.subItems));
   }, [pathname, item.subItems]);
 
+
   return (
-    <SidebarMenuItem>
-      <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger asChild>
-            <div
-              className={cn(
-                "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <item.icon className="h-4 w-4" />
-                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-              </div>
-              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
+    <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <div
+            className={cn(
+              "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <item.icon className="h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <NavMenu items={item.subItems} pathname={pathname}/>
-          </CollapsibleContent>
-      </Collapsible>
-    </SidebarMenuItem>
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <NavMenu items={item.subItems} pathname={pathname}/>
+        </CollapsibleContent>
+    </Collapsible>
   );
 };
 
@@ -179,7 +194,9 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
     <SidebarMenu>
       {items.map((item) =>
         item.subItems ? (
-          <CollapsibleMenuItem key={item.label} item={item} pathname={pathname} />
+          <SidebarMenuItem key={item.label}>
+             <CollapsibleMenuItem item={item} pathname={pathname} />
+          </SidebarMenuItem>
         ) : (
           <SidebarMenuItem key={item.label}>
               <SidebarMenuButton
@@ -225,6 +242,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
+            {/* This header title can be made dynamic later */}
             <h1 className="text-lg font-semibold">Dashboard</h1>
           </div>
           <UserNav />
