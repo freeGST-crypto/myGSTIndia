@@ -39,8 +39,8 @@ export default function RootLayout({
           fontSourceCodePro.variable
         )}
       >
-        {children}
         <ClientOnly>
+          {children}
           <Toaster />
         </ClientOnly>
       </body>
