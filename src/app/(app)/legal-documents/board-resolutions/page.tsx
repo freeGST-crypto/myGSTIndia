@@ -11,9 +11,9 @@ const resolutionTypes = [
     { name: "Approval of Annual Accounts", href: "/legal-documents/board-resolutions/approval-of-annual-accounts", status: "active" },
     { name: "Appointment of Additional Director", href: "/legal-documents/board-resolutions/appointment-of-director", status: "active" },
     { name: "Approval of Loan from Director", href: "/legal-documents/board-resolutions/approval-of-loan", status: "active" },
-    { name: "Borrowing Powers (Bank Loan)", href: "#", status: "coming_soon" },
-    { name: "Issue of Share Certificates", href: "#", status: "coming_soon" },
-    { name: "Shifting of Registered Office", href: "#", status: "coming_soon" },
+    { name: "Borrowing Powers (Bank Loan)", href: "/legal-documents/board-resolutions/borrowing-powers", status: "active" },
+    { name: "Issue of Share Certificates", href: "/legal-documents/board-resolutions/issue-of-share-certificates", status: "active" },
+    { name: "Shifting of Registered Office", href: "/legal-documents/board-resolutions/shifting-of-registered-office", status: "active" },
 ];
 
 export default function BoardResolutionsLibraryPage() {
