@@ -60,9 +60,9 @@ const documentTypes = [
     {
         name: "Loan Agreement",
         description: "Between partners/directors & the company.",
-        href: "#",
+        href: "/legal-documents/loan-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "GST Engagement Letter",
