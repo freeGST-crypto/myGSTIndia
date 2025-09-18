@@ -67,9 +67,9 @@ const documentTypes = [
      {
         name: "Rental Receipts for HRA",
         description: "Generate monthly rental receipts for employees.",
-        href: "#",
+        href: "/legal-documents/rental-receipts",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     }
 ]
 
