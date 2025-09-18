@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useContext } from "react";
@@ -51,23 +50,10 @@ import { cn } from "@/lib/utils";
 import { AccountingContext } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 
-
-// Sample data
-const items = [
-  { id: "ITEM-001", name: "Standard Office Chair", price: 4500, hsn: "9401" },
-  {
-    id: "ITEM-003",
-    name: "Wireless Mouse",
-    price: 6000,
-    hsn: "8471",
-  },
-  { id: "ITEM-004", name: "Raw Material A", price: 1200, hsn: "2901" },
-  { id: "ITEM-005", name: "Packaging Boxes", price: 150, hsn: "4819" },
-];
 
 export default function NewPurchasePage() {
   const accountingContext = useContext(AccountingContext);
@@ -90,9 +76,13 @@ export default function NewPurchasePage() {
     },
   ]);
   
-  const vendorsQuery = user ? collection(db, 'vendors') : null;
+  const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
   const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
   const vendors = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+  const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
+  const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
+  const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const handleAddItem = () => {
     setLineItems([
@@ -125,12 +115,12 @@ export default function NewPurchasePage() {
     }
 
     if (field === 'itemId') {
-      const selectedItem = items.find(i => i.id === value);
+      const selectedItem = items.find((i: any) => i.id === value);
       if (selectedItem) {
         currentItem.description = selectedItem.name;
-        currentItem.rate = selectedItem.price;
-        currentItem.hsn = selectedItem.hsn;
-        currentItem.amount = currentItem.qty * selectedItem.price;
+        currentItem.rate = selectedItem.purchasePrice || 0;
+        currentItem.hsn = selectedItem.hsn || "";
+        currentItem.amount = currentItem.qty * (selectedItem.purchasePrice || 0);
       }
     }
     
@@ -258,12 +248,12 @@ export default function NewPurchasePage() {
                 {lineItems.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)}>
+                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)} disabled={itemsLoading}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select item" />
+                            <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                           </SelectTrigger>
                           <SelectContent>
-                            {items.map((i) => (
+                            {items.map((i: any) => (
                               <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -353,6 +343,3 @@ export default function NewPurchasePage() {
       </Card>
     </div>
   );
-}
-
-    

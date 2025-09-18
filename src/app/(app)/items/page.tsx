@@ -10,46 +10,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet, Search } from "lucide-react";
+import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet, Search, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
-const initialItems = [
-    {
-        id: "ITEM-001",
-        name: "Standard Office Chair",
-        description: "Ergonomic office chair with lumbar support.",
-        hsn: "9401",
-        stock: 50,
-        purchasePrice: 4500,
-        sellingPrice: 7500,
-    },
-    {
-        id: "ITEM-002",
-        name: "Accounting Services",
-        description: "Monthly bookkeeping and GST filing services.",
-        hsn: "9982",
-        stock: 0, // Services typically have no stock
-        purchasePrice: 0,
-        sellingPrice: 15000,
-    },
-    {
-        id: "ITEM-003",
-        name: "Wireless Mouse",
-        description: "Logitech MX Master 3S wireless mouse.",
-        hsn: "8471",
-        stock: 120,
-        purchasePrice: 6000,
-        sellingPrice: 8999,
-    }
-];
+
+const itemSchema = z.object({
+    name: z.string().min(2, "Item name is required."),
+    description: z.string().optional(),
+    hsn: z.string().optional(),
+    stock: z.coerce.number().min(0).optional(),
+    purchasePrice: z.coerce.number().min(0).optional(),
+    sellingPrice: z.coerce.number().min(0).optional(),
+});
 
 
 export default function ItemsPage() {
-    const [items, setItems] = useState(initialItems);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
+    const [user] = useAuthState(auth);
+
+    const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
+    const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
+    const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+    const form = useForm<z.infer<typeof itemSchema>>({
+        resolver: zodResolver(itemSchema),
+        defaultValues: { name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0 },
+    });
 
     const handleDownloadTemplate = () => {
         const headers = "Name,Description,HSN,Stock,Purchase Price,Selling Price";
@@ -69,9 +66,26 @@ export default function ItemsPage() {
         if (!searchTerm) return items;
         return items.filter(item =>
             item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.hsn.toLowerCase().includes(searchTerm.toLowerCase())
+            item.hsn?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [items, searchTerm]);
+
+    const onAddItemSubmit = async (values: z.infer<typeof itemSchema>) => {
+        if (!user) {
+            toast({ variant: "destructive", title: "Not authenticated" });
+            return;
+        }
+        try {
+            await addDoc(collection(db, 'items'), { ...values, userId: user.uid });
+            toast({ title: "Item Added", description: `${values.name} has been added to your inventory.` });
+            form.reset();
+            setIsAddDialogOpen(false);
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            toast({ variant: "destructive", title: "Error", description: "Could not save the item." });
+        }
+    };
+
 
     return (
         <div className="space-y-8">
@@ -102,7 +116,7 @@ export default function ItemsPage() {
                 <CardHeader className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>Products & Services</CardTitle>
+                            <CardTitle>Products &amp; Services</CardTitle>
                             <CardDescription>Manage your items, including products and services.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
@@ -136,43 +150,29 @@ export default function ItemsPage() {
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-[525px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Add New Item</DialogTitle>
-                                        <DialogDescription>
-                                            Add a new product or service to your inventory.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label htmlFor="item-name" className="text-right">Item Name</Label>
-                                            <Input id="item-name" placeholder="e.g. Wireless Keyboard" className="col-span-3" />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-start gap-4">
-                                            <Label htmlFor="item-description" className="text-right pt-2">Description</Label>
-                                            <Textarea id="item-description" placeholder="A short description of the item" className="col-span-3" />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label htmlFor="hsn-sac" className="text-right">HSN/SAC Code</Label>
-                                            <Input id="hsn-sac" placeholder="e.g. 8471" className="col-span-3" />
-                                        </div>
-                                        <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label htmlFor="stock" className="text-right">Opening Stock</Label>
-                                            <Input id="stock" type="number" placeholder="0" className="col-span-3" />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 col-start-2">
-                                            <div>
-                                                <Label htmlFor="purchase-price">Purchase Price (₹)</Label>
-                                                <Input id="purchase-price" type="number" placeholder="0.00"/>
+                                    <Form {...form}>
+                                        <form onSubmit={form.handleSubmit(onAddItemSubmit)}>
+                                            <DialogHeader>
+                                                <DialogTitle>Add New Item</DialogTitle>
+                                                <DialogDescription>
+                                                    Add a new product or service to your inventory.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><Label>Item Name</Label><FormControl><Input placeholder="e.g. Wireless Keyboard" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                                <FormField control={form.control} name="description" render={({ field }) => ( <FormItem><Label>Description</Label><FormControl><Textarea placeholder="A short description of the item" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                                <FormField control={form.control} name="hsn" render={({ field }) => ( <FormItem><Label>HSN/SAC Code</Label><FormControl><Input placeholder="e.g. 8471" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                                <FormField control={form.control} name="stock" render={({ field }) => ( <FormItem><Label>Opening Stock</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <FormField control={form.control} name="purchasePrice" render={({ field }) => ( <FormItem><Label>Purchase Price (₹)</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                                    <FormField control={form.control} name="sellingPrice" render={({ field }) => ( <FormItem><Label>Selling Price (₹)</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <Label htmlFor="selling-price">Selling Price (₹)</Label>
-                                                <Input id="selling-price" type="number" placeholder="0.00" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button type="submit" onClick={() => setIsAddDialogOpen(false)}>Save Item</Button>
-                                    </DialogFooter>
+                                            <DialogFooter>
+                                                <Button type="submit">Save Item</Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </Form>
                                 </DialogContent>
                             </Dialog>
                         </div>
@@ -200,15 +200,17 @@ export default function ItemsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredItems.map((item) => (
+                            {itemsLoading ? (
+                                <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="mx-auto animate-spin"/></TableCell></TableRow>
+                            ) : filteredItems.map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell>
                                         <div className="font-medium">{item.name}</div>
                                         <div className="text-sm text-muted-foreground">{item.hsn}</div>
                                     </TableCell>
                                     <TableCell className="text-right">{item.stock > 0 ? item.stock : "-"}</TableCell>
-                                    <TableCell className="text-right">₹{item.purchasePrice.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right">₹{item.sellingPrice.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">₹{item.purchasePrice?.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">₹{item.sellingPrice?.toFixed(2)}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -237,4 +239,3 @@ export default function ItemsPage() {
             </Card>
         </div>
     );
-}

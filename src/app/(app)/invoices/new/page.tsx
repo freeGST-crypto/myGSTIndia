@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useContext, useEffect } from "react";
@@ -49,15 +48,9 @@ import { cn } from "@/lib/utils";
 import { AccountingContext } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
-
-const items = [
-  { id: "ITEM-001", name: "Standard Office Chair", price: 7500, hsn: "9401" },
-  { id: "ITEM-002", name: "Accounting Services", price: 15000, hsn: "9982" },
-  { id: "ITEM-003", name: "Wireless Mouse", price: 8999, hsn: "8471" },
-];
 
 export default function NewInvoicePage() {
   const accountingContext = useContext(AccountingContext);
@@ -84,9 +77,13 @@ export default function NewInvoicePage() {
     },
   ]);
   
-  const customersQuery = user ? collection(db, 'customers') : null;
+  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
   const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+  const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
+  const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
+  const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const handleAddItem = () => {
     setLineItems([
@@ -112,8 +109,8 @@ export default function NewInvoicePage() {
       const selectedItem = items.find(i => i.id === value);
       if (selectedItem) {
         currentItem.description = selectedItem.name;
-        currentItem.rate = selectedItem.price;
-        currentItem.hsn = selectedItem.hsn;
+        currentItem.rate = selectedItem.sellingPrice || 0;
+        currentItem.hsn = selectedItem.hsn || "";
       }
     }
 
@@ -247,12 +244,12 @@ export default function NewInvoicePage() {
                 {lineItems.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)}>
+                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)} disabled={itemsLoading}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select item" />
+                            <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                           </SelectTrigger>
                           <SelectContent>
-                            {items.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                            {items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                     </TableCell>
@@ -299,6 +296,3 @@ export default function NewInvoicePage() {
       </Card>
     </div>
   );
-}
-
-    
