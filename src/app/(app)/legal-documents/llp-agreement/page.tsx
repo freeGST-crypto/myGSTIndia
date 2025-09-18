@@ -31,6 +31,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { suggestClausesAction } from "./actions";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 const partnerSchema = z.object({
     name: z.string().min(2, "Partner name is required."),
@@ -354,5 +355,3 @@ export default function LlpAgreementPage() {
     </div>
   );
 }
-
-    
