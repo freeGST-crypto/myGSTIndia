@@ -54,8 +54,14 @@ export default function BalanceSheetPage() {
                     const credit = parseFloat(line.credit);
                      // For Assets & Expenses, Balance = Dr - Cr
                     // For Liabilities, Equity, Revenue, Balance = Cr - Dr
-                    // In our system, we store balances from a debit-positive perspective
-                    balances[line.account] += debit - credit;
+                    // In our system, we store balances from a debit-positive perspective for assets/expenses
+                    // and credit-positive for liabilities/equity/revenue
+                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
+                     if (accountType === 'Asset' || accountType === 'Expense') {
+                        balances[line.account] += debit - credit;
+                    } else { // Liability, Equity, Revenue
+                        balances[line.account] += credit - debit;
+                    }
                 }
             });
         });
@@ -66,9 +72,7 @@ export default function BalanceSheetPage() {
     const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
     const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
     
-    // Revenue balance is credit-positive (stored as negative), so we negate it to get actual revenue
-    const totalRevenue = revenueAccounts.reduce((sum, code) => sum + -(accountBalances[code] || 0), 0);
-    // Expense balance is debit-positive (stored as positive), so we use it directly
+    const totalRevenue = revenueAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
     const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
     const netProfit = totalRevenue - totalExpenses;
 
@@ -76,19 +80,19 @@ export default function BalanceSheetPage() {
     const data = useMemo(() => {
         return {
             equityAndLiabilities: {
-                capitalAccount: -(accountBalances['3010'] || 0),
-                reservesAndSurplus: -(accountBalances['3020'] || 0) + netProfit,
-                longTermLoans: -(accountBalances['2210'] || 0),
+                capitalAccount: (accountBalances['3010'] || 0),
+                reservesAndSurplus: (accountBalances['3020'] || 0) + netProfit,
+                longTermLoans: (accountBalances['2210'] || 0),
                 currentLiabilities: {
-                    sundryCreditors: -(accountBalances['2010'] || 0),
-                    gstPayable: -(accountBalances['2110'] || 0),
+                    sundryCreditors: (accountBalances['2010'] || 0),
+                    gstPayable: (accountBalances['2110'] || 0),
                     otherCurrentLiabilities: 0,
                 }
             },
             assets: {
                 fixedAssets: {
                     officeEquipment: accountBalances['1450'] || 0,
-                    lessAccumulatedDepreciation: accountBalances['1455'] || 0, // This is a credit balance, so it will be negative
+                    lessAccumulatedDepreciation: -(accountBalances['1455'] || 0), // Contra-asset, so negate its balance
                 },
                 investments: 0,
                 currentAssets: {
@@ -178,7 +182,7 @@ export default function BalanceSheetPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 {/* Liabilities + Equity Column */}
                 <div className="w-full">
-                    <Table>
+                    <Table className="w-full">
                         <TableHeader><TableRow><TableHead>Liabilities & Equity</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
@@ -204,7 +208,7 @@ export default function BalanceSheetPage() {
 
                 {/* Assets Column */}
                 <div className="w-full">
-                    <Table>
+                    <Table className="w-full">
                         <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
