@@ -111,25 +111,15 @@ export default function PurchaseOrdersPage() {
     doc.text("456 Logistics Hub, Commerce City", 110, 68);
 
     // Items Table
-    const tableColumn = ["Sr.", "Item Description", "HSN/SAC", "Qty", "Rate (INR)", "Taxable Value (INR)", "GST Rate", "GST Amt (INR)", "Total (INR)"];
-    // Mock Data for PDF
-    const taxableValue1 = 10000;
-    const gst1 = taxableValue1 * 0.18;
-    const total1 = taxableValue1 + gst1;
+    const tableColumn = ["Sr.", "Item Description", "HSN/SAC", "Qty", "Rate (INR)", "Taxable Value (INR)"];
     
-    const taxableValue2 = 5000;
-    const gst2 = taxableValue2 * 0.18;
-    const total2 = taxableValue2 + gst2;
-
+    // Use the PO's amount to derive item data
+    const subtotal = po.amount / 1.18; // Assuming 18% GST for all items
+    const gst = po.amount - subtotal;
     const tableRows = [
-        ["1", "Sample Item A", "9982", "2", "5,000.00", taxableValue1.toFixed(2), "18%", gst1.toFixed(2), total1.toFixed(2)],
-        ["2", "Sample Component B", "8471", "5", "1,000.00", taxableValue2.toFixed(2), "18%", gst2.toFixed(2), total2.toFixed(2)],
+        ["1", "Sample Item based on PO", "9982", "1", subtotal.toFixed(2), subtotal.toFixed(2)],
     ];
     
-    const subtotal = taxableValue1 + taxableValue2;
-    const totalGst = gst1 + gst2;
-    const total = subtotal + totalGst;
-
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
@@ -144,15 +134,15 @@ export default function PurchaseOrdersPage() {
         finalY = 85 + (tableRows.length + 1) * 10; // estimate if not available
     }
 
+    // Totals
     doc.setFontSize(10);
     doc.text("Subtotal:", 140, finalY + 8);
     doc.text(subtotal.toFixed(2), 200, finalY + 8, { align: "right" });
-    doc.text("Total GST:", 140, finalY + 14);
-    doc.text(totalGst.toFixed(2), 200, finalY + 14, { align: "right" });
+    doc.text("Total GST (18%):", 140, finalY + 14);
+    doc.text(gst.toFixed(2), 200, finalY + 14, { align: "right" });
     doc.setFont("helvetica", "bold");
     doc.text("Total:", 140, finalY + 20);
-    doc.text(`Rs. ${total.toFixed(2)}`, 200, finalY + 20, { align: "right" });
-
+    doc.text(`Rs. ${po.amount.toFixed(2)}`, 200, finalY + 20, { align: "right" });
 
     // Terms and Conditions
     finalY += 30; // space
@@ -204,7 +194,7 @@ export default function PurchaseOrdersPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Purchase Orders / New</h1>
+          <h1 className="text-3xl font-bold">Purchase Orders</h1>
           <p className="text-muted-foreground">
             Create and track orders placed with your vendors.
           </p>
@@ -317,5 +307,3 @@ export default function PurchaseOrdersPage() {
     </div>
   );
 }
-
-    
