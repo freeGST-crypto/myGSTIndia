@@ -59,8 +59,8 @@ export default function AdminDashboardPage() {
         <Link href="/admin/professionals">
             <AdminStatCard
             title="Listed Professionals"
-            mainValue="48"
-            subValue="25 CAs / 23 Advocates"
+            mainValue="52"
+            subValue="CA/CS/Advocates & more"
             icon={UserSquare}
             />
         </Link>

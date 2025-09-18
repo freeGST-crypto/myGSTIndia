@@ -78,6 +78,36 @@ const sampleProfessionals = [
     proCount: 2,
     avatarUrl: "https://picsum.photos/seed/pro3/100/100"
   },
+  {
+    id: "PRO-006",
+    name: "Sandeep Verma, CWA",
+    firmName: "Verma Cost Accountants",
+    email: "s.verma@cwa.com",
+    city: "Chennai",
+    specialization: "Cost Audit, Management Accounting",
+    clients: 12,
+    status: "Active",
+    about: "Specialists in cost accounting and management advisory services for manufacturing industries.",
+    experience: 14,
+    staffCount: 15,
+    proCount: 4,
+    avatarUrl: "https://picsum.photos/seed/pro6/100/100",
+  },
+   {
+    id: "PRO-008",
+    name: "Amit Kumar, Tax Practitioner",
+    firmName: "Kumar Tax Consultants",
+    email: "amit.k@taxhelp.com",
+    city: "Kolkata",
+    specialization: "Income Tax Filing, TDS/TCS",
+    clients: 50,
+    status: "Active",
+    about: "20+ years of experience in individual and corporate tax planning and filing.",
+    experience: 18,
+    staffCount: 5,
+    proCount: 2,
+    avatarUrl: "https://picsum.photos/seed/pro8/100/100",
+  },
 ];
 
 export default function ProfessionalsListPage() {

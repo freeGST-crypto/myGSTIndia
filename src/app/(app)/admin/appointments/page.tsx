@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -61,6 +62,28 @@ const sampleAppointments = [
     preferredTime: "12:00 PM - 02:00 PM",
     status: "Completed",
     assignedTo: "Rohan Sharma, CS"
+  },
+  {
+    id: "APT-004",
+    clientName: "Digital Goods",
+    clientEmail: "accounts@digitalgoods.com",
+    professionalType: "Cost Accountant (CWA)",
+    serviceArea: "Cost Audit",
+    preferredDate: new Date(new Date().setDate(new Date().getDate() + 3)),
+    preferredTime: "11:00 AM - 01:00 PM",
+    mode: "Video Call",
+    status: "Pending",
+  },
+  {
+    id: "APT-005",
+    clientName: "Retail Chain Inc.",
+    clientEmail: "finance@retailchain.com",
+    professionalType: "Tax Practitioner",
+    serviceArea: "TDS Compliance",
+    preferredDate: new Date(new Date().setDate(new Date().getDate() + 5)),
+    preferredTime: "03:00 PM - 04:00 PM",
+    mode: "Phone Call",
+    status: "Pending",
   },
 ];
 

@@ -78,6 +78,45 @@ const sampleProfessionals = [
     reviews: 60,
     avatarUrl: "https://picsum.photos/seed/pro5/100/100",
   },
+  {
+    id: "PRO-006",
+    name: "Sandeep Verma, CWA",
+    type: "cwa",
+    firmName: "Verma Cost Accountants",
+    email: "s.verma@cwa.com",
+    specialization: ["Cost Audit", "Management Accounting"],
+    city: "Chennai",
+    experience: 14,
+    rating: 4.7,
+    reviews: 41,
+    avatarUrl: "https://picsum.photos/seed/pro6/100/100",
+  },
+  {
+    id: "PRO-007",
+    name: "Neha Gupta, Accountant",
+    type: "accountant",
+    firmName: "Accurate Bookkeeping",
+    email: "neha.g@bookkeeping.com",
+    specialization: ["Bookkeeping", "Payroll", "MIS Reporting"],
+    city: "Pune",
+    experience: 7,
+    rating: 4.6,
+    reviews: 25,
+    avatarUrl: "https://picsum.photos/seed/pro7/100/100",
+  },
+  {
+    id: "PRO-008",
+    name: "Amit Kumar, Tax Practitioner",
+    type: "tax_practitioner",
+    firmName: "Kumar Tax Consultants",
+    email: "amit.k@taxhelp.com",
+    specialization: ["Income Tax Filing", "TDS/TCS"],
+    city: "Kolkata",
+    experience: 18,
+    rating: 4.8,
+    reviews: 50,
+    avatarUrl: "https://picsum.photos/seed/pro8/100/100",
+  },
 ];
 
 
@@ -115,6 +154,9 @@ export default function ProfessionalServicesPage() {
                                     <SelectItem value="ca">Chartered Accountant (CA)</SelectItem>
                                     <SelectItem value="cs">Company Secretary (CS)</SelectItem>
                                     <SelectItem value="advocate">Advocate</SelectItem>
+                                    <SelectItem value="cwa">Cost Accountant (CWA)</SelectItem>
+                                    <SelectItem value="accountant">Accountant</SelectItem>
+                                    <SelectItem value="tax_practitioner">Tax Practitioner</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
