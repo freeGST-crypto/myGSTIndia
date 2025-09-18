@@ -45,9 +45,9 @@ const certificateTypes = [
     {
         name: "General Attestation",
         description: "A general-purpose attestation form.",
-        href: "#",
+        href: "/ca-certificates/general-attestation",
         icon: FileText,
-        status: "inactive"
+        status: "active"
     },
 ];
 
