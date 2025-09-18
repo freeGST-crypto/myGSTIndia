@@ -73,7 +73,7 @@ export function UserNav() {
             </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="p-2 text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
-            <span>Made for India</span>
+            <span>Made in India</span>
             <Heart className="size-3 text-red-500" />
         </div>
       </DropdownMenuContent>
