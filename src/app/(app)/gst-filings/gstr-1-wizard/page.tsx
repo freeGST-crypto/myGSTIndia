@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -34,6 +34,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { AccountingContext } from "@/context/accounting-context";
+import { db, auth } from "@/lib/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
 
 const states = [
@@ -46,46 +51,6 @@ const states = [
 ];
 
 const exportTypes = ["WPAY", "WOPAY"];
-
-
-const initialB2BInvoices = [
-  {
-    gstin: "27AACCG1234F1Z5",
-    invoiceNumber: "INV-001",
-    invoiceDate: "2024-05-15",
-    invoiceValue: 25000.00,
-    taxableValue: 21186.44,
-    taxRate: 18,
-    igst: 3813.56,
-    cgst: 0,
-    sgst: 0,
-    cess: 0,
-  },
-  {
-    gstin: "29AABCI5678G1Z4",
-    invoiceNumber: "INV-002",
-    invoiceDate: "2024-05-20",
-    invoiceValue: 15000.00,
-    taxableValue: 12711.86,
-    taxRate: 18,
-    igst: 2288.14,
-    cgst: 0,
-    sgst: 0,
-    cess: 0,
-  },
-   {
-    gstin: "24AAACS4321H1Z2",
-    invoiceNumber: "INV-004",
-    invoiceDate: "2024-05-25",
-    invoiceValue: 45000.00,
-    taxableValue: 38135.59,
-    taxRate: 18,
-    igst: 6864.41,
-    cgst: 0,
-    sgst: 0,
-    cess: 0,
-  },
-];
 
 const initialB2CLargeInvoices = [
     {
@@ -180,6 +145,36 @@ const initialDocumentsIssued = [
 export default function Gstr1WizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [user] = useAuthState(auth);
+
+  const { journalVouchers } = useContext(AccountingContext)!;
+  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+  const [customersSnapshot] = useCollection(customersQuery);
+  const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
+
+  const initialB2BInvoices = useMemo(() => {
+    return journalVouchers
+      .filter(v => v.id.startsWith("JV-INV-"))
+      .map(v => {
+        const customer = customers.find(c => v.customerId === c.id);
+        const taxableValue = v.lines.find(l => l.account === '4010')?.credit || '0';
+        const taxAmount = v.lines.find(l => l.account === '2110')?.credit || '0';
+
+        return {
+          gstin: customer?.gstin || "N/A",
+          invoiceNumber: v.id.replace("JV-", ""),
+          invoiceDate: v.date,
+          invoiceValue: v.amount,
+          taxableValue: parseFloat(taxableValue),
+          taxRate: 18, // Assuming 18% for now
+          igst: parseFloat(taxAmount),
+          cgst: 0,
+          sgst: 0,
+          cess: 0,
+        };
+      });
+  }, [journalVouchers, customers]);
+
   const [b2bInvoices, setB2bInvoices] = useState(initialB2BInvoices);
   const [b2cLargeInvoices, setB2cLargeInvoices] = useState(initialB2CLargeInvoices);
   const [exportInvoices, setExportInvoices] = useState(initialExportInvoices);
