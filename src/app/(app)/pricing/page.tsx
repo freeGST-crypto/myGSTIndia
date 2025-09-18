@@ -32,7 +32,7 @@ const tiers = [
     name: "Business",
     price: "₹199",
     priceSuffix: "/ month",
-    description: "For businesses needing comprehensive accounting and financial reporting.",
+    description: "For businesses needing comprehensive accounting, financial reporting, and tax compliance.",
     features: [
       { text: "Unlimited Invoices & Purchases", included: true },
       { text: "Full Accounting Suite", included: true },
