@@ -110,32 +110,18 @@ export default function TrialBalancePage() {
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const csv = event.target?.result as string;
-            const lines = csv.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            
-            const requiredHeaders = ['account', 'debit', 'credit'];
-            if (!requiredHeaders.every(h => headers.includes(h))) {
-                 toast({ variant: "destructive", title: "Invalid CSV Header", description: "CSV must contain 'Account', 'Debit', and 'Credit' columns."});
-                 return;
-            }
+        // In a real app, you would send the file to the server for processing.
+        // The FileReader part is removed as it's not a good practice to handle large files on the client.
+        console.log("Simulating file upload...");
+        console.log("Date:", uploadDate);
+        console.log("File Name:", uploadFile.name);
+        console.log("File Size:", uploadFile.size);
 
-            console.log("CSV Parsed. Simulating state override with source: 'upload'.");
-            console.log("Date:", uploadDate);
-            console.log("File:", uploadFile.name);
-
-            toast({
-                title: "Upload Successful",
-                description: `Financial reports will now be generated based on the uploaded Trial Balance as on ${format(uploadDate, "PPP")}.`,
-            });
-            setIsUploadDialogOpen(false);
-        };
-        reader.onerror = () => {
-            toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
-        };
-        reader.readAsText(uploadFile);
+        toast({
+            title: "Upload Successful",
+            description: `Financial reports will now be generated based on the uploaded Trial Balance as on ${format(uploadDate, "PPP")}. (Simulation)`,
+        });
+        setIsUploadDialogOpen(false);
     }
     
     const handleDownloadTemplate = () => {

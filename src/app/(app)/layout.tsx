@@ -114,6 +114,7 @@ const menuItems = [
   {
     label: "Reports",
     icon: AreaChart,
+    href: "/reports/cma-report", // Added href for direct navigation
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
     ],
@@ -159,6 +160,7 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
+    // Only run on client-side
     const checkActive = (subItems: any[]): boolean => {
         return subItems.some(sub => 
             (sub.href && pathname.startsWith(sub.href)) || 

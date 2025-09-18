@@ -145,9 +145,9 @@ export default function ProfitAndLossPage() {
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                              {grossProfit < 0 && <ReportRow label="To Gross Loss b/d" value={-grossProfit} />}
-                            <ReportRow label="To Salaries &amp; Wages" value={data.operatingExpenses.salaries} />
+                            <ReportRow label="To Salaries & Wages" value={data.operatingExpenses.salaries} />
                             <ReportRow label="To Rent Expense" value={data.operatingExpenses.rent} />
-                            <ReportRow label="To Marketing &amp; Advertising" value={data.operatingExpenses.marketing} />
+                            <ReportRow label="To Marketing & Advertising" value={data.operatingExpenses.marketing} />
                             <ReportRow label="To Depreciation" value={data.operatingExpenses.depreciation} />
                             <ReportRow label="To Other Operating Expenses" value={data.operatingExpenses.other} />
                              {netProfit > 0 && <ReportRow label="To Net Profit" value={netProfit} />}
