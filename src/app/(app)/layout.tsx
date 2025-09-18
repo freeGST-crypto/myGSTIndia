@@ -41,7 +41,8 @@ import {
   TrendingUp,
   AreaChart,
   ConciergeBell,
-  LayoutDashboard
+  LayoutDashboard,
+  MailWarning,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -102,6 +103,7 @@ const menuItems = [
       { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy },
     ],
   },
+  { href: "/notices", label: "Handle Notices", icon: MailWarning },
   {
     label: "Accounting",
     icon: Calculator,
