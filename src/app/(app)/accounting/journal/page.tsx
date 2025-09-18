@@ -132,6 +132,17 @@ export default function JournalVoucherPage() {
         });
     };
 
+    const handleSaveVoucher = () => {
+        toast({
+            title: "Voucher Saved",
+            description: "Your journal voucher has been saved successfully. (This is a simulation)"
+        });
+        setIsAddDialogOpen(false);
+        // Reset form state
+        setDate(new Date());
+        setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
+    };
+
     const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
     const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
     const isBalanced = totalDebits === totalCredits && totalDebits > 0;
@@ -243,7 +254,7 @@ export default function JournalVoucherPage() {
                      </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={() => setIsAddDialogOpen(false)} disabled={!isBalanced}>Save Voucher</Button>
+                    <Button onClick={handleSaveVoucher} disabled={!isBalanced}>Save Voucher</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
