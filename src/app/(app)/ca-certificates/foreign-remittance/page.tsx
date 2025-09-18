@@ -8,10 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { useState, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
   remitterName: z.string().min(3, "Remitter's name is required."),
@@ -30,6 +32,8 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function ForeignRemittancePage() {
   const { toast } = useToast();
+  const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -46,26 +50,33 @@ export default function ForeignRemittancePage() {
       dtaaClause: "As per Article 12 of the India-USA DTAA, the tax is to be withheld at the rate of 15%.",
     },
   });
-
-  const handleGenerateDraft = () => {
-    toast({
-        title: "Form 15CB Draft Generated",
-        description: "The draft has been sent to the admin panel for certification.",
-    });
+  
+  const handlePreview = async () => {
+    const isValid = await form.trigger();
+    if(isValid) {
+        setStep(2);
+        toast({ title: "Draft Ready", description: "Review the Form 15CB before printing." });
+    } else {
+        toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
+    }
+  }
+  
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: `Form15CB_${form.getValues("remitterName")}`,
+  });
+  
+  const handleCertificationRequest = () => {
+      toast({
+          title: "Request Sent",
+          description: "Draft sent to admin for certification."
+      });
   }
 
-  return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <Link href="/ca-certificates" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" />
-        Back to Certificate Menu
-      </Link>
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Form 15CB Preparation Utility</h1>
-        <p className="text-muted-foreground">Generate a draft Form 15CB for remittances to a non-resident.</p>
-      </div>
-      <Form {...form}>
-        <form className="space-y-8">
+  const renderContent = () => {
+    if (step === 1) {
+        return (
+            <>
             <Card>
                 <CardHeader>
                     <CardTitle>Remittance Details</CardTitle>
@@ -96,21 +107,96 @@ export default function ForeignRemittancePage() {
                     <FormField control={form.control} name="taxability" render={({ field }) => (<FormItem><FormLabel>Taxability under Income Tax Act</FormLabel><FormControl><Textarea className="min-h-24" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                     <FormField control={form.control} name="dtaaClause" render={({ field }) => (<FormItem><FormLabel>Applicable DTAA Clause & Rate</FormLabel><FormControl><Textarea className="min-h-24" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                 </CardContent>
-            </Card>
-            
-             <Card>
-                <CardHeader>
-                    <CardTitle>Generate & Certify</CardTitle>
-                    <CardDescription>This will generate a draft Form 15CB and send it to the admin panel for review and final signature.</CardDescription>
-                </CardHeader>
                 <CardFooter>
-                    <Button type="button" onClick={handleGenerateDraft}>
-                       <FileSignature className="mr-2" /> Generate Draft & Request Certification
+                    <Button type="button" onClick={handlePreview}>
+                       <ArrowRight className="mr-2" /> Preview Form 15CB
                     </Button>
                 </CardFooter>
             </Card>
+            </>
+        )
+    }
+
+    if (step === 2) {
+        const formData = form.getValues();
+        const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle>Final Preview</CardTitle>
+                    <CardDescription>Review the generated Form 15CB. You can print it or send it for certification.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">
+                       <header className="text-center border-b-2 border-primary pb-4 mb-8">
+                            <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
+                            <p className="text-sm m-0">Chartered Accountants</p>
+                            <p className="text-xs m-0">H.No. 2-2-1130/2/A, G-1, Amberpet, Hyderabad-500013</p>
+                       </header>
+                       <h3 className="font-bold text-center">FORM NO. 15CB</h3>
+                       <p className="text-center text-xs">[See rule 37BB of the Income-tax Rules, 1962]</p>
+
+                        <div className="flex justify-between items-start mb-6">
+                            <div><p className="font-bold text-sm">Certificate of an accountant</p></div>
+                            <div className="text-right"><p className="font-semibold">UDIN: [UDIN GOES HERE]</p></div>
+                        </div>
+
+                        <p>I/We have examined the agreement between <strong>{formData.remitterName}</strong> ("the remitter") and <strong>{formData.remitteeName}</strong> ("the beneficiary") and I/we hereby certify the following:</p>
+
+                        <table className="w-full my-4 text-sm">
+                           <tbody>
+                                <tr className="border-t"><td className="py-2 border-r pr-2">1. Name of the remitter</td><td className="py-2 pl-2">{formData.remitterName}</td></tr>
+                                <tr className="border-t"><td className="py-2 border-r pr-2">2. Name of the beneficiary</td><td className="py-2 pl-2">{formData.remitteeName}</td></tr>
+                                <tr className="border-t"><td className="py-2 border-r pr-2">3. Nature of remittance</td><td className="py-2 pl-2">{formData.natureOfRemittance}</td></tr>
+                                <tr className="border-t"><td className="py-2 border-r pr-2">4. Amount of remittance in foreign currency</td><td className="py-2 pl-2">{formData.remittanceAmount} {formData.remittanceCurrency}</td></tr>
+                                <tr className="border-t"><td className="py-2 border-r pr-2">5. Taxability under the provisions of the Income-tax Act</td><td className="py-2 pl-2">{formData.taxability}</td></tr>
+                                <tr className="border-t border-b"><td className="py-2 border-r pr-2">6. If the remittance is taxable, the tax rate as per DTAA</td><td className="py-2 pl-2">{formData.dtaaClause}</td></tr>
+                           </tbody>
+                        </table>
+                        
+                        <h4 className="font-bold text-center underline my-6">CERTIFICATE</h4>
+                        <p>I/We certify that the above particulars are true and correct to the best of my/our knowledge and belief. I/We have obtained all the necessary documents for the purpose of this certification.</p>
+                        
+                        <div className="mt-24 text-right">
+                            <p className="font-bold">For S. KRANTHI KUMAR & Co.</p>
+                            <p>Chartered Accountants</p>
+                            <div className="h-20"></div>
+                            <p>(S. Kranthi Kumar)</p><p>Proprietor</p><p>Membership No: 224983</p>
+                            <p>Date: {new Date().toLocaleDateString('en-GB', dateOptions)}</p>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="justify-between">
+                     <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
+                     <div>
+                        <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+                        <Button type="button" className="ml-2" onClick={handleCertificationRequest}>
+                            <FileSignature className="mr-2"/> Request Certification
+                        </Button>
+                     </div>
+                </CardFooter>
+            </Card>
+        )
+    }
+  }
+
+  return (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <Link href="/ca-certificates" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-4" />
+        Back to Certificate Menu
+      </Link>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">Form 15CB Preparation Utility</h1>
+        <p className="text-muted-foreground">Generate a draft Form 15CB for remittances to a non-resident.</p>
+      </div>
+      <Form {...form}>
+        <form className="space-y-8">
+            {renderContent()}
         </form>
       </Form>
     </div>
   );
 }
+
+    

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,10 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
   entityName: z.string().min(3, "Entity name is required."),
@@ -26,8 +28,26 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+const numberToWords = (num: number): string => {
+    const a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
+    const b = ['', '', 'twenty','thirty','forty','fifty', 'sixty','seventy','eighty','ninety'];
+    if (!num) return 'Zero';
+    if ((num.toString()).length > 9) return 'overflow';
+    const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return '';
+    let str = '';
+    str += (n[1] != '00') ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+    str += (n[2] != '00') ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+    str += (n[3] != '00') ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+    str += (n[4] != '00') ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+    str += (n[5] != '00') ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+    return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
+}
+
 export default function CapitalContributionCertificatePage() {
   const { toast } = useToast();
+  const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -43,26 +63,32 @@ export default function CapitalContributionCertificatePage() {
     },
   });
 
-  const handleGenerateDraft = () => {
-    toast({
-        title: "Draft Certificate Generated",
-        description: "The draft has been sent to the admin panel for certification.",
-    });
+  const handlePreview = async () => {
+    const isValid = await form.trigger();
+    if(isValid) {
+        setStep(2);
+        toast({ title: "Draft Ready", description: "Review the certificate before printing." });
+    } else {
+        toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
+    }
+  }
+  
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: `Capital_Contribution_Certificate_${form.getValues("entityName")}`,
+  });
+  
+  const handleCertificationRequest = () => {
+      toast({
+          title: "Request Sent",
+          description: "Draft sent to admin for certification."
+      });
   }
 
-  return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <Link href="/ca-certificates" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" />
-        Back to Certificate Menu
-      </Link>
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Capital Contribution Certificate</h1>
-        <p className="text-muted-foreground">Generate a certificate for capital contributed by a director or partner.</p>
-      </div>
-      <Form {...form}>
-        <form className="space-y-8">
-            <Card>
+  const renderContent = () => {
+    if (step === 1) {
+        return (
+             <Card>
                 <CardHeader>
                     <CardTitle>Contribution Details</CardTitle>
                 </CardHeader>
@@ -84,21 +110,83 @@ export default function CapitalContributionCertificatePage() {
                          <FormField control={form.control} name="bankDetails" render={({ field }) => (<FormItem><FormLabel>Bank Details (if applicable)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                      </div>
                 </CardContent>
-            </Card>
-            
-             <Card>
-                <CardHeader>
-                    <CardTitle>Generate & Certify</CardTitle>
-                    <CardDescription>This will generate a draft certificate and send it to the admin panel for review and final DSC signature.</CardDescription>
-                </CardHeader>
                 <CardFooter>
-                    <Button type="button" onClick={handleGenerateDraft}>
-                       <FileSignature className="mr-2" /> Generate Draft & Request Certification
+                     <Button type="button" onClick={handlePreview}>
+                       <ArrowRight className="mr-2" /> Preview Certificate
                     </Button>
                 </CardFooter>
             </Card>
+        )
+    }
+
+    if (step === 2) {
+        const formData = form.getValues();
+        const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle>Final Preview</CardTitle>
+                    <CardDescription>Review the generated certificate. You can print it or send it for certification.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">
+                       <header className="text-center border-b-2 border-primary pb-4 mb-8">
+                            <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
+                            <p className="text-sm m-0">Chartered Accountants</p>
+                            <p className="text-xs m-0">H.No. 2-2-1130/2/A, G-1, Amberpet, Hyderabad-500013</p>
+                            <p className="text-xs m-0">Email: skkandco@gmail.com</p>
+                       </header>
+                       <div className="flex justify-between items-start mb-6">
+                            <div><p className="font-bold text-sm">TO WHOMSOEVER IT MAY CONCERN</p></div>
+                            <div className="text-right">
+                                <p className="font-semibold">UDIN: [UDIN GOES HERE]</p>
+                                <p className="text-sm">Date: {new Date().toLocaleDateString('en-GB', dateOptions)}</p>
+                            </div>
+                        </div>
+                        <h4 className="font-bold text-center underline my-6">CAPITAL CONTRIBUTION CERTIFICATE</h4>
+                        <p>This is to certify that we have verified the books of accounts and other relevant records of <strong>M/s {formData.entityName}</strong>.</p>
+                        <p>Based on our verification, we confirm that <strong>{formData.contributorName}</strong>, {formData.contributorType} of the {formData.entityType}, has contributed an amount of <strong>₹ {formData.contributionAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</strong> (Rupees {numberToWords(formData.contributionAmount)} only) towards their capital contribution on <strong>{new Date(formData.contributionDate).toLocaleDateString('en-GB', dateOptions)}</strong>.</p>
+                        <p>The contribution was made via {formData.contributionMode}. {formData.contributionMode !== 'Cash' && `The details are as follows: ${formData.bankDetails}`}</p>
+                         <p className="mt-8 text-xs">This certificate is issued based on the information and records produced before us by the management and is true to the best of our knowledge and belief.</p>
+                        <div className="mt-24 text-right">
+                            <p className="font-bold">For S. KRANTHI KUMAR & Co.</p>
+                            <p>Chartered Accountants</p>
+                            <div className="h-20"></div>
+                            <p>(S. Kranthi Kumar)</p><p>Proprietor</p><p>Membership No: 224983</p>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="justify-between">
+                     <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
+                     <div>
+                        <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+                        <Button type="button" className="ml-2" onClick={handleCertificationRequest}>
+                            <FileSignature className="mr-2"/> Request Certification
+                        </Button>
+                     </div>
+                </CardFooter>
+            </Card>
+        )
+    }
+  }
+
+  return (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <Link href="/ca-certificates" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-4" />
+        Back to Certificate Menu
+      </Link>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">Capital Contribution Certificate</h1>
+        <p className="text-muted-foreground">Generate a certificate for capital contributed by a director or partner.</p>
+      </div>
+      <Form {...form}>
+        <form className="space-y-8">
+            {renderContent()}
         </form>
       </Form>
     </div>
   );
 }
+
+    
