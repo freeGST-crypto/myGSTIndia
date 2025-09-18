@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight, FileText, BookCopy } from "lucide-react";
 import Link from "next/link";
 
 const documentTypes = [
@@ -180,6 +180,13 @@ const documentTypes = [
         description: "Memorandum and Articles of Association for companies.",
         href: "/legal-documents/moa-aoa",
         icon: FileText,
+        status: "active"
+    },
+    {
+        name: "Statutory Registers (Co. Act)",
+        description: "Generate mandatory statutory registers for your company.",
+        href: "/legal-documents/statutory-registers",
+        icon: BookCopy,
         status: "active"
     },
 ]
