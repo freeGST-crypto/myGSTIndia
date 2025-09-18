@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -32,6 +33,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { format, addDays } from 'date-fns';
+
 
 const initialInvoices = [
   {
@@ -72,6 +75,8 @@ const customers = [
   { id: "CUST-001", name: "Global Tech Inc." },
   { id: "CUST-002", name: "Innovate Solutions" },
   { id: "CUST-003", name: "Quantum Leap" },
+  { id: "CUST-004", name: "Synergy Corp" },
+  { id: "CUST-005", name: "Apex Enterprises" },
 ];
 
 const items = [
@@ -85,12 +90,54 @@ export default function InvoicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
+  // State for the quick invoice form
+  const [quickInvNum, setQuickInvNum] = useState("");
+  const [quickCustomer, setQuickCustomer] = useState("");
+  const [quickItem, setQuickItem] = useState<{ id: string, name: string, price: number} | null>(null);
+  const [quickQty, setQuickQty] = useState(1);
+  const [quickRate, setQuickRate] = useState(0);
+
+
   const handleQuickInvoiceCreate = () => {
+    if (!quickInvNum || !quickCustomer || !quickItem || quickRate <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please fill out all fields for the quick invoice.",
+      });
+      return;
+    }
+
+    const newInvoice = {
+      id: quickInvNum,
+      customer: customers.find(c => c.id === quickCustomer)?.name || "Unknown Customer",
+      date: format(new Date(), 'yyyy-MM-dd'),
+      dueDate: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
+      amount: quickRate * quickQty,
+      status: "Pending",
+    };
+
+    setInvoices([newInvoice, ...invoices]);
+
     toast({
         title: "Quick Invoice Created!",
-        description: "The invoice has been saved and added to the list below."
+        description: `Invoice ${newInvoice.id} has been created and added to the list.`
     });
-    // In a real app, you would add the new invoice to the state.
+
+    // Reset form
+    setQuickInvNum("");
+    setQuickCustomer("");
+    setQuickItem(null);
+    setQuickQty(1);
+    setQuickRate(0);
+  }
+
+  const handleQuickItemChange = (itemId: string) => {
+    const selectedItem = items.find(i => i.id === itemId);
+    if(selectedItem) {
+        setQuickItem(selectedItem);
+        setQuickRate(selectedItem.price);
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -167,11 +214,11 @@ export default function InvoicesPage() {
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                  <div className="space-y-2">
                     <Label htmlFor="quick-inv-num">Invoice #</Label>
-                    <Input id="quick-inv-num" placeholder="INV-005"/>
+                    <Input id="quick-inv-num" placeholder="INV-005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="quick-customer">Customer</Label>
-                    <Select>
+                    <Select value={quickCustomer} onValueChange={setQuickCustomer}>
                         <SelectTrigger id="quick-customer">
                             <SelectValue placeholder="Select customer" />
                         </SelectTrigger>
@@ -182,7 +229,7 @@ export default function InvoicesPage() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="quick-item">Item</Label>
-                    <Select>
+                    <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange}>
                         <SelectTrigger id="quick-item">
                             <SelectValue placeholder="Select item" />
                         </SelectTrigger>
@@ -193,11 +240,11 @@ export default function InvoicesPage() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="quick-qty">Qty</Label>
-                    <Input id="quick-qty" type="number" placeholder="1" />
+                    <Input id="quick-qty" type="number" placeholder="1" value={quickQty} onChange={e => setQuickQty(parseInt(e.target.value) || 1)} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="quick-rate">Rate (₹)</Label>
-                    <Input id="quick-rate" type="number" placeholder="0.00" />
+                    <Input id="quick-rate" type="number" placeholder="0.00" value={quickRate} onChange={e => setQuickRate(parseFloat(e.target.value) || 0)} />
                 </div>
             </div>
         </CardContent>
