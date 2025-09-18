@@ -82,9 +82,6 @@ export default function FoundersAgreementPage() {
       vestingCliffMonths: 12,
       nonCompeteYears: 1,
       decisionMaking: "unanimous",
-      ipAssignment: "All work product and intellectual property created by the Founders related to the Project shall be the sole property of the Company.",
-      confidentiality: "Each Founder agrees to maintain the confidentiality of the Project's proprietary information.",
-      disputeResolution: "Any disputes arising out of this Agreement shall first be attempted to be resolved through mutual negotiation. If unresolved, disputes shall be subject to binding arbitration in [City].",
     },
   });
 
@@ -154,7 +151,7 @@ export default function FoundersAgreementPage() {
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", address: "", role: "", responsibilities: "", equity: 0, capitalContribution: 0 })}><PlusCircle className="mr-2"/> Add Founder</Button>
                {form.formState.errors.founders?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.founders.root.message}</p>}
-               {totalEquity !== 100 && <p className="text-sm font-medium text-destructive">Total equity must equal 100%. Current total: {totalEquity}%</p>}
+               {totalEquity !== 100 && !form.formState.errors.founders?.root && <p className="text-sm font-medium text-destructive">Total equity must equal 100%. Current total: {totalEquity}%</p>}
             </CardContent>
             <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -252,7 +249,7 @@ export default function FoundersAgreementPage() {
                     <p>No Founder shall be entitled to interest on their capital contribution. Any additional capital contributions shall be decided mutually.</p>
 
                     <h4 className="font-bold mt-4">6. INTELLECTUAL PROPERTY (IP)</h4>
-                    <p>{formData.ipAssignment} Each Founder hereby assigns to the Company all their rights, title, and interest in any such IP.</p>
+                    <p>{formData.ipAssignment}</p>
 
                     <h4 className="font-bold mt-4">7. DECISION-MAKING</h4>
                     <p>Strategic decisions, including but not limited to, fundraising, mergers, acquisitions, issuing new equity, selling the company, or changing the primary business focus, shall require the <strong>{formData.decisionMaking}</strong> approval of all Founders.</p>
@@ -279,7 +276,6 @@ export default function FoundersAgreementPage() {
                             <div key={p.name} className="text-left">
                                 <p className="mb-12">_________________________</p>
                                 <p><strong>{p.name}</strong></p>
-                                <p>{p.address}</p>
                             </div>
                          ))}
                     </div>

@@ -58,7 +58,7 @@ const documentTypes = [
         description: "Essential legal document for startup co-founders.",
         href: "/legal-documents/founders-agreement",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 7500,
     },
     {
