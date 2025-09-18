@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -47,21 +47,23 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { AccountingContext } from "@/context/accounting-context";
+import { useToast } from "@/hooks/use-toast";
+import { db, auth } from "@/lib/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
-const vendors = [
-  { id: "VEND-001", name: "Supplier Alpha" },
-  { id: "VEND-002", name: "Vendor Beta" },
-  { id: "VEND-003", name: "Supplier Gamma" },
-];
-
-const purchases = [
-    { id: "PUR-001", vendorId: "VEND-001" },
-    { id: "PUR-002", vendorId: "VEND-002" },
-    { id: "PUR-003", vendorId: "VEND-003" },
-];
 
 export default function NewDebitNotePage() {
+  const accountingContext = useContext(AccountingContext);
+  const { toast } = useToast();
+  const [user] = useAuthState(auth);
+
   const [debitNoteDate, setDebitNoteDate] = useState<Date | undefined>(new Date());
+  const [vendor, setVendor] = useState("");
+  const [originalPurchase, setOriginalPurchase] = useState("");
+  
   const [lineItems, setLineItems] = useState([
     {
       description: "",
@@ -70,6 +72,15 @@ export default function NewDebitNotePage() {
       amount: 0,
     },
   ]);
+
+  const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+  const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
+  const vendors = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+  
+  const journalVouchersQuery = user ? query(collection(db, 'journalVouchers'), where("userId", "==", user.uid)) : null;
+  const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
+  const purchases = journalVouchersSnapshot?.docs.filter(doc => doc.data().id.startsWith('JV-BILL-')).map(doc => ({ id: doc.data().id.replace('JV-',''), vendorId: doc.data().vendorId })) || [];
+
 
   const handleAddItem = () => {
     setLineItems([
@@ -104,6 +115,40 @@ export default function NewDebitNotePage() {
   const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
   const totalTax = subtotal * 0.18; // Assuming a flat 18% tax for simplicity
   const totalAmount = subtotal + totalTax;
+  
+  const handleSaveDebitNote = async () => {
+    if (!accountingContext) return;
+    const { addJournalVoucher } = accountingContext;
+
+    const selectedVendor = vendors.find(v => v.id === vendor);
+    if (!selectedVendor || !originalPurchase) {
+        toast({ variant: "destructive", title: "Missing Details", description: "Please select a vendor and original purchase bill."});
+        return;
+    }
+    
+    const debitNoteId = `DN-${originalPurchase.split('-')[1]}`;
+
+    // Reverse of a purchase entry
+    const journalLines = [
+        { account: '2010', debit: totalAmount.toFixed(2), credit: '0' }, // Debit Accounts Payable
+        { account: '5050', debit: '0', credit: subtotal.toFixed(2) }, // Credit Purchases
+        { account: '2110', debit: '0', credit: totalTax.toFixed(2) } // Credit GST Payable (reversing ITC)
+    ];
+
+    try {
+        await addJournalVoucher({
+            id: `JV-${debitNoteId}`,
+            date: debitNoteDate ? format(debitNoteDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+            narration: `Debit Note ${debitNoteId} issued to ${selectedVendor.name} against Bill #${originalPurchase}`,
+            lines: journalLines,
+            amount: totalAmount,
+        });
+        toast({ title: "Debit Note Saved", description: `Journal entry for ${debitNoteId} has been created.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
+    }
+  }
+
 
   return (
     <div className="space-y-8">
@@ -120,31 +165,31 @@ export default function NewDebitNotePage() {
         <CardHeader>
           <CardTitle>Debit Note Details</CardTitle>
           <CardDescription>
-            Fill out the details for the new debit note.
+            Fill out the details for the new debit note for a purchase return or adjustment.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <Select>
+               <Select onValueChange={setVendor} disabled={vendorsLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a vendor" />
+                  <SelectValue placeholder={vendorsLoading ? "Loading..." : "Select a vendor"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {vendors.map((vendor) => (
-                    <SelectItem key={vendor.id} value={vendor.id}>
-                      {vendor.name}
+                  {vendors.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
              <div className="space-y-2">
-              <Label>Original Purchase #</Label>
-              <Select>
+              <Label>Original Purchase Bill #</Label>
+              <Select onValueChange={setOriginalPurchase}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a purchase" />
+                  <SelectValue placeholder="Select a purchase bill" />
                 </SelectTrigger>
                 <SelectContent>
                   {purchases.map((purchase) => (
@@ -267,7 +312,7 @@ export default function NewDebitNotePage() {
 
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button>
+          <Button onClick={handleSaveDebitNote}>
             <Save className="mr-2" />
             Save Debit Note
           </Button>
