@@ -103,7 +103,7 @@ const documentTypes = [
         description: "Set terms with your suppliers and vendors.",
         href: "/legal-documents/vendor-agreement",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Service Agreement",
