@@ -31,29 +31,70 @@ import { PlusCircle, MoreHorizontal, FileText, IndianRupee, Edit, Download, Tras
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AccountingContext } from "@/context/accounting-context";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CreditNotesPage() {
-  const { journalVouchers } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
+  const { toast } = useToast();
   
   const creditNotes = useMemo(() => {
-    return journalVouchers
-        .filter(v => v.id.startsWith("JV-CN-"))
+    const allCreditNotes = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
+    const voidedCreditNoteIds = new Set(
+        journalVouchers
+            .filter(v => v.id.startsWith("JV-VOID-CN-"))
+            .map(v => v.id.replace("JV-VOID-", ""))
+    );
+    
+    return allCreditNotes
         .map(v => {
-            const narrationParts = v.narration.split(" issued to ");
-            const customer = narrationParts.length > 1 ? narrationParts[1].split(" against Invoice #")[0] : "N/A";
-            const originalInvoice = v.id.replace("JV-CN-", "INV-");
+            const creditNoteId = v.id.replace("JV-", "");
+            const isVoided = voidedCreditNoteIds.has(creditNoteId);
+            const customer = v.narration.split(" issued to ")[1]?.split(" against ")[0] || "N/A";
+            const originalInvoice = v.narration.split(" against Invoice #")[1] || "N/A";
 
             return {
-                id: v.id.replace("JV-", ""),
+                id: creditNoteId,
                 customer,
                 date: v.date,
                 originalInvoice,
                 amount: v.amount,
-                status: "Applied", // Logic to be implemented
+                status: isVoided ? "Void" : "Applied",
             };
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
+
+  const handleVoidCreditNote = async (creditNoteId: string) => {
+    const originalVoucherId = `JV-${creditNoteId}`;
+    const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+
+    if (!originalVoucher) {
+        toast({ variant: "destructive", title: "Error", description: "Original credit note transaction not found." });
+        return;
+    }
+
+    const reversalLines = originalVoucher.lines.map(line => ({
+        account: line.account,
+        debit: line.credit, // Swap debit and credit
+        credit: line.debit,
+    }));
+
+    const voidVoucher = {
+        id: `JV-VOID-${creditNoteId}`,
+        date: new Date().toISOString().split('T')[0],
+        narration: `Voiding of Credit Note #${creditNoteId}`,
+        lines: reversalLines,
+        amount: originalVoucher.amount,
+        customerId: originalVoucher.customerId,
+    };
+
+    try {
+        await addJournalVoucher(voidVoucher);
+        toast({ title: "Credit Note Voided", description: `Credit Note #${creditNoteId} has been successfully voided.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Voiding Failed", description: e.message });
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -151,7 +192,11 @@ export default function CreditNotesPage() {
                           Download PDF
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem 
+                            className="text-destructive" 
+                            onSelect={() => handleVoidCreditNote(note.id)}
+                            disabled={note.status === 'Void'}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Void Credit Note
                         </DropdownMenuItem>
@@ -167,5 +212,3 @@ export default function CreditNotesPage() {
     </div>
   );
 }
-
-    

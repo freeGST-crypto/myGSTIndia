@@ -132,7 +132,7 @@ type AccountingContextType = {
     journalVouchers: JournalVoucher[];
     loading: boolean;
     error: any;
-    addJournalVoucher: (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => Promise<void>;
+    addJournalVoucher: (voucher: Omit<JournalVoucher, 'userId'>) => Promise<void>;
 };
 
 export const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
@@ -150,7 +150,7 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
         ...(journalVouchersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalVoucher)) || [])
     ];
 
-    const addJournalVoucher = async (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => {
+    const addJournalVoucher = async (voucher: Omit<JournalVoucher, 'userId'>) => {
         if (!user) throw new Error("User not authenticated");
         await addDoc(journalVouchersRef, { ...voucher, userId: user.uid });
     };
