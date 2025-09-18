@@ -10,54 +10,54 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Check, X, ArrowRight } from "lucide-react";
 
 const tiers = [
   {
-    name: "Basic",
+    name: "Freemium",
     price: "Free",
     priceSuffix: "",
-    description: "For individuals and small businesses just getting started.",
+    description: "For individuals and small businesses just getting started with billing.",
     features: [
-      { text: "1 User", included: true },
-      { text: "Up to 20 Invoices/Bills per month", included: true },
-      { text: "Basic Legal Document Templates", included: true },
-      { text: "AI-Powered Features", included: false },
+      { text: "Up to 20 Invoices/Purchases per month", included: true },
+      { text: "Customer & Vendor Management", included: true },
+      { text: "Basic Billing Reports", included: true },
+      { text: "Financial Statements", included: false },
+      { text: "GST & TDS Compliance Tools", included: false },
       { text: "Admin Panel / Client Management", included: false },
-      { text: "Priority Support", included: false },
     ],
-    cta: "Get Started",
-  },
-  {
-    name: "Professional",
-    price: "₹9,999",
-    priceSuffix: "/ year",
-    description: "For growing businesses and professionals managing clients.",
-    features: [
-      { text: "Up to 5 Users", included: true },
-      { text: "Unlimited Invoices & Bills", included: true },
-      { text: "Full Legal Document Library", included: true },
-      { text: "AI-Powered Features", included: true },
-      { text: "Admin Panel (Manage up to 10 clients)", included: true },
-      { text: "Email & Chat Support", included: true },
-    ],
-    cta: "Upgrade to Professional",
-    isPopular: true,
+    cta: "Get Started for Free",
   },
   {
     name: "Business",
-    price: "Contact Us",
-    priceSuffix: "",
-    description: "For large firms and businesses with custom needs.",
+    price: "₹199",
+    priceSuffix: "/ month",
+    description: "For businesses needing comprehensive accounting and financial reporting.",
     features: [
-      { text: "Unlimited Users", included: true },
-      { text: "Unlimited Invoices & Bills", included: true },
-      { text: "Full Legal Document Library", included: true },
-      { text: "AI-Powered Features", included: true },
-      { text: "Admin Panel (Unlimited clients)", included: true },
-      { text: "Dedicated Account Manager & Priority Support", included: true },
+      { text: "Unlimited Invoices & Purchases", included: true },
+      { text: "Full Accounting Suite", included: true },
+      { text: "Financial Statement Generation", included: true },
+      { text: "Basic GST Reporting", included: true },
+      { text: "TDS/TCS Reports", included: false },
+      { text: "Admin Panel / Client Management", included: false },
     ],
-    cta: "Contact Sales",
+    cta: "Choose Business Plan",
+    isPopular: true,
+  },
+  {
+    name: "Professional",
+    price: "₹499",
+    priceSuffix: "/ month",
+    description: "For CAs, tax consultants, and firms managing multiple clients.",
+    features: [
+      { text: "All Business Features", included: true },
+      { text: "Full GST Filing & Reconciliation Suite", included: true },
+      { text: "Legal & CA Certificate Generators", included: true },
+      { text: "CMA Report Generator", included: true },
+      { text: "Admin Panel with Client Management", included: true },
+      { text: "Priority Support", included: true },
+    ],
+    cta: "Choose Professional Plan",
   },
 ];
 
@@ -67,12 +67,11 @@ export default function PricingPage() {
       <div className="text-center">
         <h1 className="text-3xl font-bold">Pricing Plans</h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Choose the plan that's right for your business. All plans are designed
-          to scale with you.
+          Choose the plan that's right for you. From simple billing to comprehensive professional tools.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
         {tiers.map((tier) => (
           <Card
             key={tier.name}
@@ -124,6 +123,25 @@ export default function PricingPage() {
           </Card>
         ))}
       </div>
+
+      <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+          <CardHeader>
+            <CardTitle>On-Demand Professional Services</CardTitle>
+            <CardDescription>
+                Need a specific, high-value document? We offer custom pricing for specialized reports and certificates, decided by our admin team to meet your unique needs.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+             <ul className="space-y-2 text-sm text-foreground">
+                <li className="flex items-center gap-2"><Check className="text-green-500" /> CMA Reports for Bank Loans</li>
+                <li className="flex items-center gap-2"><Check className="text-green-500" /> CA Certified Net Worth / Turnover Certificates</li>
+                <li className="flex items-center gap-2"><Check className="text-green-500" /> Custom Legal Document Drafting</li>
+             </ul>
+          </CardContent>
+          <CardFooter>
+              <Button>Contact Sales <ArrowRight className="ml-2"/></Button>
+          </CardFooter>
+      </Card>
     </div>
   );
 }
