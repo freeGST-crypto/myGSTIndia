@@ -52,7 +52,8 @@ const states = [
 
 const exportTypes = ["WPAY", "WOPAY"];
 
-export default function Gstr1WizardPage() {
+export default npm run build
+function Gstr1WizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [user] = useAuthState(auth);
@@ -919,7 +920,7 @@ export default function Gstr1WizardPage() {
           <h1 className="text-3xl font-bold">GSTR-1 Filing Wizard</h1>
           <p className="text-muted-foreground">Period: May 2024</p>
         </div>
-        
+
       </div>
 
       {renderStep()}
