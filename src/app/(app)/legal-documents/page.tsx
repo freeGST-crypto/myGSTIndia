@@ -161,7 +161,7 @@ const documentTypes = [
         description: "Establish an Employee Stock Option Plan.",
         href: "/legal-documents/esop-policy",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Convertible Note / SAFE Agreement",
