@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { DollarSign, IndianRupee, CreditCard, Users, Search } from "lucide-react";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
@@ -10,43 +10,58 @@ import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { AccountingContext } from "@/context/accounting-context";
+import { allAccounts } from "@/lib/accounts";
 
-const invoices = [
-  {
-    invoice: "INV001",
-    customer: "Global Tech Inc.",
-    amount: "₹25,000.00",
-    status: "Paid",
-  },
-  {
-    invoice: "INV002",
-    customer: "Innovate Solutions",
-    amount: "₹15,000.00",
-    status: "Draft",
-  },
-  {
-    invoice: "INV003",
-    customer: "Quantum Leap",
-    amount: "₹35,000.00",
-    status: "Paid",
-  },
-  {
-    invoice: "INV004",
-    customer: "Synergy Corp",
-    amount: "₹45,000.00",
-    status: "Overdue",
-  },
-  {
-    invoice: "INV005",
-    customer: "Apex Enterprises",
-    amount: "₹55,000.00",
-    status: "Paid",
-  },
-];
-
+const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+}
 
 export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { journalVouchers } = useContext(AccountingContext)!;
+  
+  const accountBalances = useMemo(() => {
+    const balances: Record<string, number> = {};
+    allAccounts.forEach(acc => {
+        balances[acc.code] = 0;
+    });
+
+    journalVouchers.forEach(voucher => {
+        voucher.lines.forEach(line => {
+            if (balances.hasOwnProperty(line.account)) {
+                const accountType = allAccounts.find(a => a.code === line.account)?.type;
+                const debit = parseFloat(line.debit);
+                const credit = parseFloat(line.credit);
+
+                if (accountType === 'Asset' || accountType === 'Expense') {
+                    balances[line.account] += debit - credit;
+                } else { // Liability, Equity, Revenue
+                    balances[line.account] += credit - debit;
+                }
+            }
+        });
+    });
+    return balances;
+  }, [journalVouchers]);
+  
+  const totalReceivables = accountBalances['1210'] || 0;
+  const totalPayables = accountBalances['2010'] || 0;
+  const gstPayable = accountBalances['2110'] || 0;
+
+
+  const invoices = useMemo(() => {
+    return journalVouchers
+        .filter(v => v.narration.startsWith("Sale to"))
+        .slice(0, 5)
+        .map(v => ({
+            invoice: v.id.replace("JV-", ""),
+            customer: v.narration.replace("Sale to ", "").split(" via")[0],
+            amount: formatCurrency(v.amount),
+            status: "Pending", // Status logic to be implemented later
+        }));
+  }, [journalVouchers]);
+
 
   const filteredInvoices = useMemo(() => {
     if (!searchTerm) return invoices;
@@ -59,28 +74,28 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Link href="/invoices">
+        <Link href="/accounting/ledgers">
           <StatCard 
             title="Total Receivables"
-            value="₹1,25,430.50"
+            value={formatCurrency(totalReceivables)}
             icon={IndianRupee}
-            description="+20.1% from last month"
+            description="Balance in Accounts Receivable"
           />
         </Link>
-        <Link href="/purchases">
+        <Link href="/accounting/ledgers">
           <StatCard 
             title="Total Payables"
-            value="₹45,231.89"
+            value={formatCurrency(totalPayables)}
             icon={CreditCard}
-            description="+18.1% from last month"
+            description="Balance in Accounts Payable"
           />
         </Link>
-        <Link href="/gst-filings">
+        <Link href="/accounting/ledgers">
           <StatCard 
             title="Net Tax Liability"
-            value="₹8,750.00"
+            value={formatCurrency(gstPayable)}
             icon={DollarSign}
-            description="For this month"
+            description="Balance in GST Payable"
           />
         </Link>
         <Link href="/parties">
