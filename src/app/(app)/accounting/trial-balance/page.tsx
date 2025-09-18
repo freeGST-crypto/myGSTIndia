@@ -100,7 +100,7 @@ export default function TrialBalancePage() {
     const handleVerifyPost = (entry: any) => {
         toast({
             title: "Verification Action",
-            description: `You have clicked 'Verify' for the entry: ${entry.account}. A modal would open here to correct this posting.`,
+            description: `You have clicked 'Rectify' for the entry: ${entry.account}. A modal would open here to correct this posting.`,
         });
     }
     
