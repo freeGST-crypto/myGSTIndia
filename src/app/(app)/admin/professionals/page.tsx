@@ -119,6 +119,7 @@ const sampleProfessionals = [
     experience: 9,
     rating: 4.8,
     reviews: 35,
+    status: "Active",
     avatarUrl: "https://picsum.photos/seed/pro9/100/100",
   },
   {
@@ -132,6 +133,7 @@ const sampleProfessionals = [
     experience: 12,
     rating: 4.9,
     reviews: 40,
+    status: "Active",
     avatarUrl: "https://picsum.photos/seed/pro10/100/100",
   },
 ];
@@ -270,5 +272,3 @@ export default function ProfessionalsListPage() {
     </div>
   );
 }
-
-    
