@@ -23,6 +23,7 @@ import {
   BookOpen,
   Shield,
   Presentation,
+  CalendarPlus,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -50,6 +51,7 @@ import { Separator } from "@/components/ui/separator";
 
 const menuItems = [
   { href: "/", label: "Dashboard", icon: Gauge },
+  { href: "/book-appointment", label: "Book Appointment", icon: CalendarPlus },
   {
     label: "Billing",
     icon: Receipt,
