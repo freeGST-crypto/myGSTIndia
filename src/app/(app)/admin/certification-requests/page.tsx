@@ -29,8 +29,9 @@ import { MoreHorizontal, Download, Upload, ShieldCheck, CheckCircle, Clock } fro
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { useRef } from 'react';
 
-const sampleRequests = [
+const initialRequests = [
   {
     id: "CERT-001",
     reportType: "CMA Report",
@@ -38,7 +39,8 @@ const sampleRequests = [
     requestedBy: "Priya Mehta",
     requestDate: new Date(2024, 5, 10),
     status: "Pending",
-    draftUrl: "#", // Link to download draft
+    draftUrl: "#",
+    signedDocumentUrl: null,
   },
   {
     id: "CERT-002",
@@ -48,7 +50,7 @@ const sampleRequests = [
     requestDate: new Date(2024, 5, 9),
     status: "Completed",
     draftUrl: "#",
-    signedDocumentUrl: "#"
+    signedDocumentUrl: "#",
   },
   {
     id: "CERT-003",
@@ -58,25 +60,47 @@ const sampleRequests = [
     requestDate: new Date(2024, 5, 12),
     status: "Pending",
     draftUrl: "#",
+    signedDocumentUrl: null,
+  },
+    {
+    id: "CERT-004",
+    reportType: "Capital Contribution",
+    clientName: "Innovate LLC",
+    requestedBy: "Priya Mehta",
+    requestDate: new Date(2024, 5, 13),
+    status: "Pending",
+    draftUrl: "#",
+    signedDocumentUrl: null,
   },
 ];
 
+type Request = typeof initialRequests[0];
+
 export default function CertificationRequestsPage() {
   const { toast } = useToast();
-  const [requests, setRequests] = useState(sampleRequests);
-  
+  const [requests, setRequests] = useState<Request[]>(initialRequests);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
+
   const handleUploadClick = (requestId: string) => {
-    // In a real app, you'd trigger a file input click or open a dialog.
-    // For this simulation, we'll just show a toast and update the status.
-    toast({
-      title: 'Upload Triggered',
-      description: `Please select the signed document for request ${requestId}.`,
-    });
-     setRequests(prev => 
-        prev.map(req => 
-            req.id === requestId ? {...req, status: "Completed", signedDocumentUrl: "#"} : req
-        )
-     );
+    setActiveRequestId(requestId);
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && activeRequestId) {
+        const file = e.target.files[0];
+        toast({
+            title: 'Upload Successful',
+            description: `${file.name} has been uploaded for request ${activeRequestId}.`,
+        });
+        setRequests(prev => 
+            prev.map(req => 
+                req.id === activeRequestId ? {...req, status: "Completed", signedDocumentUrl: "#"} : req
+            )
+        );
+        setActiveRequestId(null);
+    }
   };
   
   const handleDownloadSigned = (requestId: string) => {
@@ -173,9 +197,9 @@ export default function CertificationRequestsPage() {
               ))}
             </TableBody>
           </Table>
+          <Input type="file" ref={fileInputRef} onChange={handleFileSelected} className="hidden" />
         </CardContent>
       </Card>
     </div>
   );
 }
-
