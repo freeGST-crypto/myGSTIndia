@@ -16,6 +16,27 @@ const documentTypes = [
         status: "active"
     },
     {
+        name: "Rental Deed",
+        description: "Draft a legal agreement for property rental.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Lease Deed",
+        description: "Create a formal lease agreement for long-term property usage.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Self Affidavit for GST",
+        description: "Generate a self-declaration affidavit for GST registration.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
         name: "Society Registration Deed",
         description: "Register a new society with a formal deed.",
         href: "#",
