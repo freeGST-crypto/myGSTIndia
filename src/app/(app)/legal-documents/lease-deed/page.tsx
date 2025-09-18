@@ -36,9 +36,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  landlordName: z.string().min(3, "Landlord name is required."),
+  landlordName: z.string().min(3, "Lessor name is required."),
   landlordParentage: z.string().min(3, "Parentage is required."),
-  landlordAddress: z.string().min(10, "Landlord address is required."),
+  landlordAddress: z.string().min(10, "Lessor address is required."),
   
   tenantName: z.string().min(3, "Lessee name is required."),
   tenantParentage: z.string().min(3, "Parentage is required."),
@@ -220,59 +220,65 @@ export default function LeaseDeedPage() {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
         const startDate = new Date(formData.leaseStartDate).toLocaleDateString('en-GB', dateOptions);
-        const endDate = new Date(new Date(formData.leaseStartDate).setMonth(new Date(formData.leaseStartDate).getMonth() + formData.leaseTermMonths)).toLocaleDateString('en-GB', dateOptions);
+        const termInYears = formData.leaseTermMonths / 12;
 
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Lease Deed.</CardDescription></CardHeader>
                 <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <h2 className="text-center font-bold">LEASE DEED</h2>
-                    <p>This Lease Deed is made and executed on this <strong>{new Date().toLocaleDateString('en-GB', dateOptions)}</strong> at {formData.landlordAddress.split(',').pop()?.trim()}.</p>
+                    <h2 className="text-center font-bold">DEED OF LEASE</h2>
+                    <p>This Deed of Lease is made at <strong>{formData.landlordAddress.split(',').pop()?.trim()}</strong> this <strong>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>
                     
                     <p className="font-bold">BETWEEN:</p>
-                    <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called the "LESSOR" of the one part).</p>
+                    <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called 'The Lessor' of the One Part).</p>
                     
                     <p className="font-bold">AND:</p>
-                    <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called the "LESSEE" of the other part).</p>
-
-                    <p>"LESSOR" and "LESSEE" are hereinafter collectively referred to as "the Parties".</p>
+                    <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called 'The Lessee' of the Other Part).</p>
                     
                     <h4 className="font-bold mt-4">WHEREAS:</h4>
-                    <ol className="list-[upper-alpha] list-inside space-y-2">
-                        <li>The Lessor is the absolute owner of the {formData.propertyType} property situated at <strong>{formData.propertyAddress}</strong> (hereinafter referred to as the "Scheduled Property").</li>
-                        <li>The Lessee has approached the Lessor to take on lease the Scheduled Property for {formData.propertyType} purposes.</li>
-                        <li>The Lessor has agreed to let out the property to the Lessee on the terms and conditions hereafter appearing.</li>
+                    <ol className="list-decimal list-inside space-y-2">
+                        <li>The Lessor is absolutely seized and possessed of or otherwise well and sufficiently entitled to the land and premises described in the Schedule hereunder written.</li>
+                        <li>The Lessor has agreed to grant to the Lessee a lease in respect of the said land and premises for a term of <strong>{termInYears.toFixed(1)} years</strong> in the manner hereinafter appearing.</li>
                     </ol>
 
                     <h4 className="font-bold mt-4">NOW THIS DEED WITNESSETH AS FOLLOWS:</h4>
                     <ol className="list-decimal list-inside space-y-3">
-                        <li>The lease shall commence from <strong>{startDate}</strong> and shall be for a period of <strong>{formData.leaseTermMonths} months</strong>, ending on <strong>{endDate}</strong>.</li>
-                        <li>The Lessee shall pay a monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
-                        <li>The rent shall be increased by <strong>{formData.rentIncreasePercent}%</strong> after every <strong>{formData.rentIncreaseFrequency} months</strong> of the lease.</li>
-                        <li>The Lessee has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Lessor. This deposit will be refunded to the Lessee within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Lessee.</li>
-                        <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong> from the commencement of the lease. If the Lessee vacates the property during this period for any reason, the entire security deposit shall be forfeited by the Lessor.</li>
-                        <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
-                        <li>The Lessee shall bear and pay for all charges for electricity, water, internet, gas, and any other utilities consumed on the Scheduled Property directly to the concerned authorities.</li>
-                        <li>The Lessee shall use the Scheduled Property only for <strong>{formData.propertyType}</strong> purposes and shall not use it for any illegal or immoral activities.</li>
-                        <li>The Lessee shall maintain the Scheduled Property in a good, clean, and habitable condition and shall not cause any damage to the fixtures, fittings, and appliances. Any damage caused beyond normal wear and tear shall be repaired at the Lessee's expense.</li>
-                        <li>The Lessee shall not make any structural alterations or additions to the Scheduled Property without the prior written consent of the Lessor.</li>
-                        <li>The Lessor shall have the right to inspect the Scheduled Property at reasonable times with at least 24 hours prior notice to the Lessee.</li>
-                        <li>The Lessee shall {formData.allowPets ? "" : "not"} be allowed to keep pets on the property.</li>
-                        <li>The Lessee shall {formData.allowSubletting ? "" : "not"} sublet, assign, or part with the possession of the property or any part thereof without the prior written consent of the Lessor.</li>
-                        <li>Any disputes between the parties shall be subject to the exclusive jurisdiction of the courts in {formData.landlordAddress.split(',').pop()?.trim()}.</li>
+                        <li>In pursuance of the said agreement and in consideration of the rent hereby reserved and of the terms and conditions, covenants and agreements herein contained and on the part of the Lessee to be observed and performed the Lessor doth hereby demise unto the Lessee all that the said land and premises situated at <strong>{formData.propertyAddress}</strong> (hereinafter for the brevity's sake referred to as 'the demised premises') to hold the demised premises unto the Lessee for a term of <strong>{formData.leaseTermMonths} months</strong> commencing from <strong>{startDate}</strong>, yielding and paying therefor during the said term the monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong> free and clear of all deductions and strictly in advance on or before the <strong>{formData.rentPaymentDay}th day</strong> of each and every calendar month.</li>
+                        
+                        <li>The Lessee hereby covenants with the Lessor as follows:
+                            <ul className="list-[lower-alpha] list-inside pl-4 mt-2 space-y-2">
+                                <li>To pay the rent hereby reserved on the days and in the manner aforesaid. If the rent is not paid on the due dates, the Lessee shall pay interest thereon at the rate of 18% per annum from the due date till payment.</li>
+                                <li>To bear, pay and discharge all existing and future rates, taxes, assessment duties, cess, impositions, and other outgoings whatsoever imposed or charged upon the demised land and payable by the occupier.</li>
+                                <li>To keep the demised premises in good and tenantable repairs (reasonable wear and tear excepted).</li>
+                                <li>Not to make any structural alterations or additions to the demised premises without the prior written consent of the Lessor.</li>
+                                <li>To use the demised premises only for <strong>{formData.propertyType}</strong> purposes and not for any illegal or immoral activities.</li>
+                            </ul>
+                        </li>
+
+                        <li>The Lessor doth hereby covenant with the Lessee that on the Lessee paying the said monthly rent and observing and performing the covenants herein contained, they shall peaceably and quietly hold, possess and enjoy the demised premises during the said term without any eviction, interruption, or disturbance by the Lessor.</li>
+
+                        <li>It is hereby agreed that if the rent shall be in arrears for a space of two months or if any of the covenants on the part of the Lessee shall not be performed, it shall be lawful for the Lessor to re-enter upon the demised premises, without prejudice to the right of action of the Lessor in respect of any breach of the covenants.</li>
+
+                        <li>On the expiration of the term hereby created, all buildings and structures standing on the demised land shall automatically vest in the Lessor without payment of any compensation therefor by the Lessor to the Lessee.</li>
+
+                        <li>The Lessee shall not be entitled, without obtaining in writing the permission of the Lessor, to assign, mortgage, or sublet the demised premises. Such permission shall not be unreasonably withheld.</li>
                     </ol>
 
-                    <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written in the presence of the following witnesses.</p>
+                    <p className="mt-8">IN WITNESS WHEREOF the Lessor and the Lessee have put their respective hands on the original and duplicate hereof the day and year first herein above written.</p>
                     
+                     <h4 className="font-bold mt-8">THE SCHEDULE ABOVE REFERRED TO</h4>
+                     <p>(Full description of the property being leased)</p>
+                     <p>All that piece and parcel of {formData.propertyType} premises situated at: <strong>{formData.propertyAddress}</strong>, with all fittings, fixtures, and appurtenances.</p>
+
                     <div className="flex justify-between mt-16">
                         <div className="text-center">
                             <p>_________________________</p>
-                            <p>(LESSOR)</p>
+                            <p>(THE LESSOR)</p>
                             <p>{formData.landlordName}</p>
                         </div>
                         <div className="text-center">
                             <p>_________________________</p>
-                            <p>(LESSEE)</p>
+                            <p>(THE LESSEE)</p>
                             <p>{formData.tenantName}</p>
                         </div>
                     </div>
@@ -319,3 +325,4 @@ export default function LeaseDeedPage() {
     </div>
   );
 }
+
