@@ -42,7 +42,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 
 
 export default function InvoicesPage() {
-  const { journalVouchers, loading: journalLoading } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -63,16 +63,26 @@ export default function InvoicesPage() {
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const invoices = useMemo(() => {
-    return journalVouchers
-        .filter(v => v.id.startsWith("JV-INV-"))
-        .map(v => ({
-            id: v.id.replace("JV-", ""),
-            customer: v.narration.replace("Sale to ", "").split(" via")[0],
-            date: v.date,
-            dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
-            amount: v.amount,
-            status: "Pending", // Status logic to be implemented later
-        }))
+    const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
+    const cancelledInvoiceIds = new Set(
+        journalVouchers
+            .filter(v => v.id.startsWith("JV-CNL-"))
+            .map(v => v.id.replace("JV-CNL-", "INV-"))
+    );
+
+    return salesInvoices
+        .map(v => {
+            const invoiceId = v.id.replace("JV-", "");
+            const isCancelled = cancelledInvoiceIds.has(invoiceId);
+            return {
+                id: invoiceId,
+                customer: v.narration.replace("Sale to ", "").split(" via")[0],
+                date: v.date,
+                dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
+                amount: v.amount,
+                status: isCancelled ? "Cancelled" : "Pending", // Status logic now includes cancelled
+            }
+        })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
 
@@ -108,6 +118,40 @@ export default function InvoicesPage() {
     }
   }
 
+    const handleCancelInvoice = async (invoiceId: string) => {
+        const originalVoucherId = `JV-${invoiceId}`;
+        const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+
+        if (!originalVoucher) {
+            toast({ variant: "destructive", title: "Error", description: "Original invoice transaction not found." });
+            return;
+        }
+
+        // Create the reversal entry
+        const reversalLines = originalVoucher.lines.map(line => ({
+            account: line.account,
+            debit: line.credit, // Swap debit and credit
+            credit: line.debit,
+        }));
+
+        const cancellationVoucher = {
+            id: `JV-CNL-${invoiceId.replace("INV-","")}`,
+            date: new Date().toISOString().split('T')[0],
+            narration: `Cancellation of Invoice #${invoiceId}`,
+            lines: reversalLines,
+            amount: originalVoucher.amount,
+            customerId: originalVoucher.customerId,
+        };
+
+        try {
+            await addJournalVoucher(cancellationVoucher);
+            toast({ title: "Invoice Cancelled", description: `Invoice #${invoiceId} has been successfully cancelled.` });
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "Cancellation Failed", description: e.message });
+        }
+    };
+
+
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "paid":
@@ -116,6 +160,8 @@ export default function InvoicesPage() {
         return <Badge variant="secondary">Pending</Badge>;
       case "overdue":
         return <Badge variant="destructive">Overdue</Badge>;
+       case "cancelled":
+        return <Badge variant="destructive">Cancelled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -300,7 +346,11 @@ export default function InvoicesPage() {
                             Generate E-Waybill JSON
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem 
+                                className="text-destructive"
+                                onSelect={() => handleCancelInvoice(invoice.id)}
+                                disabled={invoice.status === 'Cancelled'}
+                            >
                             <Trash2 />
                             Cancel Invoice
                             </DropdownMenuItem>
