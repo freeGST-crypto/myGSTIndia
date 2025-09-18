@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -36,7 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
@@ -77,6 +76,8 @@ const initialVendors = [
 export default function PartiesPage() {
     const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
     const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
+    const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+    const [vendorSearchTerm, setVendorSearchTerm] = useState("");
     const { toast } = useToast();
 
     const handleDownloadTemplate = (type: 'Customer' | 'Vendor') => {
@@ -92,6 +93,22 @@ export default function PartiesPage() {
         document.body.removeChild(link);
         toast({ title: "Template Downloaded", description: `${type} CSV template has been downloaded.` });
     };
+
+    const filteredCustomers = useMemo(() => {
+        if (!customerSearchTerm) return initialCustomers;
+        return initialCustomers.filter(c => 
+            c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+            c.gstin.toLowerCase().includes(customerSearchTerm.toLowerCase())
+        );
+    }, [customerSearchTerm]);
+
+    const filteredVendors = useMemo(() => {
+        if (!vendorSearchTerm) return initialVendors;
+        return initialVendors.filter(v => 
+            v.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+            v.gstin.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+        );
+    }, [vendorSearchTerm]);
 
     const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -239,35 +256,59 @@ export default function PartiesPage() {
         </TabsList>
         <TabsContent value="customers">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Customers</CardTitle>
-                        <CardDescription>A list of all your customers.</CardDescription>
+                <CardHeader className="space-y-4">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <CardTitle>Customers</CardTitle>
+                            <CardDescription>A list of all your customers.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <ImportExportMenu type="Customer" />
+                            <PartyDialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} type="Customer" />
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <ImportExportMenu type="Customer" />
-                        <PartyDialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} type="Customer" />
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search customers by name or GSTIN..."
+                            className="pl-8 sm:w-full md:w-1/2"
+                            value={customerSearchTerm}
+                            onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                        />
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PartyTable parties={initialCustomers} type="Customer"/>
+                    <PartyTable parties={filteredCustomers} type="Customer"/>
                 </CardContent>
             </Card>
         </TabsContent>
         <TabsContent value="vendors">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Vendors</CardTitle>
-                        <CardDescription>A list of all your vendors/suppliers.</CardDescription>
+                <CardHeader className="space-y-4">
+                     <div className="flex items-start justify-between">
+                        <div>
+                            <CardTitle>Vendors</CardTitle>
+                            <CardDescription>A list of all your vendors/suppliers.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <ImportExportMenu type="Vendor" />
+                            <PartyDialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} type="Vendor" />
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <ImportExportMenu type="Vendor" />
-                        <PartyDialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} type="Vendor" />
+                     <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search vendors by name or GSTIN..."
+                            className="pl-8 sm:w-full md:w-1/2"
+                            value={vendorSearchTerm}
+                            onChange={(e) => setVendorSearchTerm(e.target.value)}
+                        />
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PartyTable parties={initialVendors} type="Vendor"/>
+                    <PartyTable parties={filteredVendors} type="Vendor"/>
                 </CardContent>
             </Card>
         </TabsContent>

@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -26,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
@@ -83,6 +82,7 @@ const items = [
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState(initialInvoices);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const handleQuickInvoiceCreate = () => {
@@ -105,6 +105,14 @@ export default function InvoicesPage() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  const filteredInvoices = useMemo(() => {
+    if (!searchTerm) return invoices;
+    return invoices.filter(invoice =>
+        invoice.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [invoices, searchTerm]);
 
   return (
     <div className="space-y-8">
@@ -204,6 +212,16 @@ export default function InvoicesPage() {
           <CardDescription>
             Here is a list of your most recent invoices.
           </CardDescription>
+           <div className="relative pt-4">
+                <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search by Invoice # or Customer..."
+                  className="pl-8 sm:w-full md:w-1/3"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -219,7 +237,7 @@ export default function InvoicesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {filteredInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.id}</TableCell>
                   <TableCell>{invoice.customer}</TableCell>

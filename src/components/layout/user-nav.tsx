@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import { Heart } from "lucide-react"
 
 export function UserNav() {
   return (
@@ -55,6 +56,11 @@ export function UserNav() {
             Log out
             </DropdownMenuItem>
         </Link>
+        <DropdownMenuSeparator />
+        <div className="p-2 text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+            <span>Made for India</span>
+            <Heart className="size-3 text-red-500" />
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

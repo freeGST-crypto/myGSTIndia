@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -27,8 +26,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Copy, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Copy, Trash2, Search } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { Input } from "@/components/ui/input";
 
 const initialPurchases = [
   {
@@ -67,6 +67,7 @@ const initialPurchases = [
 
 export default function PurchasesPage() {
   const [purchases, setPurchases] = useState(initialPurchases);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -80,6 +81,14 @@ export default function PurchasesPage() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  const filteredPurchases = useMemo(() => {
+    if (!searchTerm) return purchases;
+    return purchases.filter(purchase =>
+        purchase.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        purchase.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [purchases, searchTerm]);
 
   return (
     <div className="space-y-8">
@@ -126,6 +135,16 @@ export default function PurchasesPage() {
           <CardDescription>
             Here is a list of your most recent purchase bills.
           </CardDescription>
+          <div className="relative pt-4">
+                <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search by Bill # or Vendor..."
+                  className="pl-8 sm:w-full md:w-1/3"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -141,7 +160,7 @@ export default function PurchasesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {purchases.map((purchase) => (
+              {filteredPurchases.map((purchase) => (
                 <TableRow key={purchase.id}>
                   <TableCell className="font-medium">{purchase.id}</TableCell>
                   <TableCell>{purchase.vendor}</TableCell>

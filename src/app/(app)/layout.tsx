@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -41,6 +40,7 @@ import {
   ShieldCheck,
   Award,
   CreditCard,
+  Heart,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -259,7 +259,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
-            <h1 className="text-lg font-semibold">Dashboard</h1>
+             <div className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <span>Made with</span>
+                <Heart className="size-4 text-red-500" />
+                <span>in India</span>
+            </div>
           </div>
           <UserNav />
         </header>
