@@ -178,9 +178,9 @@ const documentTypes = [
     {
         name: "MOA & AOA",
         description: "Memorandum and Articles of Association for companies.",
-        href: "#",
+        href: "/legal-documents/moa-aoa",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
 ]
 
