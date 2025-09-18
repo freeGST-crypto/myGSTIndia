@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
   const invoices = useMemo(() => {
     return journalVouchers
-        .filter(v => v.narration.startsWith("Sale to"))
+        .filter(v => v.id.startsWith("JV-INV-"))
         .slice(0, 5)
         .map(v => ({
             invoice: v.id.replace("JV-", ""),
