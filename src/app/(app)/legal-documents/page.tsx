@@ -115,9 +115,9 @@ const documentTypes = [
     {
         name: "Board Resolutions Library",
         description: "Templates for common board resolutions.",
-        href: "#",
+        href: "/legal-documents/board-resolutions",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Society Registration Deed",
