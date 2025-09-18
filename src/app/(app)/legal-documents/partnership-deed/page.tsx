@@ -274,7 +274,7 @@ export default function PartnershipDeedPage() {
                    <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => (
                      <FormItem className="flex flex-row items-center justify-start gap-2 pt-2">
                         <FormControl>
-                           <input type="checkbox" checked={field.value} onChange={field.onChange} className="size-4" />
+                          <input type="checkbox" {...field} checked={field.value} className="size-4" />
                         </FormControl>
                         <Label className="font-normal" htmlFor={field.name}>This is a working/active partner</Label>
                     </FormItem>
@@ -415,7 +415,7 @@ export default function PartnershipDeedPage() {
                     </FormItem>
                 )}/>
                  <Button type="button" onClick={handleSuggestClauses} disabled={isSuggestingClauses}>
-                    {isSuggestingClauses ? <Loader2 className="animate-spin mr-2"/> : <Wand2 className="mr-2"/>}
+                    {isSuggestingClauses ? <Loader2 className="animate-spin mr-2"/> : <Wand2 className="mr-2" />}
                     Suggest Clauses with AI
                 </Button>
             </CardContent>
@@ -652,3 +652,6 @@ export default function PartnershipDeedPage() {
     </div>
   );
 }
+
+
+    

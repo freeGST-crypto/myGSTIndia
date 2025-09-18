@@ -186,13 +186,16 @@ export default function GstEngagementLetterPage() {
                                     <Checkbox
                                       checked={field.value?.includes(item.id)}
                                       onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...(field.value || []), item.id])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== item.id
-                                              )
-                                            )
+                                        const newValues = field.value ? [...field.value] : [];
+                                        if (checked) {
+                                          newValues.push(item.id);
+                                        } else {
+                                          const index = newValues.indexOf(item.id);
+                                          if (index > -1) {
+                                            newValues.splice(index, 1);
+                                          }
+                                        }
+                                        field.onChange(newValues);
                                       }}
                                     />
                                   </FormControl>
@@ -319,5 +322,7 @@ export default function GstEngagementLetterPage() {
     </div>
   );
 }
+
+    
 
     
