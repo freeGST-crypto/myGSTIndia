@@ -11,10 +11,10 @@ const resolutionTypes = [
     { name: "Appointment of First Auditor", href: "/legal-documents/board-resolutions/appointment-of-auditor", status: "active" },
     { name: "Approval of Annual Accounts", href: "/legal-documents/board-resolutions/approval-of-annual-accounts", status: "active" },
     { name: "Appointment of Additional Director", href: "/legal-documents/board-resolutions/appointment-of-director", status: "active" },
-    { name: "Approval of Loan from Director", href: "/legal-documents/board-resolutions/approval-of-loan", status: "wip" },
-    { name: "Borrowing Powers (Bank Loan)", href: "/legal-documents/board-resolutions/borrowing-powers", status: "wip" },
-    { name: "Issue of Share Certificates", href: "/legal-documents/board-resolutions/issue-of-share-certificates", status: "wip" },
-    { name: "Shifting of Registered Office", href: "/legal-documents/board-resolutions/shifting-of-registered-office", status: "wip" },
+    { name: "Approval of Loan from Director", href: "/legal-documents/board-resolutions/approval-of-loan", status: "active" },
+    { name: "Borrowing Powers (Bank Loan)", href: "/legal-documents/board-resolutions/borrowing-powers", status: "active" },
+    { name: "Issue of Share Certificates", href: "/legal-documents/board-resolutions/issue-of-share-certificates", status: "active" },
+    { name: "Shifting of Registered Office", href: "/legal-documents/board-resolutions/shifting-of-registered-office", status: "active" },
 ];
 
 export default function BoardResolutionsLibraryPage() {
