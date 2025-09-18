@@ -27,7 +27,6 @@ import {
   FileSpreadsheet,
   GitCompareArrows,
   BookCopy,
-  BookPlus,
   TrendingUp,
   Building,
   LayoutDashboard,
@@ -42,6 +41,7 @@ import {
   Award,
   CreditCard,
   Heart,
+  BookPlus,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -233,50 +233,50 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
   );
 };
 
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <GstEaseLogo className="size-8" />
-            <h1 className="text-xl font-semibold text-sidebar-primary">GSTEase</h1>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <NavMenu items={menuItems} pathname={pathname}/>
-        </SidebarContent>
-        <SidebarFooter>
-          <Separator className="my-2 bg-sidebar-border" />
-          <p className="p-2 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-            © 2024 GSTEase Inc.
-          </p>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
-          <SidebarTrigger className="md:hidden" />
-          <div className="flex-1">
-             <div className="hidden md:flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1 font-medium text-muted-foreground">
-                    <span>Made with</span>
-                    <Heart className="size-4 text-red-500" />
-                    <span>in India</span>
-                </div>
-                <Separator orientation="vertical" className="h-6"/>
-                 <div>
-                    <p className="font-semibold text-foreground">Acme Innovations Pvt. Ltd.</p>
-                    <p className="text-xs text-muted-foreground font-mono">GSTIN: 27ABCDE1234F1Z5</p>
+    const pathname = usePathname();
+    return (
+        <SidebarProvider>
+        <Sidebar>
+            <SidebarHeader>
+            <div className="flex items-center gap-2">
+                <GstEaseLogo className="size-8" />
+                <h1 className="text-xl font-semibold text-sidebar-primary">GSTEase</h1>
+            </div>
+            </SidebarHeader>
+            <SidebarContent>
+            <NavMenu items={menuItems} pathname={pathname}/>
+            </SidebarContent>
+            <SidebarFooter>
+            <Separator className="my-2 bg-sidebar-border" />
+            <p className="p-2 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+                © 2024 GSTEase Inc.
+            </p>
+            </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+            <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1">
+                <div className="hidden md:flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1 font-medium text-muted-foreground">
+                        <span>Made with</span>
+                        <Heart className="size-4 text-red-500" />
+                        <span>in India</span>
+                    </div>
+                    <Separator orientation="vertical" className="h-6"/>
+                    <div>
+                        <p className="font-semibold text-foreground">Acme Innovations Pvt. Ltd.</p>
+                        <p className="text-xs text-muted-foreground font-mono">GSTIN: 27ABCDE1234F1Z5</p>
+                    </div>
                 </div>
             </div>
-          </div>
-          <UserNav />
-        </header>
-        <main className="flex-1 p-4 md:p-8">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
-  );
+            <UserNav />
+            </header>
+            <main className="flex-1 p-4 md:p-8">{children}</main>
+        </SidebarInset>
+        </SidebarProvider>
+    )
 }
+
+    
