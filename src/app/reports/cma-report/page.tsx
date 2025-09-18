@@ -41,6 +41,7 @@ import {
   Loader2,
   FileSpreadsheet,
   AlertTriangle,
+  FileSignature,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion } from "@/components/ui/accordion";
@@ -418,9 +419,9 @@ export default function CmaReportGeneratorPage() {
                         </Accordion>
                     )}
                 </CardContent>
-                 <CardFooter className="flex justify-between">
+                 <CardFooter className="flex justify-between flex-wrap gap-4">
                     <Button variant="secondary" onClick={() => setActiveTab('inputs')}>Back to Inputs</Button>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap justify-end">
                         <Button variant="default" onClick={handleGetAiObservations} disabled={isAiLoading}>
                            {isAiLoading ? <Loader2 className="mr-2 animate-spin"/> : <BrainCircuit className="mr-2" />}
                            Get AI Observations
@@ -430,6 +431,26 @@ export default function CmaReportGeneratorPage() {
                     </div>
                 </CardFooter>
             </Card>
+            
+            {generatedReport && (
+                 <Card className="mt-8">
+                    <CardHeader>
+                        <CardTitle>Professional Certification</CardTitle>
+                        <CardDescription>As a professional (e.g., CA), you can digitally sign this report before sharing it.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                            This action would typically invoke a client-side utility like Emsigner to interact with a USB token containing the Digital Signature Certificate.
+                        </p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button>
+                            <FileSignature className="mr-2"/>
+                            Certify & Sign with DSC
+                        </Button>
+                    </CardFooter>
+                </Card>
+            )}
         </TabsContent>
 
          <TabsContent value="ai-observations" className="mt-6">
