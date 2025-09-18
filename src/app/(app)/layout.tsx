@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -32,18 +31,17 @@ import {
   Award,
   CreditCard,
   Heart,
-  BookPlus,
-  ConciergeBell,
-  LayoutDashboard,
-  Building,
-  TrendingUp,
-  AreaChart,
-  GitCompareArrows,
-  FileSpreadsheet,
   BookCopy,
   ShoppingCart,
   ShoppingBag,
   Loader2,
+  GitCompareArrows,
+  FileSpreadsheet,
+  Building,
+  TrendingUp,
+  AreaChart,
+  ConciergeBell,
+  LayoutDashboard
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -70,6 +68,7 @@ import { UserNav } from "@/components/layout/user-nav";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
+import { Header } from "@/components/layout/header";
 
 
 // --- Menu Items Definition ---
@@ -108,7 +107,7 @@ const menuItems = [
     subItems: [
       { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library },
       { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet },
-      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookPlus },
+      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy },
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale },
       {
@@ -279,18 +278,11 @@ export default function AppLayout({
             <NavMenu items={menuItems} pathname={pathname} />
         </SidebarContent>
         <SidebarFooter>
-          <div className="p-2">
-            <UserNav />
-          </div>
+          {/* Footer content can go here if needed in the future */}
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          <SidebarTrigger className="md:hidden"/>
-          <div className="w-full flex-1">
-             {/* Can add a search bar here if needed */}
-          </div>
-        </header>
+        <Header />
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
