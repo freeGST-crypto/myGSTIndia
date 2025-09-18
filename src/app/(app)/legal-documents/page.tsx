@@ -43,7 +43,7 @@ const documentTypes = [
         description: "Draft an agreement for a Limited Liability Partnership.",
         href: "/legal-documents/llp-agreement",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 5000,
     },
      {
