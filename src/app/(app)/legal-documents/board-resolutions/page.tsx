@@ -7,10 +7,11 @@ import Link from "next/link";
 
 const resolutionTypes = [
     { name: "Opening of Bank Account", href: "/legal-documents/board-resolutions/opening-of-bank-account", status: "active" },
-    { name: "Appointment of First Auditor", href: "#", status: "coming_soon" },
-    { name: "Approval of Financial Statements", href: "#", status: "coming_soon" },
-    { name: "Appointment/Resignation of Director", href: "#", status: "coming_soon" },
-    { name: "Borrowing Powers / Loan Approval", href: "#", status: "coming_soon" },
+    { name: "Appointment of First Auditor", href: "/legal-documents/board-resolutions/appointment-of-auditor", status: "active" },
+    { name: "Approval of Annual Accounts", href: "/legal-documents/board-resolutions/approval-of-annual-accounts", status: "active" },
+    { name: "Appointment of Additional Director", href: "/legal-documents/board-resolutions/appointment-of-director", status: "active" },
+    { name: "Approval of Loan from Director", href: "/legal-documents/board-resolutions/approval-of-loan", status: "active" },
+    { name: "Borrowing Powers (Bank Loan)", href: "#", status: "coming_soon" },
     { name: "Issue of Share Certificates", href: "#", status: "coming_soon" },
     { name: "Shifting of Registered Office", href: "#", status: "coming_soon" },
 ];
