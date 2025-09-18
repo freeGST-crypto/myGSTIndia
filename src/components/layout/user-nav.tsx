@@ -33,12 +33,16 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-          </DropdownMenuItem>
+          <Link href="/settings">
+            <DropdownMenuItem>
+              Profile
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/pricing">
+            <DropdownMenuItem>
+              Billing
+            </DropdownMenuItem>
+          </Link>
           <Link href="/settings">
             <DropdownMenuItem>
               Settings
