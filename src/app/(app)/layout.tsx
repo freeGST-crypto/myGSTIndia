@@ -51,7 +51,6 @@ import { Separator } from "@/components/ui/separator";
 
 const menuItems = [
   { href: "/", label: "Dashboard", icon: Gauge },
-  { href: "/book-appointment", label: "Book Appointment", icon: CalendarPlus },
   {
     label: "Billing",
     icon: Receipt,
@@ -103,6 +102,7 @@ const menuItems = [
     label: "Legal Documents",
     icon: BookCopy,
   },
+  { href: "/book-appointment", label: "Book Appointment", icon: CalendarPlus },
   {
     label: "Admin",
     icon: Shield,
