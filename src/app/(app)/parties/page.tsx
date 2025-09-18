@@ -42,17 +42,24 @@ import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where } from 'firebase/firestore';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
+const partySchema = z.object({
+    name: z.string().min(2, "Name is required."),
+    gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN format.").optional().or(z.literal("")),
+    email: z.string().email("Invalid email.").optional().or(z.literal("")),
+    phone: z.string().optional(),
+    address1: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    pincode: z.string().optional(),
+});
 
-type Party = {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    gstin: string;
-    userId: string;
-};
+type Party = z.infer<typeof partySchema> & { id: string; };
 
 export default function PartiesPage() {
     const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
@@ -62,13 +69,13 @@ export default function PartiesPage() {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
 
-    const customersQuery = user ? collection(db, 'customers') : null;
-    const [customersSnapshot, customersLoading, customersError] = useCollection(customersQuery);
-    const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+    const customers: Party[] = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Party)) || [];
 
-    const vendorsQuery = user ? collection(db, 'vendors') : null;
-    const [vendorsSnapshot, vendorsLoading, vendorsError] = useCollection(vendorsQuery);
-    const vendors = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
+    const vendors: Party[] = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Party)) || [];
 
 
     const handleDownloadTemplate = (type: 'Customer' | 'Vendor') => {
@@ -102,26 +109,23 @@ export default function PartiesPage() {
     }, [vendors, vendorSearchTerm]);
 
     const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => {
-        const [formData, setFormData] = useState({ name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' });
+        
+        const form = useForm<z.infer<typeof partySchema>>({
+            resolver: zodResolver(partySchema),
+            defaultValues: { name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' },
+        });
 
-        const handleSave = async () => {
+        const onSubmit = async (values: z.infer<typeof partySchema>) => {
              if (!user) {
                 toast({ variant: "destructive", title: "Not Authenticated" });
                 return;
             }
-             if (!formData.name || !formData.gstin) {
-                toast({ variant: "destructive", title: "Missing Fields", description: "Name and GSTIN are required." });
-                return;
-            }
             const collectionName = type === 'Customer' ? 'customers' : 'vendors';
             try {
-                await addDoc(collection(db, collectionName), {
-                    ...formData,
-                    userId: user.uid
-                });
-                toast({ title: `${type} Added`, description: `${formData.name} has been saved.` });
+                await addDoc(collection(db, collectionName), { ...values, userId: user.uid });
+                toast({ title: `${type} Added`, description: `${values.name} has been saved.` });
                 onOpenChange(false);
-                setFormData({ name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' });
+                form.reset();
             } catch (e) {
                 console.error("Error adding document: ", e);
                 toast({ variant: "destructive", title: "Error", description: `Could not save ${type}.` });
@@ -137,45 +141,36 @@ export default function PartiesPage() {
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[625px]">
-                    <DialogHeader>
-                        <DialogTitle>Add New {type}</DialogTitle>
-                        <DialogDescription>Enter the details for your new {type.toLowerCase()}.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right">Name</Label>
-                            <Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder={`${type}'s legal name`} className="col-span-3" />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="gstin" className="text-right">GSTIN</Label>
-                            <Input id="gstin" value={formData.gstin} onChange={e => setFormData({...formData, gstin: e.target.value})} placeholder="15-digit GSTIN" className="col-span-3" />
-                        </div>
-                        <Separator/>
-                        <h3 className="font-medium col-span-4">Contact Details</h3>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="email" className="text-right">Email</Label>
-                            <Input id="email" type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="contact@example.com" className="col-span-3" />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="phone" className="text-right">Phone</Label>
-                            <Input id="phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 98765 43210" className="col-span-3" />
-                        </div>
-                        <Separator />
-                        <h3 className="font-medium col-span-4">Billing Address</h3>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="address1" className="text-right">Address</Label>
-                            <Input id="address1" value={formData.address1} onChange={e => setFormData({...formData, address1: e.target.value})} placeholder="Street, Building No." className="col-span-3" />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={handleSave}>Save {type}</Button>
-                    </DialogFooter>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)}>
+                            <DialogHeader>
+                                <DialogTitle>Add New {type}</DialogTitle>
+                                <DialogDescription>Enter the details for your new {type.toLowerCase()}.</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><Label>Name</Label><FormControl><Input placeholder={`${type}'s legal name`} {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField control={form.control} name="gstin" render={({ field }) => ( <FormItem><Label>GSTIN</Label><FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <Separator/>
+                                <h3 className="font-medium col-span-4">Contact Details</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                     <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><Label>Email</Label><FormControl><Input placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                     <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><Label>Phone</Label><FormControl><Input placeholder="+91 98765 43210" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                </div>
+                                <Separator />
+                                <h3 className="font-medium col-span-4">Billing Address</h3>
+                                <FormField control={form.control} name="address1" render={({ field }) => ( <FormItem><Label>Address</Label><FormControl><Input placeholder="Street, Building No." {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit">Save {type}</Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
                 </DialogContent>
             </Dialog>
         )
     };
 
-    const PartyTable = ({ parties, loading }: { parties: any[], loading: boolean }) => (
+    const PartyTable = ({ parties, loading }: { parties: Party[], loading: boolean }) => (
         <Table>
             <TableHeader>
                 <TableRow>
@@ -186,8 +181,11 @@ export default function PartiesPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {loading ? <TableRow><TableCell colSpan={4} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>
-                : parties.map((party) => (
+                {loading ? (
+                    <TableRow><TableCell colSpan={4} className="h-24 text-center"><Loader2 className="animate-spin mx-auto text-primary"/></TableCell></TableRow>
+                ) : parties.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="text-center h-24 text-muted-foreground">No parties found.</TableCell></TableRow>
+                ) : parties.map((party) => (
                     <TableRow key={party.id}>
                         <TableCell className="font-medium">{party.name}</TableCell>
                         <TableCell>

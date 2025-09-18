@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -49,33 +50,43 @@ export function RecentActivity({ invoices }: RecentActivityProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.invoice}>
-                <TableCell>
-                  <div className="font-medium">{invoice.customer}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {invoice.invoice}
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge 
-                    variant={
-                      invoice.status === "Paid" ? "default" :
-                      invoice.status === "Overdue" ? "destructive" :
-                      "secondary"
-                    }
-                    className={
-                        invoice.status === "Paid" ? "bg-green-600" : ""
-                    }
-                  >
-                    {invoice.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">{invoice.amount}</TableCell>
-              </TableRow>
-            ))}
+            {invoices.length > 0 ? (
+                invoices.map((invoice) => (
+                <TableRow key={invoice.invoice}>
+                    <TableCell>
+                    <div className="font-medium">{invoice.customer}</div>
+                    <div className="text-sm text-muted-foreground">
+                        {invoice.invoice}
+                    </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                    <Badge 
+                        variant={
+                        invoice.status === "Paid" ? "default" :
+                        invoice.status === "Overdue" ? "destructive" :
+                        "secondary"
+                        }
+                        className={
+                            invoice.status === "Paid" ? "bg-green-600" : ""
+                        }
+                    >
+                        {invoice.status}
+                    </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{invoice.amount}</TableCell>
+                </TableRow>
+                ))
+            ) : (
+                <TableRow>
+                    <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">
+                        No recent invoices found matching your search.
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
     </>
   )
 }
+
+    

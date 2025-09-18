@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -201,7 +202,9 @@ export default function ItemsPage() {
                         </TableHeader>
                         <TableBody>
                             {itemsLoading ? (
-                                <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="mx-auto animate-spin"/></TableCell></TableRow>
+                                <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="mx-auto animate-spin text-primary"/></TableCell></TableRow>
+                            ) : filteredItems.length === 0 ? (
+                                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">No items found.</TableCell></TableRow>
                             ) : filteredItems.map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell>
@@ -239,3 +242,5 @@ export default function ItemsPage() {
             </Card>
         </div>
     );
+
+    
