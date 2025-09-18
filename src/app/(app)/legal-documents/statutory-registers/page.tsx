@@ -38,6 +38,7 @@ import {
   BadgePercent,
   Wallet,
   ShoppingCart,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
