@@ -18,9 +18,9 @@ const documentTypes = [
     {
         name: "Rental Deed",
         description: "Draft a legal agreement for property rental.",
-        href: "#",
+        href: "/legal-documents/rental-deed",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Lease Deed",
