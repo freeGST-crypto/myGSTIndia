@@ -52,6 +52,9 @@ export default function BalanceSheetPage() {
                 if (balances.hasOwnProperty(line.account)) {
                     const debit = parseFloat(line.debit);
                     const credit = parseFloat(line.credit);
+                     // For Assets & Expenses, Balance = Dr - Cr
+                    // For Liabilities, Equity, Revenue, Balance = Cr - Dr
+                    // In our system, we store balances from a debit-positive perspective
                     balances[line.account] += debit - credit;
                 }
             });
@@ -63,11 +66,12 @@ export default function BalanceSheetPage() {
     const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
     const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
     
-    // Revenue is credit-positive, so we negate the balance (which is debit-positive)
+    // Revenue balance is credit-positive (stored as negative), so we negate it to get actual revenue
     const totalRevenue = revenueAccounts.reduce((sum, code) => sum + -(accountBalances[code] || 0), 0);
-    // Expenses are debit-positive, so we use the balance directly
+    // Expense balance is debit-positive (stored as positive), so we use it directly
     const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
     const netProfit = totalRevenue - totalExpenses;
+
 
     const data = useMemo(() => {
         return {
@@ -84,7 +88,7 @@ export default function BalanceSheetPage() {
             assets: {
                 fixedAssets: {
                     officeEquipment: accountBalances['1450'] || 0,
-                    lessAccumulatedDepreciation: accountBalances['1455'] || 0,
+                    lessAccumulatedDepreciation: accountBalances['1455'] || 0, // This is a credit balance, so it will be negative
                 },
                 investments: 0,
                 currentAssets: {
@@ -173,54 +177,58 @@ export default function BalanceSheetPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 {/* Liabilities + Equity Column */}
-                <Table>
-                    <TableHeader><TableRow><TableHead>Liabilities & Equity</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                        <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
-                        <ReportRow label="Capital Account" value={data.equityAndLiabilities.capitalAccount} isSub />
-                        <ReportRow label="Reserves & Surplus (incl. P&L)" value={data.equityAndLiabilities.reservesAndSurplus} isSub />
-                        
-                        <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
-                        <ReportRow label="Long-Term Loans" value={data.equityAndLiabilities.longTermLoans} isSub />
+                <div className="w-full">
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Liabilities & Equity</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
+                            <ReportRow label="Capital Account" value={data.equityAndLiabilities.capitalAccount} isSub />
+                            <ReportRow label="Reserves & Surplus (incl. P&L)" value={data.equityAndLiabilities.reservesAndSurplus} isSub />
+                            
+                            <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
+                            <ReportRow label="Long-Term Loans" value={data.equityAndLiabilities.longTermLoans} isSub />
 
-                        <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
-                        <ReportRow label="Sundry Creditors" value={data.equityAndLiabilities.currentLiabilities.sundryCreditors} isSub />
-                        <ReportRow label="GST Payable" value={data.equityAndLiabilities.currentLiabilities.gstPayable} isSub />
-                        <ReportRow label="Other Current Liabilities" value={data.equityAndLiabilities.currentLiabilities.otherCurrentLiabilities} isSub />
-                    </TableBody>
-                     <TableFooter>
-                        <TableRow className="font-bold bg-muted/50">
-                            <TableCell>Total</TableCell>
-                            <TableCell className="text-right font-mono">{formatCurrency(totalEquityAndLiabilities)}</TableCell>
-                        </TableRow>
-                    </TableFooter>
-                </Table>
+                            <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
+                            <ReportRow label="Sundry Creditors" value={data.equityAndLiabilities.currentLiabilities.sundryCreditors} isSub />
+                            <ReportRow label="GST Payable" value={data.equityAndLiabilities.currentLiabilities.gstPayable} isSub />
+                            <ReportRow label="Other Current Liabilities" value={data.equityAndLiabilities.currentLiabilities.otherCurrentLiabilities} isSub />
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(totalEquityAndLiabilities)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
 
                 {/* Assets Column */}
-                <Table>
-                    <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                        <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
-                        <ReportRow label="Office Equipment" value={data.assets.fixedAssets.officeEquipment} isSub />
-                        <ReportRow label="Less: Acc. Depreciation" value={data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
-                         <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
+                <div className="w-full">
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
+                            <ReportRow label="Office Equipment" value={data.assets.fixedAssets.officeEquipment} isSub />
+                            <ReportRow label="Less: Acc. Depreciation" value={data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
+                            <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
 
-                        <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(data.assets.investments)}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(data.assets.investments)}</TableCell></TableRow>
 
-                        <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
-                         <ReportRow label="Office Supplies" value={data.assets.currentAssets.officeSupplies} isSub />
-                        <ReportRow label="Sundry Debtors" value={data.assets.currentAssets.sundryDebtors} isSub />
-                        <ReportRow label="Cash in Hand" value={data.assets.currentAssets.cashInHand} isSub />
-                        <ReportRow label="Bank Balance" value={data.assets.currentAssets.bankBalance} isSub />
-                        <ReportRow label="Prepaid Insurance" value={data.assets.currentAssets.prepaidInsurance} isSub />
-                    </TableBody>
-                     <TableFooter>
-                        <TableRow className="font-bold bg-muted/50">
-                            <TableCell>Total</TableCell>
-                            <TableCell className="text-right font-mono">{formatCurrency(totalAssets)}</TableCell>
-                        </TableRow>
-                    </TableFooter>
-                </Table>
+                            <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
+                            <ReportRow label="Office Supplies" value={data.assets.currentAssets.officeSupplies} isSub />
+                            <ReportRow label="Sundry Debtors" value={data.assets.currentAssets.sundryDebtors} isSub />
+                            <ReportRow label="Cash in Hand" value={data.assets.currentAssets.cashInHand} isSub />
+                            <ReportRow label="Bank Balance" value={data.assets.currentAssets.bankBalance} isSub />
+                            <ReportRow label="Prepaid Insurance" value={data.assets.currentAssets.prepaidInsurance} isSub />
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow className="font-bold bg-muted/50">
+                                <TableCell>Total</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(totalAssets)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
             </div>
             
             {Math.abs(totalAssets - totalEquityAndLiabilities) > 0.01 && (
@@ -330,5 +338,3 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
-
-    
