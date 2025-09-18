@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -111,6 +112,27 @@ const documentTypes = [
         href: "/legal-documents/franchise-agreement",
         icon: FileText,
         status: "active"
+    },
+    {
+        name: "Offer Letter",
+        description: "Generate a formal job offer for prospective employees.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Appointment Letter",
+        description: "Create a detailed appointment letter for new hires.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Internship Agreement",
+        description: "Define the terms and conditions for an internship.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
     },
     {
         name: "Board Resolutions Library",
