@@ -31,29 +31,71 @@ import { PlusCircle, MoreHorizontal, FileText, IndianRupee, Edit, Download, Tras
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AccountingContext } from "@/context/accounting-context";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DebitNotesPage() {
-  const { journalVouchers } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
+  const { toast } = useToast();
   
   const debitNotes = useMemo(() => {
-    return journalVouchers
-        .filter(v => v.id.startsWith("JV-DN-"))
+    const allDebitNotes = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+    const voidedDebitNoteIds = new Set(
+        journalVouchers
+            .filter(v => v.id.startsWith("JV-VOID-DN-"))
+            .map(v => v.id.replace("JV-VOID-", ""))
+    );
+
+    return allDebitNotes
         .map(v => {
-            const narrationParts = v.narration.split(" issued to ");
-            const vendor = narrationParts.length > 1 ? narrationParts[1].split(" against Bill #")[0] : "N/A";
-            const originalPurchase = v.id.replace("JV-DN-", "BILL-");
+            const debitNoteId = v.id.replace("JV-", "");
+            const isVoided = voidedDebitNoteIds.has(debitNoteId);
+            const vendor = v.narration.split(" issued to ")[1]?.split(" against Bill #")[0] || "N/A";
+            const originalPurchase = v.narration.split(" against Bill #")[1] || "N/A";
 
             return {
-                id: v.id.replace("JV-", ""),
+                id: debitNoteId,
                 vendor,
                 date: v.date,
                 originalPurchase,
                 amount: v.amount,
-                status: "Applied", // Logic to be implemented
+                status: isVoided ? "Void" : "Applied",
             };
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
+
+
+  const handleVoidDebitNote = async (debitNoteId: string) => {
+    const originalVoucherId = `JV-${debitNoteId}`;
+    const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+
+    if (!originalVoucher) {
+        toast({ variant: "destructive", title: "Error", description: "Original debit note transaction not found." });
+        return;
+    }
+
+    const reversalLines = originalVoucher.lines.map(line => ({
+        account: line.account,
+        debit: line.credit, // Swap debit and credit
+        credit: line.debit,
+    }));
+
+    const voidVoucher = {
+        id: `JV-VOID-${debitNoteId}`,
+        date: new Date().toISOString().split('T')[0],
+        narration: `Voiding of Debit Note #${debitNoteId}`,
+        lines: reversalLines,
+        amount: originalVoucher.amount,
+        vendorId: originalVoucher.vendorId,
+    };
+
+    try {
+        await addJournalVoucher(voidVoucher);
+        toast({ title: "Debit Note Voided", description: `Debit Note #${debitNoteId} has been successfully voided.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Voiding Failed", description: e.message });
+    }
+  };
 
 
   const getStatusBadge = (status: string) => {
@@ -152,7 +194,11 @@ export default function DebitNotesPage() {
                           Download PDF
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem 
+                            className="text-destructive" 
+                            onSelect={() => handleVoidDebitNote(note.id)}
+                            disabled={note.status === 'Void'}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Void Debit Note
                         </DropdownMenuItem>
@@ -168,5 +214,3 @@ export default function DebitNotesPage() {
     </div>
   );
 }
-
-    
