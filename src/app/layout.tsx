@@ -18,6 +18,7 @@ const fontSourceCodePro = Source_Code_Pro({
 export const metadata: Metadata = {
   title: 'GSTEase',
   description: 'The All-in-One GST and Accounting Software',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -31,6 +32,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#4B0082" />
       </head>
       <body
         className={cn(
