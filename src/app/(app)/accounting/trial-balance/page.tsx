@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useContext, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -44,39 +44,102 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { AccountingContext } from "@/context/accounting-context";
 
-
-const trialBalanceData = [
-  // Assets
-  { account: "Cash on Hand", code: "1010", debit: 1500.00, credit: 0 },
-  { account: "HDFC Bank", code: "1020", debit: 120000.00, credit: 0 },
-  { account: "Accounts Receivable", code: "1210", debit: 35000.00, credit: 0 },
-  { account: "Office Supplies", code: "1410", debit: 5000.00, credit: 0 },
-  // Liabilities
-  { account: "Accounts Payable", code: "2010", debit: 0, credit: 22000.00 },
-  { account: "GST Payable", code: "2110", debit: 0, credit: 8500.00 },
-  // Equity
-  { account: "Owner's Equity", code: "3010", debit: 0, credit: 100000.00 },
-  { account: "Retained Earnings", code: "3020", debit: 0, credit: 15000.00 },
-  // Revenue
-  { account: "Sales Revenue", code: "4010", debit: 0, credit: 50000.00 },
-  { account: "Service Revenue", code: "4020", debit: 0, credit: 25000.00 },
-  // Expenses
-  { account: "Rent Expense", code: "5010", debit: 25000.00, credit: 0 },
-  { account: "Salaries and Wages", code: "5020", debit: 30000.00, credit: 0 },
-  { account: "Office Supplies Expense", code: "5030", debit: 4000.00, credit: 0 },
-  { account: "Bank Charges", code: "5040", debit: 500.00, credit: 0 },
+const allAccounts = [
+  { code: "1010", name: "Cash on Hand", type: "Asset" },
+  { code: "1020", name: "HDFC Bank", type: "Asset" },
+  { code: "1210", name: "Accounts Receivable", type: "Asset" },
+  { code: "1410", name: "Office Supplies", type: "Asset" },
+  { code: "1450", name: "Office Equipment", type: "Asset" },
+  { code: "1455", name: "Accumulated Depreciation", type: "Asset" },
+  { code: "1510", name: "Prepaid Insurance", type: "Asset" },
+  { code: "2010", name: "Accounts Payable", type: "Liability" },
+  { code: "2110", name: "GST Payable", type: "Liability" },
+  { code: "3010", name: "Owner's Equity", type: "Equity" },
+  { code: "3020", name: "Retained Earnings", type: "Equity" },
+  { code: "4010", name: "Sales Revenue", type: "Revenue" },
+  { code: "4020", name: "Service Revenue", type: "Revenue" },
+  { code: "5010", name: "Rent Expense", type: "Expense" },
+  { code: "5020", name: "Salaries and Wages", type: "Expense" },
+  { code: "5030", name: "Office Supplies Expense", type: "Expense" },
+  { code: "5040", name: "Bank Charges", type: "Expense" },
+  { code: "5150", name: "Depreciation Expense", type: "Expense" },
+  { code: "5160", name: "Insurance Expense", type: "Expense" },
 ];
+
 
 export default function TrialBalancePage() {
     
     const { toast } = useToast();
     const router = useRouter();
+    const { journalVouchers } = useContext(AccountingContext)!;
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [isMismatchDialogOpen, setIsMismatchDialogOpen] = useState(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [uploadDate, setUploadDate] = useState<Date | undefined>(new Date());
     const [uploadFile, setUploadFile] = useState<File | null>(null);
+
+    const trialBalanceData = useMemo(() => {
+        const balances: Record<string, { debit: number, credit: number }> = {};
+
+        allAccounts.forEach(acc => {
+            balances[acc.code] = { debit: 0, credit: 0 };
+        });
+
+        journalVouchers.forEach(voucher => {
+            voucher.lines.forEach(line => {
+                if (balances[line.account]) {
+                    balances[line.account].debit += parseFloat(line.debit);
+                    balances[line.account].credit += parseFloat(line.credit);
+                }
+            });
+        });
+
+        return allAccounts.map(acc => {
+            const balance = balances[acc.code];
+            const netBalance = balance.debit - balance.credit;
+            
+            // Assets and Expenses have debit balances
+            // Liabilities, Equity, and Revenue have credit balances
+            const isDebitNature = acc.type === 'Asset' || acc.type === 'Expense';
+
+            if (isDebitNature) {
+                 return {
+                    account: acc.name,
+                    code: acc.code,
+                    debit: netBalance > 0 ? netBalance : 0,
+                    credit: netBalance < 0 ? -netBalance : 0,
+                 };
+            } else {
+                 return {
+                    account: acc.name,
+                    code: acc.code,
+                    debit: netBalance < 0 ? 0 : netBalance,
+                    credit: netBalance > 0 ? -netBalance : 0,
+                 };
+            }
+        }).map(acc => {
+            // A simple correction for typical balances.
+            // A better system would use account types (Asset, Liability, etc.)
+            const netBalance = acc.debit - acc.credit;
+            const accountInfo = allAccounts.find(a => a.code === acc.code);
+            const accountType = accountInfo?.type;
+
+            if ((accountType === 'Asset' || accountType === 'Expense') && netBalance < 0) {
+                 return { ...acc, debit: 0, credit: -netBalance };
+            }
+             if ((accountType === 'Liability' || accountType === 'Equity' || accountType === 'Revenue') && netBalance > 0) {
+                 return { ...acc, debit: netBalance, credit: 0 };
+            }
+            // A bit of a simplification - in real accounting, a credit balance in an asset account is possible (e.g. bank overdraft)
+            // But for this simulation, we'll keep it clean.
+            if(netBalance > 0) return {...acc, debit: netBalance, credit: 0};
+            if(netBalance < 0) return {...acc, debit: 0, credit: -netBalance};
+            return acc;
+        });
+
+    }, [journalVouchers]);
 
     const totalDebits = trialBalanceData.reduce((acc, item) => acc + item.debit, 0);
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
@@ -91,10 +154,11 @@ export default function TrialBalancePage() {
 
 
     const handleAccountClick = (code: string) => {
-        router.push('/accounting/ledgers');
+        // This is a placeholder for navigation. In a real app, you might do something like this:
+        // router.push(`/accounting/ledgers?accountCode=${code}`);
         toast({
-            title: `Navigating to Ledger`,
-            description: `You would now be viewing the ledger for account ${code}.`
+            title: `Viewing Ledger for ${code}`,
+            description: `You would be navigated to the ledger for this account. For now, please use the ledger page directly.`
         });
     }
 
@@ -111,8 +175,6 @@ export default function TrialBalancePage() {
             return;
         }
 
-        // In a real app, you would send the file to the server for processing.
-        // The FileReader part is removed as it's not a good practice to handle large files on the client.
         console.log("Simulating file upload...");
         console.log("Date:", uploadDate);
         console.log("File Name:", uploadFile.name);
@@ -178,7 +240,7 @@ export default function TrialBalancePage() {
             <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                 <div>
                     <CardTitle>Trial Balance as on {date ? format(date, "PPP") : 'selected date'}</CardTitle>
-                    <CardDescription>This report lists the closing balances of all general ledger accounts.</CardDescription>
+                    <CardDescription>This report is dynamically generated from your journal entries.</CardDescription>
                 </div>
                 <Popover>
                     <PopoverTrigger asChild>
@@ -216,7 +278,7 @@ export default function TrialBalancePage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {trialBalanceData.map((item) => (
+                        {trialBalanceData.filter(item => item.debit > 0 || item.credit > 0).map((item) => (
                             <TableRow key={item.code}>
                                 <TableCell>{item.code}</TableCell>
                                 <TableCell 
