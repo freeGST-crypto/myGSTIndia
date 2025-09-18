@@ -52,72 +52,6 @@ const states = [
 
 const exportTypes = ["WPAY", "WOPAY"];
 
-const initialB2CLargeInvoices = [
-    {
-        pos: "07-Delhi",
-        invoiceNumber: "INV-B2CL-001",
-        invoiceDate: "2024-05-18",
-        invoiceValue: 300000.00,
-        taxableValue: 254237.29,
-        taxRate: 18,
-        igst: 45762.71,
-        cess: 0
-    }
-];
-
-const initialExportInvoices = [
-    {
-        exportType: "WPAY",
-        invoiceNumber: "EXP-001",
-        invoiceDate: "2024-05-22",
-        invoiceValue: 50000.00,
-        portCode: "INBOM1",
-        shippingBillNumber: "SB-12345",
-        shippingBillDate: "2024-05-23",
-        taxableValue: 50000.00,
-        taxRate: 18,
-        igst: 9000,
-        cess: 0,
-    }
-];
-
-const initialB2COthers = [
-    {
-        pos: "27-Maharashtra",
-        taxableValue: 125000.00,
-        taxRate: 18,
-        igst: 0,
-        cgst: 11250,
-        sgst: 11250,
-        cess: 0
-    },
-    {
-        pos: "29-Karnataka",
-        taxableValue: 80000.00,
-        taxRate: 12,
-        igst: 9600.00,
-        cgst: 0,
-        sgst: 0,
-        cess: 0
-    }
-];
-
-const initialNilRated = [
-    { description: "Inter-State supplies to Registered persons", nilRated: 5000, exempted: 0, nonGst: 0 },
-    { description: "Intra-State supplies to Registered persons", nilRated: 12000, exempted: 2000, nonGst: 0 },
-    { description: "Inter-State supplies to Unregistered persons", nilRated: 0, exempted: 3000, nonGst: 0 },
-    { description: "Intra-State supplies to Unregistered persons", nilRated: 8000, exempted: 1500, nonGst: 500 },
-];
-
-const initialAdvancesReceived = [
-    { pos: "06-Haryana", taxRate: 18, grossAdvance: 50000, igst: 9000, cgst: 0, sgst: 0, cess: 0 },
-];
-
-const initialAdvancesAdjusted = [
-    { pos: "06-Haryana", taxRate: 18, grossAdvanceAdjusted: 30000, igst: 5400, cgst: 0, sgst: 0, cess: 0 },
-];
-
-
 const initialDocumentsIssued = [
     {
         type: "Invoices for outward supply",
@@ -152,7 +86,7 @@ export default function Gstr1WizardPage() {
   const [customersSnapshot] = useCollection(customersQuery);
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
 
-  const initialB2BInvoices = useMemo(() => {
+  const b2bInvoicesFromJournal = useMemo(() => {
     return journalVouchers
       .filter(v => v.id.startsWith("JV-INV-"))
       .map(v => {
@@ -175,14 +109,14 @@ export default function Gstr1WizardPage() {
       });
   }, [journalVouchers, customers]);
 
-  const [b2bInvoices, setB2bInvoices] = useState(initialB2BInvoices);
-  const [b2cLargeInvoices, setB2cLargeInvoices] = useState(initialB2CLargeInvoices);
-  const [exportInvoices, setExportInvoices] = useState(initialExportInvoices);
-  const [b2cOther, setB2cOther] = useState(initialB2COthers);
-  const [nilRated, setNilRated] = useState(initialNilRated);
+  const [b2bInvoices, setB2bInvoices] = useState(b2bInvoicesFromJournal);
+  const [b2cLargeInvoices, setB2cLargeInvoices] = useState<any[]>([]);
+  const [exportInvoices, setExportInvoices] = useState<any[]>([]);
+  const [b2cOther, setB2cOther] = useState<any[]>([]);
+  const [nilRated, setNilRated] = useState<any[]>([]);
   const [documentsIssued, setDocumentsIssued] = useState(initialDocumentsIssued);
-  const [advancesReceived, setAdvancesReceived] = useState(initialAdvancesReceived);
-  const [advancesAdjusted, setAdvancesAdjusted] = useState(initialAdvancesAdjusted);
+  const [advancesReceived, setAdvancesReceived] = useState<any[]>([]);
+  const [advancesAdjusted, setAdvancesAdjusted] = useState<any[]>([]);
 
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
@@ -215,7 +149,7 @@ export default function Gstr1WizardPage() {
     setB2bInvoices(newInvoices);
   }
   
-  const handleB2cLargeChange = (index: number, field: keyof typeof b2cLargeInvoices[0], value: string | number) => {
+  const handleB2cLargeChange = (index: number, field: string, value: string | number) => {
     const newInvoices = [...b2cLargeInvoices];
     (newInvoices[index] as any)[field] = value;
     setB2cLargeInvoices(newInvoices);
@@ -229,7 +163,7 @@ export default function Gstr1WizardPage() {
     setB2cLargeInvoices(newInvoices);
   }
 
-  const handleExportChange = (index: number, field: keyof typeof exportInvoices[0], value: string | number) => {
+  const handleExportChange = (index: number, field: string, value: string | number) => {
     const newInvoices = [...exportInvoices];
     (newInvoices[index] as any)[field] = value;
     setExportInvoices(newInvoices);
@@ -243,7 +177,7 @@ export default function Gstr1WizardPage() {
     setExportInvoices(newInvoices);
   }
 
-  const handleB2cOtherChange = (index: number, field: keyof typeof b2cOther[0], value: string | number) => {
+  const handleB2cOtherChange = (index: number, field: string, value: string | number) => {
     const newRows = [...b2cOther];
     (newRows[index] as any)[field] = value;
     setB2cOther(newRows);
@@ -257,7 +191,7 @@ export default function Gstr1WizardPage() {
     setB2cOther(newRows);
   }
 
-  const handleNilRatedChange = (index: number, field: keyof typeof nilRated[0], value: string | number) => {
+  const handleNilRatedChange = (index: number, field: string, value: string | number) => {
     const newRows = [...nilRated];
     (newRows[index] as any)[field] = value;
     setNilRated(newRows);
