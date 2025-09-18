@@ -71,6 +71,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { Header } from "@/components/layout/header";
 import { AccountingProvider } from "@/context/accounting-context";
+import { ClientOnly } from "@/components/client-only";
 
 
 // --- Menu Items Definition ---
@@ -287,7 +288,11 @@ export default function AppLayout({
       <SidebarInset>
         <Header />
         <main className="flex-1 p-4 sm:p-6">
-          <AccountingProvider>{children}</AccountingProvider>
+           <ClientOnly>
+             <AccountingProvider>
+                {children}
+            </AccountingProvider>
+          </ClientOnly>
         </main>
       </SidebarInset>
     </SidebarProvider>

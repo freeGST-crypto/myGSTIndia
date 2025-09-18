@@ -12,7 +12,6 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "
 import { ArrowLeft, FileDown, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({

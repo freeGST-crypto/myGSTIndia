@@ -298,3 +298,4 @@ export default function NewInvoicePage() {
       </Card>
     </div>
   );
+}
