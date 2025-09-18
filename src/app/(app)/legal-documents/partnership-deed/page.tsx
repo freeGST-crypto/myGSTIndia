@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDescription } from "@/components/ui/form";
 import {
   ArrowLeft,
   ArrowRight,
@@ -465,3 +465,5 @@ export default function PartnershipDeedPage() {
     </div>
   );
 }
+
+    
