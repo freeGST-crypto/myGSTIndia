@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileSpreadsheet, GitCompareArrows, FileText } from "lucide-react";
+import { FileSpreadsheet, GitCompareArrows, FileText, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +80,7 @@ export default function GstFilingsPage() {
                             <SelectItem value="2024-05">May 2024</SelectItem>
                             <SelectItem value="2024-04">April 2024</SelectItem>
                             <SelectItem value="2024-03">March 2024</SelectItem>
+                            <SelectItem value="FY-2023-24">FY 2023-24 (Annual)</SelectItem>
                         </SelectContent>
                     </Select>
                      <Link href="/reconciliation/gstr-comparison" passHref>
@@ -92,9 +93,11 @@ export default function GstFilingsPage() {
             </div>
 
             <Tabs defaultValue="gstr-1">
-                <TabsList className="max-w-md">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-2xl">
                     <TabsTrigger value="gstr-1">GSTR-1 Summary</TabsTrigger>
                     <TabsTrigger value="gstr-3b">GSTR-3B Summary</TabsTrigger>
+                    <TabsTrigger value="gstr-9">GSTR-9 Annual</TabsTrigger>
+                    <TabsTrigger value="gstr-9c">GSTR-9C Reconciliation</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="gstr-1">
@@ -193,6 +196,47 @@ export default function GstFilingsPage() {
                         </CardFooter>
                     </Card>
                 </TabsContent>
+
+                <TabsContent value="gstr-9">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>GSTR-9 Annual Return</CardTitle>
+                            <CardDescription>Prepare and file your GST annual return for the selected financial year.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">Use the wizard to consolidate your monthly/quarterly data, make adjustments, and prepare your GSTR-9 for filing.</p>
+                        </CardContent>
+                        <CardFooter>
+                            <Link href="/gst-filings/gstr-9-wizard" passHref>
+                               <Button>
+                                    <span>Prepare GSTR-9</span>
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                               </Button>
+                            </Link>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="gstr-9c">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>GSTR-9C Reconciliation Statement</CardTitle>
+                            <CardDescription>Prepare the reconciliation statement between your audited annual financial statements and the GSTR-9 annual return.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">Upload your audited financials and use our tool to reconcile the figures with your GSTR-9 data.</p>
+                        </CardContent>
+                        <CardFooter>
+                            <Link href="/gst-filings/gstr-9c-reconciliation" passHref>
+                                <Button>
+                                    <span>Prepare GSTR-9C</span>
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            </Link>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+
             </Tabs>
         </div>
     );
