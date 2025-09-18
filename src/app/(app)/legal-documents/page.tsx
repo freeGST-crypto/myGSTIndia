@@ -88,16 +88,16 @@ const documentTypes = [
     {
         name: "Consultant / Freelancer Agreement",
         description: "Define terms for engaging independent contractors.",
-        href: "#",
+        href: "/legal-documents/consultant-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Vendor Agreement",
         description: "Set terms with your suppliers and vendors.",
-        href: "#",
+        href: "/legal-documents/vendor-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Service Agreement",
