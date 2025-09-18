@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -102,16 +101,16 @@ const documentTypes = [
     {
         name: "Service Agreement",
         description: "A general-purpose agreement for providing services.",
-        href: "#",
+        href: "/legal-documents/service-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Franchise Agreement",
         description: "Establish the terms of a franchise relationship.",
-        href: "#",
+        href: "/legal-documents/franchise-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Board Resolutions Library",
