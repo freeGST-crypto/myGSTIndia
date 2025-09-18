@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User, ChevronLeft, ChevronRight, Users, Building } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,6 +45,9 @@ const sampleProfessionals = [
     rating: 4.8,
     reviews: 32,
     avatarUrl: "https://picsum.photos/seed/pro1/100/100",
+    about: "A leading CA firm based in Mumbai, specializing in startup consultation and audit services for over 10 years.",
+    staffCount: 25,
+    proCount: 5,
   },
   {
     id: "PRO-002",
@@ -58,6 +61,9 @@ const sampleProfessionals = [
     rating: 4.9,
     reviews: 45,
     avatarUrl: "https://picsum.photos/seed/pro2/100/100",
+    about: "Expert legal counsel for corporate law, mergers, and high-stakes GST litigation.",
+    staffCount: 10,
+    proCount: 3,
   },
   {
     id: "PRO-003",
@@ -71,6 +77,9 @@ const sampleProfessionals = [
     rating: 4.7,
     reviews: 28,
      avatarUrl: "https://picsum.photos/seed/pro3/100/100",
+    about: "One-stop solution for company and LLP formation, annual compliance, and secretarial audits.",
+    staffCount: 8,
+    proCount: 2,
   },
    {
     id: "PRO-004",
@@ -84,6 +93,9 @@ const sampleProfessionals = [
     rating: 4.9,
     reviews: 55,
     avatarUrl: "https://picsum.photos/seed/pro4/100/100",
+    about: "Specializing in tax planning and project financing for large-scale enterprises.",
+    staffCount: 30,
+    proCount: 8,
   },
    {
     id: "PRO-005",
@@ -97,6 +109,9 @@ const sampleProfessionals = [
     rating: 4.6,
     reviews: 60,
     avatarUrl: "https://picsum.photos/seed/pro5/100/100",
+    about: "Over two decades of experience in handling complex tax litigation and corporate law.",
+    staffCount: 12,
+    proCount: 4,
   },
   {
     id: "PRO-006",
@@ -110,6 +125,9 @@ const sampleProfessionals = [
     rating: 4.7,
     reviews: 41,
     avatarUrl: "https://picsum.photos/seed/pro6/100/100",
+    about: "Specialists in cost accounting and management advisory for manufacturing industries.",
+    staffCount: 15,
+    proCount: 4,
   },
   {
     id: "PRO-007",
@@ -123,6 +141,9 @@ const sampleProfessionals = [
     rating: 4.6,
     reviews: 25,
     avatarUrl: "https://picsum.photos/seed/pro7/100/100",
+    about: "Dedicated bookkeeping and payroll services for small and medium enterprises.",
+    staffCount: 5,
+    proCount: 1,
   },
   {
     id: "PRO-008",
@@ -136,6 +157,9 @@ const sampleProfessionals = [
     rating: 4.8,
     reviews: 50,
     avatarUrl: "https://picsum.photos/seed/pro8/100/100",
+    about: "Expert tax filing and compliance services for individuals and corporations.",
+    staffCount: 7,
+    proCount: 2,
   },
    {
     id: "PRO-009",
@@ -149,6 +173,9 @@ const sampleProfessionals = [
     rating: 4.8,
     reviews: 35,
     avatarUrl: "https://picsum.photos/seed/pro9/100/100",
+    about: "Providing comprehensive company secretarial services to ensure your business remains compliant.",
+    staffCount: 10,
+    proCount: 3,
   },
   {
     id: "PRO-010",
@@ -162,6 +189,9 @@ const sampleProfessionals = [
     rating: 4.9,
     reviews: 40,
     avatarUrl: "https://picsum.photos/seed/pro10/100/100",
+    about: "Chartered accountancy firm focused on GST advisory and statutory audits.",
+    staffCount: 18,
+    proCount: 4,
   },
 ];
 
@@ -261,26 +291,41 @@ export default function ProfessionalServicesPage() {
                 </h2>
                 <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                     {paginatedProfessionals.map(pro => (
-                        <Card key={pro.id} className="flex flex-col sm:flex-row items-start p-6 gap-6">
-                            <Avatar className="size-24 border">
-                                <AvatarImage src={pro.avatarUrl} alt={pro.name} />
-                                <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 space-y-3">
-                                <div className="space-y-1">
+                        <Card key={pro.id} className="flex flex-col p-6 gap-4">
+                            <div className="flex items-start gap-4">
+                                <Avatar className="size-20 border">
+                                    <AvatarImage src={pro.avatarUrl} alt={pro.name} />
+                                    <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 space-y-1">
                                     <CardTitle className="text-xl">{pro.name}</CardTitle>
-                                    <CardDescription className="flex items-center gap-2"><Briefcase className="size-4"/>{pro.firmName}</CardDescription>
+                                    <CardDescription className="flex items-center gap-2"><Building className="size-4"/>{pro.firmName}</CardDescription>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <MapPin className="size-4" />
+                                        <span>{pro.city}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Star className="size-4 text-yellow-500 fill-yellow-400" />
+                                        <span className="font-semibold">{pro.rating}</span>
+                                        <span className="text-muted-foreground">({pro.reviews} reviews)</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <MapPin className="size-4" />
-                                    <span>{pro.city}</span>
-                                    <span className="text-2xl leading-none">&middot;</span>
-                                    <span>{pro.experience} years experience</span>
-                                </div>
-                                 <div className="flex items-center gap-2 text-sm">
-                                    <Star className="size-4 text-yellow-500 fill-yellow-400" />
-                                    <span className="font-semibold">{pro.rating}</span>
-                                    <span className="text-muted-foreground">({pro.reviews} reviews)</span>
+                            </div>
+                            <CardContent className="p-0 space-y-4">
+                                <p className="text-sm text-muted-foreground italic">"{pro.about}"</p>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p className="font-bold text-lg">{pro.experience}+</p>
+                                        <p className="text-xs text-muted-foreground">Years Experience</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-lg">{pro.staffCount}</p>
+                                        <p className="text-xs text-muted-foreground">Total Staff</p>
+                                    </div>
+                                     <div>
+                                        <p className="font-bold text-lg">{pro.proCount}</p>
+                                        <p className="text-xs text-muted-foreground">Professionals</p>
+                                    </div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {pro.specialization.map(spec => (
@@ -289,12 +334,12 @@ export default function ProfessionalServicesPage() {
                                 </div>
                                 <div className="pt-2">
                                      <Link href={`/book-appointment?proId=${pro.id}&proName=${encodeURIComponent(pro.name)}&proType=${pro.type}&service=${selectedService || ''}`} passHref>
-                                        <Button>
+                                        <Button className="w-full">
                                             <CalendarPlus className="mr-2"/> Book an Appointment
                                         </Button>
                                     </Link>
                                 </div>
-                            </div>
+                            </CardContent>
                         </Card>
                     ))}
                 </div>
@@ -325,5 +370,3 @@ export default function ProfessionalServicesPage() {
         </div>
     );
 }
-
-    
