@@ -35,6 +35,10 @@ import {
   Handshake,
   FileKey,
   BookUser,
+  Copy,
+  BadgePercent,
+  Wallet,
+  ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +47,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import * as XLSX from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlaceholderPage } from "@/components/placeholder-page";
 
 
 // Schemas for form validation
@@ -278,13 +283,17 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="grid w-full grid-cols-6 max-w-6xl mx-auto">
+            <TabsList className="flex flex-wrap h-auto justify-start">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
               <TabsTrigger value="debentureHolders"><FileKey className="mr-2" />Debentures</TabsTrigger>
               <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
               <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
               <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
               <TabsTrigger value="contracts"><BookUser className="mr-2"/>Contracts (Sec 189)</TabsTrigger>
+              <TabsTrigger value="certs" disabled><Copy className="mr-2"/>Share Certificates</TabsTrigger>
+              <TabsTrigger value="sweat" disabled><BadgePercent className="mr-2"/>Sweat Equity</TabsTrigger>
+              <TabsTrigger value="esop" disabled><Wallet className="mr-2"/>ESOPs</TabsTrigger>
+              <TabsTrigger value="buyback" disabled><ShoppingCart className="mr-2"/>Buy-Back</TabsTrigger>
             </TabsList>
             
             <TabsContent value="members">
@@ -457,9 +466,24 @@ export default function StatutoryRegistersPage() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="certs">
+                <PlaceholderPage title="Register of Renewed & Duplicate Share Certificates" description="This register is under construction." />
+            </TabsContent>
+            <TabsContent value="sweat">
+                <PlaceholderPage title="Register of Sweat Equity Shares" description="This register is under construction." />
+            </TabsContent>
+            <TabsContent value="esop">
+                <PlaceholderPage title="Register of Employee Stock Options (ESOPs)" description="This register is under construction." />
+            </TabsContent>
+            <TabsContent value="buyback">
+                <PlaceholderPage title="Register of Buy-Back of Securities" description="This register is under construction." />
+            </TabsContent>
+
           </Tabs>
         </form>
       </Form>
     </div>
   );
 }
+
+    
