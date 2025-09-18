@@ -125,10 +125,7 @@ export default function Gstr3bWizardPage() {
   const [step1Data, setStep1Data] = useState(initialStep1Data);
   const [step2Data, setStep2Data] = useState<{placeOfSupply: string, taxableValue: number, integratedTax: number}[]>([]);
   const [step3Data, setStep3Data] = useState(initialStep3Data);
-  const [step4Data, setStep4Data] = useState([
-    { description: "From a supplier under composition scheme, exempt and nil rated supply", interState: 0, intraState: 0 },
-    { description: "Non GST supply", interState: 0, intraState: 0 },
-  ]);
+  const [step4Data, setStep4Data] = useState<any[]>([]);
   const [step5Data, setStep5Data] = useState<{
     liability: { igst: number, cgst: number, sgst: number, cess: number },
     availableItc: { igst: number, cgst: number, sgst: number, cess: number },
@@ -212,7 +209,7 @@ export default function Gstr3bWizardPage() {
       setStep3Data(newData);
   }
 
-  const handleStep4Change = (index: number, field: keyof typeof step4Data[0], value: string) => {
+  const handleStep4Change = (index: number, field: 'interState' | 'intraState', value: string) => {
     const newData = [...step4Data];
     (newData[index] as any)[field] = parseFloat(value) || 0;
     setStep4Data(newData);
@@ -663,5 +660,3 @@ export default function Gstr3bWizardPage() {
     </div>
   );
 }
-
-    

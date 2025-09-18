@@ -52,30 +52,6 @@ const states = [
 
 const exportTypes = ["WPAY", "WOPAY"];
 
-const initialDocumentsIssued = [
-    {
-        type: "Invoices for outward supply",
-        from: "INV-001",
-        to: "INV-055",
-        total: 55,
-        cancelled: 2,
-    },
-     {
-        type: "Credit Notes",
-        from: "CN-001",
-        to: "CN-005",
-        total: 5,
-        cancelled: 0,
-    },
-     {
-        type: "Debit Notes",
-        from: "DN-001",
-        to: "DN-002",
-        total: 2,
-        cancelled: 0,
-    },
-];
-
 export default function Gstr1WizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -114,7 +90,7 @@ export default function Gstr1WizardPage() {
   const [exportInvoices, setExportInvoices] = useState<any[]>([]);
   const [b2cOther, setB2cOther] = useState<any[]>([]);
   const [nilRated, setNilRated] = useState<any[]>([]);
-  const [documentsIssued, setDocumentsIssued] = useState(initialDocumentsIssued);
+  const [documentsIssued, setDocumentsIssued] = useState<any[]>([]);
   const [advancesReceived, setAdvancesReceived] = useState<any[]>([]);
   const [advancesAdjusted, setAdvancesAdjusted] = useState<any[]>([]);
 
@@ -791,7 +767,7 @@ export default function Gstr1WizardPage() {
                     <Alert variant="default">
                         <AlertTitle>Auto-Generated Summary</AlertTitle>
                         <AlertDescription>
-                            This table would be automatically populated based on the items you've sold in your invoices. Below is a representation of how it would look.
+                            This table would be automatically populated based on the items you've sold in your invoices.
                         </AlertDescription>
                     </Alert>
                     <Table className="mt-4">
@@ -810,30 +786,7 @@ export default function Gstr1WizardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                             <TableRow>
-                                <TableCell>9401</TableCell>
-                                <TableCell>Office Chairs</TableCell>
-                                <TableCell>NOS</TableCell>
-                                <TableCell className="text-right">10</TableCell>
-                                <TableCell className="text-right">75000.00</TableCell>
-                                <TableCell className="text-right">75000.00</TableCell>
-                                <TableCell className="text-right">13500.00</TableCell>
-                                <TableCell className="text-right">0.00</TableCell>
-                                <TableCell className="text-right">0.00</TableCell>
-                                <TableCell className="text-right">0.00</TableCell>
-                             </TableRow>
-                             <TableRow>
-                                <TableCell>9982</TableCell>
-                                <TableCell>Accounting Services</TableCell>
-                                <TableCell>OTH</TableCell>
-                                <TableCell className="text-right">1</TableCell>
-                                <TableCell className="text-right">15000.00</TableCell>
-                                <TableCell className="text-right">15000.00</TableCell>
-                                <TableCell className="text-right">0.00</TableCell>
-                                <TableCell className="text-right">1350.00</TableCell>
-                                <TableCell className="text-right">1350.00</TableCell>
-                                <TableCell className="text-right">0.00</TableCell>
-                             </TableRow>
+                            {/* Static data removed */}
                         </TableBody>
                     </Table>
                 </CardContent>
