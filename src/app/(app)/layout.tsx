@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -94,6 +95,11 @@ const menuItems = [
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
     ],
+  },
+  {
+    href: "/legal-documents",
+    label: "Legal Documents",
+    icon: BookCopy,
   },
   {
     label: "Admin",
