@@ -30,6 +30,8 @@ import { Separator } from "@/components/ui/separator";
 
 const memberSchema = z.object({
   name: z.string().min(2, "Member's name is required."),
+  parentage: z.string().min(3, "Parentage is required (e.g., S/o, W/o, D/o)."),
+  age: z.coerce.number().positive("Age must be a positive number.").default(30),
   address: z.string().min(10, "Address is required."),
   occupation: z.string().min(2, "Occupation is required."),
   designation: z.string().min(2, "Designation is required (e.g., President, Member)."),
@@ -63,7 +65,7 @@ export default function SocietyRegistrationDeedPage() {
       societyAddress: "",
       areaOfOperation: "the State of [Your State]",
       aimsAndObjects: "To promote education and literacy.\nTo organize health and environmental awareness camps.\nTo work for the social and economic upliftment of the underprivileged.",
-      members: Array(7).fill({ name: "", address: "", occupation: "", designation: "Member" }),
+      members: Array(7).fill({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Member" }),
       membershipFee: 500,
       membershipPeriod: "annually",
       quorum: "2/3rd of the total members of the governing body",
@@ -87,6 +89,10 @@ export default function SocietyRegistrationDeedPage() {
         break;
       case 3:
         fieldsToValidate = ["members"];
+        if (form.getValues("members").length < 7) {
+            form.setError("members", { type: "manual", message: "A society requires at least 7 members." });
+            return;
+        }
         break;
       case 4:
         fieldsToValidate = ["membershipFee", "membershipPeriod", "quorum", "governingBodyTerm"];
@@ -145,13 +151,17 @@ export default function SocietyRegistrationDeedPage() {
                   {fields.length > 7 && <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
                   <div className="grid md:grid-cols-2 gap-4">
                      <FormField control={form.control} name={`members.${index}.name`} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                     <FormField control={form.control} name={`members.${index}.occupation`} render={({ field }) => ( <FormItem><FormLabel>Occupation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                     <FormField control={form.control} name={`members.${index}.parentage`} render={({ field }) => ( <FormItem><FormLabel>S/o, W/o, D/o</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                   </div>
                    <FormField control={form.control} name={`members.${index}.address`} render={({ field }) => ( <FormItem><FormLabel>Residential Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                  <FormField control={form.control} name={`members.${index}.designation`} render={({ field }) => ( <FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="President, Secretary, Treasurer, Member..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <FormField control={form.control} name={`members.${index}.age`} render={({ field }) => ( <FormItem><FormLabel>Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name={`members.${index}.occupation`} render={({ field }) => ( <FormItem><FormLabel>Occupation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name={`members.${index}.designation`} render={({ field }) => ( <FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="President, Secretary..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                  </div>
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={() => append({ name: "", address: "", occupation: "", designation: "Member" })}><PlusCircle className="mr-2"/> Add Member</Button>
+              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Member" })}><PlusCircle className="mr-2"/> Add Member</Button>
               {form.formState.errors.members?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.members.root.message}</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
@@ -180,41 +190,121 @@ export default function SocietyRegistrationDeedPage() {
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Memorandum of Association and Bye-Laws.</CardDescription></CardHeader>
                 <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <h2 className="text-center font-bold">MEMORANDUM OF ASSOCIATION OF {formData.societyName.toUpperCase()}</h2>
-                    <ol className="list-decimal list-inside space-y-2 font-semibold">
-                      <li>Name of the Society: {formData.societyName}</li>
-                      <li>Registered Office: {formData.societyAddress}</li>
-                      <li>Area of Operation: {formData.areaOfOperation}</li>
-                      <li>Aims and Objects:
-                        <ul className="list-disc list-inside pl-6 font-normal">
-                          {formData.aimsAndObjects.split('\n').map((line, i) => <li key={i}>{line}</li>)}
+                    <h3 className="font-bold text-center">DOCUMENT NO. I</h3>
+                    <br/>
+                    <p><strong>1. NAME OF THE SOCIETY:</strong> {formData.societyName}</p>
+                    <p><strong>2. LOCATION OF THE OFFICE:</strong> {formData.societyAddress}</p>
+                    <p><strong>3. AIMS AND OBJECTS:</strong></p>
+                    <ul className="list-[lower-alpha] list-inside pl-6">
+                        {formData.aimsAndObjects.split('\n').map((line, i) => <li key={i}>{line}</li>)}
+                    </ul>
+                    <br/>
+                    <hr/>
+                    <ol className="list-decimal list-inside my-4">
+                        <li>“Certified that the Association is formed with no profit motive and commercial activities involved in its working”</li>
+                        <li>“Certified that the Office Bearers are not paid from the funds of the Association”.</li>
+                        <li>“Certified that the Association would not engage in agitational activities to ventilate grievances”</li>
+                        <li>“Certified that the Office Bearers signatures are genuine”.</li>
+                    </ol>
+                    <hr/>
+                    <br/>
+                    <h4 className="font-bold text-center">D E C L A R A T I O N</h4>
+                    <p>We the undersigned persons in the memo have formed into an association and responsible to run the affairs of the Association and are desirous of getting the Society registered under Public Society.</p>
+                    <p className="text-right mt-8">Signature of the President/Secretary.</p>
+                    
+                    <br/>
+                    <table className="w-full my-2 border-collapse border border-black">
+                        <thead className="text-center">
+                            <tr>
+                                <th className="border border-black p-1">Name of the office Bearers & S/O. W/O.D/O</th>
+                                <th className="border border-black p-1">Age</th>
+                                <th className="border border-black p-1">Designation</th>
+                                <th className="border border-black p-1">Residential Address</th>
+                                <th className="border border-black p-1">signature</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {formData.members.map((m, i) => (
+                                <tr key={i}>
+                                    <td className="border border-black p-1">{m.name}<br/>{m.parentage}</td>
+                                    <td className="border border-black p-1">{m.age}</td>
+                                    <td className="border border-black p-1">{m.designation}</td>
+                                    <td className="border border-black p-1">{m.address}</td>
+                                    <td className="border border-black h-12"></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <br/>
+                    <p><strong>WITNESSES:</strong></p>
+                     <table className="w-full my-2 border-collapse border border-black">
+                        <thead className="text-center">
+                            <tr>
+                                <th className="border border-black p-1">Name in Block Letters S/o, W/o, D/o</th>
+                                <th className="border border-black p-1">Age</th>
+                                <th className="border border-black p-1">Residential Address</th>
+                                <th className="border border-black p-1">Signature</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td className="border border-black h-12"></td><td className="border border-black h-12"></td><td className="border border-black h-12"></td><td className="border border-black h-12"></td></tr>
+                             <tr><td className="border border-black h-12"></td><td className="border border-black h-12"></td><td className="border border-black h-12"></td><td className="border border-black h-12"></td></tr>
+                        </tbody>
+                     </table>
+                     <p className="text-right mt-8">Signature of the President / Secretary.</p>
+
+                    <div className="break-before-page"></div>
+
+                    <h3 className="font-bold text-center">DOCUMENT NO. II</h3>
+                    <h4 className="font-bold text-center">RULES AND REGULATIONS</h4>
+
+                    <ol className="list-decimal list-inside space-y-3">
+                      <li><strong>Name of the Society:</strong> {formData.societyName}</li>
+                      <li><strong>Location of the Office:</strong> {formData.societyAddress}</li>
+                      <li>
+                        <strong>Membership:</strong>
+                        <ul className="list-[lower-roman] list-inside pl-6">
+                            <li>Any person who agrees with the aims and objects of the society can become a member.</li>
+                            <li>Category of Members: General Members.</li>
+                            <li>Admission Fee and Subscription: A {formData.membershipPeriod} fee of ₹{formData.membershipFee}.</li>
                         </ul>
                       </li>
-                      <li>Governing Body: The names, addresses, occupations and designations of the present members of the governing body to whom the management of the society is entrusted are as follows:
-                        <table className="w-full my-2 border-collapse border border-black">
-                          <thead><tr className="bg-muted/50"><th className="border border-black p-1">S.No.</th><th className="border border-black p-1">Name</th><th className="border border-black p-1">Address</th><th className="border border-black p-1">Occupation</th><th className="border border-black p-1">Designation</th></tr></thead>
-                          <tbody>{formData.members.map((m, i) => <tr key={i}><td className="border border-black p-1">{i+1}</td><td className="border border-black p-1">{m.name}</td><td className="border border-black p-1">{m.address}</td><td className="border border-black p-1">{m.occupation}</td><td className="border border-black p-1">{m.designation}</td></tr>)}</tbody>
-                        </table>
+                      <li><strong>General Body:</strong>
+                          <ul className="list-[lower-roman] list-inside pl-6">
+                            <li>Annual General body will meet once in a year.</li>
+                            <li>Functions:
+                                <ol className="list-[lower-alpha] list-inside pl-4">
+                                    <li>To pass the budget for the ensuing year and approve expenditure statement of previous year.</li>
+                                    <li>To approve the reports of the activities of the Society.</li>
+                                    <li>To elect the Executive Committee.</li>
+                                    <li>To appoint an Auditor.</li>
+                                </ol>
+                            </li>
+                         </ul>
                       </li>
-                      <li>We, the undersigned, are desirous of forming a society under the Societies Registration Act and have signed our names to this memorandum.</li>
+                      <li>
+                        <strong>Executive Committee (Governing Body):</strong>
+                         <ul className="list-[lower-roman] list-inside pl-6">
+                            <li>The Executive Committee shall consist of {formData.members.length} members, including a President, General Secretary, Joint Secretary, and Treasurer.</li>
+                            <li>The members of the Executive Committee shall be duty bound to attend the meetings and manage the affairs of the society.</li>
+                         </ul>
+                      </li>
+                       <li><strong>Functions of the Executive Committee and Office Bearers:</strong>
+                            <ol className="list-[decimal] list-inside pl-4">
+                                <li><strong>PRESIDENT:</strong> He presides over all the meeting of the General Body and Executive Committee. He can cast his vote in the case of tie in decision making. He can supervise all branches of the society.</li>
+                                <li><strong>VICE-PRESIDENT:</strong> He shall assist the president in discharge his functions. In the absence of the president he will perform the duty of the President as entrusted by the President.</li>
+                                <li><strong>SECRETARY:</strong> He is the chief executive Officer of the Society and Custodian of all records to the society and correspondent on behalf of the Society. He has to take on record all minutes of the society and would convene both the Executive Committee and General Body of the Society with the permission of the President. He guides the Treasurer in preparing the Budget and places the expenditure statement before the General Body for its approval.</li>
+                                <li><strong>JOINT SECRETARY:</strong> He has to do the work entrusted by the executive Committee. He has to assist the Secretary in discharging his duties. In the absence of the Secretary, he can perform the duties of the Secretary.</li>
+                                <li><strong>TREASURER:</strong> He is responsible for all Financial Transactions of the Society. He has to maintain accounts properly along with the vouchers. He has to prepare the accounts of the Society jointly with the Secretary or President.</li>
+                                <li><strong>OFFICE BEARERS:</strong> They are the responsible persons to attend to such activities of the Society which the Executive Committee entrusts to them.</li>
+                            </ol>
+                        </li>
+                         <li><strong>QUORUM:</strong> {formData.quorum} for General Body meeting and 1/4 for Executive Committee meeting.</li>
+                        <li><strong>FUNDS:</strong> The Funds shall be spent only for the attainment of the objects of the Society and no portion thereof shall be paid or transferred directly or indirectly to any of the members through any means.</li>
+                        <li><strong>AMENDMENTS:</strong> No Amendments or alteration shall be made in the purpose of the Association unless it is voted by 2/3 of its members present at a special meeting convened for the purpose and confirmed by 2/3 of the members present at a second special meeting.</li>
+                        <li><strong>WINDING UP:</strong> In case the Society has to be wound up, property and funds of the Society that remain after discharging the liabilities, if any, shall be transferred or paid to some other Institutions with similar aims and objects.</li>
                     </ol>
-                    <div className="mt-8">
-                       <table className="w-full border-collapse border border-black">
-                          <thead><tr className="bg-muted/50"><th className="border border-black p-1">S.No.</th><th className="border border-black p-1">Name of Member</th><th className="border border-black p-1">Address</th><th className="border border-black p-1">Signature</th></tr></thead>
-                          <tbody>{formData.members.map((m, i) => <tr key={i}><td className="border border-black p-1">{i+1}</td><td className="border border-black p-1">{m.name}</td><td className="border border-black p-1">{m.address}</td><td className="border border-black h-12"></td></tr>)}</tbody>
-                        </table>
-                    </div>
-
-                    <h2 className="text-center font-bold break-before-page">RULES AND REGULATIONS (BYE-LAWS)</h2>
-                    <ol className="list-decimal list-inside space-y-3">
-                      <li><strong>Membership:</strong> Any person who agrees with the aims and objects of the society can become a member by paying a {formData.membershipPeriod} fee of ₹{formData.membershipFee}.</li>
-                      <li><strong>General Body:</strong> All members of the society will constitute the General Body.</li>
-                      <li><strong>Governing Body:</strong> The affairs of the society shall be managed by a Governing Body consisting of the office bearers and executive members. The term of the Governing Body shall be {formData.governingBodyTerm} years.</li>
-                      <li><strong>Meetings:</strong> A General Body meeting shall be held at least once a year. The quorum for any meeting shall be {formData.quorum}.</li>
-                      <li><strong>Bank Account:</strong> The society shall maintain a bank account which shall be operated by the President and Treasurer jointly.</li>
-                      <li><strong>Audit:</strong> The accounts of the society shall be audited annually by a qualified auditor.</li>
-                      <li><strong>Dissolution:</strong> If upon dissolution of the society there remains any property after satisfaction of all debts, the same shall not be paid to the members but shall be given to some other society with similar objects, as determined by the members.</li>
-                    </ol>
+                     <p className="text-right mt-16">Signature of the President / Secretary.</p>
 
                 </CardContent>
                 <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Deed</Button></CardFooter>
@@ -243,5 +333,3 @@ export default function SocietyRegistrationDeedPage() {
     </div>
   );
 }
-
-    
