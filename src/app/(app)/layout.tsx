@@ -43,8 +43,9 @@ import {
   BookCopy,
   ShoppingCart,
   ShoppingBag,
+  Loader2,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -67,6 +68,8 @@ import { cn } from "@/lib/utils";
 import { GstEaseLogo } from "@/components/icons";
 import { UserNav } from "@/components/layout/user-nav";
 import { Separator } from "@/components/ui/separator";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 
 
 // --- Menu Items Definition ---
@@ -239,6 +242,26 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, loading, error] = useAuthState(auth);
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+      return (
+          <div className="flex items-center justify-center h-screen">
+              <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          </div>
+      );
+  }
+
+  if (!user) {
+    return null; // or a redirect component
+  }
 
   return (
     <SidebarProvider>
