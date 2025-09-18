@@ -38,11 +38,11 @@ const prompt = ai.definePrompt({
   Company Name: {{{companyName}}}
   Business Description: {{{businessDescription}}}
 
-  Based on the business description, draft a comprehensive "Main Objects" clause. The clause should be professionally worded, legally sound, and formatted as a numbered list. It should accurately reflect the core business activities described.
+  Based on the business description, draft a comprehensive "Main Objects" clause as a single block of text. The clause should be professionally worded, legally sound, and formatted as a numbered list within the text block. It should accurately reflect the core business activities described.
 
   Start the clause with the standard legal heading: "THE OBJECTS TO BE PURSUED BY THE COMPANY ON ITS INCORPORATION ARE:"
 
-  Generate at least 3 to 5 distinct object points. Each point should start with "To carry on the business of..." or a similar infinitive phrase.
+  Generate at least 3 to 5 distinct object points. Each point should start with "1. To carry on the business of..." or a similar infinitive phrase, followed by the next number.
   `,
 });
 
