@@ -248,20 +248,21 @@ export default function RentalDeedPage() {
                     <ol className="list-decimal list-inside space-y-3">
                         <li>The tenancy shall commence from <strong>{startDate}</strong> and shall be for a period of <strong>{formData.leaseTermMonths} months</strong>, ending on <strong>{endDate}</strong>.</li>
                         <li>The Tenant shall pay a monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
-                        <li>The Tenant has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Landlord. This deposit will be refunded to the Tenant within <strong>{formData.depositRefundDays} days</strong> of vacating the property, after deducting any arrears of rent or costs of damages.</li>
-                        <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong>. If the Tenant vacates the property during this period, the security deposit shall be forfeited by the Landlord.</li>
-                        <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
                         <li>The rent shall be increased by <strong>{formData.rentIncreasePercent}%</strong> after every <strong>{formData.rentIncreaseFrequency} months</strong> of tenancy.</li>
-                        <li>The Tenant shall bear and pay for all charges for electricity, water, internet, and any other utilities consumed on the property.</li>
-                        <li>The Tenant shall use the property only for <strong>{formData.propertyType}</strong> purposes and shall not use it for any illegal or immoral activities.</li>
-                        <li>The Tenant shall maintain the property in a good and clean condition and shall not cause any damage to the fixtures and fittings.</li>
+                        <li>The Tenant has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Landlord. This deposit will be refunded to the Tenant within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Tenant.</li>
+                        <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong> from the commencement of the lease. If the Tenant vacates the property during this period for any reason, the entire security deposit shall be forfeited by the Landlord.</li>
+                        <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
+                        <li>The Tenant shall bear and pay for all charges for electricity, water, internet, gas, and any other utilities consumed on the Scheduled Property directly to the concerned authorities.</li>
+                        <li>The Tenant shall use the Scheduled Property only for <strong>{formData.propertyType}</strong> purposes and shall not use it for any illegal, immoral, or commercial activities (unless specified as commercial).</li>
+                        <li>The Tenant shall maintain the Scheduled Property in a good, clean, and habitable condition and shall not cause any damage to the fixtures, fittings, and appliances. Any damage caused beyond normal wear and tear shall be repaired at the Tenant's expense.</li>
+                        <li>The Tenant shall not make any structural alterations or additions to the Scheduled Property without the prior written consent of the Landlord.</li>
+                        <li>The Landlord shall have the right to inspect the Scheduled Property at reasonable times with at least 24 hours prior notice to the Tenant.</li>
                         <li>The Tenant shall {formData.allowPets ? "" : "not"} be allowed to keep pets on the property.</li>
                         <li>The Tenant shall {formData.allowSubletting ? "" : "not"} sublet, assign, or part with the possession of the property or any part thereof without the prior written consent of the Landlord.</li>
-                        <li>The Landlord shall have the right to inspect the property at reasonable times with prior notice to the Tenant.</li>
-                        <li>Any disputes between the parties shall be subject to the jurisdiction of the courts in {formData.landlordAddress.split(',').pop()?.trim()}.</li>
+                        <li>Any disputes between the parties shall be subject to the exclusive jurisdiction of the courts in {formData.landlordAddress.split(',').pop()?.trim()}.</li>
                     </ol>
 
-                    <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written.</p>
+                    <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written in the presence of the following witnesses.</p>
                     
                     <div className="flex justify-between mt-16">
                         <div className="text-center">
