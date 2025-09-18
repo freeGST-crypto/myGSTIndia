@@ -24,6 +24,8 @@ import {
   Shield,
   Presentation,
   CalendarPlus,
+  ReceiptText,
+  ShoppingCart,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -55,8 +57,8 @@ const menuItems = [
     label: "Billing",
     icon: Receipt,
     subItems: [
-      { href: "/invoices", label: "Invoices" },
-      { href: "/purchases", label: "Purchases" },
+      { href: "/invoices", label: "Invoices", icon: ReceiptText },
+      { href: "/purchases", label: "Purchases", icon: ShoppingCart },
       { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus },
       { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus },
     ],
