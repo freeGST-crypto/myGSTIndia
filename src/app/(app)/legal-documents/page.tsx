@@ -81,9 +81,9 @@ const documentTypes = [
     {
         name: "NDA (Non-Disclosure Agreement)",
         description: "Protect sensitive company information.",
-        href: "#",
+        href: "/legal-documents/nda",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Consultant / Freelancer Agreement",
