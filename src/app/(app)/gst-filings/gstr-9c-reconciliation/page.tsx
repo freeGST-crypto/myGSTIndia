@@ -24,6 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import {
   Accordion,
@@ -108,7 +109,7 @@ export default function Gstr9cPage() {
                 <Accordion type="multiple" defaultValue={['turnover-recon']} className="w-full">
                     {/* Turnover Reconciliation */}
                     <AccordionItem value="turnover-recon">
-                        <AccordionTrigger>Part II: Reconciliation of Turnover Declared in Audited Annual Financial Statement with Turnover Declared in Annual Return (GSTR-9)</AccordionTrigger>
+                        <AccordionTrigger>Part II: Reconciliation of Turnover</AccordionTrigger>
                         <AccordionContent>
                            <Table>
                                <TableHeader>
@@ -127,13 +128,13 @@ export default function Gstr9cPage() {
                                        </TableRow>
                                    ))}
                                </TableBody>
-                               <CardFooter>
+                               <TableFooter>
                                     <TableRow className="font-bold bg-muted/50">
                                        <TableCell>Q</TableCell>
                                        <TableCell>Turnover as per annual return (GSTR9)</TableCell>
                                        <TableCell className="text-right font-mono">{totalTurnover.toLocaleString()}</TableCell>
                                    </TableRow>
-                               </CardFooter>
+                               </TableFooter>
                            </Table>
                         </AccordionContent>
                     </AccordionItem>
@@ -159,13 +160,13 @@ export default function Gstr9cPage() {
                                        </TableRow>
                                    ))}
                                </TableBody>
-                               <CardFooter>
+                               <TableFooter>
                                     <TableRow className="font-bold bg-muted/50">
                                        <TableCell>E</TableCell>
                                        <TableCell>Taxable Turnover as per liability declared in Annual Return (GSTR9)</TableCell>
                                        <TableCell className="text-right font-mono">{totalTaxableTurnover.toLocaleString()}</TableCell>
                                    </TableRow>
-                               </CardFooter>
+                               </TableFooter>
                            </Table>
                         </AccordionContent>
                     </AccordionItem>
@@ -183,6 +184,16 @@ export default function Gstr9cPage() {
                                         <TableRow key={item.rate}><TableCell>{item.rate}</TableCell><TableCell><Input className="text-right" defaultValue={item.taxableValue}/></TableCell><TableCell><Input className="text-right" defaultValue={item.cgst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.sgst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.igst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.cess}/></TableCell></TableRow>
                                     ))}
                                 </TableBody>
+                                <TableFooter>
+                                     <TableRow className="font-bold bg-muted/50">
+                                         <TableCell>Total</TableCell>
+                                         <TableCell className="text-right font-mono">{(taxPaidData.reduce((a, b) => a + b.taxableValue, 0)).toLocaleString()}</TableCell>
+                                         <TableCell className="text-right font-mono">{(taxPaidData.reduce((a, b) => a + b.cgst, 0)).toLocaleString()}</TableCell>
+                                         <TableCell className="text-right font-mono">{(taxPaidData.reduce((a, b) => a + b.sgst, 0)).toLocaleString()}</TableCell>
+                                         <TableCell className="text-right font-mono">{(taxPaidData.reduce((a, b) => a + b.igst, 0)).toLocaleString()}</TableCell>
+                                         <TableCell className="text-right font-mono">{(taxPaidData.reduce((a, b) => a + b.cess, 0)).toLocaleString()}</TableCell>
+                                     </TableRow>
+                                </TableFooter>
                             </Table>
                         </AccordionContent>
                     </AccordionItem>
@@ -210,13 +221,13 @@ export default function Gstr9cPage() {
                                        </TableRow>
                                    ))}
                                </TableBody>
-                               <CardFooter>
+                               <TableFooter>
                                     <TableRow className="font-bold bg-destructive/10 text-destructive">
                                        <TableCell>F</TableCell>
                                        <TableCell>Un-reconciled ITC (D-E)</TableCell>
                                        <TableCell className="text-right font-mono">{itcDifference.toLocaleString()}</TableCell>
                                    </TableRow>
-                               </CardFooter>
+                               </TableFooter>
                            </Table>
                         </AccordionContent>
                     </AccordionItem>
