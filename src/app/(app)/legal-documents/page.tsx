@@ -67,16 +67,16 @@ const documentTypes = [
     {
         name: "GST Engagement Letter",
         description: "Between a client and a tax consultant.",
-        href: "#",
+        href: "/legal-documents/gst-engagement-letter",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Accounting Engagement Agreement",
         description: "Formalize the terms of accounting services.",
-        href: "#",
+        href: "/legal-documents/accounting-engagement-letter",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "NDA (Non-Disclosure Agreement)",
