@@ -34,7 +34,10 @@ import {
   AreaChart,
   CalendarClock,
   UserSquare,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Briefcase,
+  BadgePercent,
+  Wallet,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -68,6 +71,7 @@ import { Separator } from "@/components/ui/separator";
 const menuItems = [
   // == COMMON FEATURES (For both Business Owners & Professionals) ==
   { href: "/", label: "Dashboard", icon: Gauge },
+  { href: "/pricing", label: "Pricing", icon: BadgeDollarSign },
   {
     label: "Billing",
     icon: Receipt,
@@ -152,7 +156,12 @@ const menuItems = [
 ];
 
 const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(
+    item.subItems.some((sub: any) => 
+      (sub.href && pathname.startsWith(sub.href)) || 
+      (sub.subItems && sub.subItems.some((ss: any) => ss.href && pathname.startsWith(ss.href)))
+    )
+  );
 
   React.useEffect(() => {
     const checkActive = (subItems: any[]): boolean => {
