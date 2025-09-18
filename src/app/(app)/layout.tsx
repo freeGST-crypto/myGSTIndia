@@ -21,6 +21,7 @@ import {
   BookCopy,
   BookOpen,
   Shield,
+  Presentation,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -87,7 +88,13 @@ const menuItems = [
       },
     ],
   },
-  { href: "/reports", label: "Reports", icon: Landmark },
+  {
+    label: "Reports",
+    icon: Landmark,
+    subItems: [
+        { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
+    ],
+  },
   {
     label: "Admin",
     icon: Shield,
