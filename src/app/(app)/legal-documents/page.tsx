@@ -95,7 +95,7 @@ const documentTypes = [
         description: "Define terms for engaging independent contractors.",
         href: "/legal-documents/consultant-agreement",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 2000,
     },
     {
