@@ -1,0 +1,6 @@
+{
+  "apphosting": {
+    "source": ".",
+    "predeploy": "npm run build"
+  }
+}

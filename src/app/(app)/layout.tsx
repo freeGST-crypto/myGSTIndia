@@ -266,30 +266,30 @@ export default function AppLayout({
   }
 
   return (
-    <AccountingProvider>
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarHeader>
-            <div className="flex items-center gap-2 p-2">
-              <GstEaseLogo className="size-8 shrink-0" />
-              <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-                GSTEase
-              </span>
-            </div>
-          </SidebarHeader>
-          <Separator />
-          <SidebarContent>
-              <NavMenu items={menuItems} pathname={pathname} />
-          </SidebarContent>
-          <SidebarFooter>
-            {/* Footer content can go here if needed in the future */}
-          </SidebarFooter>
-        </Sidebar>
-        <SidebarInset>
-          <Header />
-          <main className="flex-1 p-4 sm:p-6">{children}</main>
-        </SidebarInset>
-      </SidebarProvider>
-    </AccountingProvider>
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center gap-2 p-2">
+            <GstEaseLogo className="size-8 shrink-0" />
+            <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
+              GSTEase
+            </span>
+          </div>
+        </SidebarHeader>
+        <Separator />
+        <SidebarContent>
+            <NavMenu items={menuItems} pathname={pathname} />
+        </SidebarContent>
+        <SidebarFooter>
+          {/* Footer content can go here if needed in the future */}
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <Header />
+        <main className="flex-1 p-4 sm:p-6">
+          <AccountingProvider>{children}</AccountingProvider>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
