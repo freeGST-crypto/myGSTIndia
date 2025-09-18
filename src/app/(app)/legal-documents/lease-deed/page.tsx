@@ -1,0 +1,321 @@
+
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDescription } from "@/components/ui/form";
+import {
+  ArrowLeft,
+  ArrowRight,
+  FileDown
+} from "lucide-react";
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const formSchema = z.object({
+  landlordName: z.string().min(3, "Landlord name is required."),
+  landlordParentage: z.string().min(3, "Parentage is required."),
+  landlordAddress: z.string().min(10, "Landlord address is required."),
+  
+  tenantName: z.string().min(3, "Lessee name is required."),
+  tenantParentage: z.string().min(3, "Parentage is required."),
+  tenantAddress: z.string().min(10, "Lessee address is required."),
+
+  propertyAddress: z.string().min(10, "Property address is required."),
+  propertyType: z.enum(["residential", "commercial"]).default("commercial"),
+
+  leaseStartDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+  leaseTermMonths: z.coerce.number().positive("Must be a positive number.").default(36),
+  lockInMonths: z.coerce.number().min(0, "Cannot be negative.").default(12),
+
+  monthlyRent: z.coerce.number().positive("Rent must be a positive number."),
+  rentPaymentDay: z.coerce.number().min(1).max(28, "Must be between 1 and 28.").default(5),
+  rentIncreasePercent: z.coerce.number().min(0).max(100).default(5),
+  rentIncreaseFrequency: z.coerce.number().min(1).default(12),
+  
+  securityDeposit: z.coerce.number().min(0, "Cannot be negative."),
+  depositRefundDays: z.coerce.number().positive().default(60),
+
+  noticePeriodMonths: z.coerce.number().positive().default(3),
+
+  allowPets: z.boolean().default(false),
+  allowSubletting: z.boolean().default(false),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+export default function LeaseDeedPage() {
+  const { toast } = useToast();
+  const [step, setStep] = useState(1);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      landlordName: "",
+      landlordParentage: "",
+      landlordAddress: "",
+      tenantName: "",
+      tenantParentage: "",
+      tenantAddress: "",
+      propertyAddress: "",
+      propertyType: "commercial",
+      leaseStartDate: new Date().toISOString().split("T")[0],
+      leaseTermMonths: 36,
+      lockInMonths: 12,
+      monthlyRent: 50000,
+      rentPaymentDay: 5,
+      rentIncreasePercent: 5,
+      rentIncreaseFrequency: 12,
+      securityDeposit: 300000,
+      depositRefundDays: 60,
+      noticePeriodMonths: 3,
+      allowPets: false,
+      allowSubletting: false,
+    },
+  });
+
+  const processStep = async () => {
+    let fieldsToValidate: (keyof FormData)[] = [];
+    switch (step) {
+        case 1:
+            fieldsToValidate = ["landlordName", "landlordParentage", "landlordAddress", "tenantName", "tenantParentage", "tenantAddress", "propertyAddress", "propertyType"];
+            break;
+        case 2:
+            fieldsToValidate = ["leaseStartDate", "leaseTermMonths", "lockInMonths", "monthlyRent", "rentPaymentDay", "securityDeposit", "depositRefundDays"];
+            break;
+        case 3:
+            fieldsToValidate = ["noticePeriodMonths", "allowPets", "allowSubletting"];
+            break;
+    }
+    
+    const isValid = await form.trigger(fieldsToValidate);
+    if (isValid) {
+      setStep(prev => prev + 1);
+       if (step < 4) {
+        toast({
+            title: `Step ${step} Saved`,
+            description: `Proceeding to step ${step + 1}.`,
+        });
+      }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Please correct the errors before proceeding.",
+        });
+    }
+  };
+
+  const handleBack = () => setStep(prev => prev - 1);
+
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return (
+          <Card>
+            <CardHeader><CardTitle>Step 1: Parties & Property</CardTitle><CardDescription>Enter details about the lessor, lessee, and the leased property.</CardDescription></CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">Lessor (Property Owner) Details</h3>
+                    <div className="space-y-4 p-4 border rounded-lg">
+                        <FormField control={form.control} name="landlordName" render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="landlordParentage" render={({ field }) => ( <FormItem><FormLabel>S/o, W/o, D/o</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="landlordAddress" render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    </div>
+                </div>
+                 <div>
+                    <h3 className="text-lg font-semibold mb-2">Lessee (Tenant) Details</h3>
+                    <div className="space-y-4 p-4 border rounded-lg">
+                        <FormField control={form.control} name="tenantName" render={({ field }) => ( <FormItem><FormLabel>Full Name / Company Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="tenantParentage" render={({ field }) => ( <FormItem><FormLabel>S/o, W/o, D/o / Authorized Signatory</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="tenantAddress" render={({ field }) => ( <FormItem><FormLabel>Current Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    </div>
+                </div>
+                 <div>
+                    <h3 className="text-lg font-semibold mb-2">Property Details</h3>
+                    <div className="space-y-4 p-4 border rounded-lg">
+                        <FormField control={form.control} name="propertyAddress" render={({ field }) => ( <FormItem><FormLabel>Full Address of Leased Property</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="propertyType" render={({ field }) => (
+                            <FormItem><FormLabel>Property Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                    <SelectContent><SelectItem value="commercial">Commercial</SelectItem><SelectItem value="residential">Residential</SelectItem></SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
+                        )}/>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+          </Card>
+        );
+      case 2:
+        return (
+          <Card>
+            <CardHeader><CardTitle>Step 2: Rent & Deposit</CardTitle><CardDescription>Define the financial terms of the lease.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="monthlyRent" render={({ field }) => ( <FormItem><FormLabel>Monthly Rent (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="rentPaymentDay" render={({ field }) => ( <FormItem><FormLabel>Rent Due Day of Month</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                     <FormField control={form.control} name="rentIncreasePercent" render={({ field }) => ( <FormItem><FormLabel>Rent Increase (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>Periodic rent increase percentage.</FormDescription><FormMessage /></FormItem> )}/>
+                     <FormField control={form.control} name="rentIncreaseFrequency" render={({ field }) => ( <FormItem><FormLabel>Increase After (Months)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>Rent will increase after every X months.</FormDescription><FormMessage /></FormItem> )}/>
+                </div>
+                <Separator/>
+                 <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="securityDeposit" render={({ field }) => ( <FormItem><FormLabel>Security Deposit (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="depositRefundDays" render={({ field }) => ( <FormItem><FormLabel>Deposit Refund (Days)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>To be refunded within X days of vacation.</FormDescription><FormMessage /></FormItem> )}/>
+                </div>
+            </CardContent>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+          </Card>
+        );
+      case 3:
+          return (
+            <Card>
+                <CardHeader><CardTitle>Step 3: Lease & Occupancy Terms</CardTitle><CardDescription>Define the duration, notice period, and rules of the lease.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid md:grid-cols-3 gap-4">
+                        <FormField control={form.control} name="leaseStartDate" render={({ field }) => ( <FormItem><FormLabel>Lease Start Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="leaseTermMonths" render={({ field }) => ( <FormItem><FormLabel>Lease Term (Months)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="lockInMonths" render={({ field }) => ( <FormItem><FormLabel>Lock-in Period (Months)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    </div>
+                    <Separator/>
+                     <FormField control={form.control} name="noticePeriodMonths" render={({ field }) => ( <FormItem className="max-w-xs"><FormLabel>Notice Period (Months)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>For termination by either party.</FormDescription><FormMessage /></FormItem> )}/>
+                    <Separator/>
+                    <h3 className="font-medium">Specific Clauses</h3>
+                    <div className="space-y-2">
+                        <FormField control={form.control} name="allowPets" render={({ field }) => ( <FormItem className="flex items-center gap-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label className="font-normal">Allow pets on the property</Label></FormItem> )}/>
+                        <FormField control={form.control} name="allowSubletting" render={({ field }) => ( <FormItem className="flex items-center gap-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label className="font-normal">Allow sub-letting of the property</Label></FormItem> )}/>
+                    </div>
+                </CardContent>
+                <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Preview Draft <ArrowRight className="ml-2"/></Button></CardFooter>
+            </Card>
+          );
+      case 4:
+        const formData = form.getValues();
+        const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
+        const startDate = new Date(formData.leaseStartDate).toLocaleDateString('en-GB', dateOptions);
+        const endDate = new Date(new Date(formData.leaseStartDate).setMonth(new Date(formData.leaseStartDate).getMonth() + formData.leaseTermMonths)).toLocaleDateString('en-GB', dateOptions);
+
+        return (
+             <Card>
+                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Lease Deed.</CardDescription></CardHeader>
+                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                    <h2 className="text-center font-bold">LEASE DEED</h2>
+                    <p>This Lease Deed is made and executed on this <strong>{new Date().toLocaleDateString('en-GB', dateOptions)}</strong> at {formData.landlordAddress.split(',').pop()?.trim()}.</p>
+                    
+                    <p className="font-bold">BETWEEN:</p>
+                    <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called the "LESSOR" of the one part).</p>
+                    
+                    <p className="font-bold">AND:</p>
+                    <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called the "LESSEE" of the other part).</p>
+
+                    <p>"LESSOR" and "LESSEE" are hereinafter collectively referred to as "the Parties".</p>
+                    
+                    <h4 className="font-bold mt-4">WHEREAS:</h4>
+                    <ol className="list-[upper-alpha] list-inside space-y-2">
+                        <li>The Lessor is the absolute owner of the {formData.propertyType} property situated at <strong>{formData.propertyAddress}</strong> (hereinafter referred to as the "Scheduled Property").</li>
+                        <li>The Lessee has approached the Lessor to take on lease the Scheduled Property for {formData.propertyType} purposes.</li>
+                        <li>The Lessor has agreed to let out the property to the Lessee on the terms and conditions hereafter appearing.</li>
+                    </ol>
+
+                    <h4 className="font-bold mt-4">NOW THIS DEED WITNESSETH AS FOLLOWS:</h4>
+                    <ol className="list-decimal list-inside space-y-3">
+                        <li>The lease shall commence from <strong>{startDate}</strong> and shall be for a period of <strong>{formData.leaseTermMonths} months</strong>, ending on <strong>{endDate}</strong>.</li>
+                        <li>The Lessee shall pay a monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
+                        <li>The rent shall be increased by <strong>{formData.rentIncreasePercent}%</strong> after every <strong>{formData.rentIncreaseFrequency} months</strong> of the lease.</li>
+                        <li>The Lessee has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Lessor. This deposit will be refunded to the Lessee within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Lessee.</li>
+                        <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong> from the commencement of the lease. If the Lessee vacates the property during this period for any reason, the entire security deposit shall be forfeited by the Lessor.</li>
+                        <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
+                        <li>The Lessee shall bear and pay for all charges for electricity, water, internet, gas, and any other utilities consumed on the Scheduled Property directly to the concerned authorities.</li>
+                        <li>The Lessee shall use the Scheduled Property only for <strong>{formData.propertyType}</strong> purposes and shall not use it for any illegal or immoral activities.</li>
+                        <li>The Lessee shall maintain the Scheduled Property in a good, clean, and habitable condition and shall not cause any damage to the fixtures, fittings, and appliances. Any damage caused beyond normal wear and tear shall be repaired at the Lessee's expense.</li>
+                        <li>The Lessee shall not make any structural alterations or additions to the Scheduled Property without the prior written consent of the Lessor.</li>
+                        <li>The Lessor shall have the right to inspect the Scheduled Property at reasonable times with at least 24 hours prior notice to the Lessee.</li>
+                        <li>The Lessee shall {formData.allowPets ? "" : "not"} be allowed to keep pets on the property.</li>
+                        <li>The Lessee shall {formData.allowSubletting ? "" : "not"} sublet, assign, or part with the possession of the property or any part thereof without the prior written consent of the Lessor.</li>
+                        <li>Any disputes between the parties shall be subject to the exclusive jurisdiction of the courts in {formData.landlordAddress.split(',').pop()?.trim()}.</li>
+                    </ol>
+
+                    <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written in the presence of the following witnesses.</p>
+                    
+                    <div className="flex justify-between mt-16">
+                        <div className="text-center">
+                            <p>_________________________</p>
+                            <p>(LESSOR)</p>
+                            <p>{formData.landlordName}</p>
+                        </div>
+                        <div className="text-center">
+                            <p>_________________________</p>
+                            <p>(LESSEE)</p>
+                            <p>{formData.tenantName}</p>
+                        </div>
+                    </div>
+                     <div className="mt-16">
+                        <p>WITNESSES:</p>
+                        <ol className="list-decimal list-inside mt-8 space-y-8">
+                            <li>
+                                <p>Name: _________________________</p>
+                                <p>Address: _______________________</p>
+                                <p>Signature: ______________________</p>
+                            </li>
+                            <li>
+                                <p>Name: _________________________</p>
+                                <p>Address: _______________________</p>
+                                <p>Signature: ______________________</p>
+                            </li>
+                        </ol>
+                    </div>
+
+                </CardContent>
+                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started", description: "Your document is being prepared."})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
+            </Card>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <Link href="/legal-documents" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-4" />
+        Back to Document Selection
+      </Link>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">Lease Deed Generator</h1>
+        <p className="text-muted-foreground">Follow the steps to create your lease deed.</p>
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+          {renderStep()}
+        </form>
+      </Form>
+    </div>
+  );
+}

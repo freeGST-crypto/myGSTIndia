@@ -25,9 +25,9 @@ const documentTypes = [
     {
         name: "Lease Deed",
         description: "Create a formal lease agreement for long-term property usage.",
-        href: "#",
+        href: "/legal-documents/lease-deed",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Self Affidavit for GST",
