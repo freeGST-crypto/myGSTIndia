@@ -108,6 +108,21 @@ export default function PartiesPage() {
         );
     }, [vendors, vendorSearchTerm]);
 
+    const handleAction = (action: string, partyName: string) => {
+        if (action === 'Delete') {
+            toast({
+                variant: 'destructive',
+                title: 'Action Disabled',
+                description: `Deleting '${partyName}' is disabled to maintain data integrity. An archival feature will be added in the future.`,
+            });
+        } else {
+             toast({
+                title: 'Action Incomplete',
+                description: `This would ${action.toLowerCase()} the party '${partyName}'. This feature is a placeholder.`,
+            });
+        }
+    };
+
     const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => {
         
         const form = useForm<z.infer<typeof partySchema>>({
@@ -202,11 +217,11 @@ export default function PartiesPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAction('Edit', party.name)}>
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">
+                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleAction('Delete', party.name)}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
@@ -320,5 +335,3 @@ export default function PartiesPage() {
     </div>
   );
 }
-
-    

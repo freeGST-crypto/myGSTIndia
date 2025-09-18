@@ -86,6 +86,21 @@ export default function ItemsPage() {
             toast({ variant: "destructive", title: "Error", description: "Could not save the item." });
         }
     };
+    
+    const handleAction = (action: string, itemName: string) => {
+        if (action === 'Delete') {
+            toast({
+                variant: 'destructive',
+                title: 'Action Disabled',
+                description: `Deleting '${itemName}' is disabled to maintain data integrity. An archival feature will be added in the future.`,
+            });
+        } else {
+             toast({
+                title: 'Action Incomplete',
+                description: `This would ${action.toLowerCase()} the item '${itemName}'. This feature is a placeholder.`,
+            });
+        }
+    };
 
 
     return (
@@ -223,11 +238,11 @@ export default function ItemsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => handleAction('Edit', item.name)}>
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     Edit
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive">
+                                                <DropdownMenuItem className="text-destructive" onSelect={() => handleAction('Delete', item.name)}>
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Delete
                                                 </DropdownMenuItem>
@@ -245,4 +260,3 @@ export default function ItemsPage() {
 
     
 }
-    

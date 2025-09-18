@@ -32,6 +32,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { AccountingContext } from "@/context/accounting-context";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
 
 export default function CreditNotesPage() {
   const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
@@ -94,6 +95,27 @@ export default function CreditNotesPage() {
     } catch (e: any) {
         toast({ variant: "destructive", title: "Voiding Failed", description: e.message });
     }
+  };
+
+  const handleDownloadPdf = (note: any) => {
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.text("CREDIT NOTE", 105, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(`Credit Note #: ${note.id}`, 14, 40);
+    doc.text(`Date: ${format(new Date(note.date), "dd MMM, yyyy")}`, 14, 46);
+    doc.text(`Original Invoice: ${note.originalInvoice}`, 14, 52);
+    doc.text(`Customer: ${note.customer}`, 14, 60);
+    doc.text(`Amount: Rs. ${note.amount.toFixed(2)}`, 14, 70);
+    doc.save(`CreditNote_${note.id}.pdf`);
+    toast({ title: "Download Started", description: `Downloading PDF for credit note ${note.id}.` });
+  };
+  
+  const handleAction = (action: string, noteId: string) => {
+      toast({
+          title: `Action: ${action}`,
+          description: `This would ${action.toLowerCase()} Credit Note ${noteId}. This is a placeholder.`
+      });
   };
 
   const getStatusBadge = (status: string) => {
@@ -179,15 +201,15 @@ export default function CreditNotesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAction('View Details', note.id)}>
                           <FileText className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleAction('Edit', note.id)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                         <DropdownMenuItem>
+                         <DropdownMenuItem onSelect={() => handleDownloadPdf(note)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download PDF
                         </DropdownMenuItem>
