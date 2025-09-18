@@ -36,13 +36,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const initialAccounts = {
   assets: [
@@ -87,6 +92,9 @@ const accountTypes = [
 
 export default function ChartOfAccountsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedAccountType, setSelectedAccountType] = useState<string | null>(null);
+  const [purchaseDate, setPurchaseDate] = useState<Date>();
+  const [putToUseDate, setPutToUseDate] = useState<Date>();
 
   const renderAccountCategory = (title: string, accounts: {code: string, name: string, type: string}[]) => (
     <AccordionItem value={title.toLowerCase()}>
@@ -131,35 +139,72 @@ export default function ChartOfAccountsPage() {
                         Add Account
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                     <DialogTitle>Add New Account</DialogTitle>
                     <DialogDescription>
                         Create a new account for tracking finances.
                     </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="account-name" className="text-right">Account Name</Label>
-                            <Input id="account-name" placeholder="e.g. Office Rent" className="col-span-3" />
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="account-name">Account Name</Label>
+                            <Input id="account-name" placeholder="e.g. Office Rent" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="account-code" className="text-right">Account Code</Label>
-                            <Input id="account-code" placeholder="e.g. 5010" className="col-span-3" />
+                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="account-code">Account Code</Label>
+                                <Input id="account-code" placeholder="e.g. 5010" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="account-type">Account Type</Label>
+                                <Select onValueChange={setSelectedAccountType}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select an account type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {accountTypes.map(type => (
+                                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="account-type" className="text-right">Account Type</Label>
-                             <Select>
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select an account type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {accountTypes.map(type => (
-                                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+
+                        {selectedAccountType === 'Fixed Asset' && (
+                            <>
+                                <Separator className="my-4" />
+                                <h3 className="text-md font-semibold">Fixed Asset Details</h3>
+                                <div className="space-y-4 p-4 border rounded-md">
+                                     <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Date of Purchase</Label>
+                                            <Popover>
+                                                <PopoverTrigger asChild><Button variant="outline" className={cn("w-full font-normal", !purchaseDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{purchaseDate ? format(purchaseDate, "PPP") : "Select date"}</Button></PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={purchaseDate} onSelect={setPurchaseDate} initialFocus /></PopoverContent>
+                                            </Popover>
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label>Date Put to Use</Label>
+                                             <Popover>
+                                                <PopoverTrigger asChild><Button variant="outline" className={cn("w-full font-normal", !putToUseDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{putToUseDate ? format(putToUseDate, "PPP") : "Select date"}</Button></PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={putToUseDate} onSelect={setPutToUseDate} initialFocus /></PopoverContent>
+                                            </Popover>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="dep-rate">Depreciation Rate (%)</Label>
+                                            <Input id="dep-rate" type="number" placeholder="e.g. 15" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="opening-wdv">Opening WDV (₹)</Label>
+                                            <Input id="opening-wdv" type="number" placeholder="0.00"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                     <DialogFooter>
                     <Button type="submit" onClick={() => setIsAddDialogOpen(false)}>Save Account</Button>
