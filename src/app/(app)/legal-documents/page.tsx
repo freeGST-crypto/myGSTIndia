@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -50,7 +51,7 @@ const documentTypes = [
         description: "Generate monthly rental receipts for employees.",
         href: "/legal-documents/rental-receipts",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Founders’ Agreement",
