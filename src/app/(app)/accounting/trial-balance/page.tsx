@@ -72,6 +72,7 @@ export default function TrialBalancePage() {
     
     const { toast } = useToast();
     const router = useRouter();
+    const [date, setDate] = useState<Date | undefined>(new Date());
     const [isMismatchDialogOpen, setIsMismatchDialogOpen] = useState(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [uploadDate, setUploadDate] = useState<Date | undefined>(new Date());
@@ -174,8 +175,34 @@ export default function TrialBalancePage() {
       
       <Card>
           <CardHeader>
-              <CardTitle>Trial Balance as on {new Date().toLocaleDateString('en-GB')}</CardTitle>
-              <CardDescription>This report lists the closing balances of all general ledger accounts.</CardDescription>
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div>
+                    <CardTitle>Trial Balance as on {date ? format(date, "PPP") : 'selected date'}</CardTitle>
+                    <CardDescription>This report lists the closing balances of all general ledger accounts.</CardDescription>
+                </div>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className={cn(
+                        "w-[280px] justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                    />
+                    </PopoverContent>
+                </Popover>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -304,3 +331,5 @@ export default function TrialBalancePage() {
     </div>
   );
 }
+
+    

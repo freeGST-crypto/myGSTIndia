@@ -20,11 +20,14 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FileDown, CalendarDays } from "lucide-react";
-import { DateRangePicker } from "@/components/date-range-picker";
-import { Separator } from "@/components/ui/separator";
+import { FileDown, Calendar as CalendarIcon } from "lucide-react";
 import { ReportRow } from "@/components/accounting/report-row";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const data = {
     equityAndLiabilities: {
@@ -70,6 +73,7 @@ const formatCurrency = (value: number) => {
 
 export default function BalanceSheetPage() {
     const { toast } = useToast();
+    const [date, setDate] = useState<Date | undefined>(new Date());
     
     const totalCurrentLiabilities = data.equityAndLiabilities.currentLiabilities.sundryCreditors + data.equityAndLiabilities.currentLiabilities.billsPayable + data.equityAndLiabilities.currentLiabilities.outstandingExpenses;
     const totalEquityAndLiabilities = data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus + data.equityAndLiabilities.longTermLoans + totalCurrentLiabilities;
@@ -101,12 +105,30 @@ export default function BalanceSheetPage() {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                     <div>
                         <CardTitle>Report Date</CardTitle>
-                        <CardDescription>Select a date to generate the balance sheet. Currently showing live data.</CardDescription>
+                        <CardDescription>Select a date to generate the balance sheet.</CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <CalendarDays className="text-muted-foreground"/>
-                        <DateRangePicker className="w-full md:w-auto" />
-                    </div>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "w-[280px] justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={setDate}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </CardHeader>
         </Card>
@@ -114,7 +136,7 @@ export default function BalanceSheetPage() {
       <Card>
           <CardHeader>
               <CardTitle>Balance Sheet</CardTitle>
-              <CardDescription>As on 31st March 2024</CardDescription>
+              <CardDescription>As on {date ? format(date, "PPP") : 'selected date'}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
@@ -272,3 +294,5 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
+
+    
