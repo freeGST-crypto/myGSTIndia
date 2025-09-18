@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormField,
@@ -39,7 +38,6 @@ import {
   BadgePercent,
   Wallet,
   ShoppingCart,
-  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -48,7 +46,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import * as XLSX from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlaceholderPage } from "@/components/placeholder-page";
 
 
 // Schemas for form validation
@@ -129,6 +126,34 @@ const renewedDuplicateCertSchema = z.object({
     remarks: z.string().optional(),
 });
 
+const sweatEquitySchema = z.object({
+  allotteeName: z.string().min(2, "Allottee name is required."),
+  numberOfShares: z.coerce.number().positive(),
+  allotmentDate: z.string().refine(val => !isNaN(Date.parse(val))),
+  issuePrice: z.coerce.number().min(0),
+  consideration: z.string().min(3, "Consideration is required."),
+  lockInExpiry: z.string().refine(val => !isNaN(Date.parse(val))),
+});
+
+const esopSchema = z.object({
+  grantNo: z.string().min(1),
+  employeeName: z.string().min(2),
+  grantDate: z.string().refine(val => !isNaN(Date.parse(val))),
+  optionsGranted: z.coerce.number().positive(),
+  vestingPeriod: z.string().min(1),
+  exercisePrice: z.coerce.number().positive(),
+  optionsExercised: z.coerce.number().min(0).default(0),
+  optionsLapsed: z.coerce.number().min(0).default(0),
+});
+
+const buyBackSchema = z.object({
+  date: z.string().refine(val => !isNaN(Date.parse(val))),
+  numberOfSecurities: z.coerce.number().positive(),
+  price: z.coerce.number().positive(),
+  mode: z.enum(["Open Market", "Tender Offer"]),
+  cancellationDate: z.string().refine(val => !isNaN(Date.parse(val))),
+});
+
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name is required."),
@@ -140,6 +165,9 @@ const formSchema = z.object({
   loansGuaranteesInvestments: z.array(loanGuaranteeInvestmentSchema),
   relatedPartyContracts: z.array(relatedPartyContractSchema),
   renewedDuplicateCerts: z.array(renewedDuplicateCertSchema),
+  sweatEquity: z.array(sweatEquitySchema),
+  esops: z.array(esopSchema),
+  buyBacks: z.array(buyBackSchema),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -178,6 +206,9 @@ export default function StatutoryRegistersPage() {
       renewedDuplicateCerts: [
         { folioNo: "001", name: "Rohan Sharma", originalCertNo: "1", originalIssueDate: "2023-04-15", shares: 1000, distinctiveNos: "1-1000", newCertNo: "1A", newIssueDate: "2024-01-10", reason: "Duplicate", remarks: "Original lost" }
       ],
+      sweatEquity: [],
+      esops: [],
+      buyBacks: [],
     },
   });
 
@@ -189,6 +220,9 @@ export default function StatutoryRegistersPage() {
   const { fields: lgiFields, append: appendLgi, remove: removeLgi } = useFieldArray({ control: form.control, name: "loansGuaranteesInvestments" });
   const { fields: rpcFields, append: appendRpc, remove: removeRpc } = useFieldArray({ control: form.control, name: "relatedPartyContracts" });
   const { fields: rdcFields, append: appendRdc, remove: removeRdc } = useFieldArray({ control: form.control, name: "renewedDuplicateCerts" });
+  const { fields: sweatEquityFields, append: appendSweatEquity, remove: removeSweatEquity } = useFieldArray({ control: form.control, name: "sweatEquity" });
+  const { fields: esopFields, append: appendEsop, remove: removeEsop } = useFieldArray({ control: form.control, name: "esops" });
+  const { fields: buyBackFields, append: appendBuyBack, remove: removeBuyBack } = useFieldArray({ control: form.control, name: "buyBacks" });
 
 
   const exportToCsv = (data: any[], headers: string[], fileName: string) => {
@@ -323,6 +357,48 @@ export default function StatutoryRegistersPage() {
     exportToCsv(dataToExport, headers, "Register_of_Renewed_Duplicate_Certs");
   };
 
+  const handleExportSweatEquity = () => {
+    const dataToExport = form.getValues("sweatEquity").map((item, index) => ({
+      "S. No.": index + 1,
+      "Name of Allottee": item.allotteeName,
+      "No. of Shares": item.numberOfShares,
+      "Date of Allotment": format(new Date(item.allotmentDate), 'dd-MM-yyyy'),
+      "Issue Price": item.issuePrice,
+      "Consideration": item.consideration,
+      "Lock-in Expiry": format(new Date(item.lockInExpiry), 'dd-MM-yyyy'),
+    }));
+    const headers = ["S. No.", "Name of Allottee", "No. of Shares", "Date of Allotment", "Issue Price", "Consideration", "Lock-in Expiry"];
+    exportToCsv(dataToExport, headers, "Register_of_Sweat_Equity");
+  };
+  
+  const handleExportEsops = () => {
+    const dataToExport = form.getValues("esops").map((item, index) => ({
+      "Grant No.": item.grantNo,
+      "Employee Name": item.employeeName,
+      "Grant Date": format(new Date(item.grantDate), 'dd-MM-yyyy'),
+      "Options Granted": item.optionsGranted,
+      "Vesting Period": item.vestingPeriod,
+      "Exercise Price": item.exercisePrice,
+      "Options Exercised": item.optionsExercised,
+      "Options Lapsed": item.optionsLapsed,
+    }));
+    const headers = ["Grant No.", "Employee Name", "Grant Date", "Options Granted", "Vesting Period", "Exercise Price", "Options Exercised", "Options Lapsed"];
+    exportToCsv(dataToExport, headers, "Register_of_ESOPs");
+  };
+  
+  const handleExportBuyBacks = () => {
+    const dataToExport = form.getValues("buyBacks").map((item, index) => ({
+      "S. No.": index + 1,
+      "Date of Buy-Back": format(new Date(item.date), 'dd-MM-yyyy'),
+      "No. of Securities": item.numberOfSecurities,
+      "Price per Security": item.price,
+      "Mode of Buy-Back": item.mode,
+      "Date of Cancellation": format(new Date(item.cancellationDate), 'dd-MM-yyyy'),
+    }));
+    const headers = ["S. No.", "Date of Buy-Back", "No. of Securities", "Price per Security", "Mode of Buy-Back", "Date of Cancellation"];
+    exportToCsv(dataToExport, headers, "Register_of_Buy_Back");
+  };
+
 
   return (
     <div className="space-y-8">
@@ -347,7 +423,7 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="h-auto justify-start flex-wrap">
+            <TabsList className="flex flex-wrap h-auto justify-start">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
               <TabsTrigger value="debentureHolders"><FileKey className="mr-2" />Debentures</TabsTrigger>
               <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors & KMP</TabsTrigger>
@@ -599,14 +675,91 @@ export default function StatutoryRegistersPage() {
                     <CardFooter><Button type="button" onClick={handleExportRenewedCerts}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
                 </Card>
             </TabsContent>
+            
             <TabsContent value="sweat">
-                <PlaceholderPage title="Register of Sweat Equity Shares" description="This feature is under construction. You will soon be able to manage and export records of sweat equity shares issued to directors or employees." />
+              <Card>
+                <CardHeader><CardTitle>Register of Sweat Equity Shares (Form SH-3)</CardTitle><CardDescription>Manage sweat equity shares issued to directors or employees.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Allottee</TableHead><TableHead>No. of Shares</TableHead><TableHead>Allotment Date</TableHead><TableHead>Lock-in Expiry</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {sweatEquityFields.map((field, index) => (
+                           <TableRow key={field.id}>
+                              <TableCell><Input {...form.register(`sweatEquity.${index}.allotteeName`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`sweatEquity.${index}.numberOfShares`)}/></TableCell>
+                              <TableCell><Input type="date" {...form.register(`sweatEquity.${index}.allotmentDate`)}/></TableCell>
+                              <TableCell><Input type="date" {...form.register(`sweatEquity.${index}.lockInExpiry`)}/></TableCell>
+                              <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeSweatEquity(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendSweatEquity({ allotteeName: "", numberOfShares: 0, allotmentDate: "", issuePrice: 0, consideration: "", lockInExpiry: "" })}><PlusCircle className="mr-2"/> Add Entry</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportSweatEquity}><FileSpreadsheet className="mr-2"/> Export Register (SH-3)</Button></CardFooter>
+              </Card>
             </TabsContent>
+            
             <TabsContent value="esop">
-                <PlaceholderPage title="Register of Employee Stock Options (ESOPs)" description="This feature is under construction. This section will allow you to maintain a detailed register of stock options granted to employees." />
+              <Card>
+                <CardHeader><CardTitle>Register of Employee Stock Options (ESOPs)</CardTitle><CardDescription>Maintain a register of stock options granted to employees.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Options Granted</TableHead><TableHead>Grant Date</TableHead><TableHead>Exercise Price</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {esopFields.map((field, index) => (
+                           <TableRow key={field.id}>
+                              <TableCell><Input {...form.register(`esops.${index}.employeeName`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`esops.${index}.optionsGranted`)}/></TableCell>
+                              <TableCell><Input type="date" {...form.register(`esops.${index}.grantDate`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`esops.${index}.exercisePrice`)}/></TableCell>
+                              <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeEsop(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendEsop({ grantNo: "", employeeName: "", grantDate: "", optionsGranted: 0, vestingPeriod: "", exercisePrice: 0 })}><PlusCircle className="mr-2"/> Add Grant</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportEsops}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
+              </Card>
             </TabsContent>
+            
             <TabsContent value="buyback">
-                <PlaceholderPage title="Register of Buy-Back of Securities" description="This feature is under construction. You will be able to manage the records of shares and other securities bought back by the company here." />
+               <Card>
+                <CardHeader><CardTitle>Register of Buy-Back of Securities</CardTitle><CardDescription>Maintain records of shares and other securities bought back by the company.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>No. of Securities</TableHead><TableHead>Price</TableHead><TableHead>Mode</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {buyBackFields.map((field, index) => (
+                           <TableRow key={field.id}>
+                              <TableCell><Input type="date" {...form.register(`buyBacks.${index}.date`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`buyBacks.${index}.numberOfSecurities`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`buyBacks.${index}.price`)}/></TableCell>
+                              <TableCell>
+                                <Select onValueChange={(value) => form.setValue(`buyBacks.${index}.mode`, value as "Open Market" | "Tender Offer")} defaultValue={field.mode}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Open Market">Open Market</SelectItem>
+                                        <SelectItem value="Tender Offer">Tender Offer</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeBuyBack(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendBuyBack({ date: "", numberOfSecurities: 0, price: 0, mode: "Tender Offer", cancellationDate: "" })}><PlusCircle className="mr-2"/> Add Buy-Back Entry</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportBuyBacks}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
+              </Card>
             </TabsContent>
 
           </Tabs>
@@ -615,5 +768,3 @@ export default function StatutoryRegistersPage() {
     </div>
   );
 }
-
-    
