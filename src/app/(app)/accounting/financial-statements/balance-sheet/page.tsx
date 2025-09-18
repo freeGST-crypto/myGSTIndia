@@ -23,6 +23,7 @@ import { FileDown, CalendarDays } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Separator } from "@/components/ui/separator";
 import { ReportRow } from "@/components/accounting/report-row";
+import { useToast } from "@/hooks/use-toast";
 
 const data = {
     equityAndLiabilities: {
@@ -56,6 +57,7 @@ const formatCurrency = (value: number) => {
 }
 
 export default function BalanceSheetPage() {
+    const { toast } = useToast();
     
     const totalCurrentLiabilities = data.equityAndLiabilities.currentLiabilities.sundryCreditors + data.equityAndLiabilities.currentLiabilities.billsPayable + data.equityAndLiabilities.currentLiabilities.outstandingExpenses;
     const totalEquityAndLiabilities = data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus + data.equityAndLiabilities.longTermLoans + totalCurrentLiabilities;
@@ -74,7 +76,7 @@ export default function BalanceSheetPage() {
             A snapshot of your company's financial health.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => toast({ title: "Exporting PDF", description: "Your Balance Sheet is being generated."})}>
           <FileDown className="mr-2"/>
           Export PDF
         </Button>

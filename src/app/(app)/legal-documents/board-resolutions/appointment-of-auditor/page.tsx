@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -60,8 +61,6 @@ export default function AppointmentOfAuditorPage() {
           Generate a board resolution to appoint the company's first statutory auditors.
         </p>
       </div>
-
-      <div className="grid lg:grid-cols-2 gap-8 items-start">
         <Card>
           <CardHeader>
             <CardTitle>Enter Resolution Details</CardTitle>
@@ -80,9 +79,12 @@ export default function AppointmentOfAuditorPage() {
         </Card>
         
         <div className="space-y-4">
-            <Card className="sticky top-20">
+            <Card>
                 <CardHeader>
                     <CardTitle>Live Preview</CardTitle>
+                    <CardDescription>
+                        This is a live preview of the resolution. Use the button at the bottom to print or save.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg prose prose-sm dark:prose-invert max-w-none">
                     <div className="text-center">
@@ -112,7 +114,6 @@ export default function AppointmentOfAuditorPage() {
                 </CardFooter>
             </Card>
         </div>
-      </div>
     </div>
   );
 }

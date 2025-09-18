@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PlaceholderPage } from "@/components/placeholder-page";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Presentation, Construction } from "lucide-react";

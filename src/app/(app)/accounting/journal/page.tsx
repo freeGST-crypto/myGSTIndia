@@ -56,6 +56,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 const initialVouchers = [
   {
@@ -97,6 +98,7 @@ export default function JournalVoucherPage() {
         { account: '', debit: '0', credit: '0' },
         { account: '', debit: '0', credit: '0' }
     ]);
+    const { toast } = useToast();
 
     const handleAddLine = () => {
         setLines([...lines, { account: '', debit: '0', credit: '0' }]);
@@ -121,6 +123,13 @@ export default function JournalVoucherPage() {
         const newLines = [...lines];
         newLines.splice(index, 1);
         setLines(newLines);
+    };
+    
+    const handleVoucherAction = (action: string, voucherId: string) => {
+        toast({
+            title: `${action} Voucher`,
+            description: `Simulating ${action.toLowerCase()} action for voucher ${voucherId}.`,
+        });
     };
 
     const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
@@ -275,15 +284,15 @@ export default function JournalVoucherPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleVoucherAction("View Details", voucher.id)}>
                           <FileText className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleVoucherAction("Edit", voucher.id)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" onSelect={() => handleVoucherAction("Delete", voucher.id)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>

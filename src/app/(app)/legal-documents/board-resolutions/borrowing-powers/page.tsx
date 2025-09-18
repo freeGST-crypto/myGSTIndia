@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -66,8 +67,6 @@ export default function BorrowingPowersPage() {
           Generate a resolution to authorize borrowing from a bank and empower directors to execute documents.
         </p>
       </div>
-
-      <div className="grid lg:grid-cols-2 gap-8 items-start">
         <Card>
           <CardHeader>
             <CardTitle>Enter Resolution Details</CardTitle>
@@ -83,7 +82,7 @@ export default function BorrowingPowersPage() {
                     <FormField control={form.control} name="loanAmount" render={({ field }) => (<FormItem><FormLabel>Loan Amount Limit (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                  </div>
                  <div className="space-y-2">
-                    <Label>Authorized Signatories</Label>
+                    <FormLabel>Authorized Signatories</FormLabel>
                     <FormField control={form.control} name="authorizedDirector1" render={({ field }) => (<FormItem><FormControl><Input placeholder="Director 1 Name" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                     <FormField control={form.control} name="authorizedDirector2" render={({ field }) => (<FormItem><FormControl><Input placeholder="Director 2 Name (Optional)" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                  </div>
@@ -93,9 +92,12 @@ export default function BorrowingPowersPage() {
         </Card>
         
         <div className="space-y-4">
-            <Card className="sticky top-20">
+            <Card>
                 <CardHeader>
                     <CardTitle>Live Preview</CardTitle>
+                    <CardDescription>
+                        This is a live preview of the resolution. Use the button at the bottom to print or save.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg prose prose-sm dark:prose-invert max-w-none">
                     <div className="text-center">
@@ -126,7 +128,6 @@ export default function BorrowingPowersPage() {
                 </CardFooter>
             </Card>
         </div>
-      </div>
     </div>
   );
 }

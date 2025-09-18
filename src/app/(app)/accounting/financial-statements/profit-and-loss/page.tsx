@@ -23,6 +23,7 @@ import { FileDown, CalendarDays } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Separator } from "@/components/ui/separator";
 import { ReportRow } from "@/components/accounting/report-row";
+import { useToast } from "@/hooks/use-toast";
 
 const data = {
     revenue: {
@@ -49,6 +50,7 @@ const formatCurrency = (value: number) => {
 }
 
 export default function ProfitAndLossPage() {
+    const { toast } = useToast();
 
     const tradingDebits = data.cogs.openingStock + data.cogs.purchases + data.cogs.directExpenses;
     const tradingCredits = data.revenue.sales + data.cogs.closingStock;
@@ -69,7 +71,7 @@ export default function ProfitAndLossPage() {
             Summary of revenues, costs, and expenses in a horizontal T-form.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => toast({ title: "Exporting PDF", description: "Your P&L report is being generated."})}>
           <FileDown className="mr-2"/>
           Export PDF
         </Button>

@@ -64,7 +64,23 @@ export default function LedgersPage() {
         });
         // In a real app, you would use Next.js router to navigate:
         // router.push(entry.link);
-    }
+    };
+
+    const handleViewLedger = () => {
+        const accountName = accounts.find(a => a.code === selectedAccount)?.name;
+        toast({
+            title: "Viewing Ledger",
+            description: `Showing ledger for ${accountName}. (Data is static for this demo)`,
+        });
+    };
+    
+    const handleExport = () => {
+        const accountName = accounts.find(a => a.code === selectedAccount)?.name;
+        toast({
+            title: "Exporting Ledger",
+            description: `Your PDF for ${accountName} is being generated.`,
+        });
+    };
 
   return (
     <div className="space-y-8">
@@ -75,7 +91,7 @@ export default function LedgersPage() {
                     View detailed transaction history for any account.
                 </p>
             </div>
-            <Button>
+            <Button onClick={handleExport}>
                 <FileDown className="mr-2"/>
                 Export PDF
             </Button>
@@ -97,7 +113,7 @@ export default function LedgersPage() {
                         </SelectContent>
                     </Select>
                     <DateRangePicker className="w-full md:w-auto" />
-                    <Button className="w-full md:w-auto">
+                    <Button className="w-full md:w-auto" onClick={handleViewLedger}>
                         <Search className="mr-2"/>
                         View Ledger
                     </Button>
