@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -33,89 +33,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AccountingContext } from "@/context/accounting-context";
+import { allAccounts } from "@/lib/accounts";
 
-
-const initialStep1Data = [
-  {
-    description: "(a) Outward taxable supplies (other than zero rated, nil rated and exempted)",
-    taxableValue: 525000.00,
-    integratedTax: 94500.00,
-    centralTax: 0,
-    stateTax: 0,
-    cess: 0,
-  },
-  {
-    description: "(b) Outward taxable supplies (zero rated)",
-    taxableValue: 50000.00,
-    integratedTax: 0,
-    centralTax: 0,
-    stateTax: 0,
-    cess: 0,
-  },
-  {
-    description: "(c) Other outward supplies (nil rated, exempted)",
-    taxableValue: 12000.00,
-    integratedTax: 0,
-    centralTax: 0,
-    stateTax: 0,
-    cess: 0,
-  },
-  {
-    description: "(d) Inward supplies (liable to reverse charge)",
-    taxableValue: 8000.00,
-    integratedTax: 1440.00,
-    centralTax: 0,
-    stateTax: 0,
-    cess: 0,
-  },
-  {
-    description: "(e) Non-GST outward supplies",
-    taxableValue: 0,
-    integratedTax: 0,
-    centralTax: 0,
-    stateTax: 0,
-    cess: 0,
-  },
-];
-
-const initialStep2Data = [
-    {
-        placeOfSupply: "Maharashtra",
-        taxableValue: 120000.00,
-        integratedTax: 21600.00,
-    },
-    {
-        placeOfSupply: "Karnataka",
-        taxableValue: 85000.00,
-        integratedTax: 15300.00,
-    }
-];
-
-const initialStep3Data = {
-    importGoods: { igst: 15000, cess: 0 },
-    importServices: { igst: 8000, cess: 0 },
-    inwardReverseCharge: { igst: 1440, cgst: 0, sgst: 0, cess: 0 },
-    inwardISD: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
-    allOtherITC: { igst: 25000, cgst: 12000, sgst: 12000, cess: 500 },
-    rule42_43: { igst: 800, cgst: 200, sgst: 200, cess: 0 },
-    othersReversed: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
-};
-
-const initialStep4Data = [
-    { description: "From a supplier under composition scheme, exempt and nil rated supply", interState: 4500.00, intraState: 12000.00 },
-    { description: "Non GST supply", interState: 0, intraState: 500.00 },
-];
-
-const initialStep5Data = {
-    liability: { igst: 95940.00, cgst: 0, sgst: 0, cess: 0 },
-    availableItc: { igst: 48640.00, cgst: 11800, sgst: 11800, cess: 500 },
-    paidThroughItc: {
-        igst: { igst: 48640, cgst: 0, sgst: 0, cess: 0 },
-        cgst: { igst: 0, cgst: 11800, sgst: 0, cess: 0 },
-        sgst: { igst: 0, cgst: 0, sgst: 11800, cess: 0 },
-        cess: { igst: 0, cgst: 0, sgst: 0, cess: 500 },
-    }
-};
 
 const states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
@@ -127,46 +47,167 @@ const states = [
 export default function Gstr3bWizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const { journalVouchers } = useContext(AccountingContext)!;
+
+  const initialStep1Data = useMemo(() => {
+    const outwardSupplies = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
+    const outwardTaxableValue = outwardSupplies.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
+    const outwardTax = outwardSupplies.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+    
+    return [
+      {
+        description: "(a) Outward taxable supplies (other than zero rated, nil rated and exempted)",
+        taxableValue: outwardTaxableValue,
+        integratedTax: outwardTax, // Assuming all IGST for simplicity
+        centralTax: 0,
+        stateTax: 0,
+        cess: 0,
+      },
+      {
+        description: "(b) Outward taxable supplies (zero rated)",
+        taxableValue: 0,
+        integratedTax: 0,
+        centralTax: 0,
+        stateTax: 0,
+        cess: 0,
+      },
+      {
+        description: "(c) Other outward supplies (nil rated, exempted)",
+        taxableValue: 0,
+        integratedTax: 0,
+        centralTax: 0,
+        stateTax: 0,
+        cess: 0,
+      },
+      {
+        description: "(d) Inward supplies (liable to reverse charge)",
+        taxableValue: 0,
+        integratedTax: 0,
+        centralTax: 0,
+        stateTax: 0,
+        cess: 0,
+      },
+      {
+        description: "(e) Non-GST outward supplies",
+        taxableValue: 0,
+        integratedTax: 0,
+        centralTax: 0,
+        stateTax: 0,
+        cess: 0,
+      },
+    ];
+  }, [journalVouchers]);
+  
+  const initialStep3Data = useMemo(() => {
+    const purchaseBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
+    const allOtherITC = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
+    
+    return {
+        importGoods: { igst: 0, cess: 0 },
+        importServices: { igst: 0, cess: 0 },
+        inwardReverseCharge: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        inwardISD: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        allOtherITC: { igst: allOtherITC, cgst: 0, sgst: 0, cess: 0 }, // Assuming all IGST for simplicity
+        rule42_43: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        othersReversed: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+    };
+  }, [journalVouchers]);
+
 
   const [step1Data, setStep1Data] = useState(initialStep1Data);
+  const [step2Data, setStep2Data] = useState<{placeOfSupply: string, taxableValue: number, integratedTax: number}[]>([]);
+  const [step3Data, setStep3Data] = useState(initialStep3Data);
+  const [step4Data, setStep4Data] = useState([
+    { description: "From a supplier under composition scheme, exempt and nil rated supply", interState: 0, intraState: 0 },
+    { description: "Non GST supply", interState: 0, intraState: 0 },
+  ]);
+  const [step5Data, setStep5Data] = useState<{
+    liability: { igst: number, cgst: number, sgst: number, cess: number },
+    availableItc: { igst: number, cgst: number, sgst: number, cess: number },
+    paidThroughItc: any
+  }>({
+    liability: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+    availableItc: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+    paidThroughItc: {
+        igst: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        cgst: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        sgst: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        cess: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+    }
+  });
+
+  useEffect(() => {
+    setStep1Data(initialStep1Data);
+    setStep3Data(initialStep3Data);
+  }, [initialStep1Data, initialStep3Data]);
+  
+  useEffect(() => {
+    const totalLiability = step1Data.reduce((acc, row) => ({
+      igst: acc.igst + row.integratedTax,
+      cgst: acc.cgst + row.centralTax,
+      sgst: acc.sgst + row.stateTax,
+      cess: acc.cess + row.cess,
+    }), { igst: 0, cgst: 0, sgst: 0, cess: 0 });
+
+    const totalAvailableItc = Object.values(step3Data).reduce((acc, section) => {
+        if ('igst' in section) acc.igst += section.igst;
+        if ('cgst' in section) acc.cgst += section.cgst;
+        if ('sgst' in section) acc.sgst += section.sgst;
+        if ('cess' in section) acc.cess += section.cess;
+        return acc;
+    }, { igst: 0, cgst: 0, sgst: 0, cess: 0 });
+
+    // Basic ITC utilization logic
+    const paidIgst = Math.min(totalLiability.igst, totalAvailableItc.igst);
+    
+    setStep5Data(prev => ({
+        ...prev,
+        liability: totalLiability,
+        availableItc: totalAvailableItc,
+        paidThroughItc: {
+          igst: { igst: paidIgst, cgst: 0, sgst: 0, cess: 0 },
+          cgst: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+          sgst: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+          cess: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        }
+    }));
+  }, [step1Data, step3Data]);
+
+
   const handleStep1Change = (index: number, field: keyof typeof step1Data[0], value: string) => {
     const newData = [...step1Data];
     (newData[index] as any)[field] = parseFloat(value) || 0;
     setStep1Data(newData);
   };
 
-  const [step2Data, setStep2Data] = useState(initialStep2Data);
   const handleStep2Change = (index: number, field: keyof typeof step2Data[0], value: string) => {
     const newData = [...step2Data];
-    (newData[index] as any)[field] = value; // Can be string (for state) or number
     if (field !== 'placeOfSupply') {
         (newData[index] as any)[field] = parseFloat(value) || 0;
+    } else {
+         (newData[index] as any)[field] = value;
     }
     setStep2Data(newData);
   };
   const addStep2Row = () => setStep2Data([...step2Data, { placeOfSupply: "", taxableValue: 0, integratedTax: 0 }]);
 
-  const [step3Data, setStep3Data] = useState(initialStep3Data);
   const handleStep3Change = (section: keyof typeof step3Data, field: 'igst' | 'cgst' | 'sgst' | 'cess', value: string) => {
       const newData = {...step3Data};
       (newData[section] as any)[field] = parseFloat(value) || 0;
       setStep3Data(newData);
   }
 
-  const [step4Data, setStep4Data] = useState(initialStep4Data);
   const handleStep4Change = (index: number, field: keyof typeof step4Data[0], value: string) => {
     const newData = [...step4Data];
     (newData[index] as any)[field] = parseFloat(value) || 0;
     setStep4Data(newData);
   };
   
-  const [step5Data, setStep5Data] = useState(initialStep5Data);
   const handleStep5Change = (taxType: 'igst' | 'cgst' | 'sgst' | 'cess', creditType: 'igst' | 'cgst' | 'sgst' | 'cess', value: string) => {
     const newData = {...step5Data};
     (newData.paidThroughItc[taxType] as any)[creditType] = parseFloat(value) || 0;
     setStep5Data(newData);
   }
-
 
   const handleNext = () => {
     toast({
@@ -197,7 +238,7 @@ export default function Gstr3bWizardPage() {
               <CardDescription>
                 Table 3.1: Details of Outward Supplies and inward supplies liable to reverse charge.
                 <br />
-                Review the auto-populated data and make any necessary adjustments.
+                Review the auto-populated data from your journal and make any necessary adjustments.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -340,7 +381,7 @@ export default function Gstr3bWizardPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Step 3: Eligible ITC</CardTitle>
-                        <CardDescription>Table 4: Details of Eligible Input Tax Credit.</CardDescription>
+                        <CardDescription>Table 4: Details of Eligible Input Tax Credit. Auto-populated from your purchase records.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -466,11 +507,13 @@ export default function Gstr3bWizardPage() {
                 </Card>
             );
         case 5:
-            const liability = step5Data.liability;
-            const availableItc = step5Data.availableItc;
-            const paidThroughItc = step5Data.paidThroughItc;
-            // In a real app, these totals and the logic would be much more complex
-            const totalPaidItcIgst = paidThroughItc.igst.igst + paidThroughItc.cgst.igst + paidThroughItc.sgst.igst;
+            const { liability, availableItc, paidThroughItc } = step5Data;
+            
+            const cashPayableIgst = liability.igst - (paidThroughItc.igst?.igst || 0);
+            const cashPayableCgst = liability.cgst - (paidThroughItc.cgst?.cgst || 0) - (paidThroughItc.cgst?.igst || 0);
+            const cashPayableSgst = liability.sgst - (paidThroughItc.sgst?.sgst || 0) - (paidThroughItc.sgst?.igst || 0);
+            const cashPayableCess = liability.cess - (paidThroughItc.cess?.cess || 0);
+
 
             return (
                  <Card>
@@ -496,37 +539,37 @@ export default function Gstr3bWizardPage() {
                                     <TableCell className="font-medium">IGST</TableCell>
                                     <TableCell className="text-right font-mono">{liability.igst.toFixed(2)}</TableCell>
                                     <TableCell><Input type="number" className="text-right" value={paidThroughItc.igst.igst} onChange={(e) => handleStep5Change('igst', 'igst', e.target.value)}/></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.igst - paidThroughItc.igst.igst).toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell className="text-right font-mono">{cashPayableIgst.toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell className="font-medium">CGST</TableCell>
                                     <TableCell className="text-right font-mono">{liability.cgst.toFixed(2)}</TableCell>
                                     <TableCell><Input type="number" className="text-right" value={paidThroughItc.cgst.igst} onChange={(e) => handleStep5Change('cgst', 'igst', e.target.value)} /></TableCell>
                                     <TableCell><Input type="number" className="text-right" value={paidThroughItc.cgst.cgst} onChange={(e) => handleStep5Change('cgst', 'cgst', e.target.value)}/></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.cgst - paidThroughItc.cgst.cgst - paidThroughItc.cgst.igst).toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell className="text-right font-mono">{cashPayableCgst.toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell className="font-medium">SGST</TableCell>
                                     <TableCell className="text-right font-mono">{liability.sgst.toFixed(2)}</TableCell>
                                     <TableCell><Input type="number" className="text-right" value={paidThroughItc.sgst.igst} onChange={(e) => handleStep5Change('sgst', 'igst', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
                                     <TableCell><Input type="number" className="text-right" value={paidThroughItc.sgst.sgst} onChange={(e) => handleStep5Change('sgst', 'sgst', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.sgst - paidThroughItc.sgst.sgst - paidThroughItc.sgst.igst).toFixed(2)}</TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell className="text-right font-mono">{cashPayableSgst.toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell className="font-medium">Cess</TableCell>
                                     <TableCell className="text-right font-mono">{liability.cess.toFixed(2)}</TableCell>
-                                    <TableCell><Input type="number" className="text-right" value={paidThroughItc.cess.igst} onChange={(e) => handleStep5Change('cess', 'igst', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
-                                    <TableCell><Input type="number" className="text-right" disabled value={0} onChange={() => {}} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
+                                    <TableCell><Input type="number" className="text-right" disabled value={0} /></TableCell>
                                     <TableCell><Input type="number" className="text-right" value={paidThroughItc.cess.cess} onChange={(e) => handleStep5Change('cess', 'cess', e.target.value)} /></TableCell>
-                                    <TableCell className="text-right font-mono">{(liability.cess - paidThroughItc.cess.cess - paidThroughItc.cess.igst).toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono">{cashPayableCess.toFixed(2)}</TableCell>
                                 </TableRow>
                             </TableBody>
                             <TableFooter>
@@ -605,5 +648,3 @@ export default function Gstr3bWizardPage() {
     </div>
   );
 }
-
-    
