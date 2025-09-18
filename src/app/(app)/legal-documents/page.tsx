@@ -53,9 +53,9 @@ const documentTypes = [
     {
         name: "Founders’ Agreement",
         description: "Essential legal document for startup co-founders.",
-        href: "#",
+        href: "/legal-documents/founders-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Loan Agreement",
