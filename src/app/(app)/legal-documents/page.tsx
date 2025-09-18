@@ -208,7 +208,7 @@ export default function LegalDocumentsPage() {
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                  {documentTypes.map(doc => (
-                     <Card key={doc.name}>
+                     <Card key={doc.name} className="flex flex-col">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                <doc.icon className="text-primary"/> {doc.name}
@@ -217,7 +217,7 @@ export default function LegalDocumentsPage() {
                                 {doc.description}
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-grow flex items-end">
                              {doc.status === 'active' ? (
                                 <Link href={doc.href} passHref>
                                     <Button>
