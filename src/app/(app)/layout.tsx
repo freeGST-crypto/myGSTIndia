@@ -21,16 +21,6 @@ import {
   BookOpen,
   Shield,
   Presentation,
-  CalendarPlus,
-  ReceiptText,
-  ShoppingCart,
-  FileSpreadsheet,
-  GitCompareArrows,
-  BookCopy,
-  TrendingUp,
-  Building,
-  LayoutDashboard,
-  AreaChart,
   CalendarClock,
   UserSquare,
   BadgeDollarSign,
@@ -42,6 +32,15 @@ import {
   CreditCard,
   Heart,
   BookPlus,
+  ConciergeBell,
+  LayoutDashboard,
+  Building,
+  TrendingUp,
+  AreaChart,
+  GitCompareArrows,
+  FileSpreadsheet,
+  BookCopy,
+  ShoppingCart,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -80,7 +79,7 @@ const menuItems = [
     label: "Billing",
     icon: Receipt,
     subItems: [
-      { href: "/invoices", label: "Invoices", icon: ReceiptText },
+      { href: "/invoices", label: "Invoices", icon: Receipt },
       { href: "/purchases", label: "Purchases", icon: ShoppingCart },
       { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus },
       { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus },
@@ -102,6 +101,7 @@ const menuItems = [
     icon: Calculator,
     subItems: [
       { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library },
+      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet },
       { href: "/accounting/journal", label: "Journal Vouchers", icon: BookPlus },
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale },
@@ -132,10 +132,10 @@ const menuItems = [
     label: "Legal Documents",
     icon: BookCopy,
   },
-  { 
-    href: "/book-appointment", 
-    label: "Book Appointment", 
-    icon: CalendarPlus 
+  {
+    href: "/professional-services",
+    label: "Professional Services",
+    icon: ConciergeBell,
   },
 
   // == PROFESSIONAL / ADMIN FEATURES ==
@@ -259,7 +259,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
                 <div className="hidden md:flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1 font-medium text-muted-foreground">
+                   <div className="flex items-center gap-1 font-medium text-muted-foreground">
                         <span>Made with</span>
                         <Heart className="size-4 text-red-500" />
                         <span>in India</span>
@@ -278,5 +278,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarProvider>
     )
 }
-
-    
