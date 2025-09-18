@@ -74,7 +74,13 @@ const initialServices = {
   ],
   accounting_documents: [
       { id: "ACCOUNTING_ENGAGEMENT_LETTER", name: "Accounting Engagement Letter", price: 500 },
-  ]
+  ],
+  notice_handling: [
+      { id: "GST_NOTICE", name: "GST Department Notice Reply", price: 5000 },
+      { id: "IT_NOTICE", name: "Income Tax Department Notice Reply", price: 4000 },
+      { id: "ROC_NOTICE", name: "Registrar of Companies (ROC) Notice Reply", price: 6000 },
+      { id: "OTHER_NOTICE", name: "Other Departmental Notice Reply", price: 7500 },
+  ],
 };
 
 type Service = {
@@ -159,6 +165,8 @@ export default function ServicePricingPage() {
         <CardContent className="space-y-6">
             {renderServiceCategory("Management Reports", "reports")}
             {renderServiceCategory("CA Certificates", "ca_certs")}
+            {renderServiceCategory("Notice Handling & Resolution", "notice_handling")}
+            <Separator />
             {renderServiceCategory("Registration Deeds", "registration_deeds")}
             {renderServiceCategory("Founder & Startup Docs", "founder_startup")}
             {renderServiceCategory("General Agreements", "agreements")}
