@@ -168,7 +168,7 @@ const documentTypes = [
         description: "For early-stage startup fundraising.",
         href: "/legal-documents/safe-agreement",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Society Registration Deed",
