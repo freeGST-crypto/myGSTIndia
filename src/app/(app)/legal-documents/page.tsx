@@ -28,7 +28,7 @@ const documentTypes = [
         description: "Create a formal lease agreement for long-term property usage.",
         href: "/legal-documents/lease-deed",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 1500,
     },
     {
