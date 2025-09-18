@@ -64,12 +64,25 @@ export default function CertificationRequestsPage() {
   
   const handleUploadClick = (requestId: string) => {
     // In a real app, you'd trigger a file input click or open a dialog.
-    // For this simulation, we'll just show a toast.
+    // For this simulation, we'll just show a toast and update the status.
     toast({
       title: 'Upload Triggered',
       description: `Please select the signed document for request ${requestId}.`,
     });
+     setRequests(prev => 
+        prev.map(req => 
+            req.id === requestId ? {...req, status: "Completed", signedDocumentUrl: "#"} : req
+        )
+     );
   };
+  
+  const handleDownloadSigned = (requestId: string) => {
+      toast({
+          title: 'Download Started',
+          description: `Downloading signed document for request ${requestId}.`
+      });
+      // In a real app, you would use the signedDocumentUrl to fetch the file.
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -122,21 +135,28 @@ export default function CertificationRequestsPage() {
                    <TableCell>{format(req.requestDate, 'dd MMM, yyyy')}</TableCell>
                    <TableCell>{getStatusBadge(req.status)}</TableCell>
                   <TableCell className="text-right">
-                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
+                    {req.status === "Completed" ? (
+                        <Button variant="outline" size="sm" onClick={() => handleDownloadSigned(req.id)}>
+                            <Download className="mr-2" />
+                            Download Signed
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Download className="mr-2" /> Download Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleUploadClick(req.id)} disabled={req.status === 'Completed'}>
-                          <Upload className="mr-2" /> Upload Signed Document
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    ) : (
+                         <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Download className="mr-2" /> Download Report
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleUploadClick(req.id)}>
+                              <Upload className="mr-2" /> Upload Signed Document
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
