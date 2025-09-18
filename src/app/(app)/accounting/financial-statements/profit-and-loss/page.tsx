@@ -62,14 +62,25 @@ export default function ProfitAndLossPage() {
     }, [journalVouchers]);
 
     const data = useMemo(() => {
+        const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
+        const salesCreditNotes = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
+        const purchaseBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
+        const purchaseDebitNotes = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+
+        const totalSales = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
+        const totalSalesReturns = salesCreditNotes.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.debit ? parseFloat(v.lines.find(l => l.account === '4010')!.debit) : 0), 0);
+        
+        const totalPurchases = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '5050')?.debit ? parseFloat(v.lines.find(l => l.account === '5050')!.debit) : 0), 0);
+        const totalPurchaseReturns = purchaseDebitNotes.reduce((acc, v) => acc + (v.lines.find(l => l.account === '5050')?.credit ? parseFloat(v.lines.find(l => l.account === '5050')!.credit) : 0), 0);
+
         return {
             revenue: {
-                sales: (accountBalances['4010'] || 0) + (accountBalances['4020'] || 0),
+                sales: totalSales - totalSalesReturns,
                 otherIncome: 0, // Placeholder
             },
             cogs: {
                 openingStock: 0, // Placeholder
-                purchases: accountBalances['5050'] || 0,
+                purchases: totalPurchases - totalPurchaseReturns,
                 directExpenses: 0, // Placeholder
                 closingStock: 0, // Placeholder
             },
@@ -81,7 +92,7 @@ export default function ProfitAndLossPage() {
                 other: (accountBalances['5030'] || 0) + (accountBalances['5040'] || 0) + (accountBalances['5160'] || 0),
             },
         };
-    }, [accountBalances]);
+    }, [journalVouchers, accountBalances]);
 
 
     const tradingDebits = data.cogs.openingStock + data.cogs.purchases + data.cogs.directExpenses;
@@ -219,5 +230,7 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+    
 
     

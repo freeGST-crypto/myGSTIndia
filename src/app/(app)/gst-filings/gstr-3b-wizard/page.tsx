@@ -50,15 +50,20 @@ export default function Gstr3bWizardPage() {
   const { journalVouchers } = useContext(AccountingContext)!;
 
   const initialStep1Data = useMemo(() => {
-    const outwardSupplies = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
-    const outwardTaxableValue = outwardSupplies.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
-    const outwardTax = outwardSupplies.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
-    
+    const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
+    const salesReturns = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
+
+    const outwardTaxableValue = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
+    const outwardTax = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+
+    const salesReturnTaxableValue = salesReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.debit ? parseFloat(v.lines.find(l => l.account === '4010')!.debit) : 0), 0);
+    const salesReturnTax = salesReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
+
     return [
       {
         description: "(a) Outward taxable supplies (other than zero rated, nil rated and exempted)",
-        taxableValue: outwardTaxableValue,
-        integratedTax: outwardTax, // Assuming all IGST for simplicity
+        taxableValue: outwardTaxableValue - salesReturnTaxableValue,
+        integratedTax: outwardTax - salesReturnTax, // Assuming all IGST for simplicity
         centralTax: 0,
         stateTax: 0,
         cess: 0,
@@ -100,16 +105,19 @@ export default function Gstr3bWizardPage() {
   
   const initialStep3Data = useMemo(() => {
     const purchaseBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
-    const allOtherITC = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
-    
+    const purchaseReturns = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+
+    const itcFromPurchases = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
+    const itcReversedOnReturns = purchaseReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+
     return {
         importGoods: { igst: 0, cess: 0 },
         importServices: { igst: 0, cess: 0 },
         inwardReverseCharge: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
         inwardISD: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
-        allOtherITC: { igst: allOtherITC, cgst: 0, sgst: 0, cess: 0 }, // Assuming all IGST for simplicity
+        allOtherITC: { igst: itcFromPurchases, cgst: 0, sgst: 0, cess: 0 }, // Assuming all IGST for simplicity
         rule42_43: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
-        othersReversed: { igst: 0, cgst: 0, sgst: 0, cess: 0 },
+        othersReversed: { igst: itcReversedOnReturns, cgst: 0, sgst: 0, cess: 0 },
     };
   }, [journalVouchers]);
 
@@ -150,12 +158,19 @@ export default function Gstr3bWizardPage() {
     }), { igst: 0, cgst: 0, sgst: 0, cess: 0 });
 
     const totalAvailableItc = Object.values(step3Data).reduce((acc, section) => {
-        if ('igst' in section) acc.igst += section.igst;
-        if ('cgst' in section) acc.cgst += section.cgst;
-        if ('sgst' in section) acc.sgst += section.sgst;
-        if ('cess' in section) acc.cess += section.cess;
+        if (section.hasOwnProperty('igst')) acc.igst += (section as {igst: number}).igst || 0;
+        if (section.hasOwnProperty('cgst')) acc.cgst += (section as {cgst: number}).cgst || 0;
+        if (section.hasOwnProperty('sgst')) acc.sgst += (section as {sgst: number}).sgst || 0;
+        if (section.hasOwnProperty('cess')) acc.cess += (section as {cess: number}).cess || 0;
         return acc;
     }, { igst: 0, cgst: 0, sgst: 0, cess: 0 });
+    
+    // Subtract reversed ITC
+    totalAvailableItc.igst -= step3Data.rule42_43.igst + step3Data.othersReversed.igst;
+    totalAvailableItc.cgst -= step3Data.rule42_43.cgst + step3Data.othersReversed.cgst;
+    totalAvailableItc.sgst -= step3Data.rule42_43.sgst + step3Data.othersReversed.sgst;
+    totalAvailableItc.cess -= step3Data.rule42_43.cess + step3Data.othersReversed.cess;
+
 
     // Basic ITC utilization logic
     const paidIgst = Math.min(totalLiability.igst, totalAvailableItc.igst);
@@ -648,3 +663,5 @@ export default function Gstr3bWizardPage() {
     </div>
   );
 }
+
+    

@@ -42,21 +42,24 @@ export default function PurchasesPage() {
   const purchases = useMemo(() => {
     const allBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
     const deletedBillIds = new Set(
-      journalVouchers
-        .filter(v => v.id.startsWith("JV-DEL-BILL-"))
-        .map(v => v.id.replace("JV-DEL-", ""))
+        journalVouchers
+            .filter(v => v.id.startsWith("JV-DEL-BILL-"))
+            .map(v => v.id.replace("JV-DEL-", ""))
     );
     
     return allBills
-        .filter(bill => !deletedBillIds.has(bill.id.replace("JV-", "")))
-        .map(v => ({
-            id: v.id.replace("JV-", ""),
-            vendor: v.narration.replace("Purchase from ", "").split(" against")[0],
-            date: v.date,
-            dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
-            amount: v.amount,
-            status: "Pending", // Status logic to be implemented later
-        }))
+        .map(v => {
+            const billId = v.id.replace("JV-", "");
+            const isDeleted = deletedBillIds.has(billId);
+            return {
+                id: billId,
+                vendor: v.narration.replace("Purchase from ", "").split(" against")[0],
+                date: v.date,
+                dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
+                amount: v.amount,
+                status: isDeleted ? "Deleted" : "Pending", // Status logic now includes deleted
+            }
+        })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
   
@@ -107,6 +110,8 @@ export default function PurchasesPage() {
         return <Badge variant="secondary">Pending</Badge>;
       case "overdue":
         return <Badge variant="destructive">Overdue</Badge>;
+      case "deleted":
+        return <Badge variant="destructive">Deleted</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -221,7 +226,7 @@ export default function PurchasesPage() {
                                 Duplicate Bill
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteBill(purchase.id)}>
+                                <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteBill(purchase.id)} disabled={purchase.status === 'Deleted'}>
                                 <Trash2 />
                                 Delete Bill
                                 </DropdownMenuItem>
@@ -238,3 +243,5 @@ export default function PurchasesPage() {
     </div>
   );
 }
+
+    
