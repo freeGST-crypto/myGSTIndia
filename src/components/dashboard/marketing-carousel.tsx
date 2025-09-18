@@ -1,4 +1,6 @@
+
 "use client"
+import React from 'react';
 import Image from "next/image"
 import {
   Carousel,
@@ -15,11 +17,16 @@ export function MarketingCarousel() {
   const carouselImages = PlaceHolderImages.filter((img) =>
     img.id.startsWith("carousel")
   );
+  const plugin = React.useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: true })
+  );
 
   return (
     <Carousel 
       className="w-full"
-      plugins={[Autoplay({delay: 5000, stopOnInteraction: true})]}
+      plugins={[plugin.current]}
+      onMouseEnter={plugin.current.stop}
+      onMouseLeave={plugin.current.reset}
       opts={{loop: true}}
     >
       <CarouselContent>
