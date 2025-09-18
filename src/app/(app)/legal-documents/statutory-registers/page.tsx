@@ -34,6 +34,7 @@ import {
   Banknote,
   Handshake,
   FileKey,
+  BookUser,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -93,6 +94,14 @@ const loanGuaranteeInvestmentSchema = z.object({
   purpose: z.string().min(3, "Purpose is required."),
 });
 
+const relatedPartyContractSchema = z.object({
+    date: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+    partyName: z.string().min(3, "Party name is required"),
+    relationship: z.string().min(3, "Relationship is required"),
+    nature: z.string().min(10, "Nature of contract is required"),
+    keyTerms: z.string().min(10, "Key terms are required"),
+});
+
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name is required."),
@@ -101,6 +110,7 @@ const formSchema = z.object({
   directors: z.array(directorSchema),
   charges: z.array(chargeSchema),
   loansGuaranteesInvestments: z.array(loanGuaranteeInvestmentSchema),
+  relatedPartyContracts: z.array(relatedPartyContractSchema),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -129,6 +139,9 @@ export default function StatutoryRegistersPage() {
       loansGuaranteesInvestments: [
           { date: "2023-08-15", type: "Loan", bodyCorporateName: "Innovatech Solutions Ltd.", amount: 500000, purpose: "Inter-corporate deposit" },
           { date: "2023-09-01", type: "Investment", bodyCorporateName: "Future Startups Inc.", amount: 1000000, purpose: "Equity investment" },
+      ],
+      relatedPartyContracts: [
+          { date: "2023-10-01", partyName: "Rohan Sharma", relationship: "Director", nature: "Lease of Office Premises", keyTerms: "Rent Rs. 50,000/month for 3 years" }
       ]
     },
   });
@@ -138,6 +151,7 @@ export default function StatutoryRegistersPage() {
   const { fields: directorFields, append: appendDirector, remove: removeDirector } = useFieldArray({ control: form.control, name: "directors" });
   const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({ control: form.control, name: "charges" });
   const { fields: lgiFields, append: appendLgi, remove: removeLgi } = useFieldArray({ control: form.control, name: "loansGuaranteesInvestments" });
+  const { fields: rpcFields, append: appendRpc, remove: removeRpc } = useFieldArray({ control: form.control, name: "relatedPartyContracts" });
 
 
   const exportToCsv = (data: any[], headers: string[], fileName: string) => {
@@ -226,6 +240,21 @@ export default function StatutoryRegistersPage() {
     exportToCsv(dataToExport, headers, "Register_of_Loans_Guarantees_Investments");
   }
 
+  const handleExportRpc = () => {
+    const dataToExport = form.getValues("relatedPartyContracts").map((item, index) => ({
+        "S. No.": index + 1,
+        "Date of Contract": item.date ? format(new Date(item.date), 'dd-MM-yyyy') : '',
+        "Name of Related Party": item.partyName,
+        "Nature of Relationship": item.relationship,
+        "Nature of Contract": item.nature,
+        "Salient Terms": item.keyTerms,
+        "Remarks": "",
+    }));
+    const headers = ["S. No.", "Date of Contract", "Name of Related Party", "Nature of Relationship", "Nature of Contract", "Salient Terms", "Remarks"];
+    exportToCsv(dataToExport, headers, "Register_of_Contracts");
+  }
+
+
   return (
     <div className="space-y-8">
       <Link href="/legal-documents" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -249,12 +278,13 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="grid w-full grid-cols-5 max-w-4xl mx-auto">
+            <TabsList className="grid w-full grid-cols-6 max-w-6xl mx-auto">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
               <TabsTrigger value="debentureHolders"><FileKey className="mr-2" />Debentures</TabsTrigger>
               <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
               <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
               <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
+              <TabsTrigger value="contracts"><BookUser className="mr-2"/>Contracts (Sec 189)</TabsTrigger>
             </TabsList>
             
             <TabsContent value="members">
@@ -310,11 +340,19 @@ export default function StatutoryRegistersPage() {
 
             <TabsContent value="directors">
                <Card>
-                <CardHeader><CardTitle>Register of Directors &amp; KMP</CardTitle><CardDescription>Manage details of Directors, KMP, and their shareholding.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Register of Directors & KMP</CardTitle><CardDescription>Manage details of Directors, KMP, and their shareholding.</CardDescription></CardHeader>
                 <CardContent className="space-y-4">
                     <div className="border rounded-md overflow-x-auto">
                         <Table>
-                            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>DIN</TableHead><TableHead>Designation</TableHead><TableHead>Shares Held</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>DIN</TableHead>
+                                    <TableHead>Designation</TableHead>
+                                    <TableHead>Shares Held</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
                             <TableBody>
                                 {directorFields.map((field, index) => (
                                 <TableRow key={field.id}>
@@ -394,11 +432,34 @@ export default function StatutoryRegistersPage() {
               </Card>
             </TabsContent>
 
+             <TabsContent value="contracts">
+              <Card>
+                <CardHeader><CardTitle>Register of Contracts (Sec. 189)</CardTitle><CardDescription>Contracts or arrangements in which directors are interested.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Related Party</TableHead><TableHead>Nature of Contract</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {rpcFields.map((field, index) => (
+                          <TableRow key={field.id}>
+                            <TableCell><Input type="date" {...form.register(`relatedPartyContracts.${index}.date`)}/></TableCell>
+                            <TableCell><Input {...form.register(`relatedPartyContracts.${index}.partyName`)}/></TableCell>
+                            <TableCell><Input {...form.register(`relatedPartyContracts.${index}.nature`)}/></TableCell>
+                            <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeRpc(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendRpc({ date: "", partyName: "", relationship: "", nature: "", keyTerms: "" })}><PlusCircle className="mr-2"/> Add Contract</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportRpc}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
+              </Card>
+            </TabsContent>
+
           </Tabs>
         </form>
       </Form>
     </div>
   );
 }
-
-    
