@@ -408,13 +408,13 @@ export default function CmaReportGeneratorPage() {
                 <CardContent>
                     {generatedReport && (
                         <Accordion type="multiple" defaultValue={["operating-statement", "balance-sheet"]} className="w-full">
-                           <OperatingStatement report={generatedReport}/>
-                           <BalanceSheetAnalysis report={generatedReport}/>
-                           <CashFlowStatement report={generatedReport}/>
-                           <RatioAnalysis report={generatedReport}/>
-                           <FundFlowStatement report={generatedReport}/>
-                           <MpbfAssessment report={generatedReport}/>
-                           <LoanRepaymentSchedule report={generatedReport}/>
+                           <OperatingStatement key="operating-statement" report={generatedReport}/>
+                           <BalanceSheetAnalysis key="balance-sheet" report={generatedReport}/>
+                           <CashFlowStatement key="cash-flow" report={generatedReport}/>
+                           <RatioAnalysis key="ratio-analysis" report={generatedReport}/>
+                           <FundFlowStatement key="fund-flow" report={generatedReport}/>
+                           <MpbfAssessment key="mpbf" report={generatedReport}/>
+                           <LoanRepaymentSchedule key="repayment-schedule" report={generatedReport}/>
                         </Accordion>
                     )}
                 </CardContent>

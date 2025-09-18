@@ -39,6 +39,7 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { suggestClausesAction } from "./actions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const partnerSchema = z.object({
     name: z.string().min(2, "Partner name is required."),
@@ -274,7 +275,7 @@ export default function PartnershipDeedPage() {
                    <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => (
                      <FormItem className="flex flex-row items-center justify-start gap-2 pt-2">
                         <FormControl>
-                          <input type="checkbox" {...field} checked={field.value} className="size-4" />
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <Label className="font-normal" htmlFor={field.name}>This is a working/active partner</Label>
                     </FormItem>
@@ -386,7 +387,7 @@ export default function PartnershipDeedPage() {
                 <CardHeader><CardTitle>Step 6: Dispute Resolution</CardTitle><CardDescription>Define how disputes among partners will be handled.</CardDescription></CardHeader>
                 <CardContent className="space-y-4">
                      <FormField control={form.control} name="arbitration" render={({ field }) => (
-                        <FormItem className="flex items-center gap-2"><FormControl><input type="checkbox" checked={field.value} onChange={field.onChange} className="size-4" /></FormControl> <Label>Include Arbitration Clause</Label></FormItem>
+                        <FormItem className="flex items-center gap-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl> <Label>Include Arbitration Clause</Label></FormItem>
                     )}/>
                     {form.watch("arbitration") && (
                         <FormField control={form.control} name="arbitrationCity" render={({ field }) => (

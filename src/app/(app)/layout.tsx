@@ -156,12 +156,7 @@ const menuItems = [
 ];
 
 const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }) => {
-  const [isOpen, setIsOpen] = React.useState(
-    item.subItems.some((sub: any) => 
-      (sub.href && pathname.startsWith(sub.href)) || 
-      (sub.subItems && sub.subItems.some((ss: any) => ss.href && pathname.startsWith(ss.href)))
-    )
-  );
+  const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
     const checkActive = (subItems: any[]): boolean => {

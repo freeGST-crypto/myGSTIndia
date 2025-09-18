@@ -22,6 +22,7 @@ import {
 import { FileDown, CalendarDays } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Separator } from "@/components/ui/separator";
+import { ReportRow } from "@/components/accounting/report-row";
 
 const data = {
     equityAndLiabilities: {
@@ -63,12 +64,6 @@ export default function BalanceSheetPage() {
     const totalCurrentAssets = data.assets.currentAssets.closingStock + data.assets.currentAssets.sundryDebtors + data.assets.currentAssets.cashInHand + data.assets.currentAssets.bankBalance;
     const totalAssets = netFixedAssets + data.assets.investments + totalCurrentAssets;
 
-    const ReportRow = ({ label, value, isSub = false }: { label: string; value: number, isSub?: boolean }) => (
-         <TableRow>
-            <TableCell className={isSub ? 'pl-8' : ''}>{label}</TableCell>
-            <TableCell className="text-right font-mono">{formatCurrency(value)}</TableCell>
-        </TableRow>
-    );
 
   return (
     <div className="space-y-8">

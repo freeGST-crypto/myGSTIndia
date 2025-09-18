@@ -22,6 +22,7 @@ import {
 import { FileDown, CalendarDays } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Separator } from "@/components/ui/separator";
+import { ReportRow } from "@/components/accounting/report-row";
 
 const data = {
     revenue: {
@@ -58,13 +59,6 @@ export default function ProfitAndLossPage() {
     const plCredits = grossProfit + data.revenue.otherIncome;
     const netProfit = plCredits - plDebits;
     const plTotal = plCredits;
-    
-    const ReportRow = ({ label, value }: { label: string; value: number }) => (
-         <TableRow>
-            <TableCell>{label}</TableCell>
-            <TableCell className="text-right font-mono">{formatCurrency(value)}</TableCell>
-        </TableRow>
-    );
 
   return (
     <div className="space-y-8">
