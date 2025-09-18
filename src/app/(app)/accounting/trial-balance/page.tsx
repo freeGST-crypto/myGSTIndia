@@ -118,7 +118,6 @@ export default function TrialBalancePage() {
                  return;
             }
 
-            // Simulate updating a central context
             console.log("CSV Parsed. Simulating state override with source: 'upload'.");
             console.log("Date:", uploadDate);
             console.log("File:", uploadFile.name);
@@ -133,6 +132,20 @@ export default function TrialBalancePage() {
             toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
         };
         reader.readAsText(uploadFile);
+    }
+    
+    const handleDownloadTemplate = () => {
+        const headers = "Account,Debit,Credit";
+        const exampleData = "Cash,10000,0\nSales,0,10000";
+        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "trial_balance_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Template Downloaded", description: "Trial Balance CSV template has been downloaded." });
     }
 
 
@@ -161,7 +174,7 @@ export default function TrialBalancePage() {
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Export CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleDownloadTemplate}>
                     <Download className="mr-2 h-4 w-4" />
                     Download Template
                 </DropdownMenuItem>

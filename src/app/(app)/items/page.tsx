@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 const initialItems = [
     {
@@ -48,6 +49,21 @@ const initialItems = [
 export default function ItemsPage() {
     const [items, setItems] = useState(initialItems);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handleDownloadTemplate = () => {
+        const headers = "Name,Description,HSN,Stock,Purchase Price,Selling Price";
+        const exampleData = "Sample Product,A sample description,12345678,10,100,150";
+        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "items_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Template Downloaded", description: "Items CSV template has been downloaded." });
+    }
 
     return (
         <div className="space-y-8">
@@ -97,7 +113,7 @@ export default function ItemsPage() {
                                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                                     Export to CSV
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleDownloadTemplate}>
                                     <Download className="mr-2 h-4 w-4" />
                                     Download Template
                                 </DropdownMenuItem>

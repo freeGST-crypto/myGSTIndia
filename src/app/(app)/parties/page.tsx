@@ -38,6 +38,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 const initialCustomers = [
   {
@@ -76,6 +77,21 @@ const initialVendors = [
 export default function PartiesPage() {
     const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
     const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handleDownloadTemplate = (type: 'Customer' | 'Vendor') => {
+        const headers = "Name,Email,Phone,GSTIN,Address Line 1,City,State,Pincode";
+        const exampleData = "Sample Company,sample@email.com,9876543210,27ABCDE1234F1Z5,123 Sample St,Sample City,Sample State,123456";
+        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `${type.toLowerCase()}_template.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Template Downloaded", description: `${type} CSV template has been downloaded.` });
+    };
 
     const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -199,7 +215,7 @@ export default function PartiesPage() {
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Export to CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleDownloadTemplate(type)}>
                     <Download className="mr-2 h-4 w-4" />
                     Download Template
                 </DropdownMenuItem>
@@ -259,5 +275,3 @@ export default function PartiesPage() {
     </div>
   );
 }
-
-    
