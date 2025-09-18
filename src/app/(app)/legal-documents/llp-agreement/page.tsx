@@ -250,67 +250,97 @@ export default function LlpAgreementPage() {
       case 5:
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
-        const formattedDate = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
+        const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
+        const commencementDateFormatted = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
 
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated LLP Agreement.</CardDescription></CardHeader>
                 <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     <h2 className="text-center font-bold">LIMITED LIABILITY PARTNERSHIP AGREEMENT</h2>
-                    <h3 className="text-center">OF</h3>
+                    <h3 className="text-center font-bold">OF</h3>
                     <h3 className="text-center font-bold">{formData.llpName.toUpperCase()}</h3>
                     
-                    <p>This Agreement of Limited Liability Partnership is made at {formData.state} this <strong>{new Date().toLocaleDateString('en-GB', dateOptions)}</strong>.</p>
+                    <p>This Limited Liability Partnership Agreement is made on this <strong>{formattedDate}</strong> at <strong>{formData.state}</strong>.</p>
                     
-                    <p className="font-bold">BETWEEN:</p>
-                    <ol className="list-decimal list-inside space-y-2">
-                        {formData.partners.map((p, i) => (
-                           <li key={p.name}>
-                               <strong>{p.name}</strong>, {p.parentage}, residing at {p.address}. (Hereinafter referred to as Partner {i+1}).
-                           </li>
+                    <p className="font-bold">BY AND BETWEEN</p>
+                    
+                    {formData.partners.map((p, i) => (
+                       <div key={p.name} className="my-4">
+                           <p><strong>{p.name}</strong>, {p.parentage}, aged about {new Date().getFullYear() - 1990} years, residing at {p.address} (hereinafter referred to as the “{i === 0 ? 'First' : i === 1 ? 'Second' : 'Third'} Partner”),</p>
+                           {i < formData.partners.length -1 && <p className="font-bold text-center">AND</p>}
+                       </div>
+                    ))}
+                    
+                    <p>(Collectively referred to as “Partners” and individually as a “Partner”).</p>
+                    
+                    <h4 className="font-bold mt-4">1. Name</h4>
+                    <p>The name of the LLP shall be <strong>{formData.llpName}</strong>.</p>
+
+                    <h4 className="font-bold mt-4">2. Registered Office</h4>
+                    <p>The registered office of the LLP shall be situated at <strong>{formData.registeredAddress}</strong>, or such other place as may be mutually decided by the Partners.</p>
+                    
+                    <h4 className="font-bold mt-4">3. Business of LLP</h4>
+                    <p>The LLP shall carry on the business of <strong>{formData.businessActivity}</strong> and such other activities as may be decided by the Partners from time to time.</p>
+                    
+                    <h4 className="font-bold mt-4">4. Duration</h4>
+                    <p>The LLP shall come into existence from the date of its incorporation, which is <strong>{commencementDateFormatted}</strong>, and shall have perpetual succession until it is wound up in accordance with the provisions of the LLP Act, 2008.</p>
+
+                    <h4 className="font-bold mt-4">5. Capital Contribution</h4>
+                    <p>The initial capital of the LLP shall be <strong>₹{formData.totalCapital.toLocaleString('en-IN')}</strong>, which shall be contributed by the Partners in the following proportions:</p>
+                    <ul className="list-disc list-inside pl-4 mt-2">
+                        {formData.partners.map(p => (
+                            <li key={p.name}><strong>{p.name}:</strong> ₹{p.capitalContribution.toLocaleString('en-IN')}</li>
                         ))}
-                    </ol>
-                    <p>(The parties referred to above are hereinafter collectively referred to as "the Partners" and individually as a "Partner")</p>
-                    
-                    <h4 className="font-bold mt-4">WHEREAS:</h4>
-                     <ol className="list-decimal list-inside space-y-2">
-                        <li>The Partners are interested in forming a Limited Liability Partnership (LLP) under the Limited Liability Partnership Act, 2008.</li>
-                        <li>The Partners have agreed to enter into this LLP Agreement to formalize their arrangement.</li>
-                    </ol>
+                    </ul>
+                    <p>Any further capital contribution required by the LLP shall be brought by the partners in their profit-sharing ratio or as may be mutually decided by all the partners.</p>
 
-                    <h4 className="font-bold mt-4">NOW, IT IS HEREBY AGREED BY AND BETWEEN THE PARTIES HERETO AS FOLLOWS:</h4>
-                    
-                    <ol className="list-decimal list-inside space-y-3">
-                        <li><strong>Name:</strong> The name of the LLP shall be <strong>{formData.llpName}</strong>.</li>
-                        <li><strong>Registered Office:</strong> The registered office of the LLP will be at <strong>{formData.registeredAddress}</strong>.</li>
-                        <li><strong>Business:</strong> The business of the LLP shall be: {formData.businessActivity}.</li>
-                        <li><strong>Commencement:</strong> The business shall commence from <strong>{formattedDate}</strong>.</li>
-                        <li><strong>Capital Contribution:</strong> The total capital contribution of the LLP shall be <strong>₹{formData.totalCapital.toLocaleString('en-IN')}</strong>, contributed by the partners as follows:
-                           <ul className="list-disc list-inside pl-4 mt-2">
-                                {formData.partners.map(p => (
-                                    <li key={p.name}>{p.name}: ₹{p.capitalContribution.toLocaleString('en-IN')}</li>
-                                ))}
-                           </ul>
-                        </li>
-                         <li><strong>Profit/Loss Sharing:</strong> The net profits and losses of the business shall be shared among the partners in the following ratio:
-                           <ul className="list-disc list-inside pl-4 mt-2">
-                                {formData.partners.map(p => (
-                                    <li key={p.name}>{p.name}: {p.profitShare}%</li>
-                                ))}
-                           </ul>
-                        </li>
-                        <li><strong>Designated Partners:</strong> The following partners shall be the Designated Partners:
-                            <ul className="list-disc list-inside pl-4 mt-2">
-                                {formData.partners.filter(p => p.isDesignated).map(p => (<li key={p.name}>{p.name}</li>))}
-                           </ul>
-                        </li>
-                        <li><strong>Admission of New Partner:</strong> {formData.admissionClause}</li>
-                        <li><strong>Cessation of Partner:</strong> {formData.cessationClause}</li>
-                        <li><strong>Dispute Resolution:</strong> {formData.disputeResolutionClause}</li>
-                        {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
-                    </ol>
+                    <h4 className="font-bold mt-4">6. Profit Sharing Ratio</h4>
+                    <p>The net profits and losses of the business of the LLP shall be shared and borne by the Partners in the following ratio:</p>
+                     <ul className="list-disc list-inside pl-4 mt-2">
+                        {formData.partners.map(p => (
+                            <li key={p.name}><strong>{p.name}:</strong> {p.profitShare}%</li>
+                        ))}
+                    </ul>
 
-                    <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written.</p>
+                    <h4 className="font-bold mt-4">7. Management & Duties</h4>
+                    <p>All partners shall have the right to participate in the business of the LLP. Each Partner shall act in good faith and to the best interest of the LLP. However, the day-to-day management shall be conducted by the Designated Partners.</p>
+                    <p>The following matters shall require the consent of all Partners:</p>
+                    <ul className="list-disc list-inside pl-4 mt-2">
+                        <li>Change in the nature of business of the LLP.</li>
+                        <li>Admission of a new Partner.</li>
+                        <li>Retirement or expulsion of a Partner.</li>
+                        <li>Dissolution of the LLP.</li>
+                        <li>Amendment to this LLP Agreement.</li>
+                    </ul>
+
+                    <h4 className="font-bold mt-4">8. Accounts & Audit</h4>
+                    <p>Proper books of account shall be maintained at the registered office of the LLP. The accounts shall be closed on 31st March every year. If required under the LLP Act, 2008, or any other applicable law, an audit shall be conducted by a qualified Chartered Accountant.</p>
+
+                    <h4 className="font-bold mt-4">9. Bank Accounts</h4>
+                    <p>The LLP shall open one or more bank account(s) in its name with any scheduled bank. Such account(s) shall be operated by such Partner(s) as may be decided by a majority of the Partners from time to time.</p>
+
+                    <h4 className="font-bold mt-4">10. Admission / Retirement of Partner</h4>
+                    <p>{formData.admissionClause}</p>
+                    <p>{formData.cessationClause}</p>
+
+                    <h4 className="font-bold mt-4">11. Resignation / Expulsion</h4>
+                    <p>A Partner may resign from the LLP by giving prior notice as agreed upon. A Partner may be expelled for acts of fraud, willful misconduct, or a material breach of this agreement, with the consent of the remaining Partners.</p>
+                    
+                    <h4 className="font-bold mt-4">12. Transfer of Rights</h4>
+                    <p>No Partner shall transfer or assign their share or interest in the LLP to any third party without the unanimous prior written consent of the other Partners.</p>
+
+                    <h4 className="font-bold mt-4">13. Dispute Resolution</h4>
+                    <p>{formData.disputeResolutionClause}</p>
+
+                    <h4 className="font-bold mt-4">14. Winding Up</h4>
+                    <p>The LLP may be wound up voluntarily with the unanimous consent of all Partners or compulsorily as per the provisions of the LLP Act, 2008.</p>
+
+                    <h4 className="font-bold mt-4">15. Miscellaneous</h4>
+                    <p>All matters not expressly covered in this Agreement shall be governed by the provisions of the Limited Liability Partnership Act, 2008, and the rules made thereunder. This Agreement may be amended only by a written instrument executed by all the Partners.</p>
+                    {formData.extraClauses && <div className="mt-4"><h4 className="font-bold">16. Additional Clauses</h4><p>{formData.extraClauses}</p></div>}
+
+                    <p className="mt-8">IN WITNESS WHEREOF, the Partners hereto have signed this Agreement on the day, month and year first above written.</p>
                     
                     <div className="grid grid-cols-2 gap-16 mt-16">
                          {formData.partners.map(p => (
@@ -321,10 +351,16 @@ export default function LlpAgreementPage() {
                          ))}
                     </div>
                      <div className="mt-16">
-                        <p>WITNESSES:</p>
+                        <p className="font-bold">Witnesses:</p>
                         <ol className="list-decimal list-inside mt-8 space-y-8">
-                            <li>Name & Address: _________________________</li>
-                            <li>Name & Address: _________________________</li>
+                            <li>
+                                <p>Name & Signature: _________________________</p>
+                                <p>Address: _______________________</p>
+                            </li>
+                             <li>
+                                <p>Name & Signature: _________________________</p>
+                                <p>Address: _______________________</p>
+                            </li>
                         </ol>
                     </div>
 
