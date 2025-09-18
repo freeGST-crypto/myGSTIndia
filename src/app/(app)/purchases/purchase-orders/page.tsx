@@ -46,7 +46,7 @@ const initialPurchaseOrders = [
     vendor: "Supplier Alpha",
     date: "2024-06-01",
     expectedDate: "2024-06-15",
-    amount: 15000.00,
+    amount: 17700.00,
     status: "Ordered",
   },
   {
@@ -54,7 +54,7 @@ const initialPurchaseOrders = [
     vendor: "Vendor Beta",
     date: "2024-06-03",
     expectedDate: "2024-06-20",
-    amount: 25000.00,
+    amount: 29500.00,
     status: "Partial",
   },
   {
@@ -62,7 +62,7 @@ const initialPurchaseOrders = [
     vendor: "Supplier Gamma",
     date: "2024-05-20",
     expectedDate: "2024-06-05",
-    amount: 8000.00,
+    amount: 9440.00,
     status: "Billed",
   },
 ];
@@ -72,29 +72,98 @@ export default function PurchaseOrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  const handleDownloadPdf = (po: typeof initialPurchaseOrders[0]) => {
+ const handleDownloadPdf = (po: typeof initialPurchaseOrders[0]) => {
     const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("PURCHASE ORDER", 105, 20, { align: "center" });
 
-    doc.setFontSize(20);
-    doc.text("Purchase Order", 14, 22);
+    // Company Details (Buyer)
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("GSTEase Solutions Pvt. Ltd.", 14, 30);
+    doc.setFont("helvetica", "normal");
+    doc.text("123 Business Avenue, Commerce City, Maharashtra - 400001", 14, 36);
+    doc.text("GSTIN: 27ABCDE1234F1Z5", 14, 42);
 
-    doc.setFontSize(12);
-    doc.text(`PO #: ${po.id}`, 14, 32);
-    doc.text(`Date: ${po.date}`, 14, 38);
-    doc.text(`Expected: ${po.expectedDate}`, 14, 44);
+    // PO Details
+    doc.setFontSize(11);
+    doc.text(`PO Number: ${po.id}`, 200, 30, { align: "right" });
+    doc.text(`Date: ${po.date}`, 200, 36, { align: "right" });
+    doc.text(`Expected: ${po.expectedDate}`, 200, 42, { align: "right" });
 
-    doc.text(`Vendor: ${po.vendor}`, 150, 32);
+    // Vendor and Shipping Details
+    doc.rect(14, 50, 182, 30); // Box around details
+    doc.setFont("helvetica", "bold");
+    doc.text("VENDOR:", 20, 56);
+    doc.setFont("helvetica", "normal");
+    doc.text(po.vendor, 20, 62);
+    doc.text("123 Industrial Estate, Supplier City", 20, 68);
+
+    doc.line(105, 50, 105, 80); // Vertical line separator
+
+    doc.setFont("helvetica", "bold");
+    doc.text("SHIP TO:", 110, 56);
+    doc.setFont("helvetica", "normal");
+    doc.text("GSTEase Solutions - Warehouse", 110, 62);
+    doc.text("456 Logistics Hub, Commerce City", 110, 68);
+
+    // Items Table
+    const tableColumn = ["Sr.", "Item Description", "HSN/SAC", "Qty", "Rate", "Amount"];
+    // Mock Data for PDF
+    const tableRows = [
+        ["1", "Sample Item A", "9982", "2", "5,000.00", "10,000.00"],
+        ["2", "Sample Component B", "8471", "5", "1,000.00", "5,000.00"],
+    ];
+    
+    const subtotal = po.amount / 1.18; // Assuming 18% GST for mock
+    const gst = subtotal * 0.18;
+    const total = po.amount;
 
     doc.autoTable({
-        startY: 60,
-        head: [['Description', 'Qty', 'Rate', 'Amount']],
-        body: [
-            ['Sample Item 1', '2', '5000', '10000'],
-            ['Sample Item 2', '1', '5000', '5000'],
-        ],
-        foot: [['', '', 'Total', po.amount.toFixed(2)]],
-        theme: 'striped',
+        head: [tableColumn],
+        body: tableRows,
+        startY: 85,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        didDrawPage: function (data) {
+            // Totals
+            const finalY = (doc.autoTable as any).previous.finalY;
+            doc.setFontSize(10);
+            doc.text("Subtotal:", 140, finalY + 8);
+            doc.text(subtotal.toFixed(2), 200, finalY + 8, { align: "right" });
+            doc.text("GST @ 18%:", 140, finalY + 14);
+            doc.text(gst.toFixed(2), 200, finalY + 14, { align: "right" });
+            doc.setFont("helvetica", "bold");
+            doc.text("Total:", 140, finalY + 20);
+            doc.text(`Rs. ${total.toFixed(2)}`, 200, finalY + 20, { align: "right" });
+        }
     });
+
+    let finalY = (doc.autoTable as any).previous.finalY;
+
+    // Terms and Conditions
+    finalY += 30; // space
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Terms & Conditions:", 14, finalY);
+    doc.setFont("helvetica", "normal");
+    const terms = [
+        "1. Delivery: Goods to be delivered to the 'SHIP TO' address by the expected date.",
+        "2. Payment: Payment will be made within 30 days of receipt of a valid tax invoice.",
+        "3. Quality: All goods are subject to inspection and approval by the Buyer.",
+        "4. Cancellation: The Buyer reserves the right to cancel this PO for any undelivered goods.",
+        "5. This is a computer-generated document and does not require a physical signature."
+    ];
+    doc.text(terms, 14, finalY + 6);
+    
+    // Footer
+    finalY = doc.internal.pageSize.height - 30;
+    doc.line(14, finalY, 200, finalY);
+    doc.text("For GSTEase Solutions Pvt. Ltd.", 140, finalY + 8);
+    doc.text("Authorised Signatory", 140, finalY + 20);
 
     doc.save(`PO_${po.id}.pdf`);
     toast({ title: "Download Started", description: `PO ${po.id}.pdf is downloading.` });
