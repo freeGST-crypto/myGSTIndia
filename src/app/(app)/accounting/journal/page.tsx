@@ -94,12 +94,12 @@ export default function JournalVoucherPage() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [lines, setLines] = useState([
-        { account: '', debit: 0, credit: 0 },
-        { account: '', debit: 0, credit: 0 }
+        { account: '', debit: '0', credit: '0' },
+        { account: '', debit: '0', credit: '0' }
     ]);
 
     const handleAddLine = () => {
-        setLines([...lines, { account: '', debit: 0, credit: 0 }]);
+        setLines([...lines, { account: '', debit: '0', credit: '0' }]);
     };
 
     const handleLineChange = (index: number, field: 'account' | 'debit' | 'credit', value: any) => {
@@ -109,9 +109,9 @@ export default function JournalVoucherPage() {
 
         // Ensure only debit or credit is entered, not both
         if (field === 'debit' && parseFloat(value) > 0) {
-            line['credit'] = 0;
+            line['credit'] = '0';
         } else if (field === 'credit' && parseFloat(value) > 0) {
-            line['debit'] = 0;
+            line['debit'] = '0';
         }
 
         setLines(newLines);
@@ -123,8 +123,8 @@ export default function JournalVoucherPage() {
         setLines(newLines);
     };
 
-    const totalDebits = lines.reduce((sum, line) => sum + Number(line.debit), 0);
-    const totalCredits = lines.reduce((sum, line) => sum + Number(line.credit), 0);
+    const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
+    const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
     const isBalanced = totalDebits === totalCredits && totalDebits > 0;
 
   return (
@@ -299,5 +299,3 @@ export default function JournalVoucherPage() {
     </div>
   );
 }
-
-    

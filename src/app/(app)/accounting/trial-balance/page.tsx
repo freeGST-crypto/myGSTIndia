@@ -66,8 +66,6 @@ const trialBalanceData = [
   { account: "Salaries and Wages", code: "5020", debit: 30000.00, credit: 0 },
   { account: "Office Supplies Expense", code: "5030", debit: 4000.00, credit: 0 },
   { account: "Bank Charges", code: "5040", debit: 500.00, credit: 0 },
-  // This entry is intentionally added to cause a mismatch for demonstration
-  { account: "Suspense Account", code: "9999", debit: 100.00, credit: 0 },
 ];
 
 export default function TrialBalancePage() {
@@ -83,7 +81,13 @@ export default function TrialBalancePage() {
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
     const difference = totalDebits - totalCredits;
 
-    const suspenseEntries = trialBalanceData.filter(item => item.code === "9999");
+    const suspenseEntry = {
+        account: "Suspense Account",
+        code: "9999",
+        debit: difference > 0 ? difference : 0,
+        credit: difference < 0 ? -difference : 0
+    };
+
 
     const handleAccountClick = (code: string) => {
         router.push('/accounting/ledgers');
@@ -239,7 +243,7 @@ export default function TrialBalancePage() {
             <DialogHeader>
                 <DialogTitle>Trial Balance Discrepancies</DialogTitle>
                 <DialogDescription>
-                   The following entries are causing the Trial Balance to be out of balance by ₹{difference.toFixed(2)}. These are posted to a temporary Suspense Account.
+                   The following entry has been created in a temporary Suspense Account to balance the Trial Balance difference of ₹{Math.abs(difference).toFixed(2)}.
                 </DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -253,16 +257,14 @@ export default function TrialBalancePage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {suspenseEntries.map((entry, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="font-medium">{entry.account}</TableCell>
-                                <TableCell className="text-right font-mono">{entry.debit > 0 ? entry.debit.toFixed(2) : "-"}</TableCell>
-                                <TableCell className="text-right font-mono">{entry.credit > 0 ? entry.credit.toFixed(2) : "-"}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button size="sm" onClick={() => handleVerifyPost(entry)}>Verify</Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        <TableRow>
+                            <TableCell className="font-medium">{suspenseEntry.account}</TableCell>
+                            <TableCell className="text-right font-mono">{suspenseEntry.debit > 0 ? suspenseEntry.debit.toFixed(2) : "-"}</TableCell>
+                            <TableCell className="text-right font-mono">{suspenseEntry.credit > 0 ? suspenseEntry.credit.toFixed(2) : "-"}</TableCell>
+                            <TableCell className="text-right">
+                                <Button size="sm" onClick={() => handleVerifyPost(suspenseEntry)}>Rectify</Button>
+                            </TableCell>
+                        </TableRow>
                     </TableBody>
                 </Table>
             </div>
