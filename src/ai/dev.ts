@@ -11,3 +11,4 @@ import '@/ai/flows/analyze-logo-flow.ts';
 import '@/ai/flows/get-cma-observations-flow.ts';
 import '@/ai/flows/suggest-legal-clauses-flow.ts';
 import '@/ai/flows/generate-moa-objects-flow.ts';
+
