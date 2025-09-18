@@ -1,3 +1,4 @@
+
 // This file contains the business logic for generating the CMA report.
 
 export interface FinancialData {
@@ -97,9 +98,21 @@ export const generateCma = (
     let totalDepreciation = 0;
     let newAssetCost = 0;
     fixedAssets.forEach(asset => {
-        if(asset.additionYear <= (i - 1)) { // if asset exists in this year
-             totalDepreciation += (asset.cost * asset.depreciationRate / 100);
+        // Calculate depreciation on existing balance of asset
+        let currentCost = asset.cost;
+        let openingWdv = currentCost;
+        
+        // Depreciate for past years
+        for(let j=0; j < i - 1; j++) {
+            if(asset.additionYear <= j) {
+                openingWdv = openingWdv * (1 - asset.depreciationRate/100);
+            }
         }
+        
+        if(asset.additionYear <= i) {
+            totalDepreciation += openingWdv * (asset.depreciationRate / 100);
+        }
+        
         if(asset.additionYear === i) {
             newAssetCost += asset.cost;
         }
@@ -308,16 +321,16 @@ export const generateCma = (
 
   // Loan Repayment
   const repaymentScheduleBody: (string | number)[][] = [];
-  if (loan.type === 'term-loan') {
+  if (loan.type === 'term-loan' && loan.repaymentYears > 0) {
     const r = loan.interestRate / 100 / 12;
     const n = loan.repaymentYears * 12;
-    const emi = (loan.amount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    const emi = n > 0 ? (loan.amount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : 0;
     let balance = loan.amount;
     for (let j = 1; j <= n; j++) {
         const interest = balance * r;
         const principal = emi - interest;
         balance -= principal;
-        repaymentScheduleBody.push([j, formatValue(emi*100000), formatValue(principal*100000), formatValue(interest*100000), formatValue(balance*100000)]);
+        repaymentScheduleBody.push([j, formatValue(emi), formatValue(principal), formatValue(interest), formatValue(balance)]);
     }
   }
 
@@ -332,3 +345,5 @@ export const generateCma = (
     repaymentSchedule: { headers: ["Month", "EMI", "Principal", "Interest", "Outstanding Balance"], body: repaymentScheduleBody },
   };
 };
+
+    

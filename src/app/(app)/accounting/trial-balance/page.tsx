@@ -45,28 +45,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { AccountingContext } from "@/context/accounting-context";
-
-const allAccounts = [
-  { code: "1010", name: "Cash on Hand", type: "Asset" },
-  { code: "1020", name: "HDFC Bank", type: "Asset" },
-  { code: "1210", name: "Accounts Receivable", type: "Asset" },
-  { code: "1410", name: "Office Supplies", type: "Asset" },
-  { code: "1450", name: "Office Equipment", type: "Asset" },
-  { code: "1455", name: "Accumulated Depreciation", type: "Asset" },
-  { code: "1510", name: "Prepaid Insurance", type: "Asset" },
-  { code: "2010", name: "Accounts Payable", type: "Liability" },
-  { code: "2110", name: "GST Payable", type: "Liability" },
-  { code: "3010", name: "Owner's Equity", type: "Equity" },
-  { code: "3020", name: "Retained Earnings", type: "Equity" },
-  { code: "4010", name: "Sales Revenue", type: "Revenue" },
-  { code: "4020", name: "Service Revenue", type: "Revenue" },
-  { code: "5010", name: "Rent Expense", type: "Expense" },
-  { code: "5020", name: "Salaries and Wages", type: "Expense" },
-  { code: "5030", name: "Office Supplies Expense", type: "Expense" },
-  { code: "5040", name: "Bank Charges", type: "Expense" },
-  { code: "5150", name: "Depreciation Expense", type: "Expense" },
-  { code: "5160", name: "Insurance Expense", type: "Expense" },
-];
+import { allAccounts } from "@/lib/accounts";
 
 
 export default function TrialBalancePage() {
@@ -81,62 +60,52 @@ export default function TrialBalancePage() {
     const [uploadFile, setUploadFile] = useState<File | null>(null);
 
     const trialBalanceData = useMemo(() => {
-        const balances: Record<string, { debit: number, credit: number }> = {};
+        const balances: Record<string, number> = {};
 
         allAccounts.forEach(acc => {
-            balances[acc.code] = { debit: 0, credit: 0 };
+            balances[acc.code] = 0;
         });
 
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
-                if (balances[line.account]) {
-                    balances[line.account].debit += parseFloat(line.debit);
-                    balances[line.account].credit += parseFloat(line.credit);
+                if (balances.hasOwnProperty(line.account)) {
+                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
+                    const debit = parseFloat(line.debit);
+                    const credit = parseFloat(line.credit);
+
+                    // For Assets and Expenses, a debit increases the balance.
+                    if (accountType === 'Asset' || accountType === 'Expense') {
+                        balances[line.account] += debit - credit;
+                    } 
+                    // For Liabilities, Equity, and Revenue, a credit increases the balance.
+                    else {
+                        balances[line.account] += credit - debit;
+                    }
                 }
             });
         });
 
         return allAccounts.map(acc => {
-            const balance = balances[acc.code];
-            const netBalance = balance.debit - balance.credit;
+            const finalBalance = balances[acc.code] || 0;
+            const accountType = acc.type;
             
-            // Assets and Expenses have debit balances
-            // Liabilities, Equity, and Revenue have credit balances
-            const isDebitNature = acc.type === 'Asset' || acc.type === 'Expense';
+            let debit = 0;
+            let credit = 0;
 
-            if (isDebitNature) {
-                 return {
-                    account: acc.name,
-                    code: acc.code,
-                    debit: netBalance > 0 ? netBalance : 0,
-                    credit: netBalance < 0 ? -netBalance : 0,
-                 };
-            } else {
-                 return {
-                    account: acc.name,
-                    code: acc.code,
-                    debit: netBalance < 0 ? 0 : netBalance,
-                    credit: netBalance > 0 ? -netBalance : 0,
-                 };
+            if (accountType === 'Asset' || accountType === 'Expense') {
+                if (finalBalance > 0) debit = finalBalance;
+                else credit = -finalBalance;
+            } else { // Liability, Equity, Revenue
+                if (finalBalance > 0) credit = finalBalance;
+                else debit = -finalBalance;
             }
-        }).map(acc => {
-            // A simple correction for typical balances.
-            // A better system would use account types (Asset, Liability, etc.)
-            const netBalance = acc.debit - acc.credit;
-            const accountInfo = allAccounts.find(a => a.code === acc.code);
-            const accountType = accountInfo?.type;
 
-            if ((accountType === 'Asset' || accountType === 'Expense') && netBalance < 0) {
-                 return { ...acc, debit: 0, credit: -netBalance };
-            }
-             if ((accountType === 'Liability' || accountType === 'Equity' || accountType === 'Revenue') && netBalance > 0) {
-                 return { ...acc, debit: netBalance, credit: 0 };
-            }
-            // A bit of a simplification - in real accounting, a credit balance in an asset account is possible (e.g. bank overdraft)
-            // But for this simulation, we'll keep it clean.
-            if(netBalance > 0) return {...acc, debit: netBalance, credit: 0};
-            if(netBalance < 0) return {...acc, debit: 0, credit: -netBalance};
-            return acc;
+            return {
+                account: acc.name,
+                code: acc.code,
+                debit: debit,
+                credit: credit,
+            };
         });
 
     }, [journalVouchers]);
@@ -154,8 +123,6 @@ export default function TrialBalancePage() {
 
 
     const handleAccountClick = (code: string) => {
-        // This is a placeholder for navigation. In a real app, you might do something like this:
-        // router.push(`/accounting/ledgers?accountCode=${code}`);
         toast({
             title: `Viewing Ledger for ${code}`,
             description: `You would be navigated to the ledger for this account. For now, please use the ledger page directly.`
@@ -291,12 +258,20 @@ export default function TrialBalancePage() {
                                 <TableCell className="text-right font-mono">{item.credit > 0 ? item.credit.toFixed(2) : "-"}</TableCell>
                             </TableRow>
                         ))}
+                         {difference !== 0 && (
+                             <TableRow className="bg-destructive/10 text-destructive">
+                                <TableCell>{suspenseEntry.code}</TableCell>
+                                <TableCell className="font-medium">{suspenseEntry.account}</TableCell>
+                                <TableCell className="text-right font-mono">{suspenseEntry.debit > 0 ? suspenseEntry.debit.toFixed(2) : "-"}</TableCell>
+                                <TableCell className="text-right font-mono">{suspenseEntry.credit > 0 ? suspenseEntry.credit.toFixed(2) : "-"}</TableCell>
+                             </TableRow>
+                         )}
                     </TableBody>
                     <TableFooter>
                         <TableRow className="bg-muted/50 font-bold hover:bg-muted/50">
                             <TableCell colSpan={2} className="text-right">Total</TableCell>
-                            <TableCell className="text-right font-mono">₹{totalDebits.toFixed(2)}</TableCell>
-                            <TableCell className="text-right font-mono">₹{totalCredits.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{(totalDebits).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{(totalCredits).toFixed(2)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
@@ -395,3 +370,5 @@ export default function TrialBalancePage() {
     </div>
   );
 }
+
+    

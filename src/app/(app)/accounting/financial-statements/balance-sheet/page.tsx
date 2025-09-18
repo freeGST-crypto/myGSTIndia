@@ -23,49 +23,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { FileDown, Calendar as CalendarIcon } from "lucide-react";
 import { ReportRow } from "@/components/accounting/report-row";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useContext, useMemo } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-
-const data = {
-    equityAndLiabilities: {
-        capitalAccount: 500000,
-        reservesAndSurplus: 150000,
-        longTermLoans: 200000,
-        currentLiabilities: {
-            sundryCreditors: 85000,
-            billsPayable: 40000,
-            outstandingExpenses: 25000,
-        }
-    },
-    assets: {
-        fixedAssets: {
-            landAndBuilding: 400000,
-            plantAndMachinery: 250000,
-            lessAccumulatedDepreciation: 75000,
-        },
-        investments: 50000,
-        currentAssets: {
-            closingStock: 90000,
-            sundryDebtors: 125000,
-            cashInHand: 30000,
-            bankBalance: 75000,
-        }
-    }
-};
-
-const depreciationSchedule = [
-    { asset: "Land & Building", openingWdv: 400000, additions: 0, depreciationRate: 5, depreciation: 20000, closingWdv: 380000 },
-    { asset: "Plant & Machinery", openingWdv: 250000, additions: 50000, depreciationRate: 15, depreciation: 45000, closingWdv: 255000 },
-];
-
-const capitalAccounts = [
-    { partner: "Rohan Sharma", opening: 250000, introduced: 50000, drawings: -20000, profitShare: 85000, closing: 365000 },
-    { partner: "Priya Mehta", opening: 250000, introduced: 0, drawings: -15000, profitShare: 85000, closing: 320000 },
-];
-
+import { AccountingContext } from "@/context/accounting-context";
+import { allAccounts } from "@/lib/accounts";
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -73,16 +37,87 @@ const formatCurrency = (value: number) => {
 
 export default function BalanceSheetPage() {
     const { toast } = useToast();
+    const { journalVouchers } = useContext(AccountingContext)!;
     const [date, setDate] = useState<Date | undefined>(new Date());
+
+    const accountBalances = useMemo(() => {
+        const balances: Record<string, number> = {};
+
+        allAccounts.forEach(acc => {
+            balances[acc.code] = 0;
+        });
+
+        journalVouchers.forEach(voucher => {
+            voucher.lines.forEach(line => {
+                if (balances.hasOwnProperty(line.account)) {
+                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
+                    const debit = parseFloat(line.debit);
+                    const credit = parseFloat(line.credit);
+
+                    if (accountType === 'Asset' || accountType === 'Expense') {
+                        balances[line.account] += debit - credit;
+                    } else { // Liability, Equity, Revenue
+                        balances[line.account] += credit - debit;
+                    }
+                }
+            });
+        });
+        return balances;
+    }, [journalVouchers]);
     
-    const totalCurrentLiabilities = data.equityAndLiabilities.currentLiabilities.sundryCreditors + data.equityAndLiabilities.currentLiabilities.billsPayable + data.equityAndLiabilities.currentLiabilities.outstandingExpenses;
+    // Calculate P&L for Retained Earnings
+    const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
+    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
+    const totalRevenue = revenueAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
+    const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
+    const netProfit = totalRevenue - totalExpenses;
+
+    const data = useMemo(() => {
+        return {
+            equityAndLiabilities: {
+                capitalAccount: accountBalances['3010'] || 0,
+                reservesAndSurplus: (accountBalances['3020'] || 0) + netProfit,
+                longTermLoans: accountBalances['2210'] || 0, // Assuming a code for long-term loans
+                currentLiabilities: {
+                    sundryCreditors: accountBalances['2010'] || 0,
+                    gstPayable: accountBalances['2110'] || 0,
+                    otherCurrentLiabilities: 0,
+                }
+            },
+            assets: {
+                fixedAssets: {
+                    officeEquipment: accountBalances['1450'] || 0,
+                    lessAccumulatedDepreciation: -(accountBalances['1455'] || 0),
+                },
+                investments: 0,
+                currentAssets: {
+                    sundryDebtors: accountBalances['1210'] || 0,
+                    cashInHand: accountBalances['1010'] || 0,
+                    bankBalance: accountBalances['1020'] || 0,
+                    prepaidInsurance: accountBalances['1510'] || 0,
+                    officeSupplies: accountBalances['1410'] || 0,
+                }
+            }
+        };
+    }, [accountBalances, netProfit]);
+
+
+    const totalCurrentLiabilities = Object.values(data.equityAndLiabilities.currentLiabilities).reduce((sum, val) => sum + val, 0);
     const totalEquityAndLiabilities = data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus + data.equityAndLiabilities.longTermLoans + totalCurrentLiabilities;
 
-    const netFixedAssets = data.assets.fixedAssets.landAndBuilding + data.assets.fixedAssets.plantAndMachinery - data.assets.fixedAssets.lessAccumulatedDepreciation;
-    const totalCurrentAssets = data.assets.currentAssets.closingStock + data.assets.currentAssets.sundryDebtors + data.assets.currentAssets.cashInHand + data.assets.currentAssets.bankBalance;
+    const netFixedAssets = data.assets.fixedAssets.officeEquipment + data.assets.fixedAssets.lessAccumulatedDepreciation;
+    const totalCurrentAssets = Object.values(data.assets.currentAssets).reduce((sum, val) => sum + val, 0);
     const totalAssets = netFixedAssets + data.assets.investments + totalCurrentAssets;
-
+    
+    // Sample static data for schedules - will be made dynamic later
+    const depreciationSchedule = [
+        { asset: "Office Equipment", openingWdv: 0, additions: 0, depreciationRate: 20, depreciation: 5000, closingWdv: -5000 },
+    ];
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
+
+    const capitalAccounts = [
+        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: netProfit },
+    ];
 
 
   return (
@@ -105,7 +140,7 @@ export default function BalanceSheetPage() {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                     <div>
                         <CardTitle>Report Date</CardTitle>
-                        <CardDescription>Select a date to generate the balance sheet.</CardDescription>
+                        <CardDescription>Select a date to generate the balance sheet. (Currently shows live data)</CardDescription>
                     </div>
                      <Popover>
                         <PopoverTrigger asChild>
@@ -146,15 +181,15 @@ export default function BalanceSheetPage() {
                     <TableBody>
                         <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
                         <ReportRow label="Capital Account" value={data.equityAndLiabilities.capitalAccount} isSub />
-                        <ReportRow label="Reserves & Surplus" value={data.equityAndLiabilities.reservesAndSurplus} isSub />
+                        <ReportRow label="Reserves & Surplus (incl. P&L)" value={data.equityAndLiabilities.reservesAndSurplus} isSub />
                         
                         <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
                         <ReportRow label="Long-Term Loans" value={data.equityAndLiabilities.longTermLoans} isSub />
 
                         <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
                         <ReportRow label="Sundry Creditors" value={data.equityAndLiabilities.currentLiabilities.sundryCreditors} isSub />
-                        <ReportRow label="Bills Payable" value={data.equityAndLiabilities.currentLiabilities.billsPayable} isSub />
-                        <ReportRow label="Outstanding Expenses" value={data.equityAndLiabilities.currentLiabilities.outstandingExpenses} isSub />
+                        <ReportRow label="GST Payable" value={data.equityAndLiabilities.currentLiabilities.gstPayable} isSub />
+                        <ReportRow label="Other Current Liabilities" value={data.equityAndLiabilities.currentLiabilities.otherCurrentLiabilities} isSub />
                     </TableBody>
                      <TableFooter>
                         <TableRow className="font-bold bg-muted/50">
@@ -169,18 +204,18 @@ export default function BalanceSheetPage() {
                     <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                     <TableBody>
                         <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
-                        <ReportRow label="Land & Building" value={data.assets.fixedAssets.landAndBuilding} isSub />
-                        <ReportRow label="Plant & Machinery" value={data.assets.fixedAssets.plantAndMachinery} isSub />
-                        <ReportRow label="Less: Acc. Depreciation" value={-data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
+                        <ReportRow label="Office Equipment" value={data.assets.fixedAssets.officeEquipment} isSub />
+                        <ReportRow label="Less: Acc. Depreciation" value={data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
                          <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
 
                         <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(data.assets.investments)}</TableCell></TableRow>
 
                         <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
-                        <ReportRow label="Closing Stock" value={data.assets.currentAssets.closingStock} isSub />
+                         <ReportRow label="Office Supplies" value={data.assets.currentAssets.officeSupplies} isSub />
                         <ReportRow label="Sundry Debtors" value={data.assets.currentAssets.sundryDebtors} isSub />
                         <ReportRow label="Cash in Hand" value={data.assets.currentAssets.cashInHand} isSub />
                         <ReportRow label="Bank Balance" value={data.assets.currentAssets.bankBalance} isSub />
+                        <ReportRow label="Prepaid Insurance" value={data.assets.currentAssets.prepaidInsurance} isSub />
                     </TableBody>
                      <TableFooter>
                         <TableRow className="font-bold bg-muted/50">
@@ -191,7 +226,7 @@ export default function BalanceSheetPage() {
                 </Table>
             </div>
             
-            {totalAssets !== totalEquityAndLiabilities && (
+            {Math.abs(totalAssets - totalEquityAndLiabilities) > 0.01 && (
                  <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center">
                     Warning: Balance Sheet is out of balance by ₹{formatCurrency(Math.abs(totalAssets - totalEquityAndLiabilities))}!
                 </div>
@@ -248,7 +283,7 @@ export default function BalanceSheetPage() {
                     </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="capital-accounts">
-                    <AccordionTrigger>Schedule 2: Partners' / Directors' Capital Accounts</AccordionTrigger>
+                    <AccordionTrigger>Schedule 2: Capital Accounts</AccordionTrigger>
                     <AccordionContent>
                         <div className="overflow-x-auto">
                             <Table>
@@ -298,3 +333,5 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
+
+    
