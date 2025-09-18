@@ -117,7 +117,7 @@ const documentTypes = [
         description: "Establish the terms of a franchise relationship.",
         href: "/legal-documents/franchise-agreement",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Offer Letter",
