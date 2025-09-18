@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User, ChevronLeft, ChevronRight, Users, Building } from "lucide-react";
+import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User, ChevronLeft, ChevronRight, Users, Building, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -293,10 +293,15 @@ export default function ProfessionalServicesPage() {
                     {paginatedProfessionals.map(pro => (
                         <Card key={pro.id} className="flex flex-col p-6 gap-4">
                             <div className="flex items-start gap-4">
-                                <Avatar className="size-20 border">
-                                    <AvatarImage src={pro.avatarUrl} alt={pro.name} />
-                                    <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
+                                <div className="relative shrink-0">
+                                    <Avatar className="size-20 border">
+                                        <AvatarImage src={pro.avatarUrl} alt={pro.name} />
+                                        <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute -bottom-1 -right-1 bg-green-600 p-1 rounded-full text-white">
+                                        <ShieldCheck className="size-4"/>
+                                    </div>
+                                </div>
                                 <div className="flex-1 space-y-1">
                                     <CardTitle className="text-xl">{pro.name}</CardTitle>
                                     <CardDescription className="flex items-center gap-2"><Building className="size-4"/>{pro.firmName}</CardDescription>
