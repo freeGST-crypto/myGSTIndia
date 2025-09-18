@@ -24,7 +24,7 @@ import {
   PlusCircle,
   Search,
   User,
-  Switch,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -90,11 +90,14 @@ const sampleUsers = [
 ];
 
 type User = (typeof sampleUsers)[0];
+type UserRole = "Super Admin" | "Professional";
+
 
 export default function UserManagementPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState(sampleUsers);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>("Super Admin");
 
   const handleSwitchWorkspace = (userName: string) => {
     toast({
@@ -123,9 +126,24 @@ export default function UserManagementPage() {
   return (
     <div className="grid lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-2 space-y-8">
+         <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">User & Client Management</h1>
+            <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Viewing as:</span>
+                <Select value={userRole} onValueChange={(value) => setUserRole(value as UserRole)}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Super Admin">Super Admin</SelectItem>
+                        <SelectItem value="Professional">Professional</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
         <Card>
           <CardHeader>
-            <CardTitle>User & Client Management</CardTitle>
+            <CardTitle>User List</CardTitle>
             <CardDescription>
               Search, view, and manage all users on the platform.
             </CardDescription>
@@ -177,7 +195,7 @@ export default function UserManagementPage() {
                               handleSwitchWorkspace(user.name);
                           }}
                         >
-                          <Switch className="mr-2" /> Switch Workspace
+                          <ArrowRightLeft className="mr-2" /> Switch Workspace
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -188,7 +206,7 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="space-y-8">
+      <div className="space-y-8 mt-[76px]">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -208,19 +226,21 @@ export default function UserManagementPage() {
                     <Label>Phone</Label>
                     <Input defaultValue={selectedUser.phone}/>
                 </div>
-                 <div className="space-y-2">
-                    <Label>Role (Super Admin Only)</Label>
-                     <Select defaultValue={selectedUser.role} >
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Super Admin">Super Admin</SelectItem>
-                            <SelectItem value="Professional">Professional</SelectItem>
-                             <SelectItem value="Business">Business</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+                {userRole === 'Super Admin' && (
+                    <div className="space-y-2">
+                        <Label>Role (Super Admin Only)</Label>
+                        <Select defaultValue={selectedUser.role} >
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Super Admin">Super Admin</SelectItem>
+                                <SelectItem value="Professional">Professional</SelectItem>
+                                <SelectItem value="Business">Business</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
                 <Separator/>
                 <div className="space-y-2">
                     <Label>GSTIN</Label>

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Switch } from "lucide-react";
+import { PlusCircle, ArrowRightLeft } from "lucide-react";
 
 const sampleClients = [
   { id: "CL-001", name: "Innovate LLC", gstin: "29AABCI5678G1Z4" },
@@ -59,7 +59,7 @@ export function ClientList() {
                     size="sm"
                     onClick={() => handleSwitchWorkspace(client.name)}
                   >
-                    <Switch className="mr-2" />
+                    <ArrowRightLeft className="mr-2" />
                     Switch Workspace
                   </Button>
                 </TableCell>
