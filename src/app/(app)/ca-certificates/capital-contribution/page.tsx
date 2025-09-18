@@ -17,9 +17,9 @@ import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
   entityName: z.string().min(3, "Entity name is required."),
-  entityType: z.enum(["Company", "LLP"]),
+  entityType: z.enum(["Company", "LLP", "Partnership", "Private Limited Company"]),
   contributorName: z.string().min(3, "Contributor's name is required."),
-  contributorType: z.enum(["Director", "Partner"]),
+  contributorType: z.enum(["Director", "Partner", "Shareholder"]),
   contributionAmount: z.coerce.number().positive("Amount must be a positive number."),
   contributionDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
   contributionMode: z.enum(["Cash", "Cheque", "Bank Transfer"]),
@@ -94,12 +94,12 @@ export default function CapitalContributionCertificatePage() {
                 </CardHeader>
                  <CardContent className="space-y-4">
                      <div className="grid md:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="entityName" render={({ field }) => (<FormItem><FormLabel>Company / LLP Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                        <FormField control={form.control} name="entityType" render={({ field }) => (<FormItem><FormLabel>Entity Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Company">Company</SelectItem><SelectItem value="LLP">LLP</SelectItem></SelectContent></Select><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name="entityName" render={({ field }) => (<FormItem><FormLabel>Company / LLP / Firm Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name="entityType" render={({ field }) => (<FormItem><FormLabel>Entity Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Company">Company</SelectItem><SelectItem value="LLP">LLP</SelectItem><SelectItem value="Partnership">Partnership</SelectItem><SelectItem value="Private Limited Company">Private Limited Company</SelectItem></SelectContent></Select><FormMessage /></FormItem>)}/>
                      </div>
                       <div className="grid md:grid-cols-2 gap-4">
                         <FormField control={form.control} name="contributorName" render={({ field }) => (<FormItem><FormLabel>Contributor's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                        <FormField control={form.control} name="contributorType" render={({ field }) => (<FormItem><FormLabel>Contributor's Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Director">Director</SelectItem><SelectItem value="Partner">Partner</SelectItem></SelectContent></Select><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name="contributorType" render={({ field }) => (<FormItem><FormLabel>Contributor's Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Director">Director</SelectItem><SelectItem value="Partner">Partner</SelectItem><SelectItem value="Shareholder">Shareholder</SelectItem></SelectContent></Select><FormMessage /></FormItem>)}/>
                      </div>
                      <div className="grid md:grid-cols-2 gap-4">
                          <FormField control={form.control} name="contributionAmount" render={({ field }) => (<FormItem><FormLabel>Contribution Amount (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
