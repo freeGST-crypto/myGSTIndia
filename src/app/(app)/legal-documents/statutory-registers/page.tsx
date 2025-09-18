@@ -31,7 +31,8 @@ import {
   FileSpreadsheet,
   Users,
   UserCheck,
-  Banknote
+  Banknote,
+  Handshake,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import * as XLSX from 'xlsx';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 // Schemas for form validation
@@ -71,18 +73,24 @@ const chargeSchema = z.object({
   satisfactionDate: z.string().optional(),
 });
 
+const loanGuaranteeInvestmentSchema = z.object({
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+  type: z.enum(["Loan", "Guarantee", "Investment"]),
+  bodyCorporateName: z.string().min(3, "Name is required."),
+  amount: z.coerce.number().positive("Amount must be positive."),
+  purpose: z.string().min(3, "Purpose is required."),
+});
+
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name is required."),
   members: z.array(memberSchema),
   directors: z.array(directorSchema),
   charges: z.array(chargeSchema),
+  loansGuaranteesInvestments: z.array(loanGuaranteeInvestmentSchema),
 });
 
 type FormData = z.infer<typeof formSchema>;
-type Member = z.infer<typeof memberSchema>;
-type Director = z.infer<typeof directorSchema>;
-type Charge = z.infer<typeof chargeSchema>;
 
 export default function StatutoryRegistersPage() {
   const { toast } = useToast();
@@ -101,6 +109,10 @@ export default function StatutoryRegistersPage() {
       ],
       charges: [
         { creationDate: "2023-06-01", chargeHolder: "HDFC Bank", assetsCharged: "All current and future assets of the company", amountSecured: 10000000, modificationDate: "", satisfactionDate: "" },
+      ],
+      loansGuaranteesInvestments: [
+          { date: "2023-08-15", type: "Loan", bodyCorporateName: "Innovatech Solutions Ltd.", amount: 500000, purpose: "Inter-corporate deposit" },
+          { date: "2023-09-01", type: "Investment", bodyCorporateName: "Future Startups Inc.", amount: 1000000, purpose: "Equity investment" },
       ]
     },
   });
@@ -108,6 +120,7 @@ export default function StatutoryRegistersPage() {
   const { fields: memberFields, append: appendMember, remove: removeMember } = useFieldArray({ control: form.control, name: "members" });
   const { fields: directorFields, append: appendDirector, remove: removeDirector } = useFieldArray({ control: form.control, name: "directors" });
   const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({ control: form.control, name: "charges" });
+  const { fields: lgiFields, append: appendLgi, remove: removeLgi } = useFieldArray({ control: form.control, name: "loansGuaranteesInvestments" });
 
 
   const exportToCsv = (data: any[], headers: string[], fileName: string) => {
@@ -165,6 +178,20 @@ export default function StatutoryRegistersPage() {
     const headers = ["S. No.", "Date of Creation", "Charge Holder", "Assets Charged", "Amount Secured", "Modification Date", "Satisfaction Date", "Remarks"];
     exportToCsv(dataToExport, headers, "Register_of_Charges");
   };
+  
+  const handleExportLgi = () => {
+    const dataToExport = form.getValues("loansGuaranteesInvestments").map((item, index) => ({
+        "S. No.": index + 1,
+        "Date": item.date ? format(new Date(item.date), 'dd-MM-yyyy') : '',
+        "Type": item.type,
+        "Name of Body Corporate": item.bodyCorporateName,
+        "Amount": item.amount,
+        "Purpose": item.purpose,
+        "Remarks": "",
+    }));
+    const headers = ["S. No.", "Date", "Type", "Name of Body Corporate", "Amount", "Purpose", "Remarks"];
+    exportToCsv(dataToExport, headers, "Register_of_Loans_Guarantees_Investments");
+  }
 
   return (
     <div className="space-y-8">
@@ -189,10 +216,11 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto">
+            <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
               <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
               <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
+              <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
             </TabsList>
             
             <TabsContent value="members">
@@ -267,6 +295,41 @@ export default function StatutoryRegistersPage() {
                   <Button type="button" variant="outline" onClick={() => appendCharge({ creationDate: "", chargeHolder: "", assetsCharged: "", amountSecured: 0 })}><PlusCircle className="mr-2"/> Add Charge</Button>
                 </CardContent>
                 <CardFooter><Button type="button" onClick={handleExportCharges}><FileSpreadsheet className="mr-2"/> Export Register (CHG-7)</Button></CardFooter>
+              </Card>
+            </TabsContent>
+
+             <TabsContent value="lgi">
+              <Card>
+                <CardHeader><CardTitle>Register of Loans, Guarantees and Investments (Sec. 186)</CardTitle><CardDescription>Record of loans made, guarantees given, or investments made by the company.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Entity</TableHead><TableHead>Amount</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {lgiFields.map((field, index) => (
+                          <TableRow key={field.id}>
+                            <TableCell><Input type="date" {...form.register(`loansGuaranteesInvestments.${index}.date`)}/></TableCell>
+                            <TableCell>
+                                <Select onValueChange={(value) => form.setValue(`loansGuaranteesInvestments.${index}.type`, value as "Loan" | "Guarantee" | "Investment")} defaultValue={field.type}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Loan">Loan</SelectItem>
+                                        <SelectItem value="Guarantee">Guarantee</SelectItem>
+                                        <SelectItem value="Investment">Investment</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </TableCell>
+                            <TableCell><Input {...form.register(`loansGuaranteesInvestments.${index}.bodyCorporateName`)}/></TableCell>
+                             <TableCell><Input type="number" {...form.register(`loansGuaranteesInvestments.${index}.amount`)}/></TableCell>
+                            <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeLgi(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendLgi({ date: "", type: "Loan", bodyCorporateName: "", amount: 0, purpose: "" })}><PlusCircle className="mr-2"/> Add Entry</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportLgi}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
               </Card>
             </TabsContent>
 
