@@ -239,7 +239,6 @@ export default function JournalVoucherPage() {
                                 <span className="font-mono">₹{totalCredits.toFixed(2)}</span>
                             </div>
                              {totalDebits !== totalCredits && <p className="text-sm text-destructive text-right">Totals must match.</p>}
-                             {isBalanced && <div className="h-5"></div>}
                         </div>
                      </div>
                 </div>
