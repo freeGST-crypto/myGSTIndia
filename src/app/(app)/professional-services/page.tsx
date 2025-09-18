@@ -9,11 +9,14 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const sampleProfessionals = [
   {
     id: "PRO-001",
     name: "Rohan Sharma, CA",
+    type: "ca",
     firmName: "Sharma & Associates",
     email: "rohan.sharma@ca-firm.com",
     specialization: ["Startup Advisory", "GST", "Audit"],
@@ -26,6 +29,7 @@ const sampleProfessionals = [
   {
     id: "PRO-002",
     name: "Priya Mehta, Advocate",
+    type: "advocate",
     firmName: "Mehta Legal",
     email: "priya.mehta@legal.com",
     specialization: ["Corporate Law", "GST Litigation"],
@@ -38,6 +42,7 @@ const sampleProfessionals = [
   {
     id: "PRO-003",
     name: "Anjali Singh, CS",
+    type: "cs",
     firmName: "Singh Corporate Services",
     email: "anjali.s@cs-practitioner.com",
     specialization: ["LLP & Company Formation", "Compliance"],
@@ -50,6 +55,7 @@ const sampleProfessionals = [
    {
     id: "PRO-004",
     name: "Vikram Reddy, CA",
+    type: "ca",
     firmName: "Reddy & Co.",
     email: "vikram.r@ca.com",
     specialization: ["Income Tax", "Project Finance"],
@@ -62,6 +68,7 @@ const sampleProfessionals = [
    {
     id: "PRO-005",
     name: "Suresh Gupta, Advocate",
+    type: "advocate",
     firmName: "Gupta & Associates",
     email: "s.gupta@law.com",
     specialization: ["Tax Litigation", "Contract Law"],
@@ -76,8 +83,13 @@ const sampleProfessionals = [
 
 export default function ProfessionalServicesPage() {
     const [city, setCity] = useState("Mumbai");
+    const [profType, setProfType] = useState("all");
 
-    const filteredProfessionals = sampleProfessionals.filter(p => p.city.toLowerCase().includes(city.toLowerCase()));
+    const filteredProfessionals = sampleProfessionals.filter(p => {
+        const cityMatch = city ? p.city.toLowerCase().includes(city.toLowerCase()) : true;
+        const typeMatch = profType !== 'all' ? p.type === profType : true;
+        return cityMatch && typeMatch;
+    });
 
     return (
         <div className="space-y-8">
@@ -86,23 +98,39 @@ export default function ProfessionalServicesPage() {
                 <p className="text-muted-foreground max-w-2xl mx-auto">Search our network of verified Chartered Accountants, Advocates, and Company Secretaries to find the right expert for your business needs.</p>
             </div>
             
-             <Card className="max-w-2xl mx-auto">
+             <Card className="max-w-3xl mx-auto">
                 <CardHeader>
-                    <CardTitle>Search by Location</CardTitle>
+                    <CardTitle>Find an Expert</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex gap-2">
-                        <div className="relative flex-1">
-                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                             <Input placeholder="Enter a city (e.g., Mumbai, Delhi)" className="pl-10" value={city} onChange={(e) => setCity(e.target.value)} />
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="prof-type">Type of Professional</Label>
+                            <Select value={profType} onValueChange={setProfType}>
+                                <SelectTrigger id="prof-type">
+                                    <SelectValue placeholder="Select a professional type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Professionals</SelectItem>
+                                    <SelectItem value="ca">Chartered Accountant (CA)</SelectItem>
+                                    <SelectItem value="cs">Company Secretary (CS)</SelectItem>
+                                    <SelectItem value="advocate">Advocate</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                        <Button><Search className="mr-2"/> Search</Button>
+                        <div className="space-y-2">
+                             <Label htmlFor="city">City</Label>
+                             <div className="relative flex-1">
+                                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                                 <Input id="city" placeholder="Enter a city" className="pl-10" value={city} onChange={(e) => setCity(e.target.value)} />
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
             <div className="space-y-6">
-                 <h2 className="text-2xl font-semibold text-center">Professionals in {city || "your area"}</h2>
+                 <h2 className="text-2xl font-semibold text-center">Professionals matching your search</h2>
                 <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                     {filteredProfessionals.map(pro => (
                         <Card key={pro.id} className="flex flex-col sm:flex-row items-start p-6 gap-6">
@@ -132,7 +160,7 @@ export default function ProfessionalServicesPage() {
                                     ))}
                                 </div>
                                 <div className="pt-2">
-                                     <Link href="/book-appointment" passHref>
+                                     <Link href={`/book-appointment?proId=${pro.id}&proName=${encodeURIComponent(pro.name)}`} passHref>
                                         <Button>
                                             <CalendarPlus className="mr-2"/> Book an Appointment
                                         </Button>

@@ -33,8 +33,8 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 const formSchema = z.object({
-  professionalType: z.string().min(1, "Please select a professional type."),
   serviceArea: z.string().min(1, "Please select a service area."),
+  otherServiceDescription: z.string().optional(),
   consultationMode: z.string().min(1, "Please select a consultation mode."),
   preferredDate: z.date({ required_error: "A preferred date is required." }),
   preferredTime: z.string().min(1, "Please select a time slot."),
@@ -42,6 +42,14 @@ const formSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
   phone: z.string().min(10, "Please enter a valid phone number."),
   queryDescription: z.string().min(10, "Please provide a brief description."),
+}).refine(data => {
+    if (data.serviceArea === 'others' && (!data.otherServiceDescription || data.otherServiceDescription.length < 10)) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Please describe the other service you require (min. 10 characters).",
+    path: ["otherServiceDescription"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -52,8 +60,8 @@ export default function BookAppointmentPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      professionalType: "",
       serviceArea: "",
+      otherServiceDescription: "",
       consultationMode: "",
       preferredTime: "",
       fullName: "",
@@ -62,6 +70,8 @@ export default function BookAppointmentPage() {
       queryDescription: "",
     },
   });
+
+  const watchServiceArea = form.watch("serviceArea");
 
   function onSubmit(values: FormData) {
     console.log(values);
@@ -77,7 +87,7 @@ export default function BookAppointmentPage() {
       <div className="text-center">
         <h1 className="text-3xl font-bold">Book an Appointment</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Schedule a consultation with one of our qualified professionals. Fill out the form below to request an appointment.
+          Schedule a consultation with a qualified professional. Fill out the form below to request an appointment.
         </p>
       </div>
 
@@ -91,29 +101,7 @@ export default function BookAppointmentPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="professionalType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type of Professional</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Select a professional" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ca">Chartered Accountant (CA)</SelectItem>
-                          <SelectItem value="cs">Company Secretary (CS)</SelectItem>
-                          <SelectItem value="cwa">Cost & Works Accountant (CWA)</SelectItem>
-                          <SelectItem value="advocate">Advocate</SelectItem>
-                          <SelectItem value="auditor">Auditor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="grid sm:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="serviceArea"
@@ -137,7 +125,7 @@ export default function BookAppointmentPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   control={form.control}
                   name="consultationMode"
                   render={({ field }) => (
@@ -158,6 +146,23 @@ export default function BookAppointmentPage() {
                   )}
                 />
               </div>
+
+               {watchServiceArea === 'others' && (
+                <FormField
+                  control={form.control}
+                  name="otherServiceDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Please Describe the Service You Need</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Describe the specific service or consultation you are looking for..." className="min-h-24" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
 
               <div className="grid sm:grid-cols-2 gap-6">
                 <FormField
