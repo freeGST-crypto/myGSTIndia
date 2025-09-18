@@ -130,7 +130,8 @@ export default function NewCreditNotePage() {
         return;
     }
     
-    const creditNoteId = `CN-${originalInvoice.split('-')[1]}`;
+    const creditNoteId = `CN-${originalInvoice.substring(originalInvoice.lastIndexOf('-') + 1)}`;
+
 
     // Reverse of a sales entry
     const journalLines = [
@@ -325,5 +326,7 @@ export default function NewCreditNotePage() {
     </div>
   );
 }
+
+    
 
     

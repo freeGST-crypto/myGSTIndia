@@ -204,7 +204,7 @@ export default function PurchaseOrdersPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Purchase Orders</h1>
+          <h1 className="text-3xl font-bold">Purchase Orders / New</h1>
           <p className="text-muted-foreground">
             Create and track orders placed with your vendors.
           </p>
@@ -317,3 +317,5 @@ export default function PurchaseOrdersPage() {
     </div>
   );
 }
+
+    

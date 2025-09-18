@@ -73,7 +73,7 @@ export default function NdaPage() {
     if (isValid) {
       setStep(prev => prev + 1);
       if (step < 3) {
-        toast({ title: `Step ${'\'step\''}' Saved`, description: `Proceeding to the next step.` });
+        toast({ title: `Step ${step} Saved`, description: `Proceeding to the next step.` });
       }
     } else {
       toast({
@@ -219,3 +219,5 @@ export default function NdaPage() {
     </div>
   );
 }
+
+    

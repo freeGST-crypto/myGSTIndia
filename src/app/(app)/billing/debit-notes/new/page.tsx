@@ -126,7 +126,8 @@ export default function NewDebitNotePage() {
         return;
     }
     
-    const debitNoteId = `DN-${originalPurchase.split('-')[1]}`;
+    const debitNoteId = `DN-${originalPurchase.substring(originalPurchase.lastIndexOf('-') + 1)}`;
+
 
     // Reverse of a purchase entry
     const journalLines = [
@@ -321,3 +322,5 @@ export default function NewDebitNotePage() {
     </div>
   );
 }
+
+    
