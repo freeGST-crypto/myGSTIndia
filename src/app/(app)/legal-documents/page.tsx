@@ -182,7 +182,7 @@ const documentTypes = [
         description: "Formally establish a trust with a legal deed.",
         href: "/legal-documents/trust-deed",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "MOA & AOA",
@@ -239,3 +239,5 @@ export default function LegalDocumentsPage() {
         </div>
     );
 }
+
+    
