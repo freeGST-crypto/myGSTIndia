@@ -12,42 +12,48 @@ const certificateTypes = [
         description: "Certify the net worth of an individual or entity.",
         href: "/ca-certificates/net-worth",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 2500,
     },
     {
         name: "Turnover Certificate",
         description: "Certify the annual turnover of a business.",
         href: "/ca-certificates/turnover",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 2500,
     },
     {
         name: "Visa/Immigration Certificate",
         description: "Generate income and net worth certificates for visa purposes.",
         href: "/ca-certificates/visa-immigration",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 6000,
     },
     {
         name: "Capital Contribution Certificate",
         description: "Certify the capital brought in by partners/directors.",
         href: "/ca-certificates/capital-contribution",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 3000,
     },
     {
         name: "Foreign Remittance (Form 15CB)",
         description: "Prepare Form 15CB for remittances made to non-residents.",
         href: "/ca-certificates/foreign-remittance",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 4000,
     },
     {
         name: "General Attestation",
         description: "A general-purpose attestation form.",
         href: "/ca-certificates/general-attestation",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 2000,
     },
 ];
 
@@ -76,7 +82,10 @@ export default function CACertificatesPage() {
                              {doc.status === 'active' ? (
                                 <Link href={doc.href} passHref>
                                     <Button>
-                                        <span>Start Drafting</span>
+                                        <span>
+                                            Start Drafting
+                                            {doc.price && ` - ₹${doc.price}`}
+                                        </span>
                                         <ArrowRight className="ml-2 size-4" />
                                     </Button>
                                 </Link>

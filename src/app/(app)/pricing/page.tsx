@@ -123,25 +123,6 @@ export default function PricingPage() {
           </Card>
         ))}
       </div>
-
-      <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
-          <CardHeader>
-            <CardTitle>On-Demand Professional Services</CardTitle>
-            <CardDescription>
-                Need a specific, high-value document? We offer custom pricing for specialized reports and certificates, decided by our admin team to meet your unique needs.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-             <ul className="space-y-2 text-sm text-foreground">
-                <li className="flex items-center gap-2"><Check className="text-green-500" /> CMA Reports for Bank Loans</li>
-                <li className="flex items-center gap-2"><Check className="text-green-500" /> CA Certified Net Worth / Turnover Certificates</li>
-                <li className="flex items-center gap-2"><Check className="text-green-500" /> Custom Legal Document Drafting</li>
-             </ul>
-          </CardContent>
-          <CardFooter>
-              <Button>Contact Sales <ArrowRight className="ml-2"/></Button>
-          </CardFooter>
-      </Card>
     </div>
   );
 }

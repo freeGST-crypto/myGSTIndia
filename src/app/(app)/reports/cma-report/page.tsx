@@ -400,7 +400,7 @@ export default function CmaReportGeneratorPage() {
                  <CardFooter className="flex justify-center">
                     <Button size="lg" onClick={handleGenerateReport} disabled={isGenerating}>
                         {isGenerating ? <Loader2 className="mr-2 animate-spin" /> : null}
-                        Generate Report
+                        Generate Report - ₹5000
                     </Button>
                 </CardFooter>
             </Card>

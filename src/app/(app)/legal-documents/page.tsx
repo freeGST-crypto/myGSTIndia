@@ -12,21 +12,24 @@ const documentTypes = [
         description: "Create a legal document to form a business partnership.",
         href: "/legal-documents/partnership-deed",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 3000,
     },
     {
         name: "Rental Deed",
         description: "Draft a legal agreement for property rental.",
         href: "/legal-documents/rental-deed",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 1500,
     },
     {
         name: "Lease Deed",
         description: "Create a formal lease agreement for long-term property usage.",
         href: "/legal-documents/lease-deed",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 1500,
     },
     {
         name: "Self Affidavit for GST",
@@ -40,7 +43,8 @@ const documentTypes = [
         description: "Draft an agreement for a Limited Liability Partnership.",
         href: "/legal-documents/llp-agreement",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 5000,
     },
      {
         name: "Rental Receipts for HRA",
@@ -54,7 +58,8 @@ const documentTypes = [
         description: "Essential legal document for startup co-founders.",
         href: "/legal-documents/founders-agreement",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 7500,
     },
     {
         name: "Loan Agreement",
@@ -82,14 +87,16 @@ const documentTypes = [
         description: "Protect sensitive company information.",
         href: "/legal-documents/nda",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 1000,
     },
     {
         name: "Consultant / Freelancer Agreement",
         description: "Define terms for engaging independent contractors.",
         href: "/legal-documents/consultant-agreement",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 2000,
     },
     {
         name: "Vendor Agreement",
@@ -117,7 +124,8 @@ const documentTypes = [
         description: "Generate a formal job offer for prospective employees.",
         href: "/legal-documents/offer-letter",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 500,
     },
     {
         name: "Appointment Letter",
@@ -213,7 +221,10 @@ export default function LegalDocumentsPage() {
                              {doc.status === 'active' ? (
                                 <Link href={doc.href} passHref>
                                     <Button>
-                                        <span>Start Drafting</span>
+                                        <span>
+                                            Start Drafting
+                                            {doc.price && ` - ₹${doc.price}`}
+                                        </span>
                                         <ArrowRight className="ml-2 size-4" />
                                     </Button>
                                 </Link>
