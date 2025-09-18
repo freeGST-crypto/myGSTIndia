@@ -93,7 +93,10 @@ const accounts = [
 export default function JournalVoucherPage() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [date, setDate] = useState<Date | undefined>(new Date());
-    const [lines, setLines] = useState([{ account: '', debit: 0, credit: 0 }]);
+    const [lines, setLines] = useState([
+        { account: '', debit: 0, credit: 0 },
+        { account: '', debit: 0, credit: 0 }
+    ]);
 
     const handleAddLine = () => {
         setLines([...lines, { account: '', debit: 0, credit: 0 }]);
@@ -103,6 +106,14 @@ export default function JournalVoucherPage() {
         const newLines = [...lines];
         const line = newLines[index] as any;
         line[field] = value;
+
+        // Ensure only debit or credit is entered, not both
+        if (field === 'debit' && parseFloat(value) > 0) {
+            line['credit'] = 0;
+        } else if (field === 'credit' && parseFloat(value) > 0) {
+            line['debit'] = 0;
+        }
+
         setLines(newLines);
     };
 
@@ -172,7 +183,7 @@ export default function JournalVoucherPage() {
                                     <TableHead className="w-[50%]">Account</TableHead>
                                     <TableHead className="text-right">Debit</TableHead>
                                     <TableHead className="text-right">Credit</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead className="w-[50px] text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -212,13 +223,14 @@ export default function JournalVoucherPage() {
                         <div className="w-full max-w-sm space-y-2">
                              <div className="flex justify-between font-medium">
                                 <span>Total Debits</span>
-                                <span>₹{totalDebits.toFixed(2)}</span>
+                                <span className="font-mono">₹{totalDebits.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between font-medium">
                                 <span>Total Credits</span>
-                                <span>₹{totalCredits.toFixed(2)}</span>
+                                <span className="font-mono">₹{totalCredits.toFixed(2)}</span>
                             </div>
-                             {totalDebits !== totalCredits && <p className="text-sm text-destructive">Debits and credits must be equal.</p>}
+                             {totalDebits !== totalCredits && <p className="text-sm text-destructive text-right">Totals must match.</p>}
+                             {isBalanced && <div className="h-5"></div>}
                         </div>
                      </div>
                 </div>
@@ -250,10 +262,10 @@ export default function JournalVoucherPage() {
             <TableBody>
               {initialVouchers.map((voucher) => (
                 <TableRow key={voucher.id}>
-                  <TableCell>{voucher.date}</TableCell>
+                  <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell className="font-medium">{voucher.id}</TableCell>
                   <TableCell>{voucher.narration}</TableCell>
-                  <TableCell className="text-right">₹{voucher.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-mono">₹{voucher.amount.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -287,3 +299,5 @@ export default function JournalVoucherPage() {
     </div>
   );
 }
+
+    
