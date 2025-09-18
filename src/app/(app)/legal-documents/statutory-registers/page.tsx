@@ -33,6 +33,7 @@ import {
   UserCheck,
   Banknote,
   Handshake,
+  FileKey,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,17 @@ const memberSchema = z.object({
   shares: z.coerce.number().positive("Must be a positive number."),
   allotmentDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
 });
+
+const debentureHolderSchema = z.object({
+  folioNo: z.string().min(1, "Folio No. is required."),
+  name: z.string().min(2, "Holder name is required."),
+  address: z.string().min(10, "Address is required."),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format.").optional().or(z.literal("")),
+  debentureCount: z.coerce.number().positive("Must be a positive number."),
+  debentureAmount: z.coerce.number().positive("Amount must be positive."),
+  allotmentDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+});
+
 
 const directorSchema = z.object({
   name: z.string().min(2, "Director's name is required."),
@@ -85,6 +97,7 @@ const loanGuaranteeInvestmentSchema = z.object({
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name is required."),
   members: z.array(memberSchema),
+  debentureHolders: z.array(debentureHolderSchema),
   directors: z.array(directorSchema),
   charges: z.array(chargeSchema),
   loansGuaranteesInvestments: z.array(loanGuaranteeInvestmentSchema),
@@ -103,6 +116,9 @@ export default function StatutoryRegistersPage() {
         { folioNo: "001", name: "Rohan Sharma", address: "Mumbai, India", pan: "ABCDE1234F", shares: 5000, allotmentDate: "2023-04-01" },
         { folioNo: "002", name: "Priya Mehta", address: "Delhi, India", pan: "FGHIJ5678K", shares: 5000, allotmentDate: "2023-04-01" },
       ],
+      debentureHolders: [
+        { folioNo: "D001", name: "Alpha Investments", address: "Bangalore, India", pan: "AABCA1234B", debentureCount: 100, debentureAmount: 100000, allotmentDate: "2023-05-15" }
+      ],
       directors: [
         { name: "Rohan Sharma", din: "01234567", pan: "ABCDE1234F", address: "Mumbai, India", designation: "Director", appointmentDate: "2023-04-01", sharesHeld: 5000 },
         { name: "Priya Mehta", din: "76543210", pan: "FGHIJ5678K", address: "Delhi, India", designation: "Director", appointmentDate: "2023-04-01", sharesHeld: 5000 },
@@ -118,6 +134,7 @@ export default function StatutoryRegistersPage() {
   });
 
   const { fields: memberFields, append: appendMember, remove: removeMember } = useFieldArray({ control: form.control, name: "members" });
+  const { fields: debentureHolderFields, append: appendDebentureHolder, remove: removeDebentureHolder } = useFieldArray({ control: form.control, name: "debentureHolders" });
   const { fields: directorFields, append: appendDirector, remove: removeDirector } = useFieldArray({ control: form.control, name: "directors" });
   const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({ control: form.control, name: "charges" });
   const { fields: lgiFields, append: appendLgi, remove: removeLgi } = useFieldArray({ control: form.control, name: "loansGuaranteesInvestments" });
@@ -145,6 +162,22 @@ export default function StatutoryRegistersPage() {
     }));
     const headers = ["S. No.", "Folio No.", "Name of Member", "Address", "PAN", "No. of Shares", "Date of Allotment", "Date of Entry", "Remarks"];
     exportToCsv(dataToExport, headers, "Register_of_Members");
+  };
+
+  const handleExportDebentureHolders = () => {
+    const dataToExport = form.getValues("debentureHolders").map((d, index) => ({
+      "S. No.": index + 1,
+      "Folio No.": d.folioNo,
+      "Name of Holder": d.name,
+      "Address": d.address,
+      "PAN": d.pan,
+      "No. of Debentures": d.debentureCount,
+      "Amount (Rs.)": d.debentureAmount,
+      "Date of Allotment": d.allotmentDate ? format(new Date(d.allotmentDate), 'dd-MM-yyyy') : '',
+      "Remarks": "",
+    }));
+    const headers = ["S. No.", "Folio No.", "Name of Holder", "Address", "PAN", "No. of Debentures", "Amount (Rs.)", "Date of Allotment", "Remarks"];
+    exportToCsv(dataToExport, headers, "Register_of_Debenture_Holders");
   };
 
   const handleExportDirectors = () => {
@@ -216,8 +249,9 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
+            <TabsList className="grid w-full grid-cols-5 max-w-4xl mx-auto">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
+              <TabsTrigger value="debentureHolders"><FileKey className="mr-2" />Debentures</TabsTrigger>
               <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
               <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
               <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
@@ -245,6 +279,32 @@ export default function StatutoryRegistersPage() {
                   <Button type="button" variant="outline" onClick={() => appendMember({ folioNo: "", name: "", address: "", pan: "", shares: 0, allotmentDate: "" })}><PlusCircle className="mr-2"/> Add Member</Button>
                 </CardContent>
                 <CardFooter><Button type="button" onClick={handleExportMembers}><FileSpreadsheet className="mr-2"/> Export Register (MGT-1)</Button></CardFooter>
+              </Card>
+            </TabsContent>
+
+             <TabsContent value="debentureHolders">
+              <Card>
+                <CardHeader><CardTitle>Register of Debenture Holders</CardTitle><CardDescription>Manage the details of all debenture holders or other security holders.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Folio No.</TableHead><TableHead>Name</TableHead><TableHead>No. of Debentures</TableHead><TableHead>Amount</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {debentureHolderFields.map((field, index) => (
+                           <TableRow key={field.id}>
+                              <TableCell><Input {...form.register(`debentureHolders.${index}.folioNo`)}/></TableCell>
+                              <TableCell><Input {...form.register(`debentureHolders.${index}.name`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`debentureHolders.${index}.debentureCount`)}/></TableCell>
+                              <TableCell><Input type="number" {...form.register(`debentureHolders.${index}.debentureAmount`)}/></TableCell>
+                              <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeDebentureHolder(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendDebentureHolder({ folioNo: "", name: "", address: "", pan: "", debentureCount: 0, debentureAmount: 0, allotmentDate: "" })}><PlusCircle className="mr-2"/> Add Debenture Holder</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportDebentureHolders}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
               </Card>
             </TabsContent>
 
