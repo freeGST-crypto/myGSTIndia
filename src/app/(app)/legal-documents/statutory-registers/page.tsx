@@ -107,6 +107,19 @@ const relatedPartyContractSchema = z.object({
     keyTerms: z.string().min(10, "Key terms are required"),
 });
 
+const renewedDuplicateCertSchema = z.object({
+    folioNo: z.string().min(1, "Folio No. is required."),
+    name: z.string().min(2, "Member name is required."),
+    originalCertNo: z.string().min(1, "Original Cert No. is required."),
+    originalIssueDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+    shares: z.coerce.number().positive("Must be a positive number."),
+    distinctiveNos: z.string().min(1, "Distinctive numbers are required."),
+    newCertNo: z.string().min(1, "New Cert No. is required."),
+    newIssueDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+    reason: z.enum(["Renewed", "Duplicate"]),
+    remarks: z.string().optional(),
+});
+
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name is required."),
@@ -116,6 +129,7 @@ const formSchema = z.object({
   charges: z.array(chargeSchema),
   loansGuaranteesInvestments: z.array(loanGuaranteeInvestmentSchema),
   relatedPartyContracts: z.array(relatedPartyContractSchema),
+  renewedDuplicateCerts: z.array(renewedDuplicateCertSchema),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -147,7 +161,10 @@ export default function StatutoryRegistersPage() {
       ],
       relatedPartyContracts: [
           { date: "2023-10-01", partyName: "Rohan Sharma", relationship: "Director", nature: "Lease of Office Premises", keyTerms: "Rent Rs. 50,000/month for 3 years" }
-      ]
+      ],
+      renewedDuplicateCerts: [
+        { folioNo: "001", name: "Rohan Sharma", originalCertNo: "1", originalIssueDate: "2023-04-15", shares: 1000, distinctiveNos: "1-1000", newCertNo: "1A", newIssueDate: "2024-01-10", reason: "Duplicate", remarks: "Original lost" }
+      ],
     },
   });
 
@@ -157,6 +174,7 @@ export default function StatutoryRegistersPage() {
   const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({ control: form.control, name: "charges" });
   const { fields: lgiFields, append: appendLgi, remove: removeLgi } = useFieldArray({ control: form.control, name: "loansGuaranteesInvestments" });
   const { fields: rpcFields, append: appendRpc, remove: removeRpc } = useFieldArray({ control: form.control, name: "relatedPartyContracts" });
+  const { fields: rdcFields, append: appendRdc, remove: removeRdc } = useFieldArray({ control: form.control, name: "renewedDuplicateCerts" });
 
 
   const exportToCsv = (data: any[], headers: string[], fileName: string) => {
@@ -259,6 +277,24 @@ export default function StatutoryRegistersPage() {
     exportToCsv(dataToExport, headers, "Register_of_Contracts");
   }
 
+  const handleExportRenewedCerts = () => {
+    const dataToExport = form.getValues("renewedDuplicateCerts").map((c, index) => ({
+        "S. No.": index + 1,
+        "Folio No.": c.folioNo,
+        "Name of Member": c.name,
+        "Original Cert. No.": c.originalCertNo,
+        "Original Issue Date": c.originalIssueDate ? format(new Date(c.originalIssueDate), 'dd-MM-yyyy') : '',
+        "No. of Shares": c.shares,
+        "Distinctive Nos.": c.distinctiveNos,
+        "New Cert. No.": c.newCertNo,
+        "New Issue Date": c.newIssueDate ? format(new Date(c.newIssueDate), 'dd-MM-yyyy') : '',
+        "Reason (Renewed/Duplicate)": c.reason,
+        "Remarks": c.remarks,
+    }));
+    const headers = ["S. No.", "Folio No.", "Name of Member", "Original Cert. No.", "Original Issue Date", "No. of Shares", "Distinctive Nos.", "New Cert. No.", "New Issue Date", "Reason (Renewed/Duplicate)", "Remarks"];
+    exportToCsv(dataToExport, headers, "Register_of_Renewed_Duplicate_Certs");
+  };
+
 
   return (
     <div className="space-y-8">
@@ -283,14 +319,14 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="flex flex-wrap h-auto justify-start">
+            <TabsList className="flex-wrap h-auto justify-start">
               <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
               <TabsTrigger value="debentureHolders"><FileKey className="mr-2" />Debentures</TabsTrigger>
               <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
               <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
               <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
               <TabsTrigger value="contracts"><BookUser className="mr-2"/>Contracts (Sec 189)</TabsTrigger>
-              <TabsTrigger value="certs" disabled><Copy className="mr-2"/>Share Certificates</TabsTrigger>
+              <TabsTrigger value="certs"><Copy className="mr-2"/>Share Certificates</TabsTrigger>
               <TabsTrigger value="sweat" disabled><BadgePercent className="mr-2"/>Sweat Equity</TabsTrigger>
               <TabsTrigger value="esop" disabled><Wallet className="mr-2"/>ESOPs</TabsTrigger>
               <TabsTrigger value="buyback" disabled><ShoppingCart className="mr-2"/>Buy-Back</TabsTrigger>
@@ -349,7 +385,7 @@ export default function StatutoryRegistersPage() {
 
             <TabsContent value="directors">
                <Card>
-                <CardHeader><CardTitle>Register of Directors & KMP</CardTitle><CardDescription>Manage details of Directors, KMP, and their shareholding.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Register of Directors &amp; KMP</CardTitle><CardDescription>Manage details of Directors, KMP, and their shareholding.</CardDescription></CardHeader>
                 <CardContent className="space-y-4">
                     <div className="border rounded-md overflow-x-auto">
                         <Table>
@@ -467,7 +503,38 @@ export default function StatutoryRegistersPage() {
             </TabsContent>
 
             <TabsContent value="certs">
-                <PlaceholderPage title="Register of Renewed & Duplicate Share Certificates" description="This register is under construction." />
+                <Card>
+                    <CardHeader><CardTitle>Register of Renewed &amp; Duplicate Share Certificates</CardTitle><CardDescription>Record all instances of renewed or duplicated share certificates.</CardDescription></CardHeader>
+                    <CardContent className="space-y-4">
+                         <div className="border rounded-md overflow-x-auto">
+                            <Table>
+                                <TableHeader><TableRow><TableHead>Folio No.</TableHead><TableHead>Name</TableHead><TableHead>Original Cert. No.</TableHead><TableHead>New Cert. No.</TableHead><TableHead>Reason</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {rdcFields.map((field, index) => (
+                                    <TableRow key={field.id}>
+                                        <TableCell><Input {...form.register(`renewedDuplicateCerts.${index}.folioNo`)}/></TableCell>
+                                        <TableCell><Input {...form.register(`renewedDuplicateCerts.${index}.name`)}/></TableCell>
+                                        <TableCell><Input {...form.register(`renewedDuplicateCerts.${index}.originalCertNo`)}/></TableCell>
+                                        <TableCell><Input {...form.register(`renewedDuplicateCerts.${index}.newCertNo`)}/></TableCell>
+                                        <TableCell>
+                                            <Select onValueChange={(value) => form.setValue(`renewedDuplicateCerts.${index}.reason`, value as "Renewed" | "Duplicate")} defaultValue={field.reason}>
+                                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Renewed">Renewed</SelectItem>
+                                                    <SelectItem value="Duplicate">Duplicate</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeRdc(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                                    </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        <Button type="button" variant="outline" onClick={() => appendRdc({ folioNo: "", name: "", originalCertNo: "", originalIssueDate: "", shares: 0, distinctiveNos: "", newCertNo: "", newIssueDate: "", reason: "Duplicate" })}><PlusCircle className="mr-2"/> Add Entry</Button>
+                    </CardContent>
+                    <CardFooter><Button type="button" onClick={handleExportRenewedCerts}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
+                </Card>
             </TabsContent>
             <TabsContent value="sweat">
                 <PlaceholderPage title="Register of Sweat Equity Shares" description="This register is under construction." />
