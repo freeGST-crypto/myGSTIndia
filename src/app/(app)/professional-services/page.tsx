@@ -160,7 +160,7 @@ export default function ProfessionalServicesPage() {
                                     ))}
                                 </div>
                                 <div className="pt-2">
-                                     <Link href={`/book-appointment?proId=${pro.id}&proName=${encodeURIComponent(pro.name)}`} passHref>
+                                     <Link href={`/book-appointment?proId=${pro.id}&proName=${encodeURIComponent(pro.name)}&proType=${pro.type}`} passHref>
                                         <Button>
                                             <CalendarPlus className="mr-2"/> Book an Appointment
                                         </Button>
