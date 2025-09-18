@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreditCard, Save } from "lucide-react";
+import { CreditCard, Save, Search } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 
@@ -95,6 +95,7 @@ type ServiceCategories = keyof typeof initialServices;
 export default function ServicePricingPage() {
   const { toast } = useToast();
   const [services, setServices] = useState(initialServices);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handlePriceChange = (category: ServiceCategories, id: string, newPrice: number) => {
       setServices(prev => ({
@@ -104,7 +105,6 @@ export default function ServicePricingPage() {
   };
   
   const handleSaveChanges = () => {
-      // In a real app, this would make an API call to save the prices.
       console.log("Saving new prices:", services);
       toast({
           title: "Prices Updated",
@@ -112,7 +112,42 @@ export default function ServicePricingPage() {
       });
   }
 
-  const renderServiceCategory = (title: string, category: ServiceCategories) => (
+  const filteredServices = useMemo(() => {
+    if (!searchTerm) {
+        return services;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    const filtered: typeof initialServices = {
+        reports: [],
+        ca_certs: [],
+        registration_deeds: [],
+        founder_startup: [],
+        agreements: [],
+        hr_documents: [],
+        company_documents: [],
+        gst_documents: [],
+        accounting_documents: [],
+        notice_handling: [],
+    };
+
+    for (const category in services) {
+        const catKey = category as ServiceCategories;
+        const matchingServices = services[catKey].filter(service =>
+            service.name.toLowerCase().includes(lowercasedFilter)
+        );
+        if (matchingServices.length > 0) {
+            filtered[catKey] = matchingServices;
+        }
+    }
+    return filtered;
+  }, [searchTerm, services]);
+
+  const renderServiceCategory = (title: string, category: ServiceCategories) => {
+    const serviceList = filteredServices[category];
+    if (!serviceList || serviceList.length === 0) {
+        return null;
+    }
+    return (
       <div key={category}>
         <h3 className="text-lg font-semibold my-4">{title}</h3>
         <div className="border rounded-md">
@@ -124,7 +159,7 @@ export default function ServicePricingPage() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {services[category].map((service) => (
+                {serviceList.map((service) => (
                     <TableRow key={service.id}>
                     <TableCell className="font-medium">{service.name}</TableCell>
                     <TableCell className="text-right">
@@ -141,7 +176,8 @@ export default function ServicePricingPage() {
             </Table>
         </div>
       </div>
-  )
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -161,6 +197,16 @@ export default function ServicePricingPage() {
           <CardDescription>
             Update the prices that will be shown to users when they access these on-demand features.
           </CardDescription>
+          <div className="relative pt-4">
+                <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search by service name..."
+                  className="pl-8 w-full md:w-1/2 lg:w-1/3"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
         </CardHeader>
         <CardContent className="space-y-6">
             {renderServiceCategory("Management Reports", "reports")}
