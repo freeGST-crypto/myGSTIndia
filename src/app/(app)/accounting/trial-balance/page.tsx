@@ -21,6 +21,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -28,7 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FileDown, AlertTriangle } from "lucide-react";
+import { FileDown, AlertTriangle, ChevronDown, Upload, Download, FileCsv } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -93,10 +99,28 @@ export default function TrialBalancePage() {
             A summary of all ledger balances to verify the equality of debits and credits.
           </p>
         </div>
-        <Button>
-          <FileDown className="mr-2"/>
-          Export PDF
-        </Button>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                    Import/Export
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <FileCsv className="mr-2 h-4 w-4" />
+                    Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Template
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       <Card>

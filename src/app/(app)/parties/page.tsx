@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileCsv } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const initialCustomers = [
@@ -181,6 +181,31 @@ export default function PartiesPage() {
             </TableBody>
         </Table>
     );
+    
+    const ImportExportMenu = ({ type }: { type: 'Customer' | 'Vendor' }) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                    Import/Export
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import {type}s
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <FileCsv className="mr-2 h-4 w-4" />
+                    Export to CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Template
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
   return (
     <div className="space-y-8">
@@ -203,7 +228,10 @@ export default function PartiesPage() {
                         <CardTitle>Customers</CardTitle>
                         <CardDescription>A list of all your customers.</CardDescription>
                     </div>
-                    <PartyDialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} type="Customer" />
+                    <div className="flex items-center gap-2">
+                        <ImportExportMenu type="Customer" />
+                        <PartyDialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} type="Customer" />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <PartyTable parties={initialCustomers} type="Customer"/>
@@ -217,7 +245,10 @@ export default function PartiesPage() {
                         <CardTitle>Vendors</CardTitle>
                         <CardDescription>A list of all your vendors/suppliers.</CardDescription>
                     </div>
-                     <PartyDialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} type="Vendor" />
+                    <div className="flex items-center gap-2">
+                        <ImportExportMenu type="Vendor" />
+                        <PartyDialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} type="Vendor" />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <PartyTable parties={initialVendors} type="Vendor"/>

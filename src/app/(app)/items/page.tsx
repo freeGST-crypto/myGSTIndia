@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileCsv } from "lucide-react";
 import Link from "next/link";
 
 const initialItems = [
@@ -80,53 +80,77 @@ export default function ItemsPage() {
                         <CardTitle>Products & Services</CardTitle>
                         <CardDescription>Manage your items, including products and services.</CardDescription>
                     </div>
-                     <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                        <DialogTrigger asChild>
-                             <Button>
-                                <PlusCircle className="mr-2"/>
-                                Add Item
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[525px]">
-                            <DialogHeader>
-                                <DialogTitle>Add New Item</DialogTitle>
-                                <DialogDescription>
-                                    Add a new product or service to your inventory.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="item-name" className="text-right">Item Name</Label>
-                                    <Input id="item-name" placeholder="e.g. Wireless Keyboard" className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-start gap-4">
-                                    <Label htmlFor="item-description" className="text-right pt-2">Description</Label>
-                                    <Textarea id="item-description" placeholder="A short description of the item" className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="hsn-sac" className="text-right">HSN/SAC Code</Label>
-                                    <Input id="hsn-sac" placeholder="e.g. 8471" className="col-span-3" />
-                                </div>
-                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="stock" className="text-right">Opening Stock</Label>
-                                    <Input id="stock" type="number" placeholder="0" className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 col-start-2">
-                                     <div>
-                                        <Label htmlFor="purchase-price">Purchase Price (₹)</Label>
-                                        <Input id="purchase-price" type="number" placeholder="0.00"/>
+                     <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    Import/Export
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Import Items
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <FileCsv className="mr-2 h-4 w-4" />
+                                    Export to CSV
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Template
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <PlusCircle className="mr-2"/>
+                                    Add Item
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[525px]">
+                                <DialogHeader>
+                                    <DialogTitle>Add New Item</DialogTitle>
+                                    <DialogDescription>
+                                        Add a new product or service to your inventory.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="item-name" className="text-right">Item Name</Label>
+                                        <Input id="item-name" placeholder="e.g. Wireless Keyboard" className="col-span-3" />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="selling-price">Selling Price (₹)</Label>
-                                        <Input id="selling-price" type="number" placeholder="0.00" />
+                                    <div className="grid grid-cols-4 items-start gap-4">
+                                        <Label htmlFor="item-description" className="text-right pt-2">Description</Label>
+                                        <Textarea id="item-description" placeholder="A short description of the item" className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="hsn-sac" className="text-right">HSN/SAC Code</Label>
+                                        <Input id="hsn-sac" placeholder="e.g. 8471" className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="stock" className="text-right">Opening Stock</Label>
+                                        <Input id="stock" type="number" placeholder="0" className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 col-start-2">
+                                        <div>
+                                            <Label htmlFor="purchase-price">Purchase Price (₹)</Label>
+                                            <Input id="purchase-price" type="number" placeholder="0.00"/>
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="selling-price">Selling Price (₹)</Label>
+                                            <Input id="selling-price" type="number" placeholder="0.00" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit" onClick={() => setIsAddDialogOpen(false)}>Save Item</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                                <DialogFooter>
+                                    <Button type="submit" onClick={() => setIsAddDialogOpen(false)}>Save Item</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
