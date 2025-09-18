@@ -73,7 +73,7 @@ const documentTypes = [
         description: "Between a client and a tax consultant.",
         href: "/legal-documents/gst-engagement-letter",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Accounting Engagement Letter",
