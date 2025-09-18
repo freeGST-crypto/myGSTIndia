@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useContext } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -29,36 +29,31 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, Edit, Download, Trash2, FileWarning } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
-
-const initialCreditNotes = [
-  {
-    id: "CN-001",
-    customer: "Global Tech Inc.",
-    date: "2024-05-25",
-    originalInvoice: "INV-001",
-    amount: 2500.00,
-    status: "Applied",
-  },
-  {
-    id: "CN-002",
-    customer: "Innovate Solutions",
-    date: "2024-05-28",
-    originalInvoice: "INV-002",
-    amount: 1500.00,
-    status: "Open",
-  },
-  {
-    id: "CN-003",
-    customer: "Quantum Leap",
-    date: "2024-05-15",
-    originalInvoice: "INV-003",
-    amount: 5000.00,
-    status: "Applied",
-  },
-];
+import { AccountingContext } from "@/context/accounting-context";
+import { format } from "date-fns";
 
 export default function CreditNotesPage() {
-  const [creditNotes, setCreditNotes] = useState(initialCreditNotes);
+  const { journalVouchers } = useContext(AccountingContext)!;
+  
+  const creditNotes = useMemo(() => {
+    return journalVouchers
+        .filter(v => v.id.startsWith("JV-CN-"))
+        .map(v => {
+            const narrationParts = v.narration.split(" issued to ");
+            const customer = narrationParts.length > 1 ? narrationParts[1].split(" against Invoice #")[0] : "N/A";
+            const originalInvoice = v.id.replace("JV-CN-", "INV-");
+
+            return {
+                id: v.id.replace("JV-", ""),
+                customer,
+                date: v.date,
+                originalInvoice,
+                amount: v.amount,
+                status: "Applied", // Logic to be implemented
+            };
+        })
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [journalVouchers]);
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -130,7 +125,7 @@ export default function CreditNotesPage() {
                 <TableRow key={note.id}>
                   <TableCell className="font-medium">{note.id}</TableCell>
                   <TableCell>{note.customer}</TableCell>
-                  <TableCell>{note.date}</TableCell>
+                  <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell>{note.originalInvoice}</TableCell>
                   <TableCell className="text-center">{getStatusBadge(note.status)}</TableCell>
                   <TableCell className="text-right">₹{note.amount.toFixed(2)}</TableCell>
@@ -172,3 +167,5 @@ export default function CreditNotesPage() {
     </div>
   );
 }
+
+    

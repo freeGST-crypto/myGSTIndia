@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import {
   Table,
   TableBody,
@@ -34,68 +34,47 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays } from 'date-fns';
+import { AccountingContext } from "@/context/accounting-context";
+import { db, auth } from "@/lib/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
-
-const initialInvoices = [
-  {
-    id: "INV-001",
-    customer: "Global Tech Inc.",
-    date: "2024-05-15",
-    dueDate: "2024-06-14",
-    amount: 25000.00,
-    status: "Paid",
-  },
-  {
-    id: "INV-002",
-    customer: "Innovate Solutions",
-    date: "2024-05-20",
-    dueDate: "2024-06-19",
-    amount: 15000.00,
-    status: "Pending",
-  },
-  {
-    id: "INV-003",
-    customer: "Quantum Leap",
-    date: "2024-04-10",
-    dueDate: "2024-05-10",
-    amount: 35000.00,
-    status: "Overdue",
-  },
-    {
-    id: "INV-004",
-    customer: "Synergy Corp",
-    date: "2024-05-25",
-    dueDate: "2024-06-24",
-    amount: 45000.00,
-    status: "Pending",
-  },
-];
-
-const customers = [
-  { id: "CUST-001", name: "Global Tech Inc." },
-  { id: "CUST-002", name: "Innovate Solutions" },
-  { id: "CUST-003", name: "Quantum Leap" },
-  { id: "CUST-004", name: "Synergy Corp" },
-  { id: "CUST-005", name: "Apex Enterprises" },
-];
-
-const items = [
-  { id: "ITEM-001", name: "Standard Office Chair", price: 7500 },
-  { id: "ITEM-002", name: "Accounting Services", price: 15000 },
-  { id: "ITEM-003", name: "Wireless Mouse", price: 8999 },
-];
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState(initialInvoices);
+  const { journalVouchers, loading: journalLoading } = useContext(AccountingContext)!;
+  const [user] = useAuthState(auth);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   // State for the quick invoice form
   const [quickInvNum, setQuickInvNum] = useState("");
   const [quickCustomer, setQuickCustomer] = useState("");
-  const [quickItem, setQuickItem] = useState<{ id: string, name: string, price: number} | null>(null);
+  const [quickItem, setQuickItem] = useState<{ id: string, name: string, sellingPrice: number} | null>(null);
   const [quickQty, setQuickQty] = useState(1);
   const [quickRate, setQuickRate] = useState(0);
+
+  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+  const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+  const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+  const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
+  const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
+  const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+  const invoices = useMemo(() => {
+    return journalVouchers
+        .filter(v => v.id.startsWith("JV-INV-"))
+        .map(v => ({
+            id: v.id.replace("JV-", ""),
+            customer: v.narration.replace("Sale to ", "").split(" via")[0],
+            date: v.date,
+            dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
+            amount: v.amount,
+            status: "Pending", // Status logic to be implemented later
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [journalVouchers]);
 
 
   const handleQuickInvoiceCreate = () => {
@@ -107,21 +86,10 @@ export default function InvoicesPage() {
       });
       return;
     }
-
-    const newInvoice = {
-      id: quickInvNum,
-      customer: customers.find(c => c.id === quickCustomer)?.name || "Unknown Customer",
-      date: format(new Date(), 'yyyy-MM-dd'),
-      dueDate: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
-      amount: quickRate * quickQty,
-      status: "Pending",
-    };
-
-    setInvoices([newInvoice, ...invoices]);
-
+    // In a real app, this would also call addJournalVoucher
     toast({
-        title: "Quick Invoice Created!",
-        description: `Invoice ${newInvoice.id} has been created and added to the list.`
+        title: "Quick Invoice Created! (Simulation)",
+        description: `Invoice ${quickInvNum} has been created.`
     });
 
     // Reset form
@@ -133,10 +101,10 @@ export default function InvoicesPage() {
   }
 
   const handleQuickItemChange = (itemId: string) => {
-    const selectedItem = items.find(i => i.id === itemId);
+    const selectedItem = items.find((i: any) => i.id === itemId);
     if(selectedItem) {
         setQuickItem(selectedItem);
-        setQuickRate(selectedItem.price);
+        setQuickRate(selectedItem.sellingPrice);
     }
   }
 
@@ -226,23 +194,23 @@ export default function InvoicesPage() {
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="quick-customer">Customer</Label>
-                    <Select value={quickCustomer} onValueChange={setQuickCustomer}>
+                    <Select value={quickCustomer} onValueChange={setQuickCustomer} disabled={customersLoading}>
                         <SelectTrigger id="quick-customer">
-                            <SelectValue placeholder="Select customer" />
+                            <SelectValue placeholder={customersLoading ? "Loading..." : "Select customer"} />
                         </SelectTrigger>
                         <SelectContent>
-                            {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            {customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="quick-item">Item</Label>
-                    <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange}>
+                    <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange} disabled={itemsLoading}>
                         <SelectTrigger id="quick-item">
-                            <SelectValue placeholder="Select item" />
+                            <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                         </SelectTrigger>
                         <SelectContent>
-                            {items.map(i => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                            {items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
@@ -297,8 +265,8 @@ export default function InvoicesPage() {
                     <TableRow key={invoice.id}>
                     <TableCell className="font-medium">{invoice.id}</TableCell>
                     <TableCell>{invoice.customer}</TableCell>
-                    <TableCell>{invoice.date}</TableCell>
-                    <TableCell>{invoice.dueDate}</TableCell>
+                    <TableCell>{format(new Date(invoice.date), "dd MMM, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(invoice.dueDate), "dd MMM, yyyy")}</TableCell>
                     <TableCell className="text-center">{getStatusBadge(invoice.status)}</TableCell>
                     <TableCell className="text-right">₹{invoice.amount.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
@@ -349,3 +317,5 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+    

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useContext } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -29,28 +29,32 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, Edit, Download, Trash2, FileWarning } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
-
-const initialDebitNotes = [
-  {
-    id: "DN-001",
-    vendor: "Supplier Alpha",
-    date: "2024-05-26",
-    originalPurchase: "PUR-001",
-    amount: 1200.00,
-    status: "Applied",
-  },
-  {
-    id: "DN-002",
-    vendor: "Vendor Beta",
-    date: "2024-05-29",
-    originalPurchase: "PUR-002",
-    amount: 800.00,
-    status: "Open",
-  },
-];
+import { AccountingContext } from "@/context/accounting-context";
+import { format } from "date-fns";
 
 export default function DebitNotesPage() {
-  const [debitNotes, setDebitNotes] = useState(initialDebitNotes);
+  const { journalVouchers } = useContext(AccountingContext)!;
+  
+  const debitNotes = useMemo(() => {
+    return journalVouchers
+        .filter(v => v.id.startsWith("JV-DN-"))
+        .map(v => {
+            const narrationParts = v.narration.split(" issued to ");
+            const vendor = narrationParts.length > 1 ? narrationParts[1].split(" against Bill #")[0] : "N/A";
+            const originalPurchase = v.id.replace("JV-DN-", "BILL-");
+
+            return {
+                id: v.id.replace("JV-", ""),
+                vendor,
+                date: v.date,
+                originalPurchase,
+                amount: v.amount,
+                status: "Applied", // Logic to be implemented
+            };
+        })
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [journalVouchers]);
+
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -122,7 +126,7 @@ export default function DebitNotesPage() {
                 <TableRow key={note.id}>
                   <TableCell className="font-medium">{note.id}</TableCell>
                   <TableCell>{note.vendor}</TableCell>
-                  <TableCell>{note.date}</TableCell>
+                  <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell>{note.originalPurchase}</TableCell>
                   <TableCell className="text-center">{getStatusBadge(note.status)}</TableCell>
                   <TableCell className="text-right">₹{note.amount.toFixed(2)}</TableCell>
@@ -164,3 +168,5 @@ export default function DebitNotesPage() {
     </div>
   );
 }
+
+    

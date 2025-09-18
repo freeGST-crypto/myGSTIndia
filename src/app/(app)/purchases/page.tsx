@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -30,45 +30,27 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Copy, Trash2, Search } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
-
-const initialPurchases = [
-  {
-    id: "PUR-001",
-    vendor: "Supplier Alpha",
-    date: "2024-05-18",
-    dueDate: "2024-06-17",
-    amount: 8500.00,
-    status: "Paid",
-  },
-  {
-    id: "PUR-002",
-    vendor: "Vendor Beta",
-    date: "2024-05-22",
-    dueDate: "2024-06-21",
-    amount: 12000.00,
-    status: "Pending",
-  },
-  {
-    id: "PUR-003",
-    vendor: "Supplier Gamma",
-    date: "2024-04-12",
-    dueDate: "2024-05-12",
-    amount: 7500.00,
-    status: "Overdue",
-  },
-  {
-    id: "PUR-004",
-    vendor: "Vendor Delta",
-    date: "2024-05-28",
-    dueDate: "2024-06-27",
-    amount: 21000.00,
-    status: "Pending",
-  },
-];
+import { AccountingContext } from "@/context/accounting-context";
+import { format, addDays } from "date-fns";
 
 export default function PurchasesPage() {
-  const [purchases, setPurchases] = useState(initialPurchases);
+  const { journalVouchers } = useContext(AccountingContext)!;
   const [searchTerm, setSearchTerm] = useState("");
+
+  const purchases = useMemo(() => {
+    return journalVouchers
+        .filter(v => v.id.startsWith("JV-BILL-"))
+        .map(v => ({
+            id: v.id.replace("JV-", ""),
+            vendor: v.narration.replace("Purchase from ", "").split(" against")[0],
+            date: v.date,
+            dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
+            amount: v.amount,
+            status: "Pending", // Status logic to be implemented later
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [journalVouchers]);
+
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -166,8 +148,8 @@ export default function PurchasesPage() {
                         <TableRow key={purchase.id}>
                         <TableCell className="font-medium">{purchase.id}</TableCell>
                         <TableCell>{purchase.vendor}</TableCell>
-                        <TableCell>{purchase.date}</TableCell>
-                        <TableCell>{purchase.dueDate}</TableCell>
+                        <TableCell>{format(new Date(purchase.date), "dd MMM, yyyy")}</TableCell>
+                        <TableCell>{format(new Date(purchase.dueDate), "dd MMM, yyyy")}</TableCell>
                         <TableCell className="text-center">{getStatusBadge(purchase.status)}</TableCell>
                         <TableCell className="text-right">₹{purchase.amount.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
@@ -209,3 +191,5 @@ export default function PurchasesPage() {
     </div>
   );
 }
+
+    
