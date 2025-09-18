@@ -28,7 +28,7 @@ const documentTypes = [
         description: "Create a formal lease agreement for long-term property usage.",
         href: "/legal-documents/lease-deed",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 1500,
     },
     {
@@ -43,7 +43,7 @@ const documentTypes = [
         description: "Draft an agreement for a Limited Liability Partnership.",
         href: "/legal-documents/llp-agreement",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 5000,
     },
      {
@@ -51,14 +51,14 @@ const documentTypes = [
         description: "Generate monthly rental receipts for employees.",
         href: "/legal-documents/rental-receipts",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Founders’ Agreement",
         description: "Essential legal document for startup co-founders.",
         href: "/legal-documents/founders-agreement",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 7500,
     },
     {
@@ -66,28 +66,28 @@ const documentTypes = [
         description: "Between partners/directors & the company.",
         href: "/legal-documents/loan-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "GST Engagement Letter",
         description: "Between a client and a tax consultant.",
         href: "/legal-documents/gst-engagement-letter",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Accounting Engagement Letter",
         description: "Formalize the terms of accounting services.",
         href: "/legal-documents/accounting-engagement-letter",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "NDA (Non-Disclosure Agreement)",
         description: "Protect sensitive company information.",
         href: "/legal-documents/nda",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 1000,
     },
     {
@@ -95,7 +95,7 @@ const documentTypes = [
         description: "Define terms for engaging independent contractors.",
         href: "/legal-documents/consultant-agreement",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 2000,
     },
     {
@@ -103,28 +103,28 @@ const documentTypes = [
         description: "Set terms with your suppliers and vendors.",
         href: "/legal-documents/vendor-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Service Agreement",
         description: "A general-purpose agreement for providing services.",
         href: "/legal-documents/service-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Franchise Agreement",
         description: "Establish the terms of a franchise relationship.",
         href: "/legal-documents/franchise-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Offer Letter",
         description: "Generate a formal job offer for prospective employees.",
         href: "/legal-documents/offer-letter",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 500,
     },
     {
@@ -132,21 +132,21 @@ const documentTypes = [
         description: "Create a detailed appointment letter for new hires.",
         href: "/legal-documents/appointment-letter",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Internship Agreement",
         description: "Define the terms and conditions for an internship.",
         href: "/legal-documents/internship-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Board Resolutions Library",
         description: "Templates for common board resolutions.",
         href: "/legal-documents/board-resolutions",
         icon: FileText,
-        status: "active",
+        status: "wip",
         price: 750,
     },
     {
@@ -154,49 +154,49 @@ const documentTypes = [
         description: "Define rights and obligations of shareholders.",
         href: "/legal-documents/shareholders-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "ESOP Trust Deed / Policy",
         description: "Establish an Employee Stock Option Plan.",
         href: "/legal-documents/esop-policy",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Convertible Note / SAFE Agreement",
         description: "For early-stage startup fundraising.",
         href: "/legal-documents/safe-agreement",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Society Registration Deed",
         description: "Register a new society with a formal deed.",
         href: "/legal-documents/society-registration-deed",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Trust Deed",
         description: "Formally establish a trust with a legal deed.",
         href: "/legal-documents/trust-deed",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "MOA & AOA",
         description: "Memorandum and Articles of Association for companies.",
         href: "/legal-documents/moa-aoa",
         icon: FileText,
-        status: "active"
+        status: "wip"
     },
     {
         name: "Statutory Registers (Co. Act)",
         description: "Generate mandatory statutory registers for your company.",
         href: "/legal-documents/statutory-registers",
         icon: BookCopy,
-        status: "active"
+        status: "wip"
     },
 ]
 

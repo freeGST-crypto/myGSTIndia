@@ -319,6 +319,3 @@ export default function RentalDeedPage() {
     </div>
   );
 }
-
-
-    
