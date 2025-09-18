@@ -356,9 +356,9 @@ export default function StatutoryRegistersPage() {
               <TabsTrigger value="lgi"><Handshake className="mr-2"/>Loans etc. (Sec 186)</TabsTrigger>
               <TabsTrigger value="contracts"><BookUser className="mr-2"/>Contracts (Sec 189)</TabsTrigger>
               <TabsTrigger value="certs"><Copy className="mr-2"/>Share Certificates</TabsTrigger>
-              <TabsTrigger value="sweat" disabled><BadgePercent className="mr-2"/>Sweat Equity</TabsTrigger>
-              <TabsTrigger value="esop" disabled><Wallet className="mr-2"/>ESOPs</TabsTrigger>
-              <TabsTrigger value="buyback" disabled><ShoppingCart className="mr-2"/>Buy-Back</TabsTrigger>
+              <TabsTrigger value="sweat"><BadgePercent className="mr-2"/>Sweat Equity</TabsTrigger>
+              <TabsTrigger value="esop"><Wallet className="mr-2"/>ESOPs</TabsTrigger>
+              <TabsTrigger value="buyback"><ShoppingCart className="mr-2"/>Buy-Back</TabsTrigger>
             </TabsList>
             
             <TabsContent value="members">
@@ -600,13 +600,13 @@ export default function StatutoryRegistersPage() {
                 </Card>
             </TabsContent>
             <TabsContent value="sweat">
-                <PlaceholderPage title="Register of Sweat Equity Shares" description="This register is under construction." />
+                <PlaceholderPage title="Register of Sweat Equity Shares" description="This feature is under construction. You will soon be able to manage and export records of sweat equity shares issued to directors or employees." />
             </TabsContent>
             <TabsContent value="esop">
-                <PlaceholderPage title="Register of Employee Stock Options (ESOPs)" description="This register is under construction." />
+                <PlaceholderPage title="Register of Employee Stock Options (ESOPs)" description="This feature is under construction. This section will allow you to maintain a detailed register of stock options granted to employees." />
             </TabsContent>
             <TabsContent value="buyback">
-                <PlaceholderPage title="Register of Buy-Back of Securities" description="This register is under construction." />
+                <PlaceholderPage title="Register of Buy-Back of Securities" description="This feature is under construction. You will be able to manage the records of shares and other securities bought back by the company here." />
             </TabsContent>
 
           </Tabs>
@@ -615,3 +615,5 @@ export default function StatutoryRegistersPage() {
     </div>
   );
 }
+
+    
