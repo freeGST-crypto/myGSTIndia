@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from "react-to-print";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 
 
 const assetSchema = z.object({
@@ -304,5 +305,3 @@ export default function NetWorthCertificatePage() {
     </div>
   );
 }
-
-    
