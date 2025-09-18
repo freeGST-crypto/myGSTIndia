@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, BarChart, Users, Zap, FileText } from "lucide-react";
+import { ArrowRight, BarChart, Users, Zap, FileText, CalendarClock, UserSquare, BadgeDollarSign } from "lucide-react";
 import Link from "next/link";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
@@ -31,37 +31,39 @@ export default function AdminDashboardPage() {
 
   const renderSuperAdminDashboard = () => (
     <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <AdminStatCard
-          title="Active Subscriptions"
-          mainValue="1,250"
-          subValue="850 Pro / 400 Business"
-          icon={BarChart}
-        />
-        <AdminStatCard
-          title="Today's Usage Metrics"
-          items={[
-            { label: "E-Way Bills", value: "45" },
-            { label: "GSTR Reports", value: "22" },
-            { label: "AI Features Used", value: "157" },
-          ]}
-          icon={Zap}
-        />
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Users/> Total Users</CardTitle>
-                <CardDescription>Total registered users on the platform.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-3xl font-bold">2,480</p>
-                <Link href="/admin/users" passHref>
-                    <Button variant="outline">
-                        <span>Go to User Management</span>
-                        <ArrowRight className="ml-2"/>
-                    </Button>
-                </Link>
-            </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Link href="/admin/subscribers">
+            <AdminStatCard
+            title="Paid Subscribers"
+            mainValue="1,250"
+            subValue="850 Pro / 400 Business"
+            icon={BadgeDollarSign}
+            />
+        </Link>
+         <Link href="/admin/users">
+            <AdminStatCard
+            title="Total Users"
+            mainValue="2,480"
+            subValue="150 new this month"
+            icon={Users}
+            />
+        </Link>
+        <Link href="/admin/appointments">
+            <AdminStatCard
+            title="Pending Appointments"
+            mainValue="12"
+            subValue="3 new today"
+            icon={CalendarClock}
+            />
+        </Link>
+        <Link href="/admin/professionals">
+            <AdminStatCard
+            title="Listed Professionals"
+            mainValue="48"
+            subValue="25 CAs / 23 Advocates"
+            icon={UserSquare}
+            />
+        </Link>
       </div>
       <ActivityFeed />
     </div>

@@ -33,6 +33,9 @@ import {
   Building,
   LayoutDashboard,
   AreaChart,
+  CalendarClock,
+  UserSquare,
+  BadgeDollarSign
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -121,7 +124,10 @@ const menuItems = [
     icon: Shield,
     subItems: [
       { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/admin/users", label: "User Management", icon: Users },
+      { href: "/admin/appointments", label: "Appointments", icon: CalendarClock },
+      { href: "/admin/users", label: "Users", icon: Users },
+      { href: "/admin/professionals", label: "Professionals", icon: UserSquare },
+      { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign },
     ],
   },
   { 
