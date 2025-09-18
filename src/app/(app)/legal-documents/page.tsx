@@ -175,7 +175,7 @@ const documentTypes = [
         description: "Register a new society with a formal deed.",
         href: "/legal-documents/society-registration-deed",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Trust Deed",
