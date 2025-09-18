@@ -49,7 +49,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Sample data - in a real app, this would come from an API
 const customers = [
@@ -77,7 +77,7 @@ const items = [
 export default function NewInvoicePage() {
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>();
-  const [isTdsApplicable, setIsTdsApplicable] = useState(false);
+  const [taxCompliance, setTaxCompliance] = useState("none"); // 'none', 'tds', 'tcs'
   const [lineItems, setLineItems] = useState([
     {
       itemId: "",
@@ -135,8 +135,13 @@ export default function NewInvoicePage() {
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
-  const tdsAmount = isTdsApplicable ? subtotal * 0.10 : 0; // Example: 10% on subtotal
-  const totalAmount = subtotal + totalTax - tdsAmount;
+  
+  // Calculate TDS (Sec 194Q) or TCS (Sec 206C(1H))
+  // Using 0.1% as the standard rate for example purposes.
+  const tdsAmount = taxCompliance === 'tds' ? (subtotal + totalTax) * 0.001 : 0;
+  const tcsAmount = taxCompliance === 'tcs' ? (subtotal + totalTax) * 0.001 : 0;
+
+  const totalAmount = subtotal + totalTax - tdsAmount + tcsAmount;
 
 
   return (
@@ -304,13 +309,19 @@ export default function NewInvoicePage() {
                 <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Tax (e.g. IGST @18%)</span>
+                <span className="text-muted-foreground">Total GST</span>
                 <span>₹{totalTax.toFixed(2)}</span>
               </div>
-              {isTdsApplicable && (
+              {taxCompliance === 'tds' && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Less: TDS receivable (e.g. @10%)</span>
+                  <span className="text-muted-foreground">Less: TDS Receivable (0.1%)</span>
                   <span className="text-red-500">- ₹{tdsAmount.toFixed(2)}</span>
+                </div>
+              )}
+               {taxCompliance === 'tcs' && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Add: TCS to Collect (0.1%)</span>
+                  <span className="text-green-600">+ ₹{tcsAmount.toFixed(2)}</span>
                 </div>
               )}
               <Separator/>
@@ -330,12 +341,23 @@ export default function NewInvoicePage() {
                 <Textarea placeholder="Payment is due within 30 days..." className="mt-2 min-h-[120px]" />
               </div>
                <div>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="tds-switch" checked={isTdsApplicable} onCheckedChange={setIsTdsApplicable} />
-                    <Label htmlFor="tds-switch">Customer will deduct TDS</Label>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enable this if the customer is liable to deduct TDS on this payment.
+                  <Label>Tax Compliance</Label>
+                   <RadioGroup value={taxCompliance} onValueChange={setTaxCompliance} className="mt-2 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="none" id="tax-none" />
+                        <Label htmlFor="tax-none">None</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="tds" id="tax-tds" />
+                        <Label htmlFor="tax-tds">TDS Applicable (Sec 194Q - Buyer deducts)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="tcs" id="tax-tcs" />
+                        <Label htmlFor="tax-tcs">TCS Applicable (Sec 206C(1H) - Seller collects)</Label>
+                      </div>
+                    </RadioGroup>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Select if TDS or TCS applies as per Income Tax provisions based on turnover limits.
                   </p>
                </div>
             </div>
