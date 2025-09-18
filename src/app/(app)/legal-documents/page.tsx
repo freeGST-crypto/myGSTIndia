@@ -171,9 +171,9 @@ const documentTypes = [
     {
         name: "Trust Deed",
         description: "Formally establish a trust with a legal deed.",
-        href: "#",
+        href: "/legal-documents/trust-deed",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "MOA & AOA",
