@@ -310,17 +310,18 @@ export default function StatutoryRegistersPage() {
 
             <TabsContent value="directors">
                <Card>
-                <CardHeader><CardTitle>Register of Directors &amp; KMP</CardTitle><CardDescription>Manage details of Directors and Key Managerial Personnel.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Register of Directors &amp; KMP</CardTitle><CardDescription>Manage details of Directors, KMP, and their shareholding.</CardDescription></CardHeader>
                 <CardContent className="space-y-4">
                     <div className="border rounded-md overflow-x-auto">
                         <Table>
-                            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>DIN</TableHead><TableHead>Designation</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>DIN</TableHead><TableHead>Designation</TableHead><TableHead>Shares Held</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
                             <TableBody>
                                 {directorFields.map((field, index) => (
                                 <TableRow key={field.id}>
                                     <TableCell><Input {...form.register(`directors.${index}.name`)}/></TableCell>
                                     <TableCell><Input {...form.register(`directors.${index}.din`)}/></TableCell>
                                     <TableCell><Input {...form.register(`directors.${index}.designation`)}/></TableCell>
+                                    <TableCell><Input type="number" {...form.register(`directors.${index}.sharesHeld`)} /></TableCell>
                                     <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeDirector(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
                                 </TableRow>
                                 ))}
@@ -399,3 +400,5 @@ export default function StatutoryRegistersPage() {
     </div>
   );
 }
+
+    
