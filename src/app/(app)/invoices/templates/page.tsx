@@ -13,19 +13,19 @@ const templates = [
     {
         id: "classic",
         name: "Classic Professional",
-        imageUrl: "https://placehold.co/400x566/ffffff/000000?text=Classic+Invoice\n\nLogo\n\nBill+To:\n\nItem|Qty|Amount",
+        imageUrl: "https://placehold.co/400x566/ffffff/000000?text=Your+Logo%5Cn%5CnTAX+INVOICE%5Cn%5Cn--%5Cn%5CnBill+To:%5CnClient+Name%5CnClient+Address%5CnGSTIN:+...%5Cn%5Cn--%5Cn%5Cn%23|Item|HSN|Qty|Rate|Amount%5Cn1|Service|9982|1|5000|5000%5Cn%5Cn--%5Cn%5CnSubtotal:5000%5CnCGST:450%5CnSGST:450%5CnTotal:5900",
         description: "A timeless, clean, and professional design suitable for any business."
     },
     {
         id: "modern",
         name: "Modern Minimalist",
-        imageUrl: "https://placehold.co/400x566/333333/ffffff?text=Modern+Invoice\n\nYour+Logo\n\nBilled+To\n...",
+        imageUrl: "https://placehold.co/400x566/1a1a1a/ffffff?text=INVOICE%5Cn%5Cn%7C+Your+Company%5Cn%7C+Your+Address%5Cn%5CnBilled+To:%5CnClient+Name%5Cn%5Cn--%5Cn%5CnService+Description.........5000%5Cn%5CnTax+(18%25).....................900%5Cn--%5CnTotal.........................5900%5Cn%5CnThank+You.",
         description: "A sleek, contemporary design with a focus on typography and whitespace."
     },
     {
         id: "creative",
         name: "Creative Splash",
-        imageUrl: "https://placehold.co/400x566/273a99/ffffff?text=Creative\nInvoice\n\nLogo\n\nDetails...",
+        imageUrl: "https://placehold.co/400x566/4f46e5/ffffff?font=lato&text=INVOICE%5Cn%5Cn%5Cn%5CnFrom:%5CnYour+Company%5Cn%5CnFor:%5CnClient+Name%5Cn%5Cn--%5Cn%5CnService%5CnRate:5000+Qty:1%5Cn%5CnTotal%5Cn%E2%82%B95900",
         description: "A bold design with a splash of color, perfect for creative businesses."
     },
 ];
