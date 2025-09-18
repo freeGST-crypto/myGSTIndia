@@ -1,10 +1,11 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -32,6 +33,27 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
+const serviceAreas = [
+    { value: "gst_registration", label: "GST Registration" },
+    { value: "startup_registration", label: "Start-Up Registration" },
+    { value: "pvt_incorporation", label: "PVT Incorporation" },
+    { value: "opc_incorporation", label: "OPC Incorporation" },
+    { value: "llp_registration", label: "LLP Registration" },
+    { value: "partnership_registration", label: "Partnership Registration" },
+    { value: "itr_filing", label: "ITR Filing" },
+    { value: "society_registration", label: "Society Registration" },
+    { value: "gstr_filings", label: "GSTR Filings" },
+    { value: "gst_notices", label: "GST Notices" },
+    { value: "income_tax_notices", label: "Income Tax Notices" },
+    { value: "mca_compliance", label: "MCA Compliance" },
+    { value: "mca_monthly_retainership", label: "MCA Monthly Retainership" },
+    { value: "virtual_cfo", label: "Virtual CFO" },
+    { value: "book_keeping", label: "Book Keeping" },
+    { value: "payroll_accounting", label: "Payroll Accounting" },
+    { value: "others", label: "Others" },
+];
+
+
 const formSchema = z.object({
   serviceArea: z.string().min(1, "Please select a service area."),
   otherServiceDescription: z.string().optional(),
@@ -54,13 +76,18 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function BookAppointmentPage() {
+function BookAppointmentForm() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const proName = searchParams.get('proName');
+  const proType = searchParams.get('proType');
+  const service = searchParams.get('service');
+
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      serviceArea: "",
+      serviceArea: service || "",
       otherServiceDescription: "",
       consultationMode: "",
       preferredTime: "",
@@ -70,6 +97,12 @@ export default function BookAppointmentPage() {
       queryDescription: "",
     },
   });
+
+  useEffect(() => {
+    if(service) {
+      form.setValue("serviceArea", service);
+    }
+  }, [service, form]);
 
   const watchServiceArea = form.watch("serviceArea");
 
@@ -87,7 +120,7 @@ export default function BookAppointmentPage() {
       <div className="text-center">
         <h1 className="text-3xl font-bold">Book an Appointment</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Schedule a consultation with a qualified professional. Fill out the form below to request an appointment.
+          {proName ? `You are booking an appointment with ${decodeURIComponent(proName)}.` : "Schedule a consultation with a qualified professional."}
         </p>
       </div>
 
@@ -108,17 +141,12 @@ export default function BookAppointmentPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Service Area</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger><SelectValue placeholder="Select a service" /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="gst">GST</SelectItem>
-                          <SelectItem value="llp">LLP / Company Formation</SelectItem>
-                          <SelectItem value="pvt">Private Limited Compliance</SelectItem>
-                          <SelectItem value="startup">Start-up Advisory</SelectItem>
-                          <SelectItem value="cfo">Virtual CFO Services</SelectItem>
-                          <SelectItem value="others">Others</SelectItem>
+                          {serviceAreas.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -245,4 +273,12 @@ export default function BookAppointmentPage() {
       </Card>
     </div>
   );
+}
+
+export default function BookAppointmentPage() {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <BookAppointmentForm />
+        </React.Suspense>
+    )
 }

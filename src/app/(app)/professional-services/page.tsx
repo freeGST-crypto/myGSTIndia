@@ -12,6 +12,26 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
+const servicesList = [
+    { value: "gst_registration", label: "GST Registration" },
+    { value: "startup_registration", label: "Start-Up Registration" },
+    { value: "pvt_incorporation", label: "PVT Incorporation" },
+    { value: "opc_incorporation", label: "OPC Incorporation" },
+    { value: "llp_registration", label: "LLP Registration" },
+    { value: "partnership_registration", label: "Partnership Registration" },
+    { value: "itr_filing", label: "ITR Filing" },
+    { value: "society_registration", label: "Society Registration" },
+    { value: "gstr_filings", label: "GSTR Filings" },
+    { value: "gst_notices", label: "GST Notices" },
+    { value: "income_tax_notices", label: "Income Tax Notices" },
+    { value: "mca_compliance", label: "MCA Compliance" },
+    { value: "mca_monthly_retainership", label: "MCA Monthly Retainership" },
+    { value: "virtual_cfo", label: "Virtual CFO" },
+    { value: "book_keeping", label: "Book Keeping" },
+    { value: "payroll_accounting", label: "Payroll Accounting" },
+];
+
+
 const sampleProfessionals = [
   {
     id: "PRO-001",
@@ -19,7 +39,7 @@ const sampleProfessionals = [
     type: "ca",
     firmName: "Sharma & Associates",
     email: "rohan.sharma@ca-firm.com",
-    specialization: ["Startup Advisory", "GST", "Audit"],
+    specialization: ["Startup Advisory", "GST", "Audit", "Virtual CFO"],
     city: "Mumbai",
     experience: 10,
     rating: 4.8,
@@ -32,7 +52,7 @@ const sampleProfessionals = [
     type: "advocate",
     firmName: "Mehta Legal",
     email: "priya.mehta@legal.com",
-    specialization: ["Corporate Law", "GST Litigation"],
+    specialization: ["Corporate Law", "GST Litigation", "GST Notices", "Income Tax Notices"],
     city: "Delhi",
     experience: 12,
     rating: 4.9,
@@ -45,7 +65,7 @@ const sampleProfessionals = [
     type: "cs",
     firmName: "Singh Corporate Services",
     email: "anjali.s@cs-practitioner.com",
-    specialization: ["LLP & Company Formation", "Compliance"],
+    specialization: ["LLP Registration", "PVT Incorporation", "MCA Compliance", "MCA Monthly Retainership"],
     city: "Bangalore",
     experience: 8,
     rating: 4.7,
@@ -58,7 +78,7 @@ const sampleProfessionals = [
     type: "ca",
     firmName: "Reddy & Co.",
     email: "vikram.r@ca.com",
-    specialization: ["Income Tax", "Project Finance"],
+    specialization: ["Income Tax", "Project Finance", "ITR Filing", "Virtual CFO"],
     city: "Hyderabad",
     experience: 15,
     rating: 4.9,
@@ -71,7 +91,7 @@ const sampleProfessionals = [
     type: "advocate",
     firmName: "Gupta & Associates",
     email: "s.gupta@law.com",
-    specialization: ["Tax Litigation", "Contract Law"],
+    specialization: ["Tax Litigation", "Contract Law", "GST Notices", "Partnership Registration"],
     city: "Mumbai",
     experience: 20,
     rating: 4.6,
@@ -84,7 +104,7 @@ const sampleProfessionals = [
     type: "cwa",
     firmName: "Verma Cost Accountants",
     email: "s.verma@cwa.com",
-    specialization: ["Cost Audit", "Management Accounting"],
+    specialization: ["Cost Audit", "Management Accounting", "Book Keeping"],
     city: "Chennai",
     experience: 14,
     rating: 4.7,
@@ -97,7 +117,7 @@ const sampleProfessionals = [
     type: "accountant",
     firmName: "Accurate Bookkeeping",
     email: "neha.g@bookkeeping.com",
-    specialization: ["Bookkeeping", "Payroll", "MIS Reporting"],
+    specialization: ["Book Keeping", "Payroll Accounting", "MIS Reporting"],
     city: "Pune",
     experience: 7,
     rating: 4.6,
@@ -110,7 +130,7 @@ const sampleProfessionals = [
     type: "tax_practitioner",
     firmName: "Kumar Tax Consultants",
     email: "amit.k@taxhelp.com",
-    specialization: ["Income Tax Filing", "TDS/TCS"],
+    specialization: ["Income Tax Filing", "TDS/TCS", "ITR Filing", "GSTR Filings"],
     city: "Kolkata",
     experience: 18,
     rating: 4.8,
@@ -123,25 +143,27 @@ const sampleProfessionals = [
 export default function ProfessionalServicesPage() {
     const [city, setCity] = useState("Mumbai");
     const [profType, setProfType] = useState("all");
+    const [selectedService, setSelectedService] = useState<string | null>(null);
 
     const filteredProfessionals = sampleProfessionals.filter(p => {
         const cityMatch = city ? p.city.toLowerCase().includes(city.toLowerCase()) : true;
         const typeMatch = profType !== 'all' ? p.type === profType : true;
-        return cityMatch && typeMatch;
+        const serviceMatch = selectedService ? p.specialization.some(s => s.toLowerCase().includes(selectedService.split('_')[0])) : true;
+        return cityMatch && typeMatch && serviceMatch;
     });
 
     return (
         <div className="space-y-8">
             <div className="text-center">
                 <h1 className="text-3xl font-bold">Find a Professional</h1>
-                <p className="text-muted-foreground max-w-2xl mx-auto">Search our network of verified Chartered Accountants, Advocates, and Company Secretaries to find the right expert for your business needs.</p>
+                <p className="text-muted-foreground max-w-2xl mx-auto">Search our network of verified professionals to find the right expert for your business needs.</p>
             </div>
             
-             <Card className="max-w-3xl mx-auto">
+             <Card className="max-w-4xl mx-auto">
                 <CardHeader>
                     <CardTitle>Find an Expert</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="prof-type">Type of Professional</Label>
@@ -168,6 +190,21 @@ export default function ProfessionalServicesPage() {
                             </div>
                         </div>
                     </div>
+                     <div className="space-y-2">
+                        <Label>Select a Service</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {servicesList.map(service => (
+                                <Button
+                                    key={service.value}
+                                    variant={selectedService === service.value ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setSelectedService(prev => prev === service.value ? null : service.value)}
+                                >
+                                    {service.label}
+                                </Button>
+                            ))}
+                        </div>
+                     </div>
                 </CardContent>
             </Card>
 
@@ -202,7 +239,7 @@ export default function ProfessionalServicesPage() {
                                     ))}
                                 </div>
                                 <div className="pt-2">
-                                     <Link href={`/book-appointment?proId=${pro.id}&proName=${encodeURIComponent(pro.name)}&proType=${pro.type}`} passHref>
+                                     <Link href={`/book-appointment?proId=${pro.id}&proName=${encodeURIComponent(pro.name)}&proType=${pro.type}&service=${selectedService || ''}`} passHref>
                                         <Button>
                                             <CalendarPlus className="mr-2"/> Book an Appointment
                                         </Button>
