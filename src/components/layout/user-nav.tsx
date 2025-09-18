@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
-import { Heart, LogOut } from "lucide-react"
+import { LogOut } from "lucide-react"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
@@ -71,11 +71,6 @@ export function UserNav() {
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <div className="p-2 text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
-            <span>Made in India</span>
-            <Heart className="size-3 text-red-500" />
-        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

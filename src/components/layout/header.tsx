@@ -4,6 +4,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/layout/user-nav";
 import { GstEaseLogo } from "../icons";
+import { Heart } from "lucide-react";
 
 export function Header() {
   // In a real app, this data would come from a user context or API call
@@ -19,7 +20,11 @@ export function Header() {
          <h1 className="text-xl font-semibold hidden md:block">{companyInfo.name}</h1>
          <p className="text-sm text-muted-foreground font-mono hidden lg:block">{companyInfo.gstin}</p>
       </div>
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-4">
+        <div className="hidden items-center gap-1 text-sm font-medium text-muted-foreground md:flex">
+          <span>Made in India</span>
+          <Heart className="size-4 text-red-500 fill-red-500" />
+        </div>
         <UserNav />
       </div>
     </header>
