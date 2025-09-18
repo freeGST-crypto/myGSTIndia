@@ -1,7 +1,8 @@
+
 import { PlaceholderPage } from "@/components/placeholder-page";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Building, Users } from "lucide-react";
+import { ArrowRight, Building, Users, Briefcase } from "lucide-react";
 import Link from "next/link";
 
 export default function SettingsPage() {
@@ -48,10 +49,24 @@ export default function SettingsPage() {
                         </Link>
                     </CardContent>
                 </Card>
-                 <PlaceholderPage 
-                    title="Profile"
-                    description="Manage your personal profile details. This feature is currently under construction."
-                />
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Briefcase className="text-primary"/> Professional Profile
+                        </CardTitle>
+                        <CardDescription>
+                            Manage your public profile, expertise, and firm details. (For Professionals)
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Link href="/settings/professional-profile" passHref>
+                            <Button>
+                                <span>Update Profile</span>
+                                <ArrowRight className="ml-2 size-4" />
+                            </Button>
+                        </Link>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
