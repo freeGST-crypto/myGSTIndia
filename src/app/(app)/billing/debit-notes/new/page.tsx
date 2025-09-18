@@ -81,6 +81,7 @@ export default function NewDebitNotePage() {
   const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
   const purchases = journalVouchersSnapshot?.docs.filter(doc => doc.data().id.startsWith('JV-BILL-')).map(doc => ({ id: doc.data().id.replace('JV-',''), vendorId: doc.data().vendorId })) || [];
 
+  const filteredPurchases = purchases.filter(p => p.vendorId === vendor);
 
   const handleAddItem = () => {
     setLineItems([
@@ -143,6 +144,7 @@ export default function NewDebitNotePage() {
             narration: `Debit Note ${debitNoteId} issued to ${selectedVendor.name} against Bill #${originalPurchase}`,
             lines: journalLines,
             amount: totalAmount,
+            vendorId: vendor,
         });
         toast({ title: "Debit Note Saved", description: `Journal entry for ${debitNoteId} has been created.` });
     } catch (e: any) {
@@ -188,12 +190,12 @@ export default function NewDebitNotePage() {
             </div>
              <div className="space-y-2">
               <Label>Original Purchase Bill #</Label>
-              <Select onValueChange={setOriginalPurchase}>
+              <Select onValueChange={setOriginalPurchase} disabled={!vendor}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a purchase bill" />
                 </SelectTrigger>
                 <SelectContent>
-                  {purchases.map((purchase) => (
+                  {filteredPurchases.map((purchase) => (
                     <SelectItem key={purchase.id} value={purchase.id}>
                       {purchase.id}
                     </SelectItem>
@@ -322,5 +324,3 @@ export default function NewDebitNotePage() {
     </div>
   );
 }
-
-    

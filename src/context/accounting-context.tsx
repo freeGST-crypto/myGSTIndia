@@ -20,6 +20,8 @@ type JournalVoucher = {
     lines: JournalLine[];
     amount: number;
     userId: string;
+    customerId?: string;
+    vendorId?: string;
 };
 
 type AccountingContextType = {

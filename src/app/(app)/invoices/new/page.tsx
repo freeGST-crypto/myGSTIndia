@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useContext, useEffect } from "react";
@@ -154,6 +155,7 @@ export default function NewInvoicePage() {
             narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceNumber}`,
             lines: journalLines,
             amount: totalAmount,
+            customerId: customer,
         });
         toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
     } catch (e: any) {

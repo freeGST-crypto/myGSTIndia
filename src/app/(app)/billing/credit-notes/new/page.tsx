@@ -86,6 +86,8 @@ export default function NewCreditNotePage() {
   const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
   const invoices = journalVouchersSnapshot?.docs.filter(doc => doc.data().id.startsWith('JV-INV-')).map(doc => ({ id: doc.data().id.replace('JV-',''), customerId: doc.data().customerId })) || [];
 
+  const filteredInvoices = invoices.filter(inv => inv.customerId === customer);
+
   const handleAddItem = () => {
     setLineItems([
       ...lineItems,
@@ -147,6 +149,7 @@ export default function NewCreditNotePage() {
             narration: `Credit Note ${creditNoteId} issued to ${selectedCustomer.name} against Invoice #${originalInvoice}`,
             lines: journalLines,
             amount: totalAmount,
+            customerId: customer,
         });
         toast({ title: "Credit Note Saved", description: `Journal entry for ${creditNoteId} has been created.` });
     } catch (e: any) {
@@ -192,12 +195,12 @@ export default function NewCreditNotePage() {
             </div>
              <div className="space-y-2">
               <Label>Original Invoice #</Label>
-              <Select onValueChange={setOriginalInvoice}>
+              <Select onValueChange={setOriginalInvoice} disabled={!customer}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an invoice" />
                 </SelectTrigger>
                 <SelectContent>
-                  {invoices.map((invoice) => (
+                  {filteredInvoices.map((invoice) => (
                     <SelectItem key={invoice.id} value={invoice.id}>
                       {invoice.id}
                     </SelectItem>
@@ -326,7 +329,3 @@ export default function NewCreditNotePage() {
     </div>
   );
 }
-
-    
-
-    

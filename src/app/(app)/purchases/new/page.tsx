@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useContext } from "react";
@@ -155,6 +156,7 @@ export default function NewPurchasePage() {
             narration: `Purchase from ${selectedVendor.name} against Bill #${billNumber}`,
             lines: journalLines,
             amount: totalAmount,
+            vendorId: vendor,
         });
         toast({ title: "Purchase Bill Saved", description: `Journal entry for bill #${billNumber} has been automatically created.` });
     } catch (e: any) {
