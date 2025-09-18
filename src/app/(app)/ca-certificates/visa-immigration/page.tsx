@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,11 +28,13 @@ const formSchema = z.object({
   asOnDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
   assets: z.array(assetSchema),
   liabilities: z.array(liabilitySchema),
+  annualIncome: z.coerce.number().positive("Annual income is required."),
+  incomeYear: z.string().regex(/^\d{4}-\d{2}$/, "Invalid format. Use YYYY-YY."),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function NetWorthCertificatePage() {
+export default function VisaImmigrationCertificatePage() {
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -42,8 +43,10 @@ export default function NetWorthCertificatePage() {
       clientName: "",
       clientPan: "",
       asOnDate: new Date().toISOString().split("T")[0],
-      assets: [{ description: "Immovable Property - Residential Flat", value: 5000000 }],
-      liabilities: [{ description: "Housing Loan from HDFC Bank", value: 2000000 }],
+      assets: [{ description: "Market Value of Residential Property", value: 0 }],
+      liabilities: [{ description: "Outstanding Housing Loan", value: 0 }],
+      annualIncome: 0,
+      incomeYear: "2023-24",
     },
   });
 
@@ -52,7 +55,6 @@ export default function NetWorthCertificatePage() {
 
   const watchedAssets = form.watch("assets");
   const watchedLiabilities = form.watch("liabilities");
-
   const totalAssets = watchedAssets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
   const totalLiabilities = watchedLiabilities.reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
   const netWorth = totalAssets - totalLiabilities;
@@ -62,7 +64,6 @@ export default function NetWorthCertificatePage() {
         title: "Draft Certificate Generated",
         description: "The draft has been sent to the admin panel for certification.",
     });
-    // In a real app, this would trigger an action to save the draft and create a request.
   }
 
   return (
@@ -72,29 +73,29 @@ export default function NetWorthCertificatePage() {
         Back to Certificate Menu
       </Link>
       <div className="text-center">
-        <h1 className="text-3xl font-bold">Net Worth Certificate</h1>
-        <p className="text-muted-foreground">Generate a draft certificate of net worth for an individual or HUF.</p>
+        <h1 className="text-3xl font-bold">Visa / Immigration Certificate</h1>
+        <p className="text-muted-foreground">Generate a certificate of net worth and annual income for visa purposes.</p>
       </div>
       <Form {...form}>
         <form className="space-y-8">
             <Card>
-                <CardHeader>
-                    <CardTitle>Client and Date Information</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Client and Date Information</CardTitle></CardHeader>
                  <CardContent className="space-y-4">
-                     <FormField control={form.control} name="clientName" render={({ field }) => (<FormItem><FormLabel>Client's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                    <div className="grid md:grid-cols-2 gap-4">
-                         <FormField control={form.control} name="clientPan" render={({ field }) => (<FormItem><FormLabel>Client's PAN</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                         <FormField control={form.control} name="asOnDate" render={({ field }) => (<FormItem><FormLabel>Net Worth as on Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                     <FormField control={form.control} name="clientName" render={({ field }) => (<FormItem><FormLabel>Applicant's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                     <div className="grid md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="clientPan" render={({ field }) => (<FormItem><FormLabel>Applicant's PAN</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name="asOnDate" render={({ field }) => (<FormItem><FormLabel>Net Worth as on Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                     </div>
+                     <div className="grid md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="annualIncome" render={({ field }) => (<FormItem><FormLabel>Annual Income (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <FormField control={form.control} name="incomeYear" render={({ field }) => (<FormItem><FormLabel>For Financial Year</FormLabel><FormControl><Input placeholder="2023-24" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                     </div>
                 </CardContent>
             </Card>
 
             <div className="grid md:grid-cols-2 gap-8 items-start">
                  <Card>
-                    <CardHeader>
-                        <CardTitle>Assets</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Assets</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         {assetFields.map((field, index) => (
                              <div key={field.id} className="flex gap-2 items-end">
@@ -111,9 +112,7 @@ export default function NetWorthCertificatePage() {
                     </CardFooter>
                  </Card>
                  <Card>
-                    <CardHeader>
-                        <CardTitle>Liabilities</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Liabilities</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         {liabilityFields.map((field, index) => (
                              <div key={field.id} className="flex gap-2 items-end">
@@ -132,11 +131,16 @@ export default function NetWorthCertificatePage() {
             </div>
             
             <Card className="bg-muted/50">
-                <CardHeader>
-                    <CardTitle className="text-center">Calculated Net Worth</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                    <p className="text-4xl font-bold">₹{netWorth.toLocaleString('en-IN')}</p>
+                <CardHeader><CardTitle className="text-center">Summary for Visa</CardTitle></CardHeader>
+                <CardContent className="text-center grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Calculated Net Worth</p>
+                        <p className="text-3xl font-bold">₹{netWorth.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Annual Income</p>
+                        <p className="text-3xl font-bold">₹{form.getValues("annualIncome").toLocaleString('en-IN')}</p>
+                    </div>
                 </CardContent>
             </Card>
 

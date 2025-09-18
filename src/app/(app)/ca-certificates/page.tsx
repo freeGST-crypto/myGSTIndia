@@ -17,16 +17,16 @@ const certificateTypes = [
     {
         name: "Turnover Certificate",
         description: "Certify the annual turnover of a business.",
-        href: "#",
+        href: "/ca-certificates/turnover",
         icon: FileText,
-        status: "inactive"
+        status: "active"
     },
     {
         name: "Visa/Immigration Certificate",
         description: "Generate income and net worth certificates for visa purposes.",
-        href: "#",
+        href: "/ca-certificates/visa-immigration",
         icon: FileText,
-        status: "inactive"
+        status: "active"
     },
     {
         name: "Capital Contribution Certificate",
