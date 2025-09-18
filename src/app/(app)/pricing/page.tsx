@@ -29,7 +29,7 @@ const tiers = [
       { text: "GST & TDS Compliance Tools", included: false },
       { text: "Admin Panel / Client Management", included: false },
     ],
-    cta: "Get Started for Free",
+    cta: "Choose Freemium",
   },
   {
     id: "business",
@@ -81,11 +81,12 @@ export default function PricingPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
         {tiers.map((tier) => (
           <Card
-            key={tier.name}
+            key={tier.id}
             className={cn(
-              "flex flex-col transition-all",
+              "flex flex-col transition-all cursor-pointer",
               selectedPlan === tier.id ? "border-primary ring-2 ring-primary shadow-lg" : "hover:shadow-md"
             )}
+             onClick={() => setSelectedPlan(tier.id)}
           >
             <CardHeader className="relative">
               {tier.isPopular && (
@@ -124,7 +125,6 @@ export default function PricingPage() {
               <Button
                 className="w-full"
                 variant={selectedPlan === tier.id ? "default" : "outline"}
-                onClick={() => setSelectedPlan(tier.id)}
               >
                 {selectedPlan === tier.id ? (
                   <>

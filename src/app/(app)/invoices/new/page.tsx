@@ -49,9 +49,10 @@ import { cn } from "@/lib/utils";
 import { AccountingContext } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, addDoc, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
+import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 
 export default function NewInvoicePage() {
   const accountingContext = useContext(AccountingContext);
@@ -59,9 +60,11 @@ export default function NewInvoicePage() {
   const [user] = useAuthState(auth);
 
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
-  const [dueDate, setDueDate] = useState<Date | undefined>();
   const [customer, setCustomer] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  
+  const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+  const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   
   const [lineItems, setLineItems] = useState([
     {
@@ -174,6 +177,9 @@ export default function NewInvoicePage() {
         <h1 className="text-2xl font-bold">Create New Invoice</h1>
       </div>
 
+      <PartyDialog type="Customer" open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} />
+      <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} />
+
       <Card>
         <CardHeader>
           <CardTitle>Invoice Details</CardTitle>
@@ -185,18 +191,21 @@ export default function NewInvoicePage() {
           <div className="grid md:grid-cols-3 gap-6">
              <div className="space-y-2">
               <Label>Bill To</Label>
-              <Select onValueChange={setCustomer} disabled={customersLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select onValueChange={setCustomer} disabled={customersLoading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}><PlusCircle/></Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-no">Invoice Number</Label>
@@ -271,10 +280,16 @@ export default function NewInvoicePage() {
                 ))}
               </TableBody>
             </Table>
-            <Button variant="outline" size="sm" onClick={handleAddItem}>
-              <PlusCircle className="mr-2" />
-              Add Item
-            </Button>
+             <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleAddItem}>
+                <PlusCircle className="mr-2" />
+                Add Row
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => setIsItemDialogOpen(true)}>
+                <PlusCircle className="mr-2" />
+                Add New Item
+                </Button>
+            </div>
           </div>
 
           <div className="flex justify-end">

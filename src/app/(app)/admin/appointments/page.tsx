@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Check, UserPlus, X } from "lucide-react";
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Appointment = {
   id: string;
@@ -101,9 +103,17 @@ const sampleAppointments: Appointment[] = [
   },
 ];
 
+const sampleProfessionals = [
+    { id: "PRO-001", name: "Rohan Sharma, CA" },
+    { id: "PRO-002", name: "Priya Mehta, Advocate" },
+    { id: "PRO-003", name: "Anjali Singh, CS" },
+];
+
 export default function AppointmentsListPage() {
   const [appointments, setAppointments] = useState(sampleAppointments);
   const { toast } = useToast();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   const handleStatusChange = (id: string, status: Appointment['status']) => {
     setAppointments(prev =>
@@ -114,6 +124,22 @@ export default function AppointmentsListPage() {
       description: `Appointment ${id} has been marked as ${status.toLowerCase()}.`,
     });
   };
+
+  const handleAssignProfessional = (professionalId: string) => {
+      if (!selectedAppointment) return;
+      const professional = sampleProfessionals.find(p => p.id === professionalId);
+      if (!professional) return;
+
+      setAppointments(prev => 
+          prev.map(apt => apt.id === selectedAppointment.id ? { ...apt, assignedTo: professional.name, status: "Confirmed" } : apt)
+      );
+      toast({
+          title: "Professional Assigned",
+          description: `${professional.name} has been assigned to appointment ${selectedAppointment.id}.`
+      });
+      setIsAssignDialogOpen(false);
+      setSelectedAppointment(null);
+  }
 
   const getStatusBadge = (status: Appointment['status']) => {
     switch (status) {
@@ -145,7 +171,7 @@ export default function AppointmentsListPage() {
                 <TableHead>Client</TableHead>
                 <TableHead>Request</TableHead>
                 <TableHead>Preferred Slot</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Status / Assigned To</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -164,7 +190,10 @@ export default function AppointmentsListPage() {
                     <div>{format(apt.preferredDate, 'dd MMM, yyyy')}</div>
                     <div className="text-sm text-muted-foreground">{apt.preferredTime}</div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(apt.status)}</TableCell>
+                  <TableCell>
+                      {getStatusBadge(apt.status)}
+                      {apt.assignedTo && <div className="text-xs text-muted-foreground mt-1">to {apt.assignedTo}</div>}
+                  </TableCell>
                   <TableCell className="text-right">
                      <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -173,7 +202,7 @@ export default function AppointmentsListPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled>
+                        <DropdownMenuItem onSelect={() => { setSelectedAppointment(apt); setIsAssignDialogOpen(true); }}>
                           <UserPlus className="mr-2" /> Assign Professional
                         </DropdownMenuItem>
                          <DropdownMenuSeparator />
@@ -192,6 +221,29 @@ export default function AppointmentsListPage() {
           </Table>
         </CardContent>
       </Card>
+      
+       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Assign Professional</DialogTitle>
+                    <DialogDescription>
+                        Assign a professional to handle appointment #{selectedAppointment?.id} for {selectedAppointment?.clientName}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Select onValueChange={handleAssignProfessional}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a professional..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {sampleProfessionals.map(pro => (
+                                <SelectItem key={pro.id} value={pro.id}>{pro.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }

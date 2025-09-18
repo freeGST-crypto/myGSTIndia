@@ -54,6 +54,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
+import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 
 
 export default function NewPurchasePage() {
@@ -64,6 +65,9 @@ export default function NewPurchasePage() {
   const [billDate, setBillDate] = useState<Date | undefined>(new Date());
   const [vendor, setVendor] = useState("");
   const [billNumber, setBillNumber] = useState("");
+  
+  const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
+  const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
 
   const [lineItems, setLineItems] = useState([
     {
@@ -142,11 +146,10 @@ export default function NewPurchasePage() {
         return;
     }
 
-    // This creates the double-entry accounting transaction for the purchase.
     const journalLines = [
-        { account: '5050', debit: subtotal.toFixed(2), credit: '0' }, // Debit Purchases
-        { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, // Debit GST Payable (for ITC)
-        { account: '2010', debit: '0', credit: totalAmount.toFixed(2) } // Credit Accounts Payable
+        { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
+        { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, 
+        { account: '2010', debit: '0', credit: totalAmount.toFixed(2) } 
     ];
 
     try {
@@ -176,6 +179,9 @@ export default function NewPurchasePage() {
         <h1 className="text-2xl font-bold">Add New Purchase Bill</h1>
       </div>
 
+      <PartyDialog type="Vendor" open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} />
+      <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} />
+
       <Card>
         <CardHeader>
           <CardTitle>Purchase Bill Details</CardTitle>
@@ -187,18 +193,21 @@ export default function NewPurchasePage() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <Select onValueChange={setVendor} disabled={vendorsLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={vendorsLoading ? "Loading..." : "Select a vendor"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {vendors.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select onValueChange={setVendor} disabled={vendorsLoading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={vendorsLoading ? "Loading..." : "Select a vendor"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" size="icon" onClick={() => setIsVendorDialogOpen(true)}><PlusCircle /></Button>
+              </div>
             </div>
              <div className="space-y-2">
               <Label htmlFor="bill-no">Bill Number</Label>
@@ -296,10 +305,16 @@ export default function NewPurchasePage() {
                 ))}
               </TableBody>
             </Table>
-            <Button variant="outline" size="sm" onClick={handleAddItem}>
-              <PlusCircle className="mr-2" />
-              Add Item
-            </Button>
+            <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleAddItem}>
+                <PlusCircle className="mr-2" />
+                Add Row
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => setIsItemDialogOpen(true)}>
+                <PlusCircle className="mr-2" />
+                Add New Item
+                </Button>
+            </div>
           </div>
 
           <div className="flex justify-end">

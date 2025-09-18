@@ -35,10 +35,30 @@ import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-const sampleProfessionals = [
+type Professional = {
+    id: string;
+    name: string;
+    firmName: string;
+    email: string;
+    city: string;
+    specialization: string | string[];
+    clients: number;
+    status: "Active" | "Pending Verification" | "Inactive";
+    about: string;
+    experience: number;
+    staffCount: number;
+    proCount: number;
+    avatarUrl: string;
+    type?: string;
+    rating?: number;
+    reviews?: number;
+};
+
+const sampleProfessionals: Professional[] = [
   {
     id: "PRO-001",
     name: "Rohan Sharma, CA",
+    type: "ca",
     firmName: "Sharma & Associates",
     email: "rohan.sharma@ca-firm.com",
     city: "Mumbai",
@@ -54,6 +74,7 @@ const sampleProfessionals = [
   {
     id: "PRO-002",
     name: "Priya Mehta, Advocate",
+    type: "advocate",
     firmName: "Mehta Legal",
     email: "priya.mehta@legal.com",
     city: "Delhi",
@@ -69,6 +90,7 @@ const sampleProfessionals = [
   {
     id: "PRO-003",
     name: "Anjali Singh, CS",
+    type: "cs",
     firmName: "Singh Corporate Services",
     email: "anjali.s@cs-practitioner.com",
     city: "Bangalore",
@@ -84,6 +106,7 @@ const sampleProfessionals = [
   {
     id: "PRO-006",
     name: "Sandeep Verma, CWA",
+    type: "cwa",
     firmName: "Verma Cost Accountants",
     email: "s.verma@cwa.com",
     city: "Chennai",
@@ -99,6 +122,7 @@ const sampleProfessionals = [
    {
     id: "PRO-008",
     name: "Amit Kumar, Tax Practitioner",
+    type: "tax_practitioner",
     firmName: "Kumar Tax Consultants",
     email: "amit.k@taxhelp.com",
     city: "Kolkata",
@@ -142,7 +166,7 @@ const sampleProfessionals = [
 ];
 
 export default function ProfessionalsListPage() {
-  const [professionals, setProfessionals] = useState(sampleProfessionals);
+  const [professionals, setProfessionals] = useState<Professional[]>(sampleProfessionals);
   const { toast } = useToast();
 
   const handleExport = () => {
@@ -165,6 +189,23 @@ export default function ProfessionalsListPage() {
         description: "The professionals list has been exported to an Excel file."
     });
   };
+
+  const handleStatusChange = (id: string, status: Professional['status']) => {
+    setProfessionals(prev => prev.map(pro => pro.id === id ? { ...pro, status } : pro));
+    toast({
+        title: `Profile ${status}`,
+        description: `Professional profile has been marked as ${status}.`
+    });
+  };
+
+  const handleDelete = (id: string) => {
+      setProfessionals(prev => prev.filter(pro => pro.id !== id));
+      toast({
+          variant: "destructive",
+          title: "Profile Deleted",
+          description: "The professional has been removed from the platform."
+      });
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -287,9 +328,9 @@ export default function ProfessionalsListPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem><Edit className="mr-2" /> Edit Profile</DropdownMenuItem>
-                        {pro.status === "Pending Verification" && <DropdownMenuItem><CheckCircle className="mr-2" /> Approve Verification</DropdownMenuItem>}
-                        {pro.status === "Active" && <DropdownMenuItem><XCircle className="mr-2" /> Deactivate Profile</DropdownMenuItem>}
-                        <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2" /> Delete</DropdownMenuItem>
+                        {pro.status === "Pending Verification" && <DropdownMenuItem onClick={() => handleStatusChange(pro.id, 'Active')}><CheckCircle className="mr-2" /> Approve Verification</DropdownMenuItem>}
+                        {pro.status === "Active" && <DropdownMenuItem onClick={() => handleStatusChange(pro.id, 'Inactive')}><XCircle className="mr-2" /> Deactivate Profile</DropdownMenuItem>}
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(pro.id)}><Trash2 className="mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
