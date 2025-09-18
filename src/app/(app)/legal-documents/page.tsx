@@ -142,6 +142,27 @@ const documentTypes = [
         status: "active"
     },
     {
+        name: "Shareholders’ Agreement (SHA)",
+        description: "Define rights and obligations of shareholders.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "ESOP Trust Deed / Policy",
+        description: "Establish an Employee Stock Option Plan.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Convertible Note / SAFE Agreement",
+        description: "For early-stage startup fundraising.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
         name: "Society Registration Deed",
         description: "Register a new society with a formal deed.",
         href: "#",
