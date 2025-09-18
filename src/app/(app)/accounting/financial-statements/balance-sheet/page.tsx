@@ -61,7 +61,7 @@ export default function BalanceSheetPage() {
     
     // Calculate P&L for Retained Earnings
     const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
-    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense' && a.code !== '5150').map(a => a.code); // Exclude Depreciation
+    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
     
     // Revenue is credit-positive, so we negate the balance (which is debit-positive)
     const totalRevenue = revenueAccounts.reduce((sum, code) => sum + -(accountBalances[code] || 0), 0);
@@ -330,3 +330,5 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
+
+    
