@@ -86,7 +86,7 @@ export default function ProfitAndLossPage() {
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                     <div>
                         <CardTitle>Report Period</CardTitle>
-                        <CardDescription>Select a date range to generate the report.</CardDescription>
+                        <CardDescription>Select a date range to generate the report. Currently showing live data.</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                         <CalendarDays className="text-muted-foreground"/>
@@ -191,5 +191,3 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
-
-    

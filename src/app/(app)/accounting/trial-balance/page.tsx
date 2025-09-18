@@ -33,10 +33,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileDown, AlertTriangle, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FileDown, AlertTriangle, ChevronDown, Upload, Download, FileSpreadsheet, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+
 
 const trialBalanceData = [
   // Assets
@@ -67,6 +75,9 @@ export default function TrialBalancePage() {
     const { toast } = useToast();
     const router = useRouter();
     const [isMismatchDialogOpen, setIsMismatchDialogOpen] = useState(false);
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const [uploadDate, setUploadDate] = useState<Date | undefined>(new Date());
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
 
     const totalDebits = trialBalanceData.reduce((acc, item) => acc + item.debit, 0);
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
@@ -75,7 +86,6 @@ export default function TrialBalancePage() {
     const suspenseEntries = trialBalanceData.filter(item => item.code === "9999");
 
     const handleAccountClick = (code: string) => {
-        // In a real app, this would be: router.push(`/accounting/ledgers?account=${code}`);
         router.push('/accounting/ledgers');
         toast({
             title: `Navigating to Ledger`,
@@ -89,6 +99,42 @@ export default function TrialBalancePage() {
             description: `You have clicked 'Verify' for the entry: ${entry.account}. A modal would open here to correct this posting.`,
         });
     }
+    
+    const handleFileUpload = () => {
+        if (!uploadFile || !uploadDate) {
+            toast({ variant: "destructive", title: "Missing Information", description: "Please select a file and a date."});
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const csv = event.target?.result as string;
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            const requiredHeaders = ['account', 'debit', 'credit'];
+            if (!requiredHeaders.every(h => headers.includes(h))) {
+                 toast({ variant: "destructive", title: "Invalid CSV Header", description: "CSV must contain 'Account', 'Debit', and 'Credit' columns."});
+                 return;
+            }
+
+            // Simulate updating a central context
+            console.log("CSV Parsed. Simulating state override with source: 'upload'.");
+            console.log("Date:", uploadDate);
+            console.log("File:", uploadFile.name);
+
+            toast({
+                title: "Upload Successful",
+                description: `Financial reports will now be generated based on the uploaded Trial Balance as on ${format(uploadDate, "PPP")}.`,
+            });
+            setIsUploadDialogOpen(false);
+        };
+        reader.onerror = () => {
+            toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
+        };
+        reader.readAsText(uploadFile);
+    }
+
 
   return (
     <div className="space-y-8">
@@ -107,7 +153,7 @@ export default function TrialBalancePage() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => setIsUploadDialogOpen(true)}>
                     <Upload className="mr-2 h-4 w-4" />
                     Upload CSV
                 </DropdownMenuItem>
@@ -209,6 +255,47 @@ export default function TrialBalancePage() {
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setIsMismatchDialogOpen(false)}>Close</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Upload Trial Balance CSV</DialogTitle>
+                <DialogDescription>
+                  Upload a CSV to generate financial reports from that data. The file must contain 'Account', 'Debit', and 'Credit' columns.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="tb-date">Trial Balance Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !uploadDate && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {uploadDate ? format(uploadDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={uploadDate} onSelect={setUploadDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="tb-file">CSV File</Label>
+                    <Input id="tb-file" type="file" accept=".csv" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleFileUpload}>Upload and Process</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
