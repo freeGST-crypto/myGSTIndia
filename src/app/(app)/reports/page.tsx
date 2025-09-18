@@ -1,15 +1,18 @@
+
+"use client";
+
 import { PlaceholderPage } from "@/components/placeholder-page";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Presentation } from "lucide-react";
+import { ArrowRight, Presentation, Construction } from "lucide-react";
 import Link from "next/link";
 
 export default function ReportsPage() {
     return (
         <div className="space-y-8">
             <div className="text-center">
-                <h1 className="text-3xl font-bold">Reports</h1>
-                <p className="text-muted-foreground">Generate advanced financial and management reports.</p>
+                <h1 className="text-3xl font-bold">Financial & Management Reports</h1>
+                <p className="text-muted-foreground">Generate advanced reports for loans, analysis, and management.</p>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                  <Card>
@@ -30,14 +33,32 @@ export default function ReportsPage() {
                         </Link>
                     </CardContent>
                 </Card>
-                 <PlaceholderPage 
-                    title="Sales Analysis"
-                    description="Deep dive into your sales data with custom filters and visualizations. This feature is currently under construction."
-                />
-                 <PlaceholderPage 
-                    title="Purchase Analysis"
-                    description="Analyze your purchasing patterns and vendor performance. This feature is currently under construction."
-                />
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Construction className="text-primary"/> Sales Analysis
+                        </CardTitle>
+                        <CardDescription>
+                            Deep dive into your sales data with custom filters and visualizations.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button disabled variant="outline">Coming Soon</Button>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Construction className="text-primary"/> Purchase Analysis
+                        </CardTitle>
+                        <CardDescription>
+                            Analyze your purchasing patterns and vendor performance.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button disabled variant="outline">Coming Soon</Button>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

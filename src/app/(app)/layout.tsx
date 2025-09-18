@@ -116,7 +116,7 @@ const menuItems = [
   {
     label: "Reports",
     icon: AreaChart,
-    href: "/reports/cma-report",
+    href: "/reports",
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
     ],
