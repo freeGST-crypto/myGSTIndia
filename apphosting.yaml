@@ -1,8 +1,8 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
-# Replace "gstease-app-backend-xxxx" with the actual ID from the create command.
-id: gstease-app-backend-xxxx
+# Replace "YOUR_BACKEND_ID_HERE" with the actual ID from the `apphosting:backends:create` command.
+id: YOUR_BACKEND_ID_HERE
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
