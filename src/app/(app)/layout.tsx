@@ -19,13 +19,21 @@ import {
   FileMinus,
   Library,
   Scale,
-  BookCopy,
   BookOpen,
   Shield,
   Presentation,
   CalendarPlus,
   ReceiptText,
   ShoppingCart,
+  FileSpreadsheet,
+  GitCompareArrows,
+  BookPlus,
+  TrendingUp,
+  Building,
+  LayoutDashboard,
+  AreaChart,
+  BookCopy,
+  Briefcase,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -69,8 +77,8 @@ const menuItems = [
     label: "Compliance",
     icon: FileText,
     subItems: [
-      { href: "/gst-filings", label: "GST Filings" },
-      { href: "/reconciliation", label: "Reconciliation" },
+      { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet },
+      { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows },
       { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy },
     ],
   },
@@ -79,22 +87,22 @@ const menuItems = [
     icon: Calculator,
     subItems: [
       { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library },
-      { href: "/accounting/journal", label: "Journal Vouchers" },
-      { href: "/accounting/ledgers", label: "General Ledger" },
+      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookPlus },
+      { href: "/accounting/ledgers", label: "General Ledger", icon: Book },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale },
       {
         label: "Financial Statements",
         icon: BookOpen,
         subItems: [
-          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss" },
-          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet" },
+          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp },
+          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark },
         ],
       },
     ],
   },
   {
     label: "Reports",
-    icon: Landmark,
+    icon: AreaChart,
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
     ],
@@ -109,16 +117,16 @@ const menuItems = [
     label: "Admin",
     icon: Shield,
     subItems: [
-      { href: "/admin/dashboard", label: "Overview" },
-      { href: "/admin/users", label: "User Management" },
+      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
+      { href: "/admin/users", label: "User Management", icon: Users },
     ],
   },
   { 
     label: "Settings", 
     icon: Settings,
     subItems: [
-      { href: "/settings/branding", label: "Company Branding" },
-      { href: "/settings/users", label: "User Management" },
+      { href: "/settings/branding", label: "Company Branding", icon: Building },
+      { href: "/settings/users", label: "User Management", icon: Users },
     ],
   },
 ];
@@ -132,7 +140,7 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   }, [pathname, item.subItems]);
 
   return (
-    <SidebarMenuItem key={item.label}>
+    <SidebarMenuItem>
       <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <div
