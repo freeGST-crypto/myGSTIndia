@@ -195,6 +195,13 @@ export default function CmaReportGeneratorPage() {
       }
   };
 
+  const handleCertificationRequest = () => {
+      toast({
+          title: "Certification Request Sent",
+          description: "A request has been sent to the Admin for certification. You can track its status in the Admin panel."
+      });
+  }
+
 
   return (
     <div className="space-y-8">
@@ -436,17 +443,17 @@ export default function CmaReportGeneratorPage() {
                  <Card className="mt-8">
                     <CardHeader>
                         <CardTitle>Professional Certification</CardTitle>
-                        <CardDescription>As a professional (e.g., CA), you can digitally sign this report before sharing it.</CardDescription>
+                        <CardDescription>As a professional (e.g., CA), you can request certification for this report.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            This action would typically invoke a client-side utility like Emsigner to interact with a USB token containing the Digital Signature Certificate.
+                            This action will send a request to the admin for digital signature. The admin can then sign the document offline and upload the certified copy.
                         </p>
                     </CardContent>
                     <CardFooter>
-                        <Button>
+                        <Button onClick={handleCertificationRequest}>
                             <FileSignature className="mr-2"/>
-                            Certify & Sign with DSC
+                            Request Certification
                         </Button>
                     </CardFooter>
                 </Card>

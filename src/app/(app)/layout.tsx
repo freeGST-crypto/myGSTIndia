@@ -38,6 +38,7 @@ import {
   Briefcase,
   BadgePercent,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -142,6 +143,7 @@ const menuItems = [
       { href: "/admin/users", label: "Users", icon: Users },
       { href: "/admin/professionals", label: "Professionals", icon: UserSquare },
       { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign },
+      { href: "/admin/certification-requests", label: "Certification Requests", icon: ShieldCheck },
     ],
   },
 
