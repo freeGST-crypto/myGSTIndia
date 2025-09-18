@@ -37,6 +37,90 @@ const documentTypes = [
         status: "active"
     },
     {
+        name: "LLP Agreement",
+        description: "Draft an agreement for a Limited Liability Partnership.",
+        href: "/legal-documents/llp-agreement",
+        icon: FileText,
+        status: "active"
+    },
+     {
+        name: "Rental Receipts for HRA",
+        description: "Generate monthly rental receipts for employees.",
+        href: "/legal-documents/rental-receipts",
+        icon: FileText,
+        status: "active"
+    },
+    {
+        name: "Founders’ Agreement",
+        description: "Essential legal document for startup co-founders.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Loan Agreement",
+        description: "Between partners/directors & the company.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "GST Engagement Letter",
+        description: "Between a client and a tax consultant.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Accounting Engagement Agreement",
+        description: "Formalize the terms of accounting services.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "NDA (Non-Disclosure Agreement)",
+        description: "Protect sensitive company information.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Consultant / Freelancer Agreement",
+        description: "Define terms for engaging independent contractors.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Vendor Agreement",
+        description: "Set terms with your suppliers and vendors.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Service Agreement",
+        description: "A general-purpose agreement for providing services.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Franchise Agreement",
+        description: "Establish the terms of a franchise relationship.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
+        name: "Board Resolutions Library",
+        description: "Templates for common board resolutions.",
+        href: "#",
+        icon: FileText,
+        status: "coming_soon"
+    },
+    {
         name: "Society Registration Deed",
         description: "Register a new society with a formal deed.",
         href: "#",
@@ -51,26 +135,12 @@ const documentTypes = [
         status: "coming_soon"
     },
     {
-        name: "LLP Agreement",
-        description: "Draft an agreement for a Limited Liability Partnership.",
-        href: "/legal-documents/llp-agreement",
-        icon: FileText,
-        status: "active"
-    },
-    {
         name: "MOA & AOA",
         description: "Memorandum and Articles of Association for companies.",
         href: "#",
         icon: FileText,
         status: "coming_soon"
     },
-     {
-        name: "Rental Receipts for HRA",
-        description: "Generate monthly rental receipts for employees.",
-        href: "/legal-documents/rental-receipts",
-        icon: FileText,
-        status: "active"
-    }
 ]
 
 export default function LegalDocumentsPage() {
