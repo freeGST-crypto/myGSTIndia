@@ -31,16 +31,16 @@ const certificateTypes = [
     {
         name: "Capital Contribution Certificate",
         description: "Certify the capital brought in by partners/directors.",
-        href: "#",
+        href: "/ca-certificates/capital-contribution",
         icon: FileText,
-        status: "inactive"
+        status: "active"
     },
     {
         name: "Foreign Remittance (Form 15CB)",
         description: "Prepare Form 15CB for remittances made to non-residents.",
-        href: "#",
+        href: "/ca-certificates/foreign-remittance",
         icon: FileText,
-        status: "inactive"
+        status: "active"
     },
     {
         name: "General Attestation",
