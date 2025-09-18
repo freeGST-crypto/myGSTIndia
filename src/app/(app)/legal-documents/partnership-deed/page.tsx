@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import {
   ArrowLeft,
   ArrowRight,
@@ -135,12 +135,20 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 1: Firm Details</CardTitle><CardDescription>Enter the basic details of your partnership firm.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label>Firm Name</Label><Input {...form.register("firmName")} />{form.formState.errors.firmName && <p className="text-sm text-destructive">{form.formState.errors.firmName.message}</p>}</div>
-              <div><Label>Principal Place of Business</Label><Textarea {...form.register("firmAddress")} />{form.formState.errors.firmAddress && <p className="text-sm text-destructive">{form.formState.errors.firmAddress.message}</p>}</div>
-              <div><Label>Business Activity</Label><Textarea {...form.register("businessActivity")} placeholder="e.g., Trading of textiles, providing software services, etc." />{form.formState.errors.businessActivity && <p className="text-sm text-destructive">{form.formState.errors.businessActivity.message}</p>}</div>
-              <div><Label>Date of Commencement</Label><Input type="date" {...form.register("commencementDate")} />{form.formState.errors.commencementDate && <p className="text-sm text-destructive">{form.formState.errors.commencementDate.message}</p>}</div>
+              <FormField control={form.control} name="firmName" render={({ field }) => (
+                <FormItem><FormLabel>Firm Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField control={form.control} name="firmAddress" render={({ field }) => (
+                <FormItem><FormLabel>Principal Place of Business</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField control={form.control} name="businessActivity" render={({ field }) => (
+                <FormItem><FormLabel>Business Activity</FormLabel><FormControl><Textarea placeholder="e.g., Trading of textiles, providing software services, etc." {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField control={form.control} name="commencementDate" render={({ field }) => (
+                <FormItem><FormLabel>Date of Commencement</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
             </CardContent>
-            <CardFooter className="justify-end"><Button onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
       case 2:
@@ -151,21 +159,33 @@ export default function PartnershipDeedPage() {
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
                   <h3 className="font-medium">Partner {index + 1}</h3>
-                  {fields.length > 2 && <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
-                  <div><Label>Partner Name</Label><Input {...form.register(`partners.${index}.name`)} />{form.formState.errors.partners?.[index]?.name && <p className="text-sm text-destructive">{form.formState.errors.partners[index]?.name?.message}</p>}</div>
-                  <div><Label>Address</Label><Textarea {...form.register(`partners.${index}.address`)} />{form.formState.errors.partners?.[index]?.address && <p className="text-sm text-destructive">{form.formState.errors.partners[index]?.address?.message}</p>}</div>
+                  {fields.length > 2 && <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
+                  
+                  <FormField control={form.control} name={`partners.${index}.name`} render={({ field }) => (
+                    <FormItem><FormLabel>Partner Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  )}/>
+                   <FormField control={form.control} name={`partners.${index}.address`} render={({ field }) => (
+                    <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                  )}/>
+                  
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div><Label>Capital Contribution (₹)</Label><Input type="number" {...form.register(`partners.${index}.capitalContribution`)} />{form.formState.errors.partners?.[index]?.capitalContribution && <p className="text-sm text-destructive">{form.formState.errors.partners[index]?.capitalContribution?.message}</p>}</div>
-                    <div><Label>Profit Share (%)</Label><Input type="number" {...form.register(`partners.${index}.profitShare`)} />{form.formState.errors.partners?.[index]?.profitShare && <p className="text-sm text-destructive">{form.formState.errors.partners[index]?.profitShare?.message}</p>}</div>
+                    <FormField control={form.control} name={`partners.${index}.capitalContribution`} render={({ field }) => (
+                        <FormItem><FormLabel>Capital Contribution (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name={`partners.${index}.profitShare`} render={({ field }) => (
+                        <FormItem><FormLabel>Profit Share (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
                   </div>
-                  <div className="flex items-center gap-2"><Input type="checkbox" {...form.register(`partners.${index}.isWorkingPartner`)} className="size-4" /> <Label>This is a working partner</Label></div>
+                  <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => (
+                    <FormItem className="flex items-center gap-2"><FormControl><Input type="checkbox" checked={field.value} onChange={field.onChange} className="size-4" /></FormControl> <Label>This is a working partner</Label></FormItem>
+                  )}/>
                 </div>
               ))}
-              <Button variant="outline" onClick={() => append({ name: "", address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
+              <Button type="button" variant="outline" onClick={() => append({ name: "", address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
                {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must equal 100%. Current total: {totalProfitShare}%</p>}
+               {totalProfitShare !== 100 && !form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">Total profit share must equal 100%. Current total: {totalProfitShare}%</p>}
             </CardContent>
-            <CardFooter className="justify-between"><Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
       case 3:
@@ -173,31 +193,36 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 3: Banking & Operations</CardTitle><CardDescription>Define how the firm's bank account will be operated.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
-               <div>
-                   <Label>Bank Account Authority</Label>
-                    <Select onValueChange={(value) => form.setValue("bankAuthority", value as "joint" | "single" | "specific")} defaultValue={form.getValues("bankAuthority")}>
-                        <SelectTrigger><SelectValue/></SelectTrigger>
+               <FormField control={form.control} name="bankAuthority" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Bank Account Authority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                       <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="joint">Jointly by all partners</SelectItem>
                             <SelectItem value="single">Singly by any partner</SelectItem>
                             <SelectItem value="specific">By a specific partner</SelectItem>
                         </SelectContent>
                     </Select>
-               </div>
+                    <FormMessage/>
+                </FormItem>
+               )}/>
                {form.watch("bankAuthority") === "specific" && (
-                   <div>
-                        <Label>Select Specific Partner</Label>
-                        <Select onValueChange={(value) => form.setValue("specificPartner", value)} defaultValue={form.getValues("specificPartner")}>
-                            <SelectTrigger><SelectValue placeholder="Select a partner"/></SelectTrigger>
+                   <FormField control={form.control} name="specificPartner" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Select Specific Partner</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select a partner"/></SelectTrigger></FormControl>
                             <SelectContent>
                                 {form.getValues("partners").map((p, i) => p.name && <SelectItem key={i} value={p.name}>{p.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
-                        {form.formState.errors.specificPartner && <p className="text-sm text-destructive">{form.formState.errors.specificPartner.message}</p>}
-                   </div>
+                        <FormMessage/>
+                    </FormItem>
+                   )}/>
                )}
             </CardContent>
-             <CardFooter className="justify-between"><Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
       case 4:
@@ -205,16 +230,19 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 4: Additional Clauses</CardTitle><CardDescription>Add any custom clauses to the deed.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
-                <div>
-                    <Label>Custom Clauses / Special Conditions</Label>
-                    <Textarea {...form.register("extraClauses")} className="min-h-48" placeholder="e.g., 'In case of a dispute, arbitration shall be held in Mumbai.'"/>
-                </div>
+                <FormField control={form.control} name="extraClauses" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Custom Clauses / Special Conditions</FormLabel>
+                        <FormControl><Textarea className="min-h-48" placeholder="e.g., 'In case of a dispute, arbitration shall be held in Mumbai.'" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
                  <Button type="button" disabled>
                     <Loader2 className="mr-2 animate-spin"/>
                     Suggest Clauses with AI (Coming Soon)
                 </Button>
             </CardContent>
-            <CardFooter className="justify-between"><Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button onClick={processStep}>Preview Draft <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Preview Draft <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
      case 5:
@@ -238,7 +266,7 @@ export default function PartnershipDeedPage() {
                     <p>The bank account of the firm shall be operated {formData.bankAuthority === 'joint' ? 'jointly by all partners.' : formData.bankAuthority === 'single' ? 'singly by any of the partners.' : `by the specified partner: ${formData.specificPartner}.`}</p>
                     {formData.extraClauses && <><h3>Additional Clauses:</h3><p>{formData.extraClauses}</p></>}
                 </CardContent>
-                <CardFooter className="justify-between"><Button variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button onClick={() => toast({title: "Download Started", description: "Your document is being prepared for download."})}><FileDown className="mr-2"/> Download</Button></CardFooter>
+                <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started", description: "Your document is being prepared for download."})}><FileDown className="mr-2"/> Download</Button></CardFooter>
             </Card>
         )
       default:
@@ -257,7 +285,7 @@ export default function PartnershipDeedPage() {
         <p className="text-muted-foreground">Follow the steps to create your legal document.</p>
       </div>
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
           {renderStep()}
         </form>
       </Form>
