@@ -180,7 +180,7 @@ const documentTypes = [
         description: "Memorandum and Articles of Association for companies.",
         href: "/legal-documents/moa-aoa",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
 ]
 
