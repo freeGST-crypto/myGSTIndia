@@ -529,6 +529,60 @@ export default function PartnershipDeedPage() {
                         </div>
                     </div>
 
+                    <div className="prose-h5:font-bold prose-h5:text-center prose-p:text-center mt-16 break-before-page">
+                        <h5>PROFORMA</h5>
+                        <p>PHOTOGRAPHS AND FINGERPRINTS AS PER SECTION 32A OF REGISTRATION ACT,1908.<br/>
+                        (C&IGR&S Circular Memo No G1/8539/99, dated 19-04-2000)</p>
+
+                        <table className="w-full border-collapse border border-black mt-8 text-sm">
+                            <thead className="text-center font-bold">
+                                <tr>
+                                    <th className="border border-black p-2 w-1/4">FINGER PRINT S.NO: IN BLACKINK<br/>(LEFT THUMB)</th>
+                                    <th className="border border-black p-2 w-1/4">PASSPORT SIZE PHOTOGRAPH (BLACK & WHITE)</th>
+                                    <th className="border border-black p-2 w-1/2">NAME & PERMANENT POSTAL ADDRESS OF PRESENTANT / SELLER/ BUYER</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {formData.partners.map((p, i) => (
+                                    <tr key={i}>
+                                        <td className="border border-black h-32"></td>
+                                        <td className="border border-black h-32"></td>
+                                        <td className="border border-black h-32 p-2 align-top text-left">{i+1}. {p.name}<br/>{p.address}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        
+                        <div className="flex justify-between mt-16">
+                            <div className="text-left">
+                                <p className="font-bold">SIGNATURE OF WITNESSES</p>
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold">SIGNATURE OF EXECUTANTS</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {formData.partners.filter(p => p.address.toLowerCase().includes(formData.firmAddress.toLowerCase())).map((p, i) => (
+                         <div key={i} className="mt-32 text-left space-y-4 break-before-page">
+                            <h4 className="font-bold text-center">AFFIDAVIT</h4>
+                            <p>I {p.name}, {p.parentage}, R/o “{p.address}” do hereby solemnly affirm and state that as follows:</p> 
+                            <p>That I am the owner of the above mentioned property at “{formData.firmAddress}”</p>
+                            <p>We are doing partnership business in the name and style of M/s “{formData.firmName}” and which is managed by me i.e. {p.name} at R/o “{formData.firmAddress}” which is owned by me and I am not charging any rent for running this partnership business.</p>
+                            <p>I do hereby declare and confirm that the contents of the affidavit are true and correct to the best of my knowledge and belief and nothing material has been concealed.</p>
+                            <div className="flex justify-between pt-16">
+                                <div>
+                                    <p>Place:</p>
+                                    <p>Date:</p>
+                                </div>
+                                <div>
+                                    <p>Deponent Signature</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
                 </CardContent>
                 <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started", description: "Your document is being prepared for download."})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
             </Card>
@@ -556,5 +610,3 @@ export default function PartnershipDeedPage() {
     </div>
   );
 }
-
-    
