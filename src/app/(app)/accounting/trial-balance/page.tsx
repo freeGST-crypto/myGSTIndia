@@ -185,7 +185,7 @@ export default function TrialBalancePage() {
                     <Button
                         variant={"outline"}
                         className={cn(
-                        "w-[280px] justify-start text-left font-normal",
+                        "w-full md:w-[280px] justify-start text-left font-normal",
                         !date && "text-muted-foreground"
                         )}
                     >
@@ -205,38 +205,40 @@ export default function TrialBalancePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Account Code</TableHead>
-                        <TableHead>Account Name</TableHead>
-                        <TableHead className="text-right">Debit (₹)</TableHead>
-                        <TableHead className="text-right">Credit (₹)</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {trialBalanceData.map((item) => (
-                        <TableRow key={item.code}>
-                            <TableCell>{item.code}</TableCell>
-                            <TableCell 
-                                className="font-medium hover:underline cursor-pointer"
-                                onClick={() => handleAccountClick(item.code)}
-                            >
-                                {item.account}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">{item.debit > 0 ? item.debit.toFixed(2) : "-"}</TableCell>
-                            <TableCell className="text-right font-mono">{item.credit > 0 ? item.credit.toFixed(2) : "-"}</TableCell>
+            <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Account Code</TableHead>
+                            <TableHead>Account Name</TableHead>
+                            <TableHead className="text-right">Debit (₹)</TableHead>
+                            <TableHead className="text-right">Credit (₹)</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                    <TableRow className="bg-muted/50 font-bold hover:bg-muted/50">
-                        <TableCell colSpan={2} className="text-right">Total</TableCell>
-                        <TableCell className="text-right font-mono">₹{totalDebits.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-mono">₹{totalCredits.toFixed(2)}</TableCell>
-                    </TableRow>
-                </TableFooter>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {trialBalanceData.map((item) => (
+                            <TableRow key={item.code}>
+                                <TableCell>{item.code}</TableCell>
+                                <TableCell 
+                                    className="font-medium hover:underline cursor-pointer"
+                                    onClick={() => handleAccountClick(item.code)}
+                                >
+                                    {item.account}
+                                </TableCell>
+                                <TableCell className="text-right font-mono">{item.debit > 0 ? item.debit.toFixed(2) : "-"}</TableCell>
+                                <TableCell className="text-right font-mono">{item.credit > 0 ? item.credit.toFixed(2) : "-"}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow className="bg-muted/50 font-bold hover:bg-muted/50">
+                            <TableCell colSpan={2} className="text-right">Total</TableCell>
+                            <TableCell className="text-right font-mono">₹{totalDebits.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{totalCredits.toFixed(2)}</TableCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+            </div>
             {difference !== 0 && (
                 <div 
                     className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center cursor-pointer hover:bg-destructive/20"
@@ -331,5 +333,3 @@ export default function TrialBalancePage() {
     </div>
   );
 }
-
-    

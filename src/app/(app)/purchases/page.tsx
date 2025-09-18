@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -92,7 +93,7 @@ export default function PurchasesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Purchases</h1>
           <p className="text-muted-foreground">
@@ -140,67 +141,69 @@ export default function PurchasesPage() {
                 <Input
                   type="search"
                   placeholder="Search by Bill # or Vendor..."
-                  className="pl-8 sm:w-full md:w-1/3"
+                  className="pl-8 w-full md:w-1/3"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bill #</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPurchases.map((purchase) => (
-                <TableRow key={purchase.id}>
-                  <TableCell className="font-medium">{purchase.id}</TableCell>
-                  <TableCell>{purchase.vendor}</TableCell>
-                  <TableCell>{purchase.date}</TableCell>
-                   <TableCell>{purchase.dueDate}</TableCell>
-                  <TableCell className="text-center">{getStatusBadge(purchase.status)}</TableCell>
-                  <TableCell className="text-right">₹{purchase.amount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <FileText />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit />
-                          Edit Bill
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy />
-                          Duplicate Bill
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 />
-                          Delete Bill
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Bill #</TableHead>
+                        <TableHead>Vendor</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {filteredPurchases.map((purchase) => (
+                        <TableRow key={purchase.id}>
+                        <TableCell className="font-medium">{purchase.id}</TableCell>
+                        <TableCell>{purchase.vendor}</TableCell>
+                        <TableCell>{purchase.date}</TableCell>
+                        <TableCell>{purchase.dueDate}</TableCell>
+                        <TableCell className="text-center">{getStatusBadge(purchase.status)}</TableCell>
+                        <TableCell className="text-right">₹{purchase.amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                <FileText />
+                                View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                <Edit />
+                                Edit Bill
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                <Copy />
+                                Duplicate Bill
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive">
+                                <Trash2 />
+                                Delete Bill
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+            </div>
         </CardContent>
       </Card>
     </div>

@@ -103,7 +103,7 @@ export default function LedgersPage() {
                 <CardDescription>Choose an account and date range to view its ledger.</CardDescription>
                 <div className="flex flex-col md:flex-row gap-4 pt-4">
                     <Select onValueChange={setSelectedAccount} defaultValue={selectedAccount}>
-                        <SelectTrigger className="md:w-[300px]">
+                        <SelectTrigger className="w-full md:w-[300px]">
                             <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                         <SelectContent>
@@ -134,30 +134,32 @@ export default function LedgersPage() {
                         <StatCard title="Total Credits" value={`₹${totalCredits.toFixed(2)}`} icon={FileText} className="text-green-500" />
                         <StatCard title="Closing Balance" value={`₹${closingBalance.toFixed(2)}`} icon={FileText} />
                     </div>
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Particulars</TableHead>
-                            <TableHead>Voucher Type</TableHead>
-                            <TableHead className="text-right">Debit</TableHead>
-                            <TableHead className="text-right">Credit</TableHead>
-                            <TableHead className="text-right">Balance</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {initialLedgerEntries.map((entry, index) => (
-                            <TableRow key={index} onClick={() => handleRowClick(entry)} className={entry.type !== 'N/A' ? 'cursor-pointer' : ''}>
-                            <TableCell>{entry.date}</TableCell>
-                            <TableCell className="font-medium">{entry.particulars}</TableCell>
-                            <TableCell>{entry.type}</TableCell>
-                            <TableCell className="text-right">{entry.debit > 0 ? `₹${entry.debit.toFixed(2)}` : '-'}</TableCell>
-                            <TableCell className="text-right">{entry.credit > 0 ? `₹${entry.credit.toFixed(2)}` : '-'}</TableCell>
-                            <TableCell className="text-right font-medium">₹{entry.balance.toFixed(2)}</TableCell>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Particulars</TableHead>
+                                <TableHead>Voucher Type</TableHead>
+                                <TableHead className="text-right">Debit</TableHead>
+                                <TableHead className="text-right">Credit</TableHead>
+                                <TableHead className="text-right">Balance</TableHead>
                             </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                            {initialLedgerEntries.map((entry, index) => (
+                                <TableRow key={index} onClick={() => handleRowClick(entry)} className={entry.type !== 'N/A' ? 'cursor-pointer' : ''}>
+                                <TableCell>{entry.date}</TableCell>
+                                <TableCell className="font-medium">{entry.particulars}</TableCell>
+                                <TableCell>{entry.type}</TableCell>
+                                <TableCell className="text-right">{entry.debit > 0 ? `₹${entry.debit.toFixed(2)}` : '-'}</TableCell>
+                                <TableCell className="text-right">{entry.credit > 0 ? `₹${entry.credit.toFixed(2)}` : '-'}</TableCell>
+                                <TableCell className="text-right font-medium">₹{entry.balance.toFixed(2)}</TableCell>
+                                </TableRow>
+                            ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         )}

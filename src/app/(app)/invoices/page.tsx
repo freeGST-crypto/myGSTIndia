@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search, FileCog } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
@@ -163,19 +163,27 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Invoices</h1>
           <p className="text-muted-foreground">
             Create and manage your sales invoices.
           </p>
         </div>
-        <Link href="/invoices/new" passHref>
-          <Button>
-            <PlusCircle className="mr-2"/>
-            Create Full Invoice
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+            <Link href="/invoices/templates" passHref>
+                <Button variant="outline">
+                    <FileCog className="mr-2"/>
+                    Templates
+                </Button>
+            </Link>
+            <Link href="/invoices/new" passHref>
+            <Button>
+                <PlusCircle className="mr-2"/>
+                Create Full Invoice
+            </Button>
+            </Link>
+        </div>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -264,76 +272,78 @@ export default function InvoicesPage() {
                 <Input
                   type="search"
                   placeholder="Search by Invoice # or Customer..."
-                  className="pl-8 sm:w-full md:w-1/3"
+                  className="pl-8 w-full md:w-1/3"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.id}</TableCell>
-                  <TableCell>{invoice.customer}</TableCell>
-                  <TableCell>{invoice.date}</TableCell>
-                   <TableCell>{invoice.dueDate}</TableCell>
-                  <TableCell className="text-center">{getStatusBadge(invoice.status)}</TableCell>
-                  <TableCell className="text-right">₹{invoice.amount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <FileText />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit />
-                          Edit Invoice
-                        </DropdownMenuItem>
-                         <DropdownMenuItem>
-                          <Download />
-                          Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy />
-                          Duplicate Invoice
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                         <DropdownMenuItem>
-                          <FileJson />
-                          Generate E-Waybill JSON
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 />
-                          Cancel Invoice
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Invoice #</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {filteredInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.id}</TableCell>
+                    <TableCell>{invoice.customer}</TableCell>
+                    <TableCell>{invoice.date}</TableCell>
+                    <TableCell>{invoice.dueDate}</TableCell>
+                    <TableCell className="text-center">{getStatusBadge(invoice.status)}</TableCell>
+                    <TableCell className="text-right">₹{invoice.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Actions</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                            <FileText />
+                            View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                            <Edit />
+                            Edit Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                            <Download />
+                            Download PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                            <Copy />
+                            Duplicate Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                            <FileJson />
+                            Generate E-Waybill JSON
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">
+                            <Trash2 />
+                            Cancel Invoice
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

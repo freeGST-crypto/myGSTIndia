@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <Input
               type="search"
               placeholder="Search recent invoices..."
-              className="pl-8 sm:w-full md:w-1/3"
+              className="pl-8 w-full md:w-1/3"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
