@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { format } from "date-fns";
 
 declare module 'jspdf' {
     interface jsPDF {
@@ -91,8 +92,8 @@ export default function PurchaseOrdersPage() {
     // PO Details
     doc.setFontSize(11);
     doc.text(`PO Number: ${po.id}`, 200, 30, { align: "right" });
-    doc.text(`Date: ${po.date}`, 200, 36, { align: "right" });
-    doc.text(`Expected: ${po.expectedDate}`, 200, 42, { align: "right" });
+    doc.text(`Date: ${format(new Date(po.date), "dd MMM, yyyy")}`, 200, 36, { align: "right" });
+    doc.text(`Expected: ${format(new Date(po.expectedDate), "dd MMM, yyyy")}`, 200, 42, { align: "right" });
 
     // Vendor and Shipping Details
     doc.rect(14, 50, 182, 30); // Box around details
@@ -168,6 +169,13 @@ export default function PurchaseOrdersPage() {
     doc.save(`PO_${po.id}.pdf`);
     toast({ title: "Download Started", description: `PO ${po.id}.pdf is downloading.` });
   };
+  
+    const handleAction = (action: string, poId: string) => {
+        toast({
+            title: `Action: ${action}`,
+            description: `This would ${action.toLowerCase()} PO ${poId}. This is a placeholder.`
+        });
+    }
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -264,8 +272,8 @@ export default function PurchaseOrdersPage() {
                     <TableRow key={po.id}>
                     <TableCell className="font-medium">{po.id}</TableCell>
                     <TableCell>{po.vendor}</TableCell>
-                    <TableCell>{po.date}</TableCell>
-                    <TableCell>{po.expectedDate}</TableCell>
+                    <TableCell>{format(new Date(po.date), "dd MMM, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(po.expectedDate), "dd MMM, yyyy")}</TableCell>
                     <TableCell className="text-center">{getStatusBadge(po.status)}</TableCell>
                     <TableCell className="text-right">₹{po.amount.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
@@ -277,11 +285,11 @@ export default function PurchaseOrdersPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('Edit', po.id)}>
                             <Edit />
                             Edit PO
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('Convert to Bill', po.id)}>
                             <FileText />
                             Convert to Bill
                             </DropdownMenuItem>
@@ -290,7 +298,7 @@ export default function PurchaseOrdersPage() {
                             Download PDF
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onSelect={() => handleAction('Cancel', po.id)}>
                             <Trash2 />
                             Cancel PO
                             </DropdownMenuItem>

@@ -39,6 +39,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
+import jsPDF from 'jspdf';
 
 
 export default function InvoicesPage() {
@@ -150,6 +151,26 @@ export default function InvoicesPage() {
             toast({ variant: "destructive", title: "Cancellation Failed", description: e.message });
         }
     };
+    
+    const handleAction = (action: string, invoiceId: string) => {
+        toast({
+            title: `Action: ${action}`,
+            description: `This would ${action.toLowerCase()} invoice ${invoiceId}. This is a placeholder.`
+        });
+    }
+
+    const handleDownloadPdf = (invoice: any) => {
+        const doc = new jsPDF();
+        doc.setFontSize(22);
+        doc.text("INVOICE", 105, 20, { align: "center" });
+        doc.setFontSize(12);
+        doc.text(`Invoice #: ${invoice.id}`, 14, 40);
+        doc.text(`Date: ${format(new Date(invoice.date), "dd MMM, yyyy")}`, 14, 46);
+        doc.text(`Customer: ${invoice.customer}`, 14, 60);
+        doc.text(`Amount: Rs. ${invoice.amount.toFixed(2)}`, 14, 70);
+        doc.save(`Invoice_${invoice.id}.pdf`);
+        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+    }
 
 
   const getStatusBadge = (status: string) => {
@@ -324,24 +345,24 @@ export default function InvoicesPage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('View', invoice.id)}>
                             <FileText />
                             View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('Edit', invoice.id)}>
                             <Edit />
                             Edit Invoice
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleDownloadPdf(invoice)}>
                             <Download />
                             Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice.id)}>
                             <Copy />
                             Duplicate Invoice
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('Generate E-Waybill JSON', invoice.id)}>
                             <FileJson />
                             Generate E-Waybill JSON
                             </DropdownMenuItem>
@@ -367,7 +388,3 @@ export default function InvoicesPage() {
     </div>
   );
 }
-
-    
-
-    

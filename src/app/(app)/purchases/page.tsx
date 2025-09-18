@@ -32,14 +32,23 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
 import { AccountingContext } from "@/context/accounting-context";
 import { format, addDays } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PurchasesPage() {
-  const { journalVouchers } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
   const purchases = useMemo(() => {
-    return journalVouchers
-        .filter(v => v.id.startsWith("JV-BILL-"))
+    const allBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
+    const deletedBillIds = new Set(
+      journalVouchers
+        .filter(v => v.id.startsWith("JV-DEL-BILL-"))
+        .map(v => v.id.replace("JV-DEL-", ""))
+    );
+    
+    return allBills
+        .filter(bill => !deletedBillIds.has(bill.id.replace("JV-", "")))
         .map(v => ({
             id: v.id.replace("JV-", ""),
             vendor: v.narration.replace("Purchase from ", "").split(" against")[0],
@@ -50,7 +59,45 @@ export default function PurchasesPage() {
         }))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
+  
+  const handleDeleteBill = async (billId: string) => {
+    const originalVoucherId = `JV-${billId}`;
+    const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
 
+    if (!originalVoucher) {
+        toast({ variant: "destructive", title: "Error", description: "Original purchase transaction not found." });
+        return;
+    }
+
+    const reversalLines = originalVoucher.lines.map(line => ({
+        account: line.account,
+        debit: line.credit, // Swap debit and credit
+        credit: line.debit,
+    }));
+
+    const deletionVoucher = {
+        id: `JV-DEL-${billId}`,
+        date: new Date().toISOString().split('T')[0],
+        narration: `Deletion of Purchase Bill #${billId}`,
+        lines: reversalLines,
+        amount: originalVoucher.amount,
+        vendorId: originalVoucher.vendorId,
+    };
+
+    try {
+        await addJournalVoucher(deletionVoucher);
+        toast({ title: "Purchase Bill Deleted", description: `Purchase bill #${billId} has been successfully deleted.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
+    }
+  };
+  
+   const handleAction = (action: string, billId: string) => {
+        toast({
+            title: `Action: ${action}`,
+            description: `This would ${action.toLowerCase()} bill ${billId}. This is a placeholder.`
+        });
+    }
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -161,20 +208,20 @@ export default function PurchasesPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleAction('View', purchase.id)}>
                                 <FileText />
                                 View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleAction('Edit', purchase.id)}>
                                 <Edit />
                                 Edit Bill
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleAction('Duplicate', purchase.id)}>
                                 <Copy />
                                 Duplicate Bill
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">
+                                <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteBill(purchase.id)}>
                                 <Trash2 />
                                 Delete Bill
                                 </DropdownMenuItem>
@@ -191,7 +238,3 @@ export default function PurchasesPage() {
     </div>
   );
 }
-
-    
-
-    
