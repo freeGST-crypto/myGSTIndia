@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -46,15 +46,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AccountingContext } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
-
-const customers = [
-  { id: "CUST-001", name: "Global Tech Inc." },
-  { id: "CUST-002", name: "Innovate Solutions" },
-  { id: "CUST-003", name: "Quantum Leap" },
-];
+import { db, auth } from "@/lib/firebase";
+import { collection } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const items = [
   { id: "ITEM-001", name: "Standard Office Chair", price: 7500, hsn: "9401" },
@@ -65,7 +62,8 @@ const items = [
 export default function NewInvoicePage() {
   const accountingContext = useContext(AccountingContext);
   const { toast } = useToast();
-  
+  const [user] = useAuthState(auth);
+
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [customer, setCustomer] = useState("");
@@ -85,6 +83,10 @@ export default function NewInvoicePage() {
       sgst: 0,
     },
   ]);
+  
+  const customersQuery = user ? collection(db, 'customers') : null;
+  const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+  const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const handleAddItem = () => {
     setLineItems([
@@ -184,9 +186,9 @@ export default function NewInvoicePage() {
           <div className="grid md:grid-cols-3 gap-6">
              <div className="space-y-2">
               <Label>Bill To</Label>
-              <Select onValueChange={setCustomer}>
+              <Select onValueChange={setCustomer} disabled={customersLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a customer" />
+                  <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
                 </SelectTrigger>
                 <SelectContent>
                   {customers.map((c) => (
@@ -298,3 +300,5 @@ export default function NewInvoicePage() {
     </div>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -35,43 +36,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet, Search } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet, Search, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { db, auth } from "@/lib/firebase";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
+import { collection, addDoc } from 'firebase/firestore';
 
-const initialCustomers = [
-  {
-    id: "CUST-001",
-    name: "Global Tech Inc.",
-    email: "contact@globaltech.com",
-    phone: "+91 9876543210",
-    gstin: "27AACCG1234F1Z5",
-  },
-  {
-    id: "CUST-002",
-    name: "Innovate Solutions",
-    email: "accounts@innovate.co.in",
-    phone: "+91 9123456789",
-    gstin: "29AABCI5678G1Z4",
-  },
-];
 
-const initialVendors = [
-  {
-    id: "VEND-001",
-    name: "Supplier Alpha",
-    email: "sales@supplieralpha.com",
-    phone: "+91 8765432109",
-    gstin: "24AAACS4321H1Z2",
-  },
-  {
-    id: "VEND-002",
-    name: "Vendor Beta",
-    email: "info@vendorbeta.net",
-    phone: "+91 7654321098",
-    gstin: "33AACCV9876J1Z1",
-  },
-];
+type Party = {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    gstin: string;
+    userId: string;
+};
 
 export default function PartiesPage() {
     const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
@@ -79,6 +60,16 @@ export default function PartiesPage() {
     const [customerSearchTerm, setCustomerSearchTerm] = useState("");
     const [vendorSearchTerm, setVendorSearchTerm] = useState("");
     const { toast } = useToast();
+    const [user] = useAuthState(auth);
+
+    const customersQuery = user ? collection(db, 'customers') : null;
+    const [customersSnapshot, customersLoading, customersError] = useCollection(customersQuery);
+    const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+    const vendorsQuery = user ? collection(db, 'vendors') : null;
+    const [vendorsSnapshot, vendorsLoading, vendorsError] = useCollection(vendorsQuery);
+    const vendors = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
 
     const handleDownloadTemplate = (type: 'Customer' | 'Vendor') => {
         const headers = "Name,Email,Phone,GSTIN,Address Line 1,City,State,Pincode";
@@ -95,82 +86,96 @@ export default function PartiesPage() {
     };
 
     const filteredCustomers = useMemo(() => {
-        if (!customerSearchTerm) return initialCustomers;
-        return initialCustomers.filter(c => 
+        if (!customerSearchTerm) return customers;
+        return customers.filter(c => 
             c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-            c.gstin.toLowerCase().includes(customerSearchTerm.toLowerCase())
+            c.gstin?.toLowerCase().includes(customerSearchTerm.toLowerCase())
         );
-    }, [customerSearchTerm]);
+    }, [customers, customerSearchTerm]);
 
     const filteredVendors = useMemo(() => {
-        if (!vendorSearchTerm) return initialVendors;
-        return initialVendors.filter(v => 
+        if (!vendorSearchTerm) return vendors;
+        return vendors.filter(v => 
             v.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
-            v.gstin.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+            v.gstin?.toLowerCase().includes(vendorSearchTerm.toLowerCase())
         );
-    }, [vendorSearchTerm]);
+    }, [vendors, vendorSearchTerm]);
 
-    const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2"/>
-                    Add {type}
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
-                 <DialogHeader>
-                    <DialogTitle>Add New {type}</DialogTitle>
-                    <DialogDescription>
-                       Enter the details for your new {type.toLowerCase()}.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">Name</Label>
-                        <Input id="name" placeholder={`${type}'s legal name`} className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="gstin" className="text-right">GSTIN</Label>
-                        <Input id="gstin" placeholder="15-digit GSTIN" className="col-span-3" />
-                    </div>
-                    <Separator/>
-                     <h3 className="font-medium col-span-4">Contact Details</h3>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="email" className="text-right">Email</Label>
-                        <Input id="email" type="email" placeholder="contact@example.com" className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="phone" className="text-right">Phone</Label>
-                        <Input id="phone" placeholder="+91 98765 43210" className="col-span-3" />
-                    </div>
-                    <Separator />
-                     <h3 className="font-medium col-span-4">Billing Address</h3>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="address1" className="text-right">Address Line 1</Label>
-                        <Input id="address1" placeholder="Street, Building No." className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="city" className="text-right">City</Label>
-                        <Input id="city" placeholder="e.g. Mumbai" className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="state" className="text-right">State</Label>
-                        <Input id="state" placeholder="e.g. Maharashtra" className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="pincode" className="text-right">Pincode</Label>
-                        <Input id="pincode" placeholder="e.g. 400001" className="col-span-3" />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={() => onOpenChange(false)}>Save {type}</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+    const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => {
+        const [formData, setFormData] = useState({ name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' });
 
-    const PartyTable = ({ parties, type }: { parties: any[], type: 'Customer' | 'Vendor' }) => (
+        const handleSave = async () => {
+             if (!user) {
+                toast({ variant: "destructive", title: "Not Authenticated" });
+                return;
+            }
+             if (!formData.name || !formData.gstin) {
+                toast({ variant: "destructive", title: "Missing Fields", description: "Name and GSTIN are required." });
+                return;
+            }
+            const collectionName = type === 'Customer' ? 'customers' : 'vendors';
+            try {
+                await addDoc(collection(db, collectionName), {
+                    ...formData,
+                    userId: user.uid
+                });
+                toast({ title: `${type} Added`, description: `${formData.name} has been saved.` });
+                onOpenChange(false);
+                setFormData({ name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' });
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                toast({ variant: "destructive", title: "Error", description: `Could not save ${type}.` });
+            }
+        };
+
+        return (
+             <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2"/>
+                        Add {type}
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                        <DialogTitle>Add New {type}</DialogTitle>
+                        <DialogDescription>Enter the details for your new {type.toLowerCase()}.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">Name</Label>
+                            <Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder={`${type}'s legal name`} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="gstin" className="text-right">GSTIN</Label>
+                            <Input id="gstin" value={formData.gstin} onChange={e => setFormData({...formData, gstin: e.target.value})} placeholder="15-digit GSTIN" className="col-span-3" />
+                        </div>
+                        <Separator/>
+                        <h3 className="font-medium col-span-4">Contact Details</h3>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="email" className="text-right">Email</Label>
+                            <Input id="email" type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="contact@example.com" className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="phone" className="text-right">Phone</Label>
+                            <Input id="phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 98765 43210" className="col-span-3" />
+                        </div>
+                        <Separator />
+                        <h3 className="font-medium col-span-4">Billing Address</h3>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="address1" className="text-right">Address</Label>
+                            <Input id="address1" value={formData.address1} onChange={e => setFormData({...formData, address1: e.target.value})} placeholder="Street, Building No." className="col-span-3" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={handleSave}>Save {type}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        )
+    };
+
+    const PartyTable = ({ parties, loading }: { parties: any[], loading: boolean }) => (
         <Table>
             <TableHeader>
                 <TableRow>
@@ -181,7 +186,8 @@ export default function PartiesPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {parties.map((party) => (
+                {loading ? <TableRow><TableCell colSpan={4} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>
+                : parties.map((party) => (
                     <TableRow key={party.id}>
                         <TableCell className="font-medium">{party.name}</TableCell>
                         <TableCell>
@@ -279,7 +285,7 @@ export default function PartiesPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PartyTable parties={filteredCustomers} type="Customer"/>
+                    <PartyTable parties={filteredCustomers} loading={customersLoading}/>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -308,7 +314,7 @@ export default function PartiesPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PartyTable parties={filteredVendors} type="Vendor"/>
+                    <PartyTable parties={filteredVendors} loading={vendorsLoading}/>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -316,3 +322,5 @@ export default function PartiesPage() {
     </div>
   );
 }
+
+    

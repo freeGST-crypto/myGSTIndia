@@ -50,15 +50,13 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { AccountingContext } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
+import { db, auth } from "@/lib/firebase";
+import { collection } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
 
 // Sample data
-const vendors = [
-  { id: "VEND-001", name: "Supplier Alpha" },
-  { id: "VEND-002", name: "Vendor Beta" },
-  { id: "VEND-003", name: "Supplier Gamma" },
-];
-
 const items = [
   { id: "ITEM-001", name: "Standard Office Chair", price: 4500, hsn: "9401" },
   {
@@ -74,6 +72,7 @@ const items = [
 export default function NewPurchasePage() {
   const accountingContext = useContext(AccountingContext);
   const { toast } = useToast();
+  const [user] = useAuthState(auth);
 
   const [billDate, setBillDate] = useState<Date | undefined>(new Date());
   const [vendor, setVendor] = useState("");
@@ -90,6 +89,10 @@ export default function NewPurchasePage() {
       amount: 0,
     },
   ]);
+  
+  const vendorsQuery = user ? collection(db, 'vendors') : null;
+  const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
+  const vendors = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const handleAddItem = () => {
     setLineItems([
@@ -192,9 +195,9 @@ export default function NewPurchasePage() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <Select onValueChange={setVendor}>
+              <Select onValueChange={setVendor} disabled={vendorsLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a vendor" />
+                  <SelectValue placeholder={vendorsLoading ? "Loading..." : "Select a vendor"} />
                 </SelectTrigger>
                 <SelectContent>
                   {vendors.map((v) => (
