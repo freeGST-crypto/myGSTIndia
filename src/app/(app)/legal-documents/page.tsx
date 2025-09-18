@@ -146,7 +146,8 @@ const documentTypes = [
         description: "Templates for common board resolutions.",
         href: "/legal-documents/board-resolutions",
         icon: FileText,
-        status: "active"
+        status: "active",
+        price: 750,
     },
     {
         name: "Shareholders’ Agreement (SHA)",
