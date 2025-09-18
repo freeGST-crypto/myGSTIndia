@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -49,6 +49,7 @@ import {
   Edit,
   Trash2,
   Calendar as CalendarIcon,
+  Loader2,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -58,16 +59,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-
-const initialReceipts = [
-  { id: "RV-001", date: "2024-06-05", party: "Global Tech Inc.", amount: 25000, mode: "Bank" },
-  { id: "RV-002", date: "2024-06-10", party: "Cash Sales", amount: 5000, mode: "Cash" },
-];
-
-const initialPayments = [
-  { id: "PV-001", date: "2024-06-07", party: "Supplier Alpha", amount: 8500, mode: "Bank" },
-  { id: "PV-002", date: "2024-06-12", party: "Office Expenses", amount: 1500, mode: "Cash" },
-];
+import { AccountingContext } from "@/context/accounting-context";
+import { Badge } from "@/components/ui/badge";
 
 const accounts = [
     { code: "1010", name: "Cash on Hand" },
@@ -85,17 +78,98 @@ const invoices = [
 ]
 
 export default function VouchersPage() {
+    const accountingContext = useContext(AccountingContext);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [dialogType, setDialogType] = useState<'receipt' | 'payment'>('receipt');
     const [transactionType, setTransactionType] = useState<string>("on_account");
     const [date, setDate] = useState<Date | undefined>(new Date());
     const { toast } = useToast();
+
+    if (!accountingContext) {
+        return <Loader2 className="animate-spin" />;
+    }
     
-    const handleVoucherAction = (action: string, voucherId: string) => {
-        toast({
-            title: `${action} Voucher`,
-            description: `Simulating ${action.toLowerCase()} action for voucher ${voucherId}.`,
-        });
+    const { journalVouchers, addJournalVoucher, loading } = accountingContext;
+
+    const { receipts, payments } = useMemo(() => {
+        const deletedIds = new Set(
+            journalVouchers.filter(v => v.id.startsWith("JV-DEL-"))
+                         .map(v => v.id.replace("JV-DEL-", ""))
+        );
+
+        const allReceipts = journalVouchers
+            .filter(v => v.id.startsWith("JV-RV-"))
+            .map(v => {
+                const isDeleted = deletedIds.has(v.id.replace("JV-", ""));
+                return {
+                    id: v.id.replace("JV-", ""),
+                    date: v.date,
+                    party: v.narration.split(" from ")[1]?.split(" against")[0] || v.narration,
+                    amount: v.amount,
+                    mode: v.lines.some(l => l.account === '1010') ? 'Cash' : 'Bank',
+                    status: isDeleted ? 'Deleted' : 'Active'
+                };
+            });
+
+        const allPayments = journalVouchers
+            .filter(v => v.id.startsWith("JV-PV-"))
+            .map(v => {
+                const isDeleted = deletedIds.has(v.id.replace("JV-", ""));
+                 return {
+                    id: v.id.replace("JV-", ""),
+                    date: v.date,
+                    party: v.narration.split(" to ")[1]?.split(" for")[0] || v.narration,
+                    amount: v.amount,
+                    mode: v.lines.some(l => l.account === '1010') ? 'Cash' : 'Bank',
+                    status: isDeleted ? 'Deleted' : 'Active'
+                };
+            });
+
+        return { receipts: allReceipts, payments: allPayments };
+    }, [journalVouchers]);
+    
+    const handleDeleteVoucher = async (voucherId: string) => {
+        const originalVoucherId = `JV-${voucherId}`;
+        const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+
+        if (!originalVoucher) {
+            toast({ variant: "destructive", title: "Error", description: "Original voucher transaction not found." });
+            return;
+        }
+
+        const reversalLines = originalVoucher.lines.map(line => ({
+            account: line.account,
+            debit: line.credit, // Swap debit and credit
+            credit: line.debit,
+        }));
+        
+        const deletionIdPrefix = voucherId.startsWith('RV') ? 'DEL-RV' : 'DEL-PV';
+
+        const deletionVoucher = {
+            id: `JV-DEL-${voucherId}`,
+            date: new Date().toISOString().split('T')[0],
+            narration: `Deletion of Voucher #${voucherId}`,
+            lines: reversalLines,
+            amount: originalVoucher.amount,
+        };
+
+        try {
+            await addJournalVoucher(deletionVoucher);
+            toast({ title: "Voucher Deleted", description: `Voucher #${voucherId} has been successfully deleted.` });
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
+        }
+    };
+    
+    const handleAction = (action: string, voucherId: string) => {
+        if(action === 'Delete') {
+            handleDeleteVoucher(voucherId);
+        } else {
+            toast({
+                title: `${action} Voucher`,
+                description: `Simulating ${action.toLowerCase()} action for voucher ${voucherId}.`,
+            });
+        }
     };
 
     const openDialog = (type: 'receipt' | 'payment') => {
@@ -152,17 +226,20 @@ export default function VouchersPage() {
                         <TableHead>Voucher #</TableHead>
                         <TableHead>Received From</TableHead>
                         <TableHead>Mode</TableHead>
+                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {initialReceipts.map((voucher) => (
+                    {loading && <TableRow><TableCell colSpan={7} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>}
+                    {receipts.map((voucher) => (
                         <TableRow key={voucher.id}>
                         <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>
                         <TableCell className="font-medium">{voucher.id}</TableCell>
                         <TableCell>{voucher.party}</TableCell>
                         <TableCell>{voucher.mode}</TableCell>
+                         <TableCell><Badge variant={voucher.status === 'Deleted' ? 'destructive' : 'default'}>{voucher.status}</Badge></TableCell>
                         <TableCell className="text-right font-mono">₹{voucher.amount.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
@@ -170,9 +247,11 @@ export default function VouchersPage() {
                                     <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onSelect={() => handleVoucherAction("View", voucher.id)}><FileText className="mr-2"/>View Details</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleVoucherAction("Edit", voucher.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleVoucherAction("Delete", voucher.id)}><Trash2 className="mr-2"/>Delete</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAction("View", voucher.id)}><FileText className="mr-2"/>View Details</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAction("Edit", voucher.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", voucher.id)} disabled={voucher.status === 'Deleted'}>
+                                        <Trash2 className="mr-2"/>Delete
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -199,17 +278,20 @@ export default function VouchersPage() {
                         <TableHead>Voucher #</TableHead>
                         <TableHead>Paid To</TableHead>
                         <TableHead>Mode</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {initialPayments.map((voucher) => (
+                    {loading && <TableRow><TableCell colSpan={7} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>}
+                    {payments.map((voucher) => (
                         <TableRow key={voucher.id}>
                         <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>
                         <TableCell className="font-medium">{voucher.id}</TableCell>
                         <TableCell>{voucher.party}</TableCell>
                         <TableCell>{voucher.mode}</TableCell>
+                        <TableCell><Badge variant={voucher.status === 'Deleted' ? 'destructive' : 'default'}>{voucher.status}</Badge></TableCell>
                         <TableCell className="text-right font-mono">₹{voucher.amount.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
@@ -217,9 +299,11 @@ export default function VouchersPage() {
                                     <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onSelect={() => handleVoucherAction("View", voucher.id)}><FileText className="mr-2"/>View Details</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleVoucherAction("Edit", voucher.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleVoucherAction("Delete", voucher.id)}><Trash2 className="mr-2"/>Delete</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAction("View", voucher.id)}><FileText className="mr-2"/>View Details</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleAction("Edit", voucher.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
+                                     <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", voucher.id)} disabled={voucher.status === 'Deleted'}>
+                                        <Trash2 className="mr-2"/>Delete
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
