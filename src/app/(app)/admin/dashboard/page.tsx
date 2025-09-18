@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, BarChart, Users, Zap, FileText, CalendarClock, UserSquare, BadgeDollarSign } from "lucide-react";
+import { ArrowRight, Users, CalendarClock, UserSquare, BadgeDollarSign } from "lucide-react";
 import Link from "next/link";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
