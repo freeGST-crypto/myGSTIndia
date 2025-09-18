@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -56,6 +57,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 const initialReceipts = [
   { id: "RV-001", date: "2024-06-05", party: "Global Tech Inc.", amount: 25000, mode: "Bank" },
@@ -76,10 +78,16 @@ const accounts = [
     { code: "5010", "name": "Rent Expense" },
 ];
 
+const invoices = [
+    { id: "INV-001", party: "Global Tech Inc.", amount: 25000.00 },
+    { id: "INV-002", party: "Innovate Solutions", amount: 15000.00 },
+    { id: "INV-004", party: "Synergy Corp", amount: 45000.00 },
+]
 
 export default function VouchersPage() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [dialogType, setDialogType] = useState<'receipt' | 'payment'>('receipt');
+    const [transactionType, setTransactionType] = useState<string>("on_account");
     const [date, setDate] = useState<Date | undefined>(new Date());
     const { toast } = useToast();
     
@@ -92,6 +100,7 @@ export default function VouchersPage() {
 
     const openDialog = (type: 'receipt' | 'payment') => {
         setDialogType(type);
+        setTransactionType('on_account'); // Reset on open
         setIsAddDialogOpen(true);
     };
 
@@ -224,12 +233,12 @@ export default function VouchersPage() {
       </Tabs>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>{dialogTitle}</DialogTitle>
                     <DialogDescription>{dialogDescription}</DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-4">
+                <div className="py-4 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                          <div className="space-y-2">
                              <Label>Voucher Date</Label>
@@ -245,18 +254,51 @@ export default function VouchersPage() {
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 md:col-span-2">
                             <Label>{dialogType === 'receipt' ? 'Received From' : 'Paid To'}</Label>
                             <Select><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
                                 <SelectContent>{accounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
-                         <div className="space-y-2">
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Transaction Type</Label>
+                             <Select defaultValue="on_account" onValueChange={(value) => setTransactionType(value)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select transaction type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="against_invoice">Against Invoice</SelectItem>
+                                    <SelectItem value="on_account">On Account</SelectItem>
+                                    <SelectItem value="advance">Advance</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {transactionType === 'against_invoice' && (
+                             <div className="space-y-2">
+                                <Label>Select Invoice</Label>
+                                <Select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select an invoice to settle" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {invoices.map(inv => (
+                                             <SelectItem key={inv.id} value={inv.id}>
+                                                {inv.id} ({inv.party} - ₹{inv.amount.toFixed(2)})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                    </div>
+                    <Separator/>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
                             <Label>Amount (₹)</Label>
                             <Input type="number" placeholder="0.00"/>
                         </div>
-                    </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div className="space-y-2">
                              <Label>Mode</Label>
                              <Select defaultValue="bank">
