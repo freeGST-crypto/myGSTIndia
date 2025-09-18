@@ -13,19 +13,19 @@ const templates = [
     {
         id: "classic",
         name: "Classic Professional",
-        imageUrl: "https://picsum.photos/seed/inv-classic/400/566",
+        imageUrl: "https://placehold.co/400x566/ffffff/000000?text=Classic+Invoice\n\nLogo\n\nBill+To:\n\nItem|Qty|Amount",
         description: "A timeless, clean, and professional design suitable for any business."
     },
     {
         id: "modern",
         name: "Modern Minimalist",
-        imageUrl: "https://picsum.photos/seed/inv-modern/400/566",
+        imageUrl: "https://placehold.co/400x566/333333/ffffff?text=Modern+Invoice\n\nYour+Logo\n\nBilled+To\n...",
         description: "A sleek, contemporary design with a focus on typography and whitespace."
     },
     {
         id: "creative",
         name: "Creative Splash",
-        imageUrl: "https://picsum.photos/seed/inv-creative/400/566",
+        imageUrl: "https://placehold.co/400x566/273a99/ffffff?text=Creative\nInvoice\n\nLogo\n\nDetails...",
         description: "A bold design with a splash of color, perfect for creative businesses."
     },
 ];
@@ -67,7 +67,7 @@ export default function InvoiceTemplatesPage() {
                                     src={template.imageUrl}
                                     alt={`${template.name} Preview`}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                 />
                             </div>
                         </CardContent>
