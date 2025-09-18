@@ -116,23 +116,23 @@ const documentTypes = [
     {
         name: "Offer Letter",
         description: "Generate a formal job offer for prospective employees.",
-        href: "#",
+        href: "/legal-documents/offer-letter",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Appointment Letter",
         description: "Create a detailed appointment letter for new hires.",
-        href: "#",
+        href: "/legal-documents/appointment-letter",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Internship Agreement",
         description: "Define the terms and conditions for an internship.",
-        href: "#",
+        href: "/legal-documents/internship-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Board Resolutions Library",
