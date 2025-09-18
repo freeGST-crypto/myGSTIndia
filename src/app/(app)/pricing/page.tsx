@@ -11,9 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Check, X, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const tiers = [
   {
+    id: "freemium",
     name: "Freemium",
     price: "Free",
     priceSuffix: "",
@@ -29,6 +32,7 @@ const tiers = [
     cta: "Get Started for Free",
   },
   {
+    id: "business",
     name: "Business",
     price: "₹199",
     priceSuffix: "/ month",
@@ -45,6 +49,7 @@ const tiers = [
     isPopular: true,
   },
   {
+    id: "professional",
     name: "Professional",
     price: "₹499",
     priceSuffix: "/ month",
@@ -62,6 +67,8 @@ const tiers = [
 ];
 
 export default function PricingPage() {
+  const [selectedPlan, setSelectedPlan] = useState("business");
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -75,9 +82,10 @@ export default function PricingPage() {
         {tiers.map((tier) => (
           <Card
             key={tier.name}
-            className={`flex flex-col ${
-              tier.isPopular ? "border-primary shadow-lg" : ""
-            }`}
+            className={cn(
+              "flex flex-col transition-all",
+              selectedPlan === tier.id ? "border-primary ring-2 ring-primary shadow-lg" : "hover:shadow-md"
+            )}
           >
             <CardHeader className="relative">
               {tier.isPopular && (
@@ -115,9 +123,17 @@ export default function PricingPage() {
             <CardFooter>
               <Button
                 className="w-full"
-                variant={tier.isPopular ? "default" : "outline"}
+                variant={selectedPlan === tier.id ? "default" : "outline"}
+                onClick={() => setSelectedPlan(tier.id)}
               >
-                {tier.cta}
+                {selectedPlan === tier.id ? (
+                  <>
+                    <Check className="mr-2" />
+                    Selected
+                  </>
+                ) : (
+                  tier.cta
+                )}
               </Button>
             </CardFooter>
           </Card>

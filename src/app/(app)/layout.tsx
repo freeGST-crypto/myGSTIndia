@@ -156,6 +156,7 @@ const menuItems = [
     subItems: [
       { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/admin/appointments", label: "Appointments", icon: CalendarClock },
+      { href: "/admin/notices", label: "Notices", icon: MailWarning },
       { href: "/admin/users", label: "Users", icon: Users },
       { href: "/admin/professionals", label: "Professionals", icon: UserSquare },
       { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign },

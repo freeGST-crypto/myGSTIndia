@@ -28,8 +28,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Check, UserPlus, X } from "lucide-react";
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
-const sampleAppointments = [
+type Appointment = {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  professionalType: string;
+  serviceArea: string;
+  preferredDate: Date;
+  preferredTime: string;
+  mode: string;
+  status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
+  assignedTo?: string;
+};
+
+const sampleAppointments: Appointment[] = [
   {
     id: "APT-001",
     clientName: "Anjali Singh",
@@ -89,15 +103,28 @@ const sampleAppointments = [
 
 export default function AppointmentsListPage() {
   const [appointments, setAppointments] = useState(sampleAppointments);
+  const { toast } = useToast();
 
-  const getStatusBadge = (status: string) => {
+  const handleStatusChange = (id: string, status: Appointment['status']) => {
+    setAppointments(prev =>
+      prev.map(apt => (apt.id === id ? { ...apt, status } : apt))
+    );
+    toast({
+      title: `Appointment ${status}`,
+      description: `Appointment ${id} has been marked as ${status.toLowerCase()}.`,
+    });
+  };
+
+  const getStatusBadge = (status: Appointment['status']) => {
     switch (status) {
       case "Pending":
         return <Badge variant="secondary">Pending</Badge>;
       case "Confirmed":
-        return <Badge variant="default">Confirmed</Badge>;
+        return <Badge className="bg-blue-600 hover:bg-blue-700">Confirmed</Badge>;
       case "Completed":
-        return <Badge className="bg-green-600">Completed</Badge>;
+        return <Badge className="bg-green-600 hover:bg-green-700">Completed</Badge>;
+      case "Cancelled":
+          return <Badge variant="destructive">Cancelled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -146,14 +173,14 @@ export default function AppointmentsListPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem disabled>
                           <UserPlus className="mr-2" /> Assign Professional
                         </DropdownMenuItem>
                          <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleStatusChange(apt.id, 'Confirmed')}>
                           <Check className="mr-2" /> Confirm Appointment
                         </DropdownMenuItem>
-                         <DropdownMenuItem className="text-destructive">
+                         <DropdownMenuItem className="text-destructive" onSelect={() => handleStatusChange(apt.id, 'Cancelled')}>
                           <X className="mr-2" /> Cancel Appointment
                         </DropdownMenuItem>
                       </DropdownMenuContent>
