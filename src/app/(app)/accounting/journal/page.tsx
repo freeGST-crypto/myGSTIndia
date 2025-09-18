@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Table,
   TableBody,
@@ -57,31 +57,17 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { AccountingContext } from "@/context/accounting-context";
 
-const initialVouchers = [
-  {
-    id: "JV-001",
-    date: "2024-05-30",
-    narration: "To record monthly office rent.",
-    amount: 25000.0,
-  },
-  {
-    id: "JV-002",
-    date: "2024-05-31",
-    narration: "To record depreciation on office equipment for the month.",
-    amount: 5000.0,
-  },
-  {
-    id: "JV-003",
-    date: "2024-06-01",
-    narration: "To adjust for prepaid insurance.",
-    amount: 1200.0,
-  },
-];
 
 const accounts = [
     { code: "1010", name: "Cash on Hand" },
     { code: "1020", name: "HDFC Bank" },
+    { code: "1210", name: "Accounts Receivable" },
+    { code: "1410", name: "Office Supplies" },
+    { code: "2010", name: "Accounts Payable" },
+    { code: "2110", name: "GST Payable" },
+    { code: "4010", name: "Sales Revenue" },
     { code: "5010", name: "Rent Expense" },
     { code: "1450", name: "Office Equipment" },
     { code: "1455", name: "Accumulated Depreciation" },
@@ -92,7 +78,9 @@ const accounts = [
 
 
 export default function JournalVoucherPage() {
+    const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [narration, setNarration] = useState("");
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [lines, setLines] = useState([
         { account: '', debit: '0', credit: '0' },
@@ -109,7 +97,6 @@ export default function JournalVoucherPage() {
         const line = newLines[index] as any;
         line[field] = value;
 
-        // Ensure only debit or credit is entered, not both
         if (field === 'debit' && parseFloat(value) > 0) {
             line['credit'] = '0';
         } else if (field === 'credit' && parseFloat(value) > 0) {
@@ -133,13 +120,39 @@ export default function JournalVoucherPage() {
     };
 
     const handleSaveVoucher = () => {
+        if (!date || !narration) {
+            toast({ variant: "destructive", title: "Missing Details", description: "Please provide a date and narration." });
+            return;
+        }
+
+        const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
+        const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
+        const isBalanced = totalDebits === totalCredits && totalDebits > 0;
+        
+        if (!isBalanced) {
+            toast({ variant: "destructive", title: "Unbalanced Entry", description: "Debit and credit totals must match and be greater than zero." });
+            return;
+        }
+
+        const newVoucher = {
+            id: `JV-${(journalVouchers.length + 1).toString().padStart(3, '0')}`,
+            date: format(date, "yyyy-MM-dd"),
+            narration: narration,
+            lines: lines,
+            amount: totalDebits,
+        };
+
+        addJournalVoucher(newVoucher);
+        
         toast({
             title: "Voucher Saved",
-            description: "Your journal voucher has been saved successfully. (This is a simulation)"
+            description: "Your journal voucher has been saved successfully."
         });
+        
+        // Reset form
         setIsAddDialogOpen(false);
-        // Reset form state
         setDate(new Date());
+        setNarration("");
         setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
     };
 
@@ -192,7 +205,7 @@ export default function JournalVoucherPage() {
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="narration">Narration</Label>
-                            <Textarea id="narration" placeholder="e.g., To record monthly depreciation expense" />
+                            <Textarea id="narration" value={narration} onChange={(e) => setNarration(e.target.value)} placeholder="e.g., To record monthly depreciation expense" />
                         </div>
                     </div>
                     <Separator />
@@ -279,7 +292,7 @@ export default function JournalVoucherPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {initialVouchers.map((voucher) => (
+              {journalVouchers.map((voucher) => (
                 <TableRow key={voucher.id}>
                   <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell className="font-medium">{voucher.id}</TableCell>
