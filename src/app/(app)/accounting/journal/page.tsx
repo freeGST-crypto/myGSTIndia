@@ -78,6 +78,48 @@ export default function JournalVoucherPage() {
     
     const { journalVouchers, addJournalVoucher, loading } = accountingContext;
 
+    const handleDeleteJournalVoucher = async (voucherId: string) => {
+        const originalVoucher = journalVouchers.find(v => v.id === voucherId);
+
+        if (!originalVoucher) {
+            toast({ variant: "destructive", title: "Error", description: "Original journal voucher not found." });
+            return;
+        }
+
+        const reversalLines = originalVoucher.lines.map(line => ({
+            account: line.account,
+            debit: line.credit, // Swap debit and credit
+            credit: line.debit,
+        }));
+        
+        const deletionVoucher = {
+            id: `JV-DEL-${voucherId}`,
+            date: new Date().toISOString().split('T')[0],
+            narration: `Reversal of Voucher #${voucherId}`,
+            lines: reversalLines,
+            amount: originalVoucher.amount,
+        };
+
+        try {
+            await addJournalVoucher(deletionVoucher);
+            toast({ title: "Voucher Reversed", description: `A reversing entry for voucher #${voucherId} has been created.` });
+        } catch (e: any)
+ {
+            toast({ variant: "destructive", title: "Reversal Failed", description: e.message });
+        }
+    };
+
+    const handleVoucherAction = (action: string, voucherId: string) => {
+        if (action === 'Delete') {
+            handleDeleteJournalVoucher(voucherId);
+        } else {
+            toast({
+                title: `${action} Voucher`,
+                description: `Simulating ${action.toLowerCase()} action for voucher ${voucherId}.`,
+            });
+        }
+    };
+
     const handleAddLine = () => {
         setLines([...lines, { account: '', debit: '0', credit: '0' }]);
     };
@@ -100,13 +142,6 @@ export default function JournalVoucherPage() {
         const newLines = [...lines];
         newLines.splice(index, 1);
         setLines(newLines);
-    };
-    
-    const handleVoucherAction = (action: string, voucherId: string) => {
-        toast({
-            title: `${action} Voucher`,
-            description: `Simulating ${action.toLowerCase()} action for voucher ${voucherId}.`,
-        });
     };
 
     const handleSaveVoucher = async () => {
@@ -324,5 +359,3 @@ export default function JournalVoucherPage() {
     </div>
   );
 }
-
-    
