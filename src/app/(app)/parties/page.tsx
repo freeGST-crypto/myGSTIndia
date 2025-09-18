@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileCsv } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const initialCustomers = [
@@ -196,7 +196,7 @@ export default function PartiesPage() {
                     Import {type}s
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                    <FileCsv className="mr-2 h-4 w-4" />
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Export to CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem>
@@ -259,3 +259,5 @@ export default function PartiesPage() {
     </div>
   );
 }
+
+    

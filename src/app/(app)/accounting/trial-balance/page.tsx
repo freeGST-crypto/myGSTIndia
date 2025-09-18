@@ -34,7 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FileDown, AlertTriangle, ChevronDown, Upload, Download, FileCsv } from "lucide-react";
+import { FileDown, AlertTriangle, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -112,7 +112,7 @@ export default function TrialBalancePage() {
                     Upload CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                    <FileCsv className="mr-2 h-4 w-4" />
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Export CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem>

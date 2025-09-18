@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileCsv, GitCompareArrows, FileText } from "lucide-react";
+import { FileSpreadsheet, GitCompareArrows, FileText } from "lucide-react";
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
@@ -128,7 +128,7 @@ export default function GstFilingsPage() {
                             </Table>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
-                            <Button variant="outline"><FileCsv className="mr-2"/> Export CSV</Button>
+                            <Button variant="outline"><FileSpreadsheet className="mr-2"/> Export CSV</Button>
                             <Link href="/gst-filings/gstr-1-wizard">
                                 <Button>Prepare GSTR-1</Button>
                             </Link>
@@ -186,7 +186,7 @@ export default function GstFilingsPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
-                             <Button variant="outline"><FileCsv className="mr-2"/> Export CSV</Button>
+                             <Button variant="outline"><FileSpreadsheet className="mr-2"/> Export CSV</Button>
                              <Link href="/gst-filings/gstr-3b-wizard">
                                 <Button>Prepare GSTR-3B</Button>
                              </Link>
