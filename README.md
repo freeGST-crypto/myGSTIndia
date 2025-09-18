@@ -1,5 +1,5 @@
-# Firebase Studio
+# GSTEase Application
 
-This is a NextJS starter in Firebase Studio.
+This is a NextJS starter project for the GSTEase application, built in Firebase Studio.
 
-To get started, take a look at src/app/page.tsx.
+To get started, run the application and navigate to the home page.
