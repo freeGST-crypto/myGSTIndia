@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText } from "lucide-react";
 import Link from "next/link";
-import { PlaceholderPage } from "@/components/placeholder-page";
 
 const documentTypes = [
     {
@@ -72,7 +71,7 @@ const documentTypes = [
         status: "active"
     },
     {
-        name: "Accounting Engagement Agreement",
+        name: "Accounting Engagement Letter",
         description: "Formalize the terms of accounting services.",
         href: "/legal-documents/accounting-engagement-letter",
         icon: FileText,
