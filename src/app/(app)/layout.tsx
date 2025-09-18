@@ -40,6 +40,7 @@ import {
   Wallet,
   ShieldCheck,
   Award,
+  CreditCard,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -116,7 +117,6 @@ const menuItems = [
   {
     label: "Reports",
     icon: AreaChart,
-    href: "/reports",
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
     ],
@@ -150,6 +150,7 @@ const menuItems = [
       { href: "/admin/professionals", label: "Professionals", icon: UserSquare },
       { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign },
       { href: "/admin/certification-requests", label: "Certification Requests", icon: ShieldCheck },
+      { href: "/admin/service-pricing", label: "Service Pricing", icon: CreditCard },
     ],
   },
 
