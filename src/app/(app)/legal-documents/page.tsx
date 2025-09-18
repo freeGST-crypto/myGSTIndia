@@ -132,7 +132,7 @@ const documentTypes = [
         description: "Create a detailed appointment letter for new hires.",
         href: "/legal-documents/appointment-letter",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Internship Agreement",
