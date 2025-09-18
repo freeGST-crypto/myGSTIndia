@@ -124,7 +124,7 @@ const documentTypes = [
         description: "Generate a formal job offer for prospective employees.",
         href: "/legal-documents/offer-letter",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 500,
     },
     {
@@ -224,7 +224,7 @@ export default function LegalDocumentsPage() {
                                     <Button>
                                         <span>
                                             Start Drafting
-                                            {doc.price && ` - ₹${'\'doc.price\''}`}
+                                            {doc.price && ` - ₹${doc.price}`}
                                         </span>
                                         <ArrowRight className="ml-2 size-4" />
                                     </Button>
