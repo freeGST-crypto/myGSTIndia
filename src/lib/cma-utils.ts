@@ -1,3 +1,4 @@
+
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from 'xlsx';
@@ -96,14 +97,16 @@ export const exportToPdf = (reportData: any) => {
     });
 
     // --- Loan Repayment Schedule ---
-    doc.addPage();
-    yPos = addHeader(doc, "Part VII: Loan Repayment Schedule");
-    doc.autoTable({
-        head: [reportData.repaymentSchedule.headers],
-        body: reportData.repaymentSchedule.body,
-        startY: yPos,
-        headStyles: { fillColor: [41, 128, 185] },
-    });
+    if (reportData.repaymentSchedule.body.length > 0) {
+        doc.addPage();
+        yPos = addHeader(doc, "Part VII: Loan Repayment Schedule");
+        doc.autoTable({
+            head: [reportData.repaymentSchedule.headers],
+            body: reportData.repaymentSchedule.body,
+            startY: yPos,
+            headStyles: { fillColor: [41, 128, 185] },
+        });
+    }
     
     // --- AI Observations ---
     doc.addPage();

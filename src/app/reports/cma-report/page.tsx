@@ -66,7 +66,7 @@ import {
 } from "@/lib/cma-logic";
 
 // Import export helpers
-import { exportToPdf, exportToExcel } from "@/helpers/cma-utils";
+import { exportToPdf, exportToExcel } from "@/lib/cma-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const initialAssets: FixedAsset[] = [
