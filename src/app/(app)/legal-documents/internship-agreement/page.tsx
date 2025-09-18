@@ -44,11 +44,28 @@ export default function InternshipAgreementPage() {
       companyName: "GSTEase Solutions Pvt. Ltd.",
       companyAddress: "123 Business Avenue, Commerce City, Maharashtra - 400001",
       agreementDate: new Date().toISOString().split("T")[0],
+      internshipTitle: "Software Development Intern",
+      department: "Technology",
+      stipend: 10000,
+      learningObjectives: "To assist the development team in building and testing new features.\nTo learn about the software development lifecycle in a professional environment.\nTo contribute to team projects and code reviews.",
+      confidentiality: "The Intern agrees to keep all proprietary information, trade secrets, and business information of the Company confidential during and after the internship period.",
+      signerName: "",
+      signerTitle: "",
     },
   });
 
   const processStep = async () => {
-    const isValid = await form.trigger();
+    let fieldsToValidate: (keyof FormData)[] = [];
+    switch (step) {
+        case 1:
+            fieldsToValidate = ["companyName", "companyAddress", "internName", "internAddress", "agreementDate", "startDate", "endDate"];
+            break;
+        case 2:
+            fieldsToValidate = ["internshipTitle", "department", "stipend", "learningObjectives", "confidentiality", "signerName", "signerTitle"];
+            break;
+    }
+    
+    const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       setStep(prev => prev + 1);
       if (step < 3) {
@@ -96,6 +113,11 @@ export default function InternshipAgreementPage() {
                 <FormField control={form.control} name="stipend" render={({ field }) => ( <FormItem className="max-w-xs"><FormLabel>Monthly Stipend (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                 <FormField control={form.control} name="learningObjectives" render={({ field }) => ( <FormItem><FormLabel>Learning Objectives & Responsibilities</FormLabel><FormControl><Textarea className="min-h-32" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                 <FormField control={form.control} name="confidentiality" render={({ field }) => ( <FormItem><FormLabel>Confidentiality Clause</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                <Separator />
+                <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="signerName" render={({ field }) => ( <FormItem><FormLabel>Signer's Name (e.g., HR Manager)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="signerTitle" render={({ field }) => ( <FormItem><FormLabel>Signer's Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                </div>
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Preview Document <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -175,3 +197,5 @@ export default function InternshipAgreementPage() {
     </div>
   );
 }
+
+    

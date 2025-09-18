@@ -139,7 +139,7 @@ const documentTypes = [
         description: "Define the terms and conditions for an internship.",
         href: "/legal-documents/internship-agreement",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Board Resolutions Library",
@@ -239,3 +239,5 @@ export default function LegalDocumentsPage() {
         </div>
     );
 }
+
+    
