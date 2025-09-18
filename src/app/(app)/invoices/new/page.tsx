@@ -309,7 +309,7 @@ export default function NewInvoicePage() {
               </div>
               {isTdsApplicable && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">TDS (e.g. @10%)</span>
+                  <span className="text-muted-foreground">Less: TDS receivable (e.g. @10%)</span>
                   <span className="text-red-500">- ₹{tdsAmount.toFixed(2)}</span>
                 </div>
               )}
@@ -332,10 +332,10 @@ export default function NewInvoicePage() {
                <div>
                   <div className="flex items-center space-x-2">
                     <Switch id="tds-switch" checked={isTdsApplicable} onCheckedChange={setIsTdsApplicable} />
-                    <Label htmlFor="tds-switch">TDS Applicable</Label>
+                    <Label htmlFor="tds-switch">Customer will deduct TDS</Label>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Enable this if the customer is liable to deduct TDS on this invoice.
+                    Enable this if the customer is liable to deduct TDS on this payment.
                   </p>
                </div>
             </div>
