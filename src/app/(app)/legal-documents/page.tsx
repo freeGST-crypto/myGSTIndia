@@ -53,9 +53,9 @@ const documentTypes = [
     {
         name: "LLP Agreement",
         description: "Draft an agreement for a Limited Liability Partnership.",
-        href: "#",
+        href: "/legal-documents/llp-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "MOA & AOA",
