@@ -87,7 +87,7 @@ const documentTypes = [
         description: "Protect sensitive company information.",
         href: "/legal-documents/nda",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 1000,
     },
     {
@@ -224,7 +224,7 @@ export default function LegalDocumentsPage() {
                                     <Button>
                                         <span>
                                             Start Drafting
-                                            {doc.price && ` - ₹${doc.price}`}
+                                            {doc.price && ` - ₹${'\'doc.price\''}`}
                                         </span>
                                         <ArrowRight className="ml-2 size-4" />
                                     </Button>

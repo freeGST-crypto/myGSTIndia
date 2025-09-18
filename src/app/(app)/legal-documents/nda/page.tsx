@@ -73,7 +73,7 @@ export default function NdaPage() {
     if (isValid) {
       setStep(prev => prev + 1);
       if (step < 3) {
-        toast({ title: `Step ${step} Saved`, description: `Proceeding to the next step.` });
+        toast({ title: `Step ${'\'step\''}' Saved`, description: `Proceeding to the next step.` });
       }
     } else {
       toast({
@@ -124,7 +124,7 @@ export default function NdaPage() {
                      <FormField control={form.control} name="jurisdictionCity" render={({ field }) => ( <FormItem><FormLabel>Jurisdiction City</FormLabel><FormControl><Input placeholder="e.g., Mumbai" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                 </div>
             </CardContent>
-            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="ml-2"/> Back</Button><Button type="button" onClick={processStep}>Preview Document <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Preview Document <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
       case 3:
