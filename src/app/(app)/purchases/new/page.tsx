@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -48,6 +48,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { AccountingContext } from "@/context/accounting-context";
+import { useToast } from "@/hooks/use-toast";
+
 
 // Sample data
 const vendors = [
@@ -69,8 +72,13 @@ const items = [
 ];
 
 export default function NewPurchasePage() {
+  const accountingContext = useContext(AccountingContext);
+  const { toast } = useToast();
+
   const [billDate, setBillDate] = useState<Date | undefined>(new Date());
-  const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [vendor, setVendor] = useState("");
+  const [billNumber, setBillNumber] = useState("");
+
   const [lineItems, setLineItems] = useState([
     {
       itemId: "",
@@ -130,6 +138,37 @@ export default function NewPurchasePage() {
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
   const totalAmount = subtotal + totalTax;
 
+  const handleSaveBill = async () => {
+    if (!accountingContext) return;
+    const { addJournalVoucher } = accountingContext;
+
+    const selectedVendor = vendors.find(v => v.id === vendor);
+    if (!selectedVendor || !billNumber) {
+        toast({ variant: "destructive", title: "Missing Details", description: "Please select a vendor and enter a bill number."});
+        return;
+    }
+
+    // This creates the double-entry accounting transaction for the purchase.
+    const journalLines = [
+        { account: '5050', debit: subtotal.toFixed(2), credit: '0' }, // Debit Purchases
+        { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, // Debit GST Payable (for ITC)
+        { account: '2010', debit: '0', credit: totalAmount.toFixed(2) } // Credit Accounts Payable
+    ];
+
+    try {
+        await addJournalVoucher({
+            id: `JV-BILL-${billNumber}`,
+            date: billDate ? format(billDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+            narration: `Purchase from ${selectedVendor.name} against Bill #${billNumber}`,
+            lines: journalLines,
+            amount: totalAmount,
+        });
+        toast({ title: "Purchase Bill Saved", description: `Journal entry for bill #${billNumber} has been automatically created.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
+    }
+  }
+
 
   return (
     <div className="space-y-8">
@@ -150,17 +189,17 @@ export default function NewPurchasePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <Select>
+              <Select onValueChange={setVendor}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a vendor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {vendors.map((vendor) => (
-                    <SelectItem key={vendor.id} value={vendor.id}>
-                      {vendor.name}
+                  {vendors.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -168,7 +207,7 @@ export default function NewPurchasePage() {
             </div>
              <div className="space-y-2">
               <Label htmlFor="bill-no">Bill Number</Label>
-              <Input id="bill-no" placeholder="Enter vendor invoice number" />
+              <Input id="bill-no" placeholder="Enter vendor invoice number" value={billNumber} onChange={e => setBillNumber(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Bill Date</Label>
@@ -190,31 +229,6 @@ export default function NewPurchasePage() {
                     mode="single"
                     selected={billDate}
                     onSelect={setBillDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-             <div className="space-y-2">
-              <Label>Due Date</Label>
-               <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dueDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={setDueDate}
                     initialFocus
                   />
                 </PopoverContent>
@@ -328,7 +342,7 @@ export default function NewPurchasePage() {
 
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button>
+          <Button onClick={handleSaveBill}>
             <Save className="mr-2" />
             Save Bill
           </Button>
