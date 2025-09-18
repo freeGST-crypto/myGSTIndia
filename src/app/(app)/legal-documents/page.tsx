@@ -158,9 +158,9 @@ const documentTypes = [
     {
         name: "Convertible Note / SAFE Agreement",
         description: "For early-stage startup fundraising.",
-        href: "#",
+        href: "/legal-documents/safe-agreement",
         icon: FileText,
-        status: "coming_soon"
+        status: "active"
     },
     {
         name: "Society Registration Deed",
