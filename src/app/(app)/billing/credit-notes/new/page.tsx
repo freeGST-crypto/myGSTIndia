@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -47,21 +47,28 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { AccountingContext } from "@/context/accounting-context";
+import { useToast } from "@/hooks/use-toast";
+import { db, auth } from "@/lib/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
-const customers = [
-  { id: "CUST-001", name: "Global Tech Inc." },
-  { id: "CUST-002", name: "Innovate Solutions" },
-  { id: "CUST-003", name: "Quantum Leap" },
-];
-
-const invoices = [
-    { id: "INV-001", customerId: "CUST-001" },
-    { id: "INV-002", customerId: "CUST-002" },
-    { id: "INV-003", customerId: "CUST-003" },
+const items = [
+  { id: "ITEM-001", name: "Standard Office Chair", price: 7500, hsn: "9401" },
+  { id: "ITEM-002", name: "Accounting Services", price: 15000, hsn: "9982" },
+  { id: "ITEM-003", name: "Wireless Mouse", price: 8999, hsn: "8471" },
 ];
 
 export default function NewCreditNotePage() {
+  const accountingContext = useContext(AccountingContext);
+  const { toast } = useToast();
+  const [user] = useAuthState(auth);
+  
   const [creditNoteDate, setCreditNoteDate] = useState<Date | undefined>(new Date());
+  const [customer, setCustomer] = useState("");
+  const [originalInvoice, setOriginalInvoice] = useState("");
+  
   const [lineItems, setLineItems] = useState([
     {
       description: "",
@@ -70,6 +77,14 @@ export default function NewCreditNotePage() {
       amount: 0,
     },
   ]);
+  
+  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+  const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+  const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+  const journalVouchersQuery = user ? query(collection(db, 'journalVouchers'), where("userId", "==", user.uid)) : null;
+  const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
+  const invoices = journalVouchersSnapshot?.docs.filter(doc => doc.data().id.startsWith('JV-INV-')).map(doc => ({ id: doc.data().id.replace('JV-',''), customerId: doc.data().customerId })) || [];
 
   const handleAddItem = () => {
     setLineItems([
@@ -105,6 +120,40 @@ export default function NewCreditNotePage() {
   const totalTax = subtotal * 0.18; // Assuming a flat 18% tax for simplicity
   const totalAmount = subtotal + totalTax;
 
+  const handleSaveCreditNote = async () => {
+    if (!accountingContext) return;
+    const { addJournalVoucher } = accountingContext;
+
+    const selectedCustomer = customers.find(c => c.id === customer);
+    if (!selectedCustomer || !originalInvoice) {
+        toast({ variant: "destructive", title: "Missing Details", description: "Please select a customer and original invoice."});
+        return;
+    }
+    
+    const creditNoteId = `CN-${originalInvoice.split('-')[1]}`;
+
+    // Reverse of a sales entry
+    const journalLines = [
+        { account: '4010', debit: subtotal.toFixed(2), credit: '0' }, // Debit Sales Revenue
+        { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, // Debit GST Payable
+        { account: '1210', debit: '0', credit: totalAmount.toFixed(2) } // Credit Accounts Receivable
+    ];
+
+    try {
+        await addJournalVoucher({
+            id: `JV-${creditNoteId}`,
+            date: creditNoteDate ? format(creditNoteDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+            narration: `Credit Note ${creditNoteId} issued to ${selectedCustomer.name} against Invoice #${originalInvoice}`,
+            lines: journalLines,
+            amount: totalAmount,
+        });
+        toast({ title: "Credit Note Saved", description: `Journal entry for ${creditNoteId} has been created.` });
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
+    }
+  }
+
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
@@ -127,14 +176,14 @@ export default function NewCreditNotePage() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Customer</Label>
-              <Select>
+               <Select onValueChange={setCustomer} disabled={customersLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a customer" />
+                  <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
+                  {customers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -142,7 +191,7 @@ export default function NewCreditNotePage() {
             </div>
              <div className="space-y-2">
               <Label>Original Invoice #</Label>
-              <Select>
+              <Select onValueChange={setOriginalInvoice}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an invoice" />
                 </SelectTrigger>
@@ -267,7 +316,7 @@ export default function NewCreditNotePage() {
 
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button>
+          <Button onClick={handleSaveCreditNote}>
             <Save className="mr-2" />
             Save Credit Note
           </Button>
@@ -276,3 +325,5 @@ export default function NewCreditNotePage() {
     </div>
   );
 }
+
+    
