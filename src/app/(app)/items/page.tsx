@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileCsv } from "lucide-react";
+import { Wand2, ArrowRight, PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
 
 const initialItems = [
@@ -94,7 +94,7 @@ export default function ItemsPage() {
                                     Import Items
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                    <FileCsv className="mr-2 h-4 w-4" />
+                                    <FileSpreadsheet className="mr-2 h-4 w-4" />
                                     Export to CSV
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
