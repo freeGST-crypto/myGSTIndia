@@ -110,7 +110,7 @@ const documentTypes = [
         description: "A general-purpose agreement for providing services.",
         href: "/legal-documents/service-agreement",
         icon: FileText,
-        status: "wip"
+        status: "active"
     },
     {
         name: "Franchise Agreement",
