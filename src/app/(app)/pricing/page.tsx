@@ -38,7 +38,7 @@ const tiers = [
       { text: "Full Accounting Suite", included: true },
       { text: "Financial Statement Generation", included: true },
       { text: "Basic GST Reporting", included: true },
-      { text: "TDS/TCS Reports", included: false },
+      { text: "TDS/TCS Reports", included: true },
       { text: "Admin Panel / Client Management", included: false },
     ],
     cta: "Choose Business Plan",
