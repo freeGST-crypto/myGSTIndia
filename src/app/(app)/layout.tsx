@@ -121,32 +121,46 @@ const menuItems = [
   },
 ];
 
+const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const isActive = item.subItems.some((sub:any) => sub.href && pathname.startsWith(sub.href)) || item.subItems.some((sub:any) => sub.subItems?.some((ss:any) => ss.href && pathname.startsWith(ss.href)));
+    setIsOpen(isActive);
+  }, [pathname, item.subItems]);
+
+  return (
+    <SidebarMenuItem key={item.label}>
+      <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger asChild>
+            <div
+              className={cn(
+                "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <item.icon className="h-4 w-4" />
+                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+              </div>
+              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <NavMenu items={item.subItems} pathname={pathname}/>
+          </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  );
+};
+
+
 const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
   return (
     <SidebarMenu>
       {items.map((item) =>
         item.subItems ? (
-          <SidebarMenuItem key={item.label}>
-            <Collapsible className="w-full" defaultOpen={item.subItems.some((sub:any) => sub.href && pathname.startsWith(sub.href)) || item.subItems.some((sub:any) => sub.subItems?.some((ss:any) => ss.href && pathname.startsWith(ss.href)))}>
-                <CollapsibleTrigger asChild>
-                  <div
-                    className={cn(
-                      "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <NavMenu items={item.subItems} pathname={pathname}/>
-                </CollapsibleContent>
-            </Collapsible>
-          </SidebarMenuItem>
+          <CollapsibleMenuItem key={item.label} item={item} pathname={pathname} />
         ) : (
           <SidebarMenuItem key={item.label}>
               <SidebarMenuButton
