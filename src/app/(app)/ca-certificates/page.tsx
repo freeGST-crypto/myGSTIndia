@@ -49,7 +49,7 @@ const certificateTypes = [
     },
     {
         name: "General Attestation",
-        description: "A general-purpose attestation form.",
+        description: "A general-purpose attestation form for various certification needs.",
         href: "/ca-certificates/general-attestation",
         icon: FileText,
         status: "active",
@@ -69,7 +69,7 @@ export default function CACertificatesPage() {
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                  {certificateTypes.map(doc => (
-                     <Card key={doc.name}>
+                     <Card key={doc.name} className="flex flex-col">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                <doc.icon className="text-primary"/> {doc.name}
@@ -78,7 +78,7 @@ export default function CACertificatesPage() {
                                 {doc.description}
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-grow flex items-end">
                              {doc.status === 'active' ? (
                                 <Link href={doc.href} passHref>
                                     <Button>
