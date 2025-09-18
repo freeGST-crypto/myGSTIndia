@@ -77,7 +77,7 @@ export default function BalanceSheetPage() {
             equityAndLiabilities: {
                 capitalAccount: accountBalances['3010'] || 0,
                 reservesAndSurplus: (accountBalances['3020'] || 0) + netProfit,
-                longTermLoans: accountBalances['2210'] || 0, // Assuming a code for long-term loans
+                longTermLoans: accountBalances['2210'] || 0,
                 currentLiabilities: {
                     sundryCreditors: accountBalances['2010'] || 0,
                     gstPayable: accountBalances['2110'] || 0,

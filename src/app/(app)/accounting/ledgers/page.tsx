@@ -31,20 +31,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { format } from "date-fns";
-
-const accounts = [
-    { code: "1010", name: "Cash on Hand" },
-    { code: "1020", name: "HDFC Bank" },
-    { code: "1210", name: "Accounts Receivable" },
-    { code: "1410", name: "Office Supplies" },
-    { code: "2010", name: "Accounts Payable" },
-    { code: "2110", name: "GST Payable" },
-    { code: "4010", name: "Sales Revenue" },
-    { code: "5010", name: "Rent Expense" },
-    { code: "1450", name: "Office Equipment" },
-    { code: "1455", name: "Accumulated Depreciation" },
-    { code: "5150", name: "Depreciation Expense" },
-];
+import { allAccounts } from "@/lib/accounts";
 
 type LedgerEntry = {
     date: string;
@@ -63,7 +50,7 @@ export default function LedgersPage() {
     const { toast } = useToast();
 
     const handleViewLedger = () => {
-        const account = accounts.find(a => a.code === selectedAccount);
+        const account = allAccounts.find(a => a.code === selectedAccount);
         if (!account) return;
 
         const openingBalance = 0; // Simplified for this demo
@@ -105,7 +92,7 @@ export default function LedgersPage() {
     };
     
     const handleExport = () => {
-        const accountName = accounts.find(a => a.code === selectedAccount)?.name;
+        const accountName = allAccounts.find(a => a.code === selectedAccount)?.name;
         toast({
             title: "Exporting Ledger",
             description: `Your PDF for ${accountName} is being generated.`,
@@ -137,7 +124,7 @@ export default function LedgersPage() {
                             <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                         <SelectContent>
-                            {accounts.map(account => (
+                            {allAccounts.map(account => (
                                 <SelectItem key={account.code} value={account.code}>{account.name} ({account.code})</SelectItem>
                             ))}
                         </SelectContent>
@@ -154,7 +141,7 @@ export default function LedgersPage() {
         {selectedAccount && (
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">{accounts.find(a => a.code === selectedAccount)?.name} Ledger</CardTitle>
+                    <CardTitle className="text-2xl">{allAccounts.find(a => a.code === selectedAccount)?.name} Ledger</CardTitle>
                     <CardDescription>For the period 01-Apr-2024 to 31-Mar-2025</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -202,3 +189,5 @@ export default function LedgersPage() {
     </div>
   );
 }
+
+    

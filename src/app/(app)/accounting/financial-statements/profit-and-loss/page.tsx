@@ -64,12 +64,12 @@ export default function ProfitAndLossPage() {
     const data = useMemo(() => {
         return {
             revenue: {
-                sales: accountBalances['4010'] || 0,
+                sales: (accountBalances['4010'] || 0) + (accountBalances['4020'] || 0),
                 otherIncome: 0, // Placeholder
             },
             cogs: {
                 openingStock: 0, // Placeholder
-                purchases: accountBalances['5050'] || 0, // Assuming a code for purchases
+                purchases: accountBalances['5050'] || 0,
                 directExpenses: 0, // Placeholder
                 closingStock: 0, // Placeholder
             },

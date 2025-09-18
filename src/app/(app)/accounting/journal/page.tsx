@@ -59,24 +59,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
-
-
-const accounts = [
-    { code: "1010", name: "Cash on Hand" },
-    { code: "1020", name: "HDFC Bank" },
-    { code: "1210", name: "Accounts Receivable" },
-    { code: "1410", name: "Office Supplies" },
-    { code: "2010", name: "Accounts Payable" },
-    { code: "2110", name: "GST Payable" },
-    { code: "4010", name: "Sales Revenue" },
-    { code: "5010", name: "Rent Expense" },
-    { code: "1450", name: "Office Equipment" },
-    { code: "1455", name: "Accumulated Depreciation" },
-    { code: "5150", name: "Depreciation Expense" },
-    { code: "1510", name: "Prepaid Insurance" },
-    { code: "5160", name: "Insurance Expense" },
-];
-
+import { allAccounts } from "@/lib/accounts";
 
 export default function JournalVoucherPage() {
     const accountingContext = useContext(AccountingContext);
@@ -237,7 +220,7 @@ export default function JournalVoucherPage() {
                                                 <SelectValue placeholder="Select an account" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {accounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name} ({acc.code})</SelectItem>)}
+                                                {allAccounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name} ({acc.code})</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     </TableCell>
@@ -341,3 +324,5 @@ export default function JournalVoucherPage() {
     </div>
   );
 }
+
+    
