@@ -3,6 +3,7 @@ import { Inter, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import { ClientOnly } from '@/components/client-only';
 
 const fontInter = Inter({
   subsets: ['latin'],
@@ -39,7 +40,9 @@ export default function RootLayout({
         )}
       >
         {children}
-        <Toaster />
+        <ClientOnly>
+          <Toaster />
+        </ClientOnly>
       </body>
     </html>
   );
