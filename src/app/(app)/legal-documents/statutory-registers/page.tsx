@@ -30,7 +30,8 @@ import {
   Trash2,
   FileSpreadsheet,
   Users,
-  UserCheck
+  UserCheck,
+  Banknote
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -61,15 +62,27 @@ const directorSchema = z.object({
   sharesHeld: z.coerce.number().min(0).default(0),
 });
 
+const chargeSchema = z.object({
+  creationDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
+  chargeHolder: z.string().min(3, "Charge holder is required."),
+  assetsCharged: z.string().min(10, "Assets description is required."),
+  amountSecured: z.coerce.number().positive("Amount must be positive."),
+  modificationDate: z.string().optional(),
+  satisfactionDate: z.string().optional(),
+});
+
+
 const formSchema = z.object({
   companyName: z.string().min(2, "Company name is required."),
   members: z.array(memberSchema),
   directors: z.array(directorSchema),
+  charges: z.array(chargeSchema),
 });
 
 type FormData = z.infer<typeof formSchema>;
 type Member = z.infer<typeof memberSchema>;
 type Director = z.infer<typeof directorSchema>;
+type Charge = z.infer<typeof chargeSchema>;
 
 export default function StatutoryRegistersPage() {
   const { toast } = useToast();
@@ -86,11 +99,16 @@ export default function StatutoryRegistersPage() {
         { name: "Rohan Sharma", din: "01234567", pan: "ABCDE1234F", address: "Mumbai, India", designation: "Director", appointmentDate: "2023-04-01", sharesHeld: 5000 },
         { name: "Priya Mehta", din: "76543210", pan: "FGHIJ5678K", address: "Delhi, India", designation: "Director", appointmentDate: "2023-04-01", sharesHeld: 5000 },
       ],
+      charges: [
+        { creationDate: "2023-06-01", chargeHolder: "HDFC Bank", assetsCharged: "All current and future assets of the company", amountSecured: 10000000, modificationDate: "", satisfactionDate: "" },
+      ]
     },
   });
 
   const { fields: memberFields, append: appendMember, remove: removeMember } = useFieldArray({ control: form.control, name: "members" });
   const { fields: directorFields, append: appendDirector, remove: removeDirector } = useFieldArray({ control: form.control, name: "directors" });
+  const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({ control: form.control, name: "charges" });
+
 
   const exportToCsv = (data: any[], headers: string[], fileName: string) => {
     const ws = XLSX.utils.json_to_sheet(data, { header: headers });
@@ -133,6 +151,21 @@ export default function StatutoryRegistersPage() {
     exportToCsv(dataToExport, headers, "Register_of_Directors_KMP");
   };
 
+  const handleExportCharges = () => {
+    const dataToExport = form.getValues("charges").map((c, index) => ({
+      "S. No.": index + 1,
+      "Date of Creation": c.creationDate ? format(new Date(c.creationDate), 'dd-MM-yyyy') : '',
+      "Charge Holder": c.chargeHolder,
+      "Assets Charged": c.assetsCharged,
+      "Amount Secured": c.amountSecured,
+      "Modification Date": c.modificationDate ? format(new Date(c.modificationDate), 'dd-MM-yyyy') : '',
+      "Satisfaction Date": c.satisfactionDate ? format(new Date(c.satisfactionDate), 'dd-MM-yyyy') : '',
+      "Remarks": "",
+    }));
+    const headers = ["S. No.", "Date of Creation", "Charge Holder", "Assets Charged", "Amount Secured", "Modification Date", "Satisfaction Date", "Remarks"];
+    exportToCsv(dataToExport, headers, "Register_of_Charges");
+  };
+
   return (
     <div className="space-y-8">
       <Link href="/legal-documents" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -156,9 +189,10 @@ export default function StatutoryRegistersPage() {
           </Card>
 
           <Tabs defaultValue="members">
-            <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto">
-              <TabsTrigger value="members"><Users className="mr-2"/>Register of Members</TabsTrigger>
-              <TabsTrigger value="directors"><UserCheck className="mr-2"/>Register of Directors</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto">
+              <TabsTrigger value="members"><Users className="mr-2"/>Members (MGT-1)</TabsTrigger>
+              <TabsTrigger value="directors"><UserCheck className="mr-2"/>Directors (KMP)</TabsTrigger>
+              <TabsTrigger value="charges"><Banknote className="mr-2"/>Charges (CHG-7)</TabsTrigger>
             </TabsList>
             
             <TabsContent value="members">
@@ -210,6 +244,32 @@ export default function StatutoryRegistersPage() {
                 <CardFooter><Button type="button" onClick={handleExportDirectors}><FileSpreadsheet className="mr-2"/> Export Register</Button></CardFooter>
               </Card>
             </TabsContent>
+
+             <TabsContent value="charges">
+              <Card>
+                <CardHeader><CardTitle>Register of Charges (Form CHG-7)</CardTitle><CardDescription>Manage details of all charges created on the company's assets.</CardDescription></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border rounded-md overflow-x-auto">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Charge Holder</TableHead><TableHead>Amount Secured</TableHead><TableHead>Creation Date</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {chargeFields.map((field, index) => (
+                          <TableRow key={field.id}>
+                            <TableCell><Input {...form.register(`charges.${index}.chargeHolder`)}/></TableCell>
+                            <TableCell><Input type="number" {...form.register(`charges.${index}.amountSecured`)}/></TableCell>
+                            <TableCell><Input type="date" {...form.register(`charges.${index}.creationDate`)}/></TableCell>
+                            <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)}><Trash2 className="size-4 text-destructive"/></Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" onClick={() => appendCharge({ creationDate: "", chargeHolder: "", assetsCharged: "", amountSecured: 0 })}><PlusCircle className="mr-2"/> Add Charge</Button>
+                </CardContent>
+                <CardFooter><Button type="button" onClick={handleExportCharges}><FileSpreadsheet className="mr-2"/> Export Register (CHG-7)</Button></CardFooter>
+              </Card>
+            </TabsContent>
+
           </Tabs>
         </form>
       </Form>
