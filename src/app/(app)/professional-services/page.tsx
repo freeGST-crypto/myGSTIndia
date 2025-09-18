@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User } from "lucide-react";
+import { ArrowRight, Book, Briefcase, CalendarPlus, MapPin, Search, Star, User, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -137,6 +137,32 @@ const sampleProfessionals = [
     reviews: 50,
     avatarUrl: "https://picsum.photos/seed/pro8/100/100",
   },
+   {
+    id: "PRO-009",
+    name: "Sunita Rao, CS",
+    type: "cs",
+    firmName: "Rao & Associates",
+    email: "sunita.rao@csfirm.com",
+    specialization: ["MCA Compliance", "LLP Registration", "PVT Incorporation"],
+    city: "Mumbai",
+    experience: 9,
+    rating: 4.8,
+    reviews: 35,
+    avatarUrl: "https://picsum.photos/seed/pro9/100/100",
+  },
+  {
+    id: "PRO-010",
+    name: "Deepak Verma, CA",
+    type: "ca",
+    firmName: "Verma & Co.",
+    email: "deepak.verma@ca.in",
+    specialization: ["GST", "Audit", "Startup Advisory"],
+    city: "Mumbai",
+    experience: 12,
+    rating: 4.9,
+    reviews: 40,
+    avatarUrl: "https://picsum.photos/seed/pro10/100/100",
+  },
 ];
 
 
@@ -144,6 +170,8 @@ export default function ProfessionalServicesPage() {
     const [city, setCity] = useState("Mumbai");
     const [profType, setProfType] = useState("all");
     const [selectedService, setSelectedService] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
 
     const filteredProfessionals = sampleProfessionals.filter(p => {
         const cityMatch = city ? p.city.toLowerCase().includes(city.toLowerCase()) : true;
@@ -151,6 +179,23 @@ export default function ProfessionalServicesPage() {
         const serviceMatch = selectedService ? p.specialization.some(s => s.toLowerCase().includes(selectedService.split('_')[0])) : true;
         return cityMatch && typeMatch && serviceMatch;
     });
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredProfessionals.length / itemsPerPage);
+    const paginatedProfessionals = filteredProfessionals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
 
     return (
         <div className="space-y-8">
@@ -209,9 +254,13 @@ export default function ProfessionalServicesPage() {
             </Card>
 
             <div className="space-y-6">
-                 <h2 className="text-2xl font-semibold text-center">Professionals matching your search</h2>
+                 <h2 className="text-2xl font-semibold text-center">
+                    {filteredProfessionals.length > 0 
+                        ? `${filteredProfessionals.length} Professionals matching your search`
+                        : "No professionals found matching your criteria"}
+                </h2>
                 <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-                    {filteredProfessionals.map(pro => (
+                    {paginatedProfessionals.map(pro => (
                         <Card key={pro.id} className="flex flex-col sm:flex-row items-start p-6 gap-6">
                             <Avatar className="size-24 border">
                                 <AvatarImage src={pro.avatarUrl} alt={pro.name} />
@@ -249,7 +298,32 @@ export default function ProfessionalServicesPage() {
                         </Card>
                     ))}
                 </div>
+                 {totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-4 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="mr-2" />
+                            Previous
+                        </Button>
+                        <span className="text-sm font-medium">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                            <ChevronRight className="ml-2" />
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+
+    

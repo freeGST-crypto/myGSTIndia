@@ -108,6 +108,32 @@ const sampleProfessionals = [
     proCount: 2,
     avatarUrl: "https://picsum.photos/seed/pro8/100/100",
   },
+   {
+    id: "PRO-009",
+    name: "Sunita Rao, CS",
+    type: "cs",
+    firmName: "Rao & Associates",
+    email: "sunita.rao@csfirm.com",
+    specialization: ["MCA Compliance", "LLP Registration", "PVT Incorporation"],
+    city: "Mumbai",
+    experience: 9,
+    rating: 4.8,
+    reviews: 35,
+    avatarUrl: "https://picsum.photos/seed/pro9/100/100",
+  },
+  {
+    id: "PRO-010",
+    name: "Deepak Verma, CA",
+    type: "ca",
+    firmName: "Verma & Co.",
+    email: "deepak.verma@ca.in",
+    specialization: ["GST", "Audit", "Startup Advisory"],
+    city: "Mumbai",
+    experience: 12,
+    rating: 4.9,
+    reviews: 40,
+    avatarUrl: "https://picsum.photos/seed/pro10/100/100",
+  },
 ];
 
 export default function ProfessionalsListPage() {
@@ -218,7 +244,7 @@ export default function ProfessionalsListPage() {
                     </div>
                   </TableCell>
                   <TableCell>{pro.city}</TableCell>
-                  <TableCell>{pro.specialization}</TableCell>
+                  <TableCell>{Array.isArray(pro.specialization) ? pro.specialization.join(', ') : pro.specialization}</TableCell>
                   <TableCell>{getStatusBadge(pro.status)}</TableCell>
                   <TableCell className="text-right">
                      <DropdownMenu>
@@ -244,3 +270,5 @@ export default function ProfessionalsListPage() {
     </div>
   );
 }
+
+    
