@@ -12,48 +12,26 @@ import { ArrowUpRight } from "lucide-react"
 import { Button } from "../ui/button"
 import Link from "next/link"
 
-const invoices = [
-  {
-    invoice: "INV001",
-    customer: "Global Tech Inc.",
-    amount: "₹25,000.00",
-    status: "Paid",
-  },
-  {
-    invoice: "INV002",
-    customer: "Innovate Solutions",
-    amount: "₹15,000.00",
-    status: "Draft",
-  },
-  {
-    invoice: "INV003",
-    customer: "Quantum Leap",
-    amount: "₹35,000.00",
-    status: "Paid",
-  },
-  {
-    invoice: "INV004",
-    customer: "Synergy Corp",
-    amount: "₹45,000.00",
-    status: "Overdue",
-  },
-  {
-    invoice: "INV005",
-    customer: "Apex Enterprises",
-    amount: "₹55,000.00",
-    status: "Paid",
-  },
-]
+type Invoice = {
+  invoice: string;
+  customer: string;
+  amount: string;
+  status: string;
+};
 
-export function RecentActivity() {
+type RecentActivityProps = {
+  invoices: Invoice[];
+};
+
+export function RecentActivity({ invoices }: RecentActivityProps) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center">
+    <>
+       <div className="flex items-center justify-between mb-4">
         <div className="grid gap-2">
-            <CardTitle>Recent Invoices</CardTitle>
-            <CardDescription>
+            <h3 className="text-xl font-semibold">Recent Invoices</h3>
+            <p className="text-sm text-muted-foreground">
                 An overview of your 5 most recent invoices.
-            </CardDescription>
+            </p>
         </div>
         <Button asChild size="sm" className="ml-auto gap-1">
             <Link href="/invoices">
@@ -61,8 +39,7 @@ export function RecentActivity() {
                 <ArrowUpRight className="h-4 w-4" />
             </Link>
         </Button>
-      </CardHeader>
-      <CardContent>
+      </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -99,7 +76,6 @@ export function RecentActivity() {
             ))}
           </TableBody>
         </Table>
-      </CardContent>
-    </Card>
+    </>
   )
 }

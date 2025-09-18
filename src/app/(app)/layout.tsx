@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -259,10 +260,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center justify-between gap-4 border-b bg-card p-4 lg:h-[60px]">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
-             <div className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <span>Made with</span>
-                <Heart className="size-4 text-red-500" />
-                <span>in India</span>
+             <div className="hidden md:flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1 font-medium text-muted-foreground">
+                    <span>Made with</span>
+                    <Heart className="size-4 text-red-500" />
+                    <span>in India</span>
+                </div>
+                <Separator orientation="vertical" className="h-6"/>
+                 <div>
+                    <p className="font-semibold text-foreground">Acme Innovations Pvt. Ltd.</p>
+                    <p className="text-xs text-muted-foreground font-mono">GSTIN: 27ABCDE1234F1Z5</p>
+                </div>
             </div>
           </div>
           <UserNav />
