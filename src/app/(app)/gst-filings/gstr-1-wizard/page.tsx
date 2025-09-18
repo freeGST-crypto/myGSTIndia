@@ -1,8 +1,7 @@
 
-
 "use client";
 
-import { useState, useContext, useMemo } from "react";
+import { useState, useContext, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -52,8 +51,7 @@ const states = [
 
 const exportTypes = ["WPAY", "WOPAY"];
 
-export default npm run build
-function Gstr1WizardPage() {
+export default function Gstr1WizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [user] = useAuthState(auth);
@@ -86,14 +84,23 @@ function Gstr1WizardPage() {
       });
   }, [journalVouchers, customers]);
 
-  const [b2bInvoices, setB2bInvoices] = useState(b2bInvoicesFromJournal);
+  const [b2bInvoices, setB2bInvoices] = useState<any[]>([]);
   const [b2cLargeInvoices, setB2cLargeInvoices] = useState<any[]>([]);
   const [exportInvoices, setExportInvoices] = useState<any[]>([]);
   const [b2cOther, setB2cOther] = useState<any[]>([]);
-  const [nilRated, setNilRated] = useState<any[]>([]);
+  const [nilRated, setNilRated] = useState<any[]>([
+    { description: "Inter-State supplies to registered persons", nilRated: 0, exempted: 0, nonGst: 0 },
+    { description: "Intra-State supplies to registered persons", nilRated: 0, exempted: 0, nonGst: 0 },
+    { description: "Inter-State supplies to unregistered persons", nilRated: 0, exempted: 0, nonGst: 0 },
+    { description: "Intra-State supplies to unregistered persons", nilRated: 0, exempted: 0, nonGst: 0 },
+  ]);
   const [documentsIssued, setDocumentsIssued] = useState<any[]>([]);
   const [advancesReceived, setAdvancesReceived] = useState<any[]>([]);
   const [advancesAdjusted, setAdvancesAdjusted] = useState<any[]>([]);
+
+  useEffect(() => {
+    setB2bInvoices(b2bInvoicesFromJournal);
+  }, [b2bInvoicesFromJournal]);
 
 
   const handleInvoiceChange = (index: number, field: keyof typeof b2bInvoices[0], value: string | number) => {
@@ -927,3 +934,5 @@ function Gstr1WizardPage() {
     </div>
   );
 }
+
+    
