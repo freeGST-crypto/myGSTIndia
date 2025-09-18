@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -146,7 +145,7 @@ const documentTypes = [
         description: "Templates for common board resolutions.",
         href: "/legal-documents/board-resolutions",
         icon: FileText,
-        status: "wip",
+        status: "active",
         price: 750,
     },
     {
