@@ -15,6 +15,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
+import { allAccounts } from "@/lib/accounts";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -37,12 +38,18 @@ export default function DashboardContent() {
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
 
+  const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+  const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
+  const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [vendorsSnapshot]);
+
+
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
     
-    customers.forEach(c => {
-        if(c.id) balances[c.id] = 0;
-    });
+    // Initialize all accounts from lists
+    allAccounts.forEach(acc => { balances[acc.code] = 0; });
+    customers.forEach(c => { if(c.id) balances[c.id] = 0; });
+    vendors.forEach(v => { if(v.id) balances[v.id] = 0; });
     
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.lines) return;
@@ -56,19 +63,29 @@ export default function DashboardContent() {
         });
     });
     return balances;
-  }, [journalVouchers, customers]);
+  }, [journalVouchers, customers, vendors]);
   
   const totalReceivables = useMemo(() => {
     return customers.reduce((sum, customer) => {
-        if (customer.id) {
-            return sum + (accountBalances[customer.id] || 0)
+        if (customer.id && accountBalances[customer.id]) {
+            // Receivables are debit balances
+            return sum + accountBalances[customer.id];
         }
         return sum;
     }, 0);
   }, [customers, accountBalances]);
 
-  const totalPayables = accountBalances['2010'] || 0;
-  const gstPayable = accountBalances['2110'] || 0;
+  const totalPayables = useMemo(() => {
+    return vendors.reduce((sum, vendor) => {
+      if (vendor.id && accountBalances[vendor.id]) {
+        // Payables are credit balances, so they will be negative in our calculation
+        return sum - accountBalances[vendor.id];
+      }
+      return sum;
+    }, 0);
+  }, [vendors, accountBalances]);
+  
+  const gstPayable = accountBalances['2110'] ? -accountBalances['2110'] : 0; // GST Payable is a credit balance
 
   const invoices = useMemo(() => {
     return journalVouchers
@@ -106,16 +123,16 @@ export default function DashboardContent() {
         <Link href="/accounting/ledgers">
           <StatCard 
             title="Total Payables"
-            value={formatCurrency(Math.abs(totalPayables))}
+            value={formatCurrency(totalPayables)}
             icon={CreditCard}
             description="Balance in Accounts Payable"
-             loading={journalLoading}
+             loading={journalLoading || vendorsLoading}
           />
         </Link>
         <Link href="/accounting/ledgers">
           <StatCard 
             title="Net Tax Liability"
-            value={formatCurrency(Math.abs(gstPayable))}
+            value={formatCurrency(gstPayable)}
             icon={DollarSign}
             description="Balance in GST Payable"
              loading={journalLoading}
