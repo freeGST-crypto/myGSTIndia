@@ -254,25 +254,18 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
 
 function filterMenuByRole(items: any[], role: string): any[] {
   return items.reduce((acc: any[], item: any) => {
-    // Check if the current user's role is included in the item's roles
-    const hasAccess = item.roles && item.roles.includes(role);
-
-    if (!hasAccess) {
+    if (!item.roles.includes(role)) {
       return acc;
     }
 
-    // If the item has sub-items, filter them recursively
     if (item.subItems) {
       const accessibleSubItems = filterMenuByRole(item.subItems, role);
-      // Only include the parent menu item if it has visible sub-items
       if (accessibleSubItems.length > 0) {
         acc.push({ ...item, subItems: accessibleSubItems });
       }
     } else {
-      // If it's a top-level item with no sub-items, include it
       acc.push(item);
     }
-
     return acc;
   }, []);
 }
