@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, ReactNode } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, query, where } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
@@ -13,7 +13,7 @@ type JournalLine = {
     credit: string;
 };
 
-type JournalVoucher = {
+export type JournalVoucher = {
     id: string;
     date: string;
     narration: string;
@@ -29,6 +29,7 @@ type AccountingContextType = {
     loading: boolean;
     error: any;
     addJournalVoucher: (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => Promise<void>;
+    updateJournalVoucher: (id: string, voucherData: Partial<Omit<JournalVoucher, 'id' | 'userId'>>) => Promise<void>;
 };
 
 export const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
@@ -46,9 +47,15 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
         if (!user) throw new Error("User not authenticated");
         await addDoc(journalVouchersRef, { ...voucher, userId: user.uid });
     };
+    
+    const updateJournalVoucher = async (id: string, voucherData: Partial<Omit<JournalVoucher, 'id' | 'userId'>>) => {
+        if (!user) throw new Error("User not authenticated");
+        const voucherDocRef = doc(db, "journalVouchers", id);
+        await updateDoc(voucherDocRef, voucherData);
+    };
 
     return (
-        <AccountingContext.Provider value={{ journalVouchers, loading, error, addJournalVoucher }}>
+        <AccountingContext.Provider value={{ journalVouchers, loading, error, addJournalVoucher, updateJournalVoucher }}>
             {children}
         </AccountingContext.Provider>
     );

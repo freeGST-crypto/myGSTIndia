@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -59,20 +59,13 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { AccountingContext } from "@/context/accounting-context";
+import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
-
-type JournalVoucher = {
-    id: string;
-    date: string;
-    narration: string;
-    lines: { account: string; debit: string; credit: string; }[];
-    amount: number;
-}
 
 export default function JournalVoucherPage() {
     const accountingContext = useContext(AccountingContext);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [editingVoucher, setEditingVoucher] = useState<JournalVoucher | null>(null);
     const [narration, setNarration] = useState("");
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [lines, setLines] = useState([
@@ -82,11 +75,25 @@ export default function JournalVoucherPage() {
     const { toast } = useToast();
     const [selectedVoucher, setSelectedVoucher] = useState<JournalVoucher | null>(null);
 
+    useEffect(() => {
+        if (editingVoucher) {
+            setDate(new Date(editingVoucher.date));
+            setNarration(editingVoucher.narration);
+            setLines(editingVoucher.lines);
+            setIsAddDialogOpen(true);
+        } else {
+            // Reset form when not editing
+            setDate(new Date());
+            setNarration("");
+            setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
+        }
+    }, [editingVoucher]);
+
     if (!accountingContext) {
         return <Loader2 className="animate-spin" />;
     }
     
-    const { journalVouchers, addJournalVoucher, loading } = accountingContext;
+    const { journalVouchers, addJournalVoucher, updateJournalVoucher, loading } = accountingContext;
 
     const handleDeleteJournalVoucher = async (voucherId: string) => {
         const originalVoucher = journalVouchers.find(v => v.id === voucherId);
@@ -113,8 +120,7 @@ export default function JournalVoucherPage() {
         try {
             await addJournalVoucher(deletionVoucher);
             toast({ title: "Voucher Reversed", description: `A reversing entry for voucher #${voucherId} has been created.` });
-        } catch (e: any)
- {
+        } catch (e: any) {
             toast({ variant: "destructive", title: "Reversal Failed", description: e.message });
         }
     };
@@ -124,8 +130,9 @@ export default function JournalVoucherPage() {
             handleDeleteJournalVoucher(voucher.id);
         } else if (action === 'View') {
             setSelectedVoucher(voucher);
-        }
-        else {
+        } else if (action === 'Edit') {
+            setEditingVoucher(voucher);
+        } else {
             toast({
                 title: `${action} Voucher`,
                 description: `This would ${action.toLowerCase()} voucher ${voucher.id}. This feature is a placeholder.`,
@@ -157,6 +164,13 @@ export default function JournalVoucherPage() {
         setLines(newLines);
     };
 
+    const handleDialogClose = (open: boolean) => {
+        if (!open) {
+            setEditingVoucher(null); // Reset editing mode on close
+        }
+        setIsAddDialogOpen(open);
+    }
+
     const handleSaveVoucher = async () => {
         if (!date || !narration) {
             toast({ variant: "destructive", title: "Missing Details", description: "Please provide a date and narration." });
@@ -171,9 +185,8 @@ export default function JournalVoucherPage() {
             toast({ variant: "destructive", title: "Unbalanced Entry", description: "Debit and credit totals must match and be greater than zero." });
             return;
         }
-
-        const newVoucher = {
-            id: `JV-${(journalVouchers.length + 1).toString().padStart(3, '0')}`,
+        
+        const voucherData = {
             date: format(date, "yyyy-MM-dd"),
             narration: narration,
             lines: lines,
@@ -181,16 +194,28 @@ export default function JournalVoucherPage() {
         };
 
         try {
-            await addJournalVoucher(newVoucher);
-            toast({
-                title: "Voucher Saved",
-                description: "Your journal voucher has been saved successfully."
-            });
-            // Reset form
-            setIsAddDialogOpen(false);
-            setDate(new Date());
-            setNarration("");
-            setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
+            if (editingVoucher) {
+                // Update existing voucher
+                await updateJournalVoucher(editingVoucher.id, voucherData);
+                toast({
+                    title: "Voucher Updated",
+                    description: "Your journal voucher has been updated successfully."
+                });
+            } else {
+                 // Create new voucher
+                const newVoucher = {
+                    ...voucherData,
+                    id: `JV-${(journalVouchers.length + 1).toString().padStart(3, '0')}`,
+                };
+                await addJournalVoucher(newVoucher);
+                toast({
+                    title: "Voucher Saved",
+                    description: "Your journal voucher has been saved successfully."
+                });
+            }
+
+            handleDialogClose(false); // Close dialog and reset state
+
         } catch (e: any) {
             toast({ variant: "destructive", title: "Save failed", description: e.message });
         }
@@ -209,7 +234,7 @@ export default function JournalVoucherPage() {
             Create manual journal entries to adjust ledger accounts.
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2" />
@@ -218,8 +243,10 @@ export default function JournalVoucherPage() {
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
-                    <DialogTitle>New Journal Voucher</DialogTitle>
-                    <DialogDescription>Create a manual entry to record transactions that don't fit into other categories.</DialogDescription>
+                    <DialogTitle>{editingVoucher ? "Edit Journal Voucher" : "New Journal Voucher"}</DialogTitle>
+                    <DialogDescription>
+                        {editingVoucher ? `Editing voucher #${editingVoucher.id}` : "Create a manual entry to record transactions."}
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -263,7 +290,7 @@ export default function JournalVoucherPage() {
                                 {lines.map((line, index) => (
                                 <TableRow key={index}>
                                     <TableCell>
-                                        <Select onValueChange={(value) => handleLineChange(index, 'account', value)}>
+                                        <Select value={line.account} onValueChange={(value) => handleLineChange(index, 'account', value)}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select an account" />
                                             </SelectTrigger>
@@ -307,7 +334,7 @@ export default function JournalVoucherPage() {
                      </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleSaveVoucher} disabled={!isBalanced}>Save Voucher</Button>
+                    <Button onClick={handleSaveVoucher} disabled={!isBalanced}>{editingVoucher ? 'Save Changes' : 'Save Voucher'}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
