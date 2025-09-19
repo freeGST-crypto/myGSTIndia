@@ -6,13 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
 import { ArrowLeft, FileDown, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from "react-to-print";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
@@ -96,6 +97,7 @@ export default function OfferLetterPage() {
             <Card className="sticky top-20">
                 <CardHeader>
                     <CardTitle>Live Preview</CardTitle>
+                    <CardDescription>The receipt will update as you type.</CardDescription>
                 </CardHeader>
                 <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg prose prose-sm dark:prose-invert max-w-none">
                     <div className="text-center">
@@ -137,7 +139,7 @@ export default function OfferLetterPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={handlePrint}><Printer className="mr-2" /> Print / Save as PDF</Button>
+                    <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
                 </CardFooter>
             </Card>
         </div>
