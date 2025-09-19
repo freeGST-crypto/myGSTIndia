@@ -80,36 +80,34 @@ type Item = {
 // Memoized Invoice Item Row to prevent re-renders
 const InvoiceItemRow = memo(({
     item,
-    index,
-    handleItemChange,
-    handleRemoveItem,
+    onRemove,
+    onUpdate,
     items,
     itemsLoading,
     openItemDialog,
 }: {
     item: LineItem;
-    index: number;
-    handleItemChange: (index: number, field: string, value: any) => void;
-    handleRemoveItem: (index: number) => void;
+    onRemove: () => void;
+    onUpdate: (field: keyof LineItem, value: any) => void;
     items: Item[];
     itemsLoading: boolean;
     openItemDialog: () => void;
 }) => {
-    
+
     const handleSelectChange = useCallback((itemId: string) => {
         if (itemId === 'add-new') {
             openItemDialog();
         } else {
             const selectedItem = items.find(i => i.id === itemId);
             if (selectedItem) {
-                handleItemChange(index, 'itemId', itemId);
-                handleItemChange(index, 'description', selectedItem.name);
-                handleItemChange(index, 'rate', selectedItem.sellingPrice || 0);
-                handleItemChange(index, 'hsn', selectedItem.hsn || "");
+                onUpdate('itemId', itemId);
+                onUpdate('description', selectedItem.name);
+                onUpdate('rate', selectedItem.sellingPrice || 0);
+                onUpdate('hsn', selectedItem.hsn || "");
             }
         }
-    }, [index, items, openItemDialog, handleItemChange]);
-    
+    }, [items, onUpdate, openItemDialog]);
+
     return (
         <TableRow>
             <TableCell>
@@ -128,15 +126,15 @@ const InvoiceItemRow = memo(({
                     </SelectContent>
                 </Select>
             </TableCell>
-            <TableCell><Input type="number" value={item.qty} onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value))} className="w-16 text-right" /></TableCell>
-            <TableCell><Input type="number" value={item.rate} onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value))} className="w-24 text-right" /></TableCell>
+            <TableCell><Input type="number" value={item.qty} onChange={(e) => onUpdate("qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
+            <TableCell><Input type="number" value={item.rate} onChange={(e) => onUpdate("rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
             <TableCell className="text-right font-medium">₹{item.taxableAmount.toFixed(2)}</TableCell>
-            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => handleItemChange(index, "taxRate", parseFloat(e.target.value))} className="w-16 text-right" /></TableCell>
+            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => onUpdate("taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
             <TableCell className="text-right font-mono">₹{item.igst.toFixed(2)}</TableCell>
             <TableCell className="text-right font-mono">₹{item.cgst.toFixed(2)}</TableCell>
             <TableCell className="text-right font-mono">₹{item.sgst.toFixed(2)}</TableCell>
             <TableCell className="text-right">
-               <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+               <Button variant="ghost" size="icon" onClick={onRemove}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
             </TableCell>
@@ -146,7 +144,7 @@ const InvoiceItemRow = memo(({
 InvoiceItemRow.displayName = 'InvoiceItemRow';
 
 const createNewLineItem = (): LineItem => ({
-  id: `${Date.now()}-${Math.random()}`, // Assign a unique ID
+  id: `${Date.now()}-${Math.random()}`,
   itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxableAmount: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0
 });
 
@@ -212,29 +210,27 @@ export default function NewInvoicePage() {
     setLineItems(prev => [...prev, createNewLineItem()]);
   }, []);
 
-  const handleRemoveItem = useCallback((index: number) => {
-    setLineItems(prev => {
-        const list = [...prev];
-        list.splice(index, 1);
-        return list;
-    });
+  const handleRemoveItem = useCallback((id: string) => {
+    setLineItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  const handleItemChange = useCallback((index: number, field: string, value: any) => {
+  const handleItemChange = useCallback((id: string, field: keyof LineItem, value: any) => {
     setLineItems(prev => {
-        const list = [...prev];
-        const currentItem = { ...list[index] } as any;
-        currentItem[field] = value;
+        return prev.map(item => {
+            if (item.id === id) {
+                const updatedItem = { ...item, [field]: value };
 
-        if (field === 'qty' || field === 'rate' || field === 'taxRate' || field === 'itemId') {
-          currentItem.taxableAmount = (currentItem.qty || 0) * (currentItem.rate || 0);
-          currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
-          currentItem.cgst = 0;
-          currentItem.sgst = 0;
-        }
-        
-        list[index] = currentItem;
-        return list;
+                // Recalculate derived fields
+                if (['qty', 'rate', 'taxRate'].includes(field as string)) {
+                    updatedItem.taxableAmount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+                    updatedItem.igst = updatedItem.taxableAmount * (updatedItem.taxRate / 100);
+                    updatedItem.cgst = 0; // Assuming IGST for simplicity
+                    updatedItem.sgst = 0;
+                }
+                return updatedItem;
+            }
+            return item;
+        });
     });
   }, []);
   
@@ -378,13 +374,12 @@ export default function NewInvoicePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lineItems.map((item, index) => (
+                {lineItems.map((item) => (
                   <InvoiceItemRow
                       key={item.id}
                       item={item}
-                      index={index}
-                      handleItemChange={handleItemChange}
-                      handleRemoveItem={handleRemoveItem}
+                      onRemove={() => handleRemoveItem(item.id)}
+                      onUpdate={(field, value) => handleItemChange(item.id, field, value)}
                       items={items}
                       itemsLoading={itemsLoading}
                       openItemDialog={openItemDialog}

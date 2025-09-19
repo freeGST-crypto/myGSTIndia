@@ -77,17 +77,15 @@ type Item = {
 
 const PurchaseItemRow = memo(({
     item,
-    index,
-    handleItemChange,
-    handleRemoveItem,
+    onRemove,
+    onUpdate,
     items,
     itemsLoading,
     openItemDialog,
 }: {
     item: LineItem;
-    index: number;
-    handleItemChange: (index: number, field: string, value: any) => void;
-    handleRemoveItem: (index: number) => void;
+    onRemove: () => void;
+    onUpdate: (field: keyof LineItem, value: any) => void;
     items: Item[];
     itemsLoading: boolean;
     openItemDialog: () => void;
@@ -99,13 +97,13 @@ const PurchaseItemRow = memo(({
         } else {
              const selectedItem = items.find((i) => i.id === itemId);
             if (selectedItem) {
-                handleItemChange(index, 'itemId', itemId);
-                handleItemChange(index, 'description', selectedItem.name);
-                handleItemChange(index, 'rate', selectedItem.purchasePrice || 0);
-                handleItemChange(index, 'hsn', selectedItem.hsn || "");
+                onUpdate('itemId', itemId);
+                onUpdate('description', selectedItem.name);
+                onUpdate('rate', selectedItem.purchasePrice || 0);
+                onUpdate('hsn', selectedItem.hsn || "");
             }
         }
-    }, [index, items, openItemDialog, handleItemChange]);
+    }, [items, onUpdate, openItemDialog]);
 
     return (
         <TableRow>
@@ -128,7 +126,7 @@ const PurchaseItemRow = memo(({
             <TableCell>
                 <Input
                 value={item.hsn}
-                onChange={(e) => handleItemChange(index, "hsn", e.target.value)}
+                onChange={(e) => onUpdate("hsn", e.target.value)}
                 placeholder="HSN/SAC"
                 />
             </TableCell>
@@ -136,7 +134,7 @@ const PurchaseItemRow = memo(({
                 <Input
                 type="number"
                 value={item.qty}
-                onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value))}
+                onChange={(e) => onUpdate("qty", parseInt(e.target.value) || 0)}
                 className="text-right"
                 />
             </TableCell>
@@ -144,7 +142,7 @@ const PurchaseItemRow = memo(({
                 <Input
                 type="number"
                 value={item.rate}
-                onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value))}
+                onChange={(e) => onUpdate("rate", parseFloat(e.target.value) || 0)}
                 className="text-right"
                 />
             </TableCell>
@@ -152,7 +150,7 @@ const PurchaseItemRow = memo(({
                 ₹{item.amount.toFixed(2)}
             </TableCell>
             <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                <Button variant="ghost" size="icon" onClick={onRemove}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
             </TableCell>
@@ -199,26 +197,24 @@ export default function NewPurchasePage() {
     setLineItems(prev => [...prev, createNewLineItem()]);
   }, []);
 
-  const handleRemoveItem = useCallback((index: number) => {
-    setLineItems(prev => {
-      const list = [...prev];
-      list.splice(index, 1);
-      return list;
-    });
+  const handleRemoveItem = useCallback((id: string) => {
+    setLineItems(prev => prev.filter(item => item.id !== id));
   }, []);
   
-  const handleItemChange = useCallback((index: number, field: string, value: any) => {
+  const handleItemChange = useCallback((id: string, field: keyof LineItem, value: any) => {
     setLineItems(prev => {
-      const list = [...prev];
-      const currentItem = { ...list[index] } as any;
-      currentItem[field] = value;
+      return prev.map(item => {
+        if (item.id === id) {
+          const updatedItem = { ...item, [field]: value };
 
-      if (field === 'qty' || field === 'rate') {
-        currentItem.amount = (currentItem.qty || 0) * (currentItem.rate || 0);
-      }
-      
-      list[index] = currentItem;
-      return list;
+          // Recalculate derived fields
+          if (['qty', 'rate'].includes(field as string)) {
+            updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+          }
+          return updatedItem;
+        }
+        return item;
+      });
     });
   }, []);
 
@@ -361,13 +357,12 @@ export default function NewPurchasePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lineItems.map((item, index) => (
+                {lineItems.map((item) => (
                     <PurchaseItemRow 
                         key={item.id}
                         item={item}
-                        index={index}
-                        handleItemChange={handleItemChange}
-                        handleRemoveItem={handleRemoveItem}
+                        onRemove={() => handleRemoveItem(item.id)}
+                        onUpdate={(field, value) => handleItemChange(item.id, field, value)}
                         items={items}
                         itemsLoading={itemsLoading}
                         openItemDialog={openItemDialog}
