@@ -57,6 +57,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 
 type LineItem = {
+    id: string; // Unique ID for key prop
     itemId: string;
     description: string;
     hsn: string;
@@ -154,6 +155,17 @@ const PurchaseItemRow = memo(({
 });
 PurchaseItemRow.displayName = 'PurchaseItemRow';
 
+const createNewLineItem = (): LineItem => ({
+  id: `${Date.now()}-${Math.random()}`,
+  itemId: "",
+  description: "",
+  hsn: "",
+  qty: 1,
+  rate: 0,
+  taxRate: 18,
+  amount: 0,
+});
+
 
 export default function NewPurchasePage() {
   const accountingContext = useContext(AccountingContext);
@@ -167,17 +179,7 @@ export default function NewPurchasePage() {
   const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
 
-  const [lineItems, setLineItems] = useState([
-    {
-      itemId: "",
-      description: "",
-      hsn: "",
-      qty: 1,
-      rate: 0,
-      taxRate: 18,
-      amount: 0,
-    },
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([createNewLineItem()]);
   
   const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
   const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
@@ -188,18 +190,7 @@ export default function NewPurchasePage() {
   const items: Item[] = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [];
 
   const handleAddItem = useCallback(() => {
-    setLineItems(prev => [
-      ...prev,
-      {
-        itemId: "",
-        description: "",
-        hsn: "",
-        qty: 1,
-        rate: 0,
-        taxRate: 18,
-        amount: 0,
-      },
-    ]);
+    setLineItems(prev => [...prev, createNewLineItem()]);
   }, []);
 
   const handleRemoveItem = useCallback((index: number) => {
@@ -373,7 +364,7 @@ export default function NewPurchasePage() {
               <TableBody>
                 {lineItems.map((item, index) => (
                     <PurchaseItemRow 
-                        key={index}
+                        key={item.id}
                         item={item}
                         index={index}
                         handleItemChange={handleItemChange}

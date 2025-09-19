@@ -56,6 +56,7 @@ import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type LineItem = {
+    id: string; // Unique ID for key prop
     itemId: string;
     description: string;
     hsn: string;
@@ -140,6 +141,11 @@ const InvoiceItemRow = memo(({
 });
 InvoiceItemRow.displayName = 'InvoiceItemRow';
 
+const createNewLineItem = (): LineItem => ({
+  id: `${Date.now()}-${Math.random()}`, // Assign a unique ID
+  itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxableAmount: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0
+});
+
 export default function NewInvoicePage() {
   const accountingContext = useContext(AccountingContext);
   const { toast } = useToast();
@@ -156,11 +162,7 @@ export default function NewInvoicePage() {
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    {
-      itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxableAmount: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0
-    },
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([createNewLineItem()]);
   
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
@@ -185,6 +187,7 @@ export default function NewInvoicePage() {
         const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
         if (salesLine) {
             setLineItems([{
+                 id: `${Date.now()}-${Math.random()}`,
                  itemId: "",
                  description: "Reconstructed from journal",
                  hsn: "",
@@ -202,12 +205,7 @@ export default function NewInvoicePage() {
   }, [searchParams, journalVouchers, items]);
 
   const handleAddItem = useCallback(() => {
-    setLineItems(prev => [
-      ...prev,
-      {
-        itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxableAmount: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0
-      },
-    ]);
+    setLineItems(prev => [...prev, createNewLineItem()]);
   }, []);
 
   const handleRemoveItem = useCallback((index: number) => {
@@ -394,7 +392,7 @@ export default function NewInvoicePage() {
               <TableBody>
                 {lineItems.map((item, index) => (
                   <InvoiceItemRow
-                      key={index}
+                      key={item.id}
                       item={item}
                       index={index}
                       handleItemChange={handleItemChange}
