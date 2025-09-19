@@ -69,7 +69,7 @@ export default function BalanceSheetPage() {
             });
         });
         
-        // Invert balance for liability/equity/revenue accounts
+        // Invert balance for liability/equity/revenue accounts so credit balances are positive
         const allDynamicAccounts = [...allAccounts, ...customers.map(c => ({ code: c.id, name: c.name, type: "Asset"}))];
         Object.keys(balances).forEach(key => {
             const accDetails = allDynamicAccounts.find(a => a.code === key);
