@@ -83,7 +83,7 @@ const numberToWords = (num: number): string => {
     return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
 }
 
-export function InvoicesPage() {
+export default function InvoicesPage() {
   const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
   const router = useRouter();
