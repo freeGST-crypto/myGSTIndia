@@ -177,9 +177,10 @@ export const exportToExcel = (reportData: any) => {
         [reportData.aiObservations]
     ]);
     obsWs['!cols'] = [{ wch: 100 }];
-    obsWs['C3'].s = { alignment: { wrapText: true } };
+    if (obsWs['A3']) {
+      obsWs['A3'].s = { alignment: { wrapText: true } };
+    }
     XLSX.utils.book_append_sheet(wb, obsWs, "AI Observations");
 
     XLSX.writeFile(wb, `CMA_Report_${companyBranding.name}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
-
