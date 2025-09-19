@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
+import { AccountingProvider } from '@/context/accounting-context';
 
 const PurchasesPage = dynamic(() => import('@/components/purchases/purchase-list'), { 
     ssr: false,
@@ -10,5 +11,9 @@ const PurchasesPage = dynamic(() => import('@/components/purchases/purchase-list
 });
 
 export default function Page() {
-    return <PurchasesPage />;
+    return (
+        <AccountingProvider>
+            <PurchasesPage />
+        </AccountingProvider>
+    );
 }
