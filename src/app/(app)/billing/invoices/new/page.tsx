@@ -306,7 +306,7 @@ export default function NewInvoicePage() {
             customerId: customer,
         });
         toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
-        router.push("/invoices");
+        router.push("/billing/invoices");
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
     }
@@ -315,7 +315,7 @@ export default function NewInvoicePage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <Link href="/invoices" passHref>
+        <Link href="/billing/invoices" passHref>
           <Button variant="outline" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>

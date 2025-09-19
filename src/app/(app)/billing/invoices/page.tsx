@@ -249,7 +249,7 @@ export default function InvoicesPage() {
             const queryParams = new URLSearchParams({
                 duplicate: invoice.id
             }).toString();
-            router.push(`/invoices/new?${queryParams}`);
+            router.push(`/billing/invoices/new?${queryParams}`);
         } else if (action === 'Edit') {
             toast({ title: 'Editing Invoice...', description: `Cancelling ${invoice.id} and creating a new draft.` });
             const cancelled = await handleCancelInvoice(invoice.id);
@@ -257,7 +257,7 @@ export default function InvoicesPage() {
                 const queryParams = new URLSearchParams({
                     edit: invoice.id
                 }).toString();
-                router.push(`/invoices/new?${queryParams}`);
+                router.push(`/billing/invoices/new?${queryParams}`);
             } else {
                  toast({ variant: 'destructive', title: 'Edit Failed', description: `Could not cancel the original invoice.` });
             }
@@ -465,7 +465,7 @@ export default function InvoicesPage() {
                 <Zap className="mr-2"/>
                 Quick Invoice
             </Button>
-            <Link href="/invoices/new" passHref>
+            <Link href="/billing/invoices/new" passHref>
             <Button>
                 <PlusCircle className="mr-2"/>
                 Create Full Invoice

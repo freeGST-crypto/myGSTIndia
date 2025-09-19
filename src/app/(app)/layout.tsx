@@ -85,7 +85,7 @@ const menuItems = [
     label: "Billing",
     icon: Receipt,
     subItems: [
-      { href: "/invoices", label: "Invoices", icon: Receipt },
+      { href: "/billing/invoices", label: "Invoices", icon: Receipt },
       { href: "/purchases", label: "Purchases", icon: ShoppingCart },
       { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag },
       { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus },
