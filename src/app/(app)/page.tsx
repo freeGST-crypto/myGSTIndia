@@ -1,14 +1,6 @@
-"use client";
 
-import dynamic from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
-import { AccountingProvider } from '@/context/accounting-context';
-import DashboardContent from './dashboard/dashboard-content';
+import DashboardPage from "./dashboard/page";
 
 export default function Page() {
-    return (
-        <AccountingProvider>
-            <DashboardContent />
-        </AccountingProvider>
-    );
+    return <DashboardPage />;
 }

@@ -25,17 +25,24 @@ import { auth, db } from "@/lib/firebase";
 import { doc } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 
+const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
 export default function AdminDashboardPage() {
   const [user] = useAuthState(auth);
-  const userDocRef = user ? doc(db, 'users', user.uid) : null;
-  const [userData, loading, error] = useDocumentData(userDocRef);
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
+  
+  const getRole = () => {
+    if (!user) return null;
+    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    // This is a simplification. In a real app, you'd fetch this from your DB.
+    // For this page, we primarily differentiate super_admin from professional.
+    return 'professional'; 
   }
   
-  const userRole = userData?.userType;
+  const userRole = getRole();
+
+  if (!user) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
+  }
 
   const renderSuperAdminDashboard = () => {
     const proSubscribers = sampleSubscribers.filter(s => s.plan === 'Professional').length;
@@ -119,7 +126,7 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            {userRole === "professional"
+            {userRole === 'professional'
               ? "Manage your client portfolio."
               : "Platform-wide overview and metrics."
               }

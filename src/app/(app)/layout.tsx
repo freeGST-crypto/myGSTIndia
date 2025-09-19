@@ -142,7 +142,7 @@ const allMenuItems = [
   {
     href: "/legal-documents",
     label: "Legal Documents",
-    icon: BookCopy,
+    icon: Shield,
     roles: ['business', 'professional', 'super_admin']
   },
   {
@@ -153,10 +153,10 @@ const allMenuItems = [
   },
   {
     label: "Admin",
-    icon: Shield,
-    roles: ['super_admin', 'professional'],
+    icon: ShieldCheck,
+    roles: ['super_admin'],
     subItems: [
-      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin', 'professional'] },
+      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin'] },
       { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin'] },
       { href: "/admin/notices", label: "Notices", icon: MailWarning, roles: ['super_admin'] },
       { href: "/admin/users", label: "Users", icon: Users, roles: ['super_admin', 'professional'] },
@@ -245,10 +245,15 @@ function filterMenuByRole(menu: any[], role: string): any[] {
     .filter(item => item.roles.includes(role))
     .map(item => {
       if (item.subItems) {
-        return { ...item, subItems: filterMenuByRole(item.subItems, role) };
+        const filteredSubItems = filterMenuByRole(item.subItems, role);
+        // Only include the parent item if it has visible sub-items
+        if (filteredSubItems.length > 0) {
+            return { ...item, subItems: filteredSubItems };
+        }
+        return null;
       }
       return item;
-    });
+    }).filter(item => item !== null);
 }
 
 export default function AppLayout({

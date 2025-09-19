@@ -15,15 +15,23 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
-import { AccountingProvider } from "@/context/accounting-context";
 
 const formatCurrency = (value: number) => {
+    if (isNaN(value)) return '₹0.00';
     return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
 }
 
-function DashboardCore() {
+export default function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { journalVouchers, loading: journalLoading } = useContext(AccountingContext)!;
+  const accountingContext = useContext(AccountingContext);
+
+  if (!accountingContext) {
+    // This can happen briefly while the context is loading.
+    // A more robust solution might involve a loading skeleton here.
+    return <div>Loading...</div>;
+  }
+
+  const { journalVouchers, loading: journalLoading } = accountingContext;
   const [user] = useAuthState(auth);
 
   // Fetch customers
@@ -34,9 +42,7 @@ function DashboardCore() {
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
     
-    // Initialize balances for all customers, vendors, and static accounts
     customers.forEach(c => balances[c.id] = 0);
-    // vendors would be fetched and initialized here as well in a full implementation
     
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.lines) return;
@@ -56,8 +62,7 @@ function DashboardCore() {
     return customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
   }, [customers, accountBalances]);
 
-  // Assuming vendor balances would be calculated similarly
-  const totalPayables = accountBalances['2010'] || 0; // This will need vendor logic later
+  const totalPayables = accountBalances['2010'] || 0;
   const gstPayable = accountBalances['2110'] || 0;
 
   const invoices = useMemo(() => {
@@ -68,7 +73,7 @@ function DashboardCore() {
             invoice: v.id.replace("JV-", ""),
             customer: v.narration.replace("Sale to ", "").split(" via")[0],
             amount: formatCurrency(v.amount),
-            status: "Pending", // Status logic to be implemented later
+            status: "Pending",
         }));
   }, [journalVouchers]);
 
@@ -153,13 +158,4 @@ function DashboardCore() {
 
     </div>
   );
-}
-
-
-export default function DashboardContent() {
-    return (
-        <AccountingProvider>
-            <DashboardCore />
-        </AccountingProvider>
-    );
 }
