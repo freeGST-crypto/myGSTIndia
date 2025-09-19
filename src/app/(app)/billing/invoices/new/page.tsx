@@ -168,7 +168,7 @@ export default function NewInvoicePage() {
 
   useEffect(() => {
     const editId = searchParams.get('edit') || searchParams.get('duplicate');
-    if (editId && journalVouchers.length > 0 && items.length > 0) {
+    if (editId && journalVouchers.length > 0) {
       const voucherToLoad = journalVouchers.find(v => v.id === `JV-${editId}`);
       if (voucherToLoad) {
         setInvoiceDate(new Date(voucherToLoad.date));
@@ -179,21 +179,26 @@ export default function NewInvoicePage() {
         }
 
         const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
-        if (salesLine) {
+        const taxLine = voucherToLoad.lines.find(l => l.account === '2110');
+        const subtotal = parseFloat(salesLine?.credit || '0');
+        const taxAmount = parseFloat(taxLine?.credit || '0');
+
+        if (subtotal > 0) {
+            const taxRate = (taxAmount / subtotal) * 100;
             setLineItems([{
                  id: `${Date.now()}-${Math.random()}`,
-                 itemId: "",
-                 description: "Reconstructed from journal",
-                 hsn: "",
-                 qty: 1,
-                 rate: parseFloat(salesLine.credit),
-                 taxRate: 18, // Assuming 18% for simplicity
-                 amount: parseFloat(salesLine.credit),
+                 itemId: "", // This would need more logic to map back to an item
+                 description: voucherToLoad.narration,
+                 hsn: "", // Not stored in journal
+                 qty: 1, // Not stored, so default to 1
+                 rate: subtotal,
+                 taxRate: taxRate,
+                 amount: subtotal,
             }]);
         }
       }
     }
-  }, [searchParams, journalVouchers, items]);
+  }, [searchParams, journalVouchers]);
 
   const openItemDialog = useCallback(() => {
     setIsItemDialogOpen(true);
