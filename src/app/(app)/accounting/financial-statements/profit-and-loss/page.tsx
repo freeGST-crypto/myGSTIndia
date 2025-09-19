@@ -230,9 +230,3 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    

@@ -92,7 +92,7 @@ export default function BalanceSheetPage() {
             assets: {
                 fixedAssets: {
                     officeEquipment: accountBalances['1450'] || 0,
-                    lessAccumulatedDepreciation: -(accountBalances['1455'] || 0), // Contra-asset, so negate its balance
+                    lessAccumulatedDepreciation: (accountBalances['1455'] || 0), // Contra-asset, so it's a credit balance naturally. Treat as positive for subtraction display
                 },
                 investments: 0,
                 currentAssets: {
@@ -110,7 +110,7 @@ export default function BalanceSheetPage() {
     const totalCurrentLiabilities = Object.values(data.equityAndLiabilities.currentLiabilities).reduce((sum, val) => sum + val, 0);
     const totalEquityAndLiabilities = data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus + data.equityAndLiabilities.longTermLoans + totalCurrentLiabilities;
 
-    const netFixedAssets = data.assets.fixedAssets.officeEquipment + data.assets.fixedAssets.lessAccumulatedDepreciation;
+    const netFixedAssets = data.assets.fixedAssets.officeEquipment - data.assets.fixedAssets.lessAccumulatedDepreciation;
     const totalCurrentAssets = Object.values(data.assets.currentAssets).reduce((sum, val) => sum + val, 0);
     const totalAssets = netFixedAssets + data.assets.investments + totalCurrentAssets;
     
@@ -121,7 +121,7 @@ export default function BalanceSheetPage() {
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
 
     const capitalAccounts = [
-        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: netProfit },
+        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus },
     ];
 
 
@@ -213,7 +213,7 @@ export default function BalanceSheetPage() {
                         <TableBody>
                             <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
                             <ReportRow label="Office Equipment" value={data.assets.fixedAssets.officeEquipment} isSub />
-                            <ReportRow label="Less: Acc. Depreciation" value={data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
+                            <ReportRow label="Less: Acc. Depreciation" value={-data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
                             <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
 
                             <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(data.assets.investments)}</TableCell></TableRow>
