@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useContext, useCallback, memo } from "react";
@@ -180,7 +181,6 @@ export default function NewPurchasePage() {
   const [vendor, setVendor] = useState("");
   const [billNumber, setBillNumber] = useState("");
   const [taxType, setTaxType] = useState<'none' | 'tds' | 'tcs'>('none');
-  const [taxRate, setTaxRate] = useState(0);
   
   const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -234,7 +234,7 @@ export default function NewPurchasePage() {
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
   const totalBillAmount = subtotal + totalTax;
 
-  const taxOnSourceAmount = (subtotal * taxRate) / 100;
+  const taxOnSourceAmount = (subtotal * 0.1) / 100;
   let totalAmountPayable = totalBillAmount;
   if (taxType === 'tds') {
     totalAmountPayable -= taxOnSourceAmount;
@@ -420,14 +420,8 @@ export default function NewPurchasePage() {
                     <div><RadioGroupItem value="tcs" id="tax-tcs"/><Label htmlFor="tax-tcs" className="ml-2">TCS</Label></div>
                 </RadioGroup>
               </div>
-               {taxType !== 'none' && (
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="tax-rate">{taxType.toUpperCase()} Rate (%)</Label>
-                  <Input id="tax-rate" type="number" value={taxRate} onChange={e => setTaxRate(parseFloat(e.target.value) || 0)} className="w-24 text-right" />
-                </div>
-              )}
-               {taxType === 'tds' && <div className="flex justify-between"><span className="text-muted-foreground">TDS Amount</span><span className="text-red-500">- ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
-               {taxType === 'tcs' && <div className="flex justify-between"><span className="text-muted-foreground">TCS Amount</span><span className="text-green-600">+ ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
+               {taxType === 'tds' && <div className="flex justify-between"><span className="text-muted-foreground">TDS Amount (0.1%)</span><span className="text-red-500">- ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
+               {taxType === 'tcs' && <div className="flex justify-between"><span className="text-muted-foreground">TCS Amount (0.1%)</span><span className="text-green-600">+ ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
               <Separator/>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total Amount Payable</span>
