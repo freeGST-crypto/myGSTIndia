@@ -9,11 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight, Printer, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useReactToPrint } from "react-to-print";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const formSchema = z.object({
   entityName: z.string().min(3, "Entity name is required."),
@@ -48,6 +51,8 @@ export default function CapitalContributionCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const printRef = useRef(null);
+  const [user] = useAuthState(auth);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -78,11 +83,34 @@ export default function CapitalContributionCertificatePage() {
     documentTitle: `Capital_Contribution_Certificate_${form.getValues("entityName")}`,
   });
   
-  const handleCertificationRequest = () => {
-      toast({
-          title: "Request Sent",
-          description: "Draft sent to admin for certification."
-      });
+  const handleCertificationRequest = async () => {
+      if (!user) {
+          toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to make a request." });
+          return;
+      }
+      setIsSubmitting(true);
+      try {
+        await addDoc(collection(db, "certificationRequests"), {
+            reportType: "Capital Contribution Certificate",
+            clientName: form.getValues("entityName"),
+            requestedBy: user.displayName || user.email,
+            userId: user.uid,
+            requestDate: new Date(),
+            status: "Pending",
+            draftUrl: "#", // In a real app, this would be a URL to the generated PDF/data
+            signedDocumentUrl: null,
+            formData: form.getValues(),
+        });
+        toast({
+            title: "Request Sent",
+            description: "Your certification request has been sent to the admin for review."
+        });
+      } catch (error) {
+          console.error("Error sending request:", error);
+          toast({ variant: "destructive", title: "Request Failed", description: "Could not send the request. Please try again." });
+      } finally {
+          setIsSubmitting(false);
+      }
   }
 
   const renderContent = () => {
@@ -160,8 +188,9 @@ export default function CapitalContributionCertificatePage() {
                      <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
                      <div>
                         <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
-                        <Button type="button" className="ml-2" onClick={handleCertificationRequest}>
-                            <FileSignature className="mr-2"/> Request Certification
+                        <Button type="button" className="ml-2" onClick={handleCertificationRequest} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <FileSignature className="mr-2"/>}
+                            Request Certification
                         </Button>
                      </div>
                 </CardFooter>
