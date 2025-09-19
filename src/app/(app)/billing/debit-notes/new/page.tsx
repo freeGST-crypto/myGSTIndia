@@ -134,7 +134,7 @@ export default function NewDebitNotePage() {
 
     // Reverse of a purchase entry
     const journalLines = [
-        { account: '2010', debit: totalAmount.toFixed(2), credit: '0' }, // Debit Accounts Payable
+        { account: vendor, debit: totalAmount.toFixed(2), credit: '0' }, // Debit Vendor Account
         { account: '5050', debit: '0', credit: subtotal.toFixed(2) }, // Credit Purchases
         { account: '2110', debit: '0', credit: totalTax.toFixed(2) } // Credit GST Payable (reversing ITC)
     ];

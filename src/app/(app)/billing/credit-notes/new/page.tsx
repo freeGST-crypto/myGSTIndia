@@ -141,7 +141,7 @@ export default function NewCreditNotePage() {
     const journalLines = [
         { account: '4010', debit: subtotal.toFixed(2), credit: '0' }, // Debit Sales Revenue
         { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, // Debit GST Payable
-        { account: '1210', debit: '0', credit: totalAmount.toFixed(2) } // Credit Accounts Receivable
+        { account: customer, debit: '0', credit: totalAmount.toFixed(2) } // Credit Customer Account
     ];
 
     try {

@@ -271,17 +271,8 @@ export default function NewPurchasePage() {
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
         { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, 
-        { account: selectedVendor.id, debit: '0', credit: totalAmountPayable.toFixed(2) } 
+        { account: selectedVendor.id, debit: '0', credit: totalBillAmount.toFixed(2) } 
     ];
-
-    if (taxOnSourceAmount > 0) {
-      if (taxType === 'tds') {
-        journalLines.push({ account: '2130', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TDS Payable
-      } else if (taxType === 'tcs') {
-        journalLines.push({ account: '1470', debit: taxOnSourceAmount.toFixed(2), credit: '0'}); // TCS Receivable
-      }
-    }
-
 
     try {
         await addJournalVoucher({
@@ -423,22 +414,6 @@ export default function NewPurchasePage() {
                 <span>₹{totalTax.toFixed(2)}</span>
               </div>
               <Separator/>
-              <div className="flex justify-between font-semibold">
-                <span>Total Bill Amount</span>
-                <span>₹{totalBillAmount.toFixed(2)}</span>
-              </div>
-              <Separator />
-               <div className="space-y-2">
-                <Label>Tax at Source</Label>
-                <RadioGroup value={taxType} onValueChange={(value) => setTaxType(value as any)} className="grid grid-cols-3 gap-4">
-                    <div><RadioGroupItem value="none" id="tax-none"/><Label htmlFor="tax-none" className="ml-2">None</Label></div>
-                    <div><RadioGroupItem value="tds" id="tax-tds"/><Label htmlFor="tax-tds" className="ml-2">TDS</Label></div>
-                    <div><RadioGroupItem value="tcs" id="tax-tcs"/><Label htmlFor="tax-tcs" className="ml-2">TCS</Label></div>
-                </RadioGroup>
-              </div>
-               {taxType === 'tds' && <div className="flex justify-between"><span className="text-muted-foreground">TDS Amount (0.1%)</span><span className="text-red-500">- ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
-               {taxType === 'tcs' && <div className="flex justify-between"><span className="text-muted-foreground">TCS Amount (0.1%)</span><span className="text-green-600">+ ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
-              <Separator/>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total Amount Payable</span>
                 <span>₹{totalAmountPayable.toFixed(2)}</span>
@@ -472,5 +447,3 @@ export default function NewPurchasePage() {
     </div>
   );
 }
-
-    
