@@ -82,7 +82,6 @@ const InvoiceItemRow = memo(({
     item,
     index,
     handleItemChange,
-    setLineItems,
     handleRemoveItem,
     items,
     itemsLoading,
@@ -91,7 +90,6 @@ const InvoiceItemRow = memo(({
     item: LineItem;
     index: number;
     handleItemChange: (index: number, field: string, value: any) => void;
-    setLineItems: React.Dispatch<React.SetStateAction<LineItem[]>>;
     handleRemoveItem: (index: number) => void;
     items: Item[];
     itemsLoading: boolean;
@@ -104,21 +102,13 @@ const InvoiceItemRow = memo(({
         } else {
             const selectedItem = items.find(i => i.id === itemId);
             if (selectedItem) {
-                setLineItems(prev => {
-                    const list = [...prev];
-                    const currentItem = { ...list[index] };
-                    currentItem.itemId = itemId;
-                    currentItem.description = selectedItem.name;
-                    currentItem.rate = selectedItem.sellingPrice || 0;
-                    currentItem.hsn = selectedItem.hsn || "";
-                    currentItem.taxableAmount = currentItem.qty * (selectedItem.sellingPrice || 0);
-                    currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
-                    list[index] = currentItem;
-                    return list;
-                });
+                handleItemChange(index, 'itemId', itemId);
+                handleItemChange(index, 'description', selectedItem.name);
+                handleItemChange(index, 'rate', selectedItem.sellingPrice || 0);
+                handleItemChange(index, 'hsn', selectedItem.hsn || "");
             }
         }
-    }, [index, items, openItemDialog, setLineItems]);
+    }, [index, items, openItemDialog, handleItemChange]);
     
     return (
         <TableRow>
@@ -236,13 +226,12 @@ export default function NewInvoicePage() {
         const currentItem = { ...list[index] } as any;
         currentItem[field] = value;
 
-        if (field === 'qty' || field === 'rate') {
+        if (field === 'qty' || field === 'rate' || field === 'taxRate' || field === 'itemId') {
           currentItem.taxableAmount = (currentItem.qty || 0) * (currentItem.rate || 0);
+          currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
+          currentItem.cgst = 0;
+          currentItem.sgst = 0;
         }
-        
-        currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
-        currentItem.cgst = 0;
-        currentItem.sgst = 0;
         
         list[index] = currentItem;
         return list;
@@ -395,7 +384,6 @@ export default function NewInvoicePage() {
                       item={item}
                       index={index}
                       handleItemChange={handleItemChange}
-                      setLineItems={setLineItems}
                       handleRemoveItem={handleRemoveItem}
                       items={items}
                       itemsLoading={itemsLoading}

@@ -78,7 +78,7 @@ type Item = {
 const PurchaseItemRow = memo(({
     item,
     index,
-    setLineItems,
+    handleItemChange,
     handleRemoveItem,
     items,
     itemsLoading,
@@ -86,7 +86,7 @@ const PurchaseItemRow = memo(({
 }: {
     item: LineItem;
     index: number;
-    setLineItems: React.Dispatch<React.SetStateAction<LineItem[]>>;
+    handleItemChange: (index: number, field: string, value: any) => void;
     handleRemoveItem: (index: number) => void;
     items: Item[];
     itemsLoading: boolean;
@@ -99,35 +99,13 @@ const PurchaseItemRow = memo(({
         } else {
              const selectedItem = items.find((i) => i.id === itemId);
             if (selectedItem) {
-                setLineItems(prev => {
-                    const list = [...prev];
-                    const currentItem = { ...list[index] };
-                    currentItem.itemId = itemId;
-                    currentItem.description = selectedItem.name;
-                    currentItem.rate = selectedItem.purchasePrice || 0;
-                    currentItem.hsn = selectedItem.hsn || "";
-                    currentItem.amount = (currentItem.qty || 1) * (selectedItem.purchasePrice || 0);
-                    list[index] = currentItem;
-                    return list;
-                });
+                handleItemChange(index, 'itemId', itemId);
+                handleItemChange(index, 'description', selectedItem.name);
+                handleItemChange(index, 'rate', selectedItem.purchasePrice || 0);
+                handleItemChange(index, 'hsn', selectedItem.hsn || "");
             }
         }
-    }, [index, items, openItemDialog, setLineItems]);
-
-    const handleFieldChange = (field: string, value: any) => {
-      setLineItems(prev => {
-        const list = [...prev];
-        const currentItem = { ...list[index] } as any;
-        currentItem[field] = value;
-  
-        if (field === 'qty' || field === 'rate') {
-          currentItem.amount = (currentItem.qty || 0) * (currentItem.rate || 0);
-        }
-        
-        list[index] = currentItem;
-        return list;
-      });
-    };
+    }, [index, items, openItemDialog, handleItemChange]);
 
     return (
         <TableRow>
@@ -150,7 +128,7 @@ const PurchaseItemRow = memo(({
             <TableCell>
                 <Input
                 value={item.hsn}
-                onChange={(e) => handleFieldChange("hsn", e.target.value)}
+                onChange={(e) => handleItemChange(index, "hsn", e.target.value)}
                 placeholder="HSN/SAC"
                 />
             </TableCell>
@@ -158,7 +136,7 @@ const PurchaseItemRow = memo(({
                 <Input
                 type="number"
                 value={item.qty}
-                onChange={(e) => handleFieldChange("qty", parseInt(e.target.value))}
+                onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value))}
                 className="text-right"
                 />
             </TableCell>
@@ -166,7 +144,7 @@ const PurchaseItemRow = memo(({
                 <Input
                 type="number"
                 value={item.rate}
-                onChange={(e) => handleFieldChange("rate", parseFloat(e.target.value))}
+                onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value))}
                 className="text-right"
                 />
             </TableCell>
@@ -229,6 +207,21 @@ export default function NewPurchasePage() {
     });
   }, []);
   
+  const handleItemChange = useCallback((index: number, field: string, value: any) => {
+    setLineItems(prev => {
+      const list = [...prev];
+      const currentItem = { ...list[index] } as any;
+      currentItem[field] = value;
+
+      if (field === 'qty' || field === 'rate') {
+        currentItem.amount = (currentItem.qty || 0) * (currentItem.rate || 0);
+      }
+      
+      list[index] = currentItem;
+      return list;
+    });
+  }, []);
+
   const handleVendorChange = useCallback((value: string) => {
     if (value === 'add-new') {
         setIsVendorDialogOpen(true);
@@ -373,7 +366,7 @@ export default function NewPurchasePage() {
                         key={item.id}
                         item={item}
                         index={index}
-                        setLineItems={setLineItems}
+                        handleItemChange={handleItemChange}
                         handleRemoveItem={handleRemoveItem}
                         items={items}
                         itemsLoading={itemsLoading}
