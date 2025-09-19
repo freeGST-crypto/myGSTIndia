@@ -67,6 +67,22 @@ type Invoice = {
   raw: JournalVoucher;
 }
 
+const numberToWords = (num: number): string => {
+    const a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
+    const b = ['', '', 'twenty','thirty','forty','fifty', 'sixty','seventy','eighty','ninety'];
+    if (!num) return 'Zero';
+    if ((num.toString()).length > 9) return 'overflow';
+    const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return '';
+    let str = '';
+    str += (parseInt(n[1]) != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+    str += (parseInt(n[2]) != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+    str += (parseInt(n[3]) != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+    str += (parseInt(n[4]) != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+    str += (parseInt(n[5]) != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+    return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
+}
+
 export default function InvoicesPage() {
   const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
@@ -145,7 +161,7 @@ export default function InvoicesPage() {
     const totalAmount = subtotal + tax;
 
     const journalLines = [
-        { account: '1210', debit: totalAmount.toFixed(2), credit: '0' },
+        { account: selectedCustomer.id, debit: totalAmount.toFixed(2), credit: '0' },
         { account: '4010', debit: '0', credit: subtotal.toFixed(2) },
         { account: '2110', debit: '0', credit: tax.toFixed(2) }
     ];
@@ -258,47 +274,53 @@ export default function InvoicesPage() {
     const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId);
     const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F" }; // Mock data
 
-    // Header
+    // --- Header ---
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text(companyDetails.name, 14, 20);
+    doc.setFontSize(20);
+    doc.text(companyDetails.name, 14, 22);
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(companyDetails.address, 14, 26);
-    doc.text(`GSTIN: ${companyDetails.gstin} | PAN: ${companyDetails.pan}`, 14, 32);
+    doc.text(companyDetails.address, 14, 28);
+    doc.text(`GSTIN: ${companyDetails.gstin} | PAN: ${companyDetails.pan}`, 14, 34);
+
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("TAX INVOICE", 200, 22, { align: "right" });
+
+    // --- Invoice Details Table ---
+    doc.autoTable({
+        body: [
+            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id],
+            [{ content: 'Invoice Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.date), "dd-MMM-yyyy")],
+            [{ content: 'Due Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.dueDate), "dd-MMM-yyyy")],
+        ],
+        startY: 30,
+        margin: { left: 130 },
+        theme: 'plain',
+        tableWidth: 'auto',
+        styles: { fontSize: 10, cellPadding: 1 },
+    });
+
+    // --- Bill To / Ship To ---
+    const billToAddress = `${customerDetails?.name || invoice.customer}\n${customerDetails?.address1 || 'N/A'}\nGSTIN: ${customerDetails?.gstin || "N/A"}`;
+    doc.autoTable({
+        head: [['Bill To:', 'Ship To:']],
+        body: [[billToAddress, billToAddress]],
+        startY: 45,
+        theme: 'grid',
+        headStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 2 },
+    });
     
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("TAX INVOICE", 200, 20, { align: "right" });
+    let finalY = (doc as any).lastAutoTable.finalY + 5;
 
-    // Bill To & Ship To
-    doc.line(14, 40, 200, 40); // separator
-    doc.setFont("helvetica", "bold");
-    doc.text("Bill To:", 14, 46);
-    doc.setFont("helvetica", "normal");
-    doc.text(customerDetails?.name || invoice.customer, 14, 52);
-    doc.text(customerDetails?.address1 || "N/A", 14, 58);
-    doc.text(`GSTIN: ${customerDetails?.gstin || "N/A"}`, 14, 64);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Invoice No:", 140, 46);
-    doc.setFont("helvetica", "normal");
-    doc.text(invoice.id, 165, 46);
-    doc.setFont("helvetica", "bold");
-    doc.text("Invoice Date:", 140, 52);
-    doc.setFont("helvetica", "normal");
-    doc.text(format(new Date(invoice.date), "dd-MMM-yyyy"), 165, 52);
-    doc.setFont("helvetica", "bold");
-    doc.text("Due Date:", 140, 58);
-    doc.setFont("helvetica", "normal");
-    doc.text(format(new Date(invoice.dueDate), "dd-MMM-yyyy"), 165, 58);
-    doc.line(14, 70, 200, 70);
-
-    // Items Table
+    // --- Items Table ---
     const salesLine = invoice.raw.lines.find(l => l.account === '4010');
     const taxLine = invoice.raw.lines.find(l => l.account === '2110');
     const subtotal = parseFloat(salesLine?.credit || '0');
     const taxAmount = parseFloat(taxLine?.credit || '0');
+    const taxRate = subtotal > 0 ? (taxAmount / subtotal) * 100 : 0;
     
     const tableBody = [[
         1,
@@ -306,56 +328,77 @@ export default function InvoicesPage() {
         "9983", // Placeholder HSN
         1,
         subtotal.toFixed(2),
-        ((taxAmount / subtotal) * 100).toFixed(2),
-        taxAmount.toFixed(2),
         subtotal.toFixed(2),
+        taxRate.toFixed(2) + '%',
+        taxAmount.toFixed(2),
+        (subtotal + taxAmount).toFixed(2),
     ]];
 
     doc.autoTable({
-        head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Tax %', 'Tax Amt', 'Total']],
+        head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Taxable Value', 'Tax Rate', 'Tax Amt', 'Total']],
         body: tableBody,
-        startY: 75,
+        startY: finalY,
         theme: 'grid',
         headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        columnStyles: {
+            0: { cellWidth: 8 },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 15, halign: 'center' },
+            3: { cellWidth: 10, halign: 'right' },
+            4: { cellWidth: 20, halign: 'right' },
+            5: { cellWidth: 20, halign: 'right' },
+            6: { cellWidth: 15, halign: 'right' },
+            7: { cellWidth: 20, halign: 'right' },
+            8: { cellWidth: 22, halign: 'right' },
+        }
+    });
+    finalY = (doc as any).lastAutoTable.finalY;
+
+    // --- Totals Section ---
+    const totalsBody = [
+        ['Subtotal', subtotal.toFixed(2)],
+        ['IGST @ ' + taxRate.toFixed(2) + '%', taxAmount.toFixed(2)],
+        [{ content: 'Grand Total', styles: { fontStyle: 'bold' } }, { content: `Rs. ${invoice.amount.toFixed(2)}`, styles: { fontStyle: 'bold' } }]
+    ];
+    
+    doc.autoTable({
+        body: totalsBody,
+        startY: finalY + 2,
+        margin: { left: 130 },
+        theme: 'plain',
+        tableWidth: 'auto',
+        styles: { fontSize: 10, cellPadding: 1, halign: 'right' },
     });
     
-    let finalY = (doc as any).lastAutoTable.finalY || 100;
+    doc.setFontSize(9);
+    doc.text(`Amount in words: ${numberToWords(invoice.amount)}`, 14, finalY + 10);
+    finalY += 25;
 
-    // Totals Section
-    doc.setFontSize(10);
-    doc.text("Subtotal", 140, finalY + 8);
-    doc.text(subtotal.toFixed(2), 200, finalY + 8, { align: 'right' });
-    doc.text("IGST", 140, finalY + 14);
-    doc.text(taxAmount.toFixed(2), 200, finalY + 14, { align: 'right' });
-    doc.setFont("helvetica", "bold");
-    doc.text("Grand Total", 140, finalY + 20);
-    doc.text(`Rs. ${invoice.amount.toFixed(2)}`, 200, finalY + 20, { align: 'right' });
-
-    // Bank Details & Terms
-    finalY += 30;
+    // --- Terms & Footer ---
+    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("Bank Details:", 14, finalY);
     doc.setFont("helvetica", "normal");
-    doc.text("Bank: HDFC Bank | A/c No: 1234567890 | IFSC: HDFC0001234", 14, finalY + 6);
-    
+    doc.text("Bank: HDFC Bank | A/c No: 1234567890 | IFSC: HDFC0001234", 14, finalY + 5);
+
     doc.setFont("helvetica", "bold");
-    doc.text("Terms & Conditions:", 14, finalY + 14);
+    doc.text("Terms & Conditions:", 14, finalY + 12);
     doc.setFont("helvetica", "normal");
-    const terms = doc.splitTextToSize("1. Payment is due within 30 days. 2. Interest @18% p.a. will be charged on overdue bills.", 180);
-    doc.text(terms, 14, finalY + 20);
+    doc.text("1. Payment is due within 30 days. 2. Interest @18% p.a. will be charged on overdue bills.", 14, finalY + 17);
     
-    // Footer
-    finalY = doc.internal.pageSize.height - 40;
-    doc.line(14, finalY, 200, finalY);
-    doc.text("For GSTEase Solutions Pvt. Ltd.", 140, finalY + 15, { align: 'right'});
-    // space for signature
-    doc.text("Authorised Signatory", 140, finalY + 30, { align: 'right'});
+    const signatureY = doc.internal.pageSize.height - 40;
+    doc.line(14, signatureY, 200, signatureY); // Footer line
+    doc.setFont("helvetica", "bold");
+    doc.text(`For ${companyDetails.name}`, 200, signatureY + 8, { align: 'right' });
+    doc.text("Authorised Signatory", 200, signatureY + 20, { align: 'right' });
+
     doc.setFontSize(8);
-    doc.text("This is a GSTEase Generated Invoice.", 14, doc.internal.pageSize.height - 10);
-    
+    doc.setFont("helvetica", "italic");
+    doc.text("This is a GSTEase Generated Invoice.", 105, doc.internal.pageSize.height - 10, { align: 'center'});
+
     doc.save(`Invoice_${invoice.id}.pdf`);
     toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
-};
+  };
 
 
   const getStatusBadge = (status: string) => {
