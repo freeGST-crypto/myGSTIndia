@@ -84,7 +84,9 @@ export default function NewCreditNotePage() {
 
   const journalVouchersQuery = user ? query(collection(db, 'journalVouchers'), where("userId", "==", user.uid)) : null;
   const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
-  const invoices = journalVouchersSnapshot?.docs.filter(doc => doc.data().id.startsWith('JV-INV-')).map(doc => ({ id: doc.data().id.replace('JV-',''), customerId: doc.data().customerId })) || [];
+  const invoices = journalVouchersSnapshot?.docs
+    .filter(doc => doc.data()?.id?.startsWith('JV-INV-'))
+    .map(doc => ({ id: doc.data().id.replace('JV-',''), customerId: doc.data().customerId })) || [];
 
   const filteredInvoices = invoices.filter(inv => inv.customerId === customer);
 

@@ -79,7 +79,9 @@ export default function NewDebitNotePage() {
   
   const journalVouchersQuery = user ? query(collection(db, 'journalVouchers'), where("userId", "==", user.uid)) : null;
   const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
-  const purchases = journalVouchersSnapshot?.docs.filter(doc => doc.data().id.startsWith('JV-BILL-')).map(doc => ({ id: doc.data().id.replace('JV-',''), vendorId: doc.data().vendorId })) || [];
+  const purchases = journalVouchersSnapshot?.docs
+    .filter(doc => doc.data()?.id?.startsWith('JV-BILL-'))
+    .map(doc => ({ id: doc.data().id.replace('JV-',''), vendorId: doc.data().vendorId })) || [];
 
   const filteredPurchases = purchases.filter(p => p.vendorId === vendor);
 
