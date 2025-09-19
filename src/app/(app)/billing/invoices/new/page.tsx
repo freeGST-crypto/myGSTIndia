@@ -211,7 +211,7 @@ export default function NewInvoicePage() {
         }
       }
     }
-}, [searchParams, journalVouchers, items]);
+  }, [searchParams, journalVouchers, items]);
 
   const openItemDialog = useCallback(() => {
     setIsItemDialogOpen(true);
