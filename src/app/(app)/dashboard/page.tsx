@@ -1,13 +1,9 @@
 
 "use client";
 
-import dynamic from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
-
-const DashboardContent = dynamic(() => import('@/components/dashboard/dashboard-content'), { 
-    ssr: false,
-    loading: () => <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>
-});
+// This page is now redundant as the root page.tsx serves as the dashboard.
+// Kept for routing purposes but can be removed if routes are restructured.
+import DashboardContent from "@/components/dashboard/dashboard-content";
 
 export default function DashboardPage() {
     return <DashboardContent />;
