@@ -47,6 +47,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { PartyDialog } from "@/components/billing/add-new-dialogs";
 
 const partySchema = z.object({
     name: z.string().min(2, "Name is required."),
@@ -121,68 +122,6 @@ export default function PartiesPage() {
                 description: `This would ${action.toLowerCase()} the party '${partyName}'. This feature is a placeholder.`,
             });
         }
-    };
-
-    const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => {
-        
-        const form = useForm<z.infer<typeof partySchema>>({
-            resolver: zodResolver(partySchema),
-            defaultValues: { name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' },
-        });
-
-        const onSubmit = async (values: z.infer<typeof partySchema>) => {
-             if (!user) {
-                toast({ variant: "destructive", title: "Not Authenticated" });
-                return;
-            }
-            const collectionName = type === 'Customer' ? 'customers' : 'vendors';
-            try {
-                await addDoc(collection(db, collectionName), { ...values, userId: user.uid });
-                toast({ title: `${type} Added`, description: `${values.name} has been saved.` });
-                onOpenChange(false);
-                form.reset();
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                toast({ variant: "destructive", title: "Error", description: `Could not save ${type}.` });
-            }
-        };
-
-        return (
-             <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogTrigger asChild>
-                    <Button>
-                        <PlusCircle className="mr-2"/>
-                        Add {type}
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[625px]">
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)}>
-                            <DialogHeader>
-                                <DialogTitle>Add New {type}</DialogTitle>
-                                <DialogDescription>Enter the details for your new {type.toLowerCase()}.</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><Label>Name</Label><FormControl><Input placeholder={`${type}'s legal name`} {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField control={form.control} name="gstin" render={({ field }) => ( <FormItem><Label>GSTIN</Label><FormControl><Input placeholder="15-digit GSTIN" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <Separator/>
-                                <h3 className="font-medium col-span-4">Contact Details</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                     <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><Label>Email</Label><FormControl><Input placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                     <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><Label>Phone</Label><FormControl><Input placeholder="+91 98765 43210" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                </div>
-                                <Separator />
-                                <h3 className="font-medium col-span-4">Billing Address</h3>
-                                <FormField control={form.control} name="address1" render={({ field }) => ( <FormItem><Label>Address</Label><FormControl><Input placeholder="Street, Building No." {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit">Save {type}</Button>
-                            </DialogFooter>
-                        </form>
-                    </Form>
-                </DialogContent>
-            </Dialog>
-        )
     };
 
     const PartyTable = ({ parties, loading }: { parties: Party[], loading: boolean }) => (
@@ -283,6 +222,10 @@ export default function PartiesPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <ImportExportMenu type="Customer" />
+                            <Button onClick={() => setIsCustomerDialogOpen(true)}>
+                                <PlusCircle className="mr-2"/>
+                                Add Customer
+                            </Button>
                             <PartyDialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} type="Customer" />
                         </div>
                     </div>
@@ -312,6 +255,10 @@ export default function PartiesPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <ImportExportMenu type="Vendor" />
+                            <Button onClick={() => setIsVendorDialogOpen(true)}>
+                                <PlusCircle className="mr-2"/>
+                                Add Vendor
+                            </Button>
                             <PartyDialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} type="Vendor" />
                         </div>
                     </div>

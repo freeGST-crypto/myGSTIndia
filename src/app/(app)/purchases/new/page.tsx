@@ -270,9 +270,18 @@ export default function NewPurchasePage() {
 
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
-        { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, 
-        { account: selectedVendor.id, debit: '0', credit: totalBillAmount.toFixed(2) } 
+        { account: '2110', debit: totalTax.toFixed(2), credit: '0' },
+        { account: vendor, debit: '0', credit: totalAmountPayable.toFixed(2) } 
     ];
+
+    if (taxOnSourceAmount > 0) {
+      if (taxType === 'tds') {
+        journalLines.push({ account: '2130', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TDS Payable
+      } else if (taxType === 'tcs') {
+        journalLines.push({ account: '1470', debit: taxOnSourceAmount.toFixed(2), credit: '0'}); // TCS Receivable
+      }
+    }
+
 
     try {
         await addJournalVoucher({
