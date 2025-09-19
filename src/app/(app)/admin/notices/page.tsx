@@ -43,9 +43,44 @@ type Notice = {
   assignedTo?: string;
 };
 
-const sampleNotices: Notice[] = [];
+const sampleNotices: Notice[] = [
+    {
+        id: "NOTICE-001",
+        clientName: "Quantum Services",
+        clientEmail: "contact@quantum.com",
+        noticeType: "GST Department",
+        description: "Notice regarding mismatch in GSTR-1 and GSTR-3B for the month of April 2024.",
+        submissionDate: new Date(2024, 5, 20),
+        status: "Pending Review",
+    },
+    {
+        id: "NOTICE-002",
+        clientName: "Innovate LLC",
+        clientEmail: "accounts@innovate.dev",
+        noticeType: "Income Tax Department",
+        description: "Intimation u/s 143(1) for AY 2023-24 regarding TDS mismatch.",
+        submissionDate: new Date(2024, 5, 18),
+        status: "In Progress",
+        assignedTo: "Rohan Sharma, CA",
+    },
+     {
+        id: "NOTICE-003",
+        clientName: "Synergy Corp",
+        clientEmail: "finance@synergy.io",
+        noticeType: "Registrar of Companies (ROC)",
+        description: "Show Cause Notice for non-filing of AOC-4 and MGT-7 for FY 2022-23.",
+        submissionDate: new Date(2024, 5, 15),
+        status: "Resolved",
+        assignedTo: "Anjali Singh, CS",
+    },
+];
 
-const sampleProfessionals: any[] = [];
+const sampleProfessionals = [
+  { id: "PRO-001", name: "Rohan Sharma, CA" },
+  { id: "PRO-002", name: "Priya Mehta, Advocate" },
+  { id: "PRO-003", name: "Anjali Singh, CS" },
+];
+
 
 export default function AdminNoticesPage() {
   const [notices, setNotices] = useState<Notice[]>(sampleNotices);
@@ -175,3 +210,5 @@ export default function AdminNoticesPage() {
     </div>
   );
 }
+
+    

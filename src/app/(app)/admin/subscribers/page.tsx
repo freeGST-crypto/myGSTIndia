@@ -28,7 +28,33 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Edit, RefreshCw, XCircle } from "lucide-react";
 import { format } from 'date-fns';
 
-const sampleSubscribers: any[] = [];
+const sampleSubscribers = [
+    {
+        id: "SUB001",
+        user: "Innovate LLC",
+        email: "accounts@innovate.dev",
+        plan: "Business",
+        status: "Active",
+        renewalDate: new Date(2025, 5, 10),
+    },
+    {
+        id: "SUB002",
+        user: "Quantum Services",
+        email: "contact@quantum.com",
+        plan: "Professional",
+        status: "Active",
+        renewalDate: new Date(2025, 4, 20),
+    },
+    {
+        id: "SUB003",
+        user: "Synergy Corp",
+        email: "finance@synergy.io",
+        plan: "Business",
+        status: "Cancelled",
+        renewalDate: new Date(2024, 2, 15),
+    }
+];
+
 
 export default function SubscribersListPage() {
   const [subscribers, setSubscribers] = useState(sampleSubscribers);
@@ -102,3 +128,5 @@ export default function SubscribersListPage() {
     </div>
   );
 }
+
+    

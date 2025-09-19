@@ -40,24 +40,56 @@ import { Separator } from "@/components/ui/separator";
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 
-const sampleUsersList: any[] = [];
-
-type User = {
-    id: string;
-    name: string;
-    role: string;
-    gstin: string;
-    status: string;
-    email: string;
-    phone: string;
-    pan: string;
-    address: {
-      line1: string;
-      city: string;
-      state: string;
-      pincode: string;
+const sampleUsersList = [
+    {
+        id: "USR-001",
+        name: "Innovate LLC",
+        role: "Business",
+        gstin: "29AABCI5678G1Z4",
+        status: "Active",
+        email: "accounts@innovate.dev",
+        phone: "9876543210",
+        pan: "AABCI5678G",
+        address: { line1: "123 Innovation Drive", city: "Bangalore", state: "Karnataka", pincode: "560001" },
     },
-};
+    {
+        id: "USR-002",
+        name: "Rohan Sharma",
+        role: "Professional",
+        gstin: "N/A",
+        status: "Active",
+        email: "rohan.sharma@ca-firm.com",
+        phone: "9123456789",
+        pan: "ABCDE1234F",
+        address: { line1: "456 Finance Tower, BKC", city: "Mumbai", state: "Maharashtra", pincode: "400051" },
+    },
+    {
+        id: "USR-003",
+        name: "Quantum Services",
+        role: "Business",
+        gstin: "07LMNOP1234Q1Z9",
+        status: "Active",
+        email: "contact@quantum.com",
+        phone: "9988776655",
+        pan: "LMNOP1234Q",
+        address: { line1: "789 Tech Park", city: "Gurgaon", state: "Haryana", pincode: "122001" },
+    },
+    {
+        id: "USR-004",
+        name: "New Ventures Inc.",
+        role: "Business",
+        gstin: "N/A",
+        status: "Pending Onboarding",
+        email: "new@ventures.com",
+        phone: "9000011111",
+        pan: "PQRST5432U",
+        address: { line1: "456 Startup Lane", city: "Pune", state: "Maharashtra", pincode: "411001" },
+    },
+];
+
+
+type User = typeof sampleUsersList[0];
+
 type UserRole = "Super Admin" | "Professional";
 
 
@@ -260,3 +292,5 @@ export default function UserManagementPage() {
     </div>
   );
 }
+
+    

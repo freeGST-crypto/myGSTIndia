@@ -54,7 +54,60 @@ type Professional = {
     reviews?: number;
 };
 
-const sampleProfessionals: Professional[] = [];
+const sampleProfessionals: Professional[] = [
+    {
+        id: "PRO-001",
+        name: "Rohan Sharma, CA",
+        type: "ca",
+        firmName: "Sharma & Associates",
+        email: "rohan.sharma@ca-firm.com",
+        specialization: ["Startup Advisory", "GST", "Audit"],
+        clients: 25,
+        status: "Active",
+        about: "A leading CA firm based in Mumbai, specializing in startup consultation and audit services.",
+        experience: 10,
+        staffCount: 25,
+        proCount: 5,
+        avatarUrl: "https://picsum.photos/seed/pro1/100/100",
+        rating: 4.8,
+        reviews: 32,
+    },
+    {
+        id: "PRO-002",
+        name: "Priya Mehta, Advocate",
+        type: "advocate",
+        firmName: "Mehta Legal",
+        email: "priya.mehta@legal.com",
+        specialization: ["Corporate Law", "GST Litigation"],
+        clients: 40,
+        status: "Active",
+        about: "Expert legal counsel for corporate law, mergers, and high-stakes GST litigation.",
+        experience: 12,
+        staffCount: 10,
+        proCount: 3,
+        avatarUrl: "https://picsum.photos/seed/pro2/100/100",
+        rating: 4.9,
+        reviews: 45,
+    },
+    {
+        id: "PRO-003",
+        name: "Anjali Singh, CS",
+        type: "cs",
+        firmName: "Singh Corporate Services",
+        email: "anjali.s@cs-practitioner.com",
+        specialization: ["LLP Registration", "MCA Compliance"],
+        clients: 50,
+        status: "Pending Verification",
+        about: "One-stop solution for company and LLP formation and annual compliance.",
+        experience: 8,
+        staffCount: 8,
+        proCount: 2,
+        avatarUrl: "https://picsum.photos/seed/pro3/100/100",
+        rating: 4.7,
+        reviews: 28,
+    },
+];
+
 
 export default function ProfessionalsListPage() {
   const [professionals, setProfessionals] = useState<Professional[]>(sampleProfessionals);
@@ -222,3 +275,5 @@ export default function ProfessionalsListPage() {
     </div>
   );
 }
+
+    

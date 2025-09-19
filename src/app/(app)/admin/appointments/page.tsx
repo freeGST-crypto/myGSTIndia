@@ -45,9 +45,49 @@ type Appointment = {
   assignedTo?: string;
 };
 
-const sampleAppointments: Appointment[] = [];
+const sampleAppointments: Appointment[] = [
+    {
+        id: "APT001",
+        clientName: "Priya Mehta",
+        clientEmail: "priya.mehta@example.com",
+        professionalType: "Chartered Accountant",
+        serviceArea: "ITR Filing",
+        preferredDate: new Date(2024, 6, 15),
+        preferredTime: "10:00 AM - 12:00 PM",
+        mode: "Video Call",
+        status: "Pending",
+    },
+    {
+        id: "APT002",
+        clientName: "Rohan Sharma",
+        clientEmail: "rohan.sharma@example.com",
+        professionalType: "Advocate",
+        serviceArea: "GST Notices",
+        preferredDate: new Date(2024, 6, 18),
+        preferredTime: "02:00 PM - 04:00 PM",
+        mode: "Phone Call",
+        status: "Confirmed",
+        assignedTo: "Priya Mehta, Advocate",
+    },
+     {
+        id: "APT003",
+        clientName: "Anjali Singh",
+        clientEmail: "anjali.singh@example.com",
+        professionalType: "Company Secretary",
+        serviceArea: "PVT Incorporation",
+        preferredDate: new Date(2024, 6, 20),
+        preferredTime: "12:00 PM - 02:00 PM",
+        mode: "In-Person Meeting",
+        status: "Pending",
+    }
+];
 
-const sampleProfessionals: any[] = [];
+const sampleProfessionals = [
+  { id: "PRO-001", name: "Rohan Sharma, CA" },
+  { id: "PRO-002", name: "Priya Mehta, Advocate" },
+  { id: "PRO-003", name: "Anjali Singh, CS" },
+];
+
 
 export default function AppointmentsListPage() {
   const [appointments, setAppointments] = useState(sampleAppointments);
@@ -191,3 +231,5 @@ export default function AppointmentsListPage() {
     </div>
   );
 }
+
+    
