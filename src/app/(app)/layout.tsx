@@ -154,19 +154,10 @@ const allMenuItems = [
     roles: ['business', 'professional', 'super_admin']
   },
   {
+    href: "/admin/dashboard",
     label: "Admin",
     icon: ShieldCheck,
-    roles: ['super_admin'], // Corrected: only 'super_admin'
-    subItems: [
-      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin'] },
-      { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin'] },
-      { href: "/admin/notices", label: "Notices", icon: MailWarning, roles: ['super_admin'] },
-      { href: "/admin/users", label: "Users", icon: Users, roles: ['super_admin'] },
-      { href: "/admin/professionals", label: "Professionals", icon: UserSquare, roles: ['super_admin'] },
-      { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign, roles: ['super_admin'] },
-      { href: "/admin/certification-requests", label: "Certification Requests", icon: ShieldCheck, roles: ['super_admin'] },
-      { href: "/admin/service-pricing", label: "Service Pricing", icon: CreditCard, roles: ['super_admin'] },
-    ],
+    roles: ['professional', 'super_admin'],
   },
   { 
     label: "Settings", 
@@ -254,14 +245,14 @@ function filterMenuByRole(menu: any[], role: string): any[] {
         if (filteredSubItems.length > 0) {
           return { ...item, subItems: filteredSubItems };
         }
-        // Show menu if it's a direct link even if sub-items are all filtered out
         return item.href ? { ...item, subItems: [] } : null;
       }
       
       return item;
     })
-    .filter(Boolean) as any[]; // This removes the null entries
+    .filter(Boolean) as any[];
 }
+
 
 export default function AppLayout({
   children,
@@ -320,7 +311,6 @@ export default function AppLayout({
               <NavMenu items={menuItems} pathname={pathname} />
           </SidebarContent>
           <SidebarFooter>
-            {/* Footer content can go here if needed in the future */}
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
