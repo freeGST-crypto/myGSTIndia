@@ -238,23 +238,39 @@ export default function InvoicesPage() {
         }
     };
     
-    const handleShare = (invoice: Invoice) => {
-        // First, trigger the PDF download
-        handleDownloadPdf(invoice, true); // Pass true for silent toast
+    const handleShare = async (invoice: Invoice) => {
+        const pdfBlob = handleDownloadPdf(invoice, true); // Get PDF as Blob
+        if (!pdfBlob) {
+            toast({ variant: 'destructive', title: 'Failed to generate PDF' });
+            return;
+        }
 
-        // Then, prepare and open the WhatsApp link
-        const message = `Dear ${invoice.customer},\n\nHere is a reminder for your invoice:\nInvoice No: ${invoice.id}\nAmount: ₹${invoice.amount.toFixed(2)}\nDue Date: ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}\n\nThank you!\n- ${companyInfo.name}`;
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        
-        // Give a slight delay for the download to initiate before opening a new tab
-        setTimeout(() => {
+        const message = `Dear ${invoice.customer},\n\nPlease find attached the invoice for your reference:\n\nInvoice No: ${invoice.id}\nAmount: ₹${invoice.amount.toFixed(2)}\nDue Date: ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}\n\nThank you,\n${companyInfo.name}`;
+        const pdfFile = new File([pdfBlob], `Invoice_${invoice.id}.pdf`, { type: 'application/pdf' });
+
+        if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
+            try {
+                await navigator.share({
+                    title: `Invoice ${invoice.id}`,
+                    text: message,
+                    files: [pdfFile],
+                });
+                toast({ title: 'Shared Successfully!' });
+            } catch (error) {
+                console.error('Share failed:', error);
+                toast({ variant: 'destructive', title: 'Share Failed', description: 'Could not share the invoice. Please try downloading it instead.' });
+            }
+        } else {
+            // Fallback for browsers that don't support file sharing
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
             toast({
-                title: "Ready to Share",
-                description: "Your PDF has been downloaded. Please attach it to your WhatsApp message.",
+                title: "PDF Downloaded",
+                description: "Your PDF has been downloaded. Please attach it to your WhatsApp message manually.",
                 duration: 8000,
             });
-        }, 500);
+            handleDownloadPdf(invoice, false); // Trigger direct download as fallback
+        }
     }
     
     const companyInfo = {
@@ -269,7 +285,7 @@ export default function InvoicesPage() {
         } else if (action === 'Download') {
             handleDownloadPdf(invoice, false);
         } else if (action === 'Share') {
-            handleShare(invoice);
+            await handleShare(invoice);
         } else if (action === 'Duplicate') {
             const queryParams = new URLSearchParams({
                 duplicate: invoice.id
@@ -294,7 +310,7 @@ export default function InvoicesPage() {
         }
     }
 
-  const handleDownloadPdf = (invoice: Invoice, silent: boolean = false) => {
+  const handleDownloadPdf = (invoice: Invoice, silent: boolean = false): Blob | null => {
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
@@ -436,10 +452,12 @@ export default function InvoicesPage() {
     doc.setFont("helvetica", "italic");
     doc.text("This is a GSTEase Generated Invoice.", pageWidth / 2, pageHeight - 10, { align: 'center'});
 
-
-    doc.save(`Invoice_${invoice.id}.pdf`);
-    if (!silent) {
-      toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+    if (silent) {
+        return doc.output('blob');
+    } else {
+        doc.save(`Invoice_${invoice.id}.pdf`);
+        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+        return null;
     }
   };
 
@@ -686,3 +704,5 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+    
