@@ -21,10 +21,10 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   FileSpreadsheet,
-  PlusCircle,
   Search,
   User,
   ArrowRightLeft,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +39,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { auth, db } from '@/lib/firebase';
+import { doc } from "firebase/firestore";
+
 
 export const sampleUsersList = [
     {
@@ -88,16 +93,23 @@ export const sampleUsersList = [
 ];
 
 
-type User = typeof sampleUsersList[0];
-
-type UserRole = "Super Admin" | "Professional";
+type UserType = typeof sampleUsersList[0];
 
 
 export default function UserManagementPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState(sampleUsersList);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<UserRole>("Super Admin");
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  
+  const [user] = useAuthState(auth);
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, loading, error] = useDocumentData(userDocRef);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
+  }
+  
+  const currentUserRole = userData?.userType;
 
   const handleSwitchWorkspace = (userName: string) => {
     toast({
@@ -148,18 +160,6 @@ export default function UserManagementPage() {
       <div className="lg:col-span-2 space-y-8">
          <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">User & Client Management</h1>
-            <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Viewing as:</span>
-                <Select value={userRole} onValueChange={(value) => setUserRole(value as UserRole)}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Super Admin">Super Admin</SelectItem>
-                        <SelectItem value="Professional">Professional</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
         </div>
         <Card>
           <CardHeader>
@@ -250,7 +250,7 @@ export default function UserManagementPage() {
                     <Label>Phone</Label>
                     <Input defaultValue={selectedUser.phone}/>
                 </div>
-                {userRole === 'Super Admin' && (
+                {currentUserRole === 'super_admin' && (
                     <div className="space-y-2">
                         <Label>Role (Super Admin Only)</Label>
                         <Select defaultValue={selectedUser.role} >
@@ -292,5 +292,3 @@ export default function UserManagementPage() {
     </div>
   );
 }
-
-    

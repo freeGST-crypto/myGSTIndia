@@ -68,57 +68,59 @@ import { GstEaseLogo } from "@/components/icons";
 import { UserNav } from "@/components/layout/user-nav";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { auth, db } from '@/lib/firebase';
+import { doc } from 'firebase/firestore';
 import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
 
+const SUPER_ADMIN_UID = 'h2nO3s8eZkXYiL143y7pZ1g5zZ23';
 
-// --- Menu Items Definition ---
-// The following array defines the structure of the sidebar navigation.
-// Comments indicate the intended user roles for each section.
-
-const menuItems = [
-  // == COMMON FEATURES (For both Business Owners & Professionals) ==
-  { href: "/", label: "Dashboard", icon: Gauge },
-  { href: "/pricing", label: "Pricing", icon: BadgeDollarSign },
+const allMenuItems = [
+  { href: "/", label: "Dashboard", icon: Gauge, roles: ['business', 'professional', 'super_admin'] },
+  { href: "/pricing", label: "Pricing", icon: BadgeDollarSign, roles: ['business', 'professional', 'super_admin'] },
   {
     label: "Billing",
     icon: Receipt,
+    roles: ['business', 'professional', 'super_admin'],
     subItems: [
-      { href: "/billing/invoices", label: "Invoices", icon: Receipt },
-      { href: "/purchases", label: "Purchases", icon: ShoppingCart },
-      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag },
-      { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus },
-      { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus },
+      { href: "/billing/invoices", label: "Invoices", icon: Receipt, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/purchases", label: "Purchases", icon: ShoppingCart, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
-  { href: "/parties", label: "Parties", icon: Users },
-  { href: "/items", label: "Items", icon: Warehouse },
+  { href: "/parties", label: "Parties", icon: Users, roles: ['business', 'professional', 'super_admin'] },
+  { href: "/items", label: "Items", icon: Warehouse, roles: ['business', 'professional', 'super_admin'] },
   {
     label: "Compliance",
     icon: FileText,
+    roles: ['business', 'professional', 'super_admin'],
     subItems: [
-      { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet },
-      { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows },
-      { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy },
+      { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
-  { href: "/notices", label: "Handle Notices", icon: MailWarning },
+  { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional', 'super_admin'] },
   {
     label: "Accounting",
     icon: Calculator,
+    roles: ['business', 'professional', 'super_admin'],
     subItems: [
-      { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library },
-      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet },
-      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy },
-      { href: "/accounting/ledgers", label: "General Ledger", icon: Book },
-      { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale },
+      { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional', 'super_admin'] },
       {
         label: "Financial Statements",
         icon: BookOpen,
+        roles: ['business', 'professional', 'super_admin'],
         subItems: [
-          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp },
-          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark },
+          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp, roles: ['business', 'professional', 'super_admin'] },
+          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark, roles: ['business', 'professional', 'super_admin'] },
         ],
       },
     ],
@@ -126,51 +128,52 @@ const menuItems = [
   {
     label: "Reports",
     icon: AreaChart,
+    roles: ['business', 'professional', 'super_admin'],
     subItems: [
-        { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation },
+        { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
    { 
     href: "/ca-certificates", 
     label: "CA Certificates", 
-    icon: Award 
+    icon: Award,
+    roles: ['business', 'professional', 'super_admin']
   },
   {
     href: "/legal-documents",
     label: "Legal Documents",
     icon: BookCopy,
+    roles: ['business', 'professional', 'super_admin']
   },
   {
     href: "/professional-services",
     label: "Professional Services",
     icon: ConciergeBell,
+    roles: ['business', 'professional', 'super_admin']
   },
-
-  // == PROFESSIONAL / ADMIN FEATURES ==
-  // This section is intended for Professionals (to manage their clients) and Super Admins.
-  // It would be hidden from Direct Business Owners.
   {
     label: "Admin",
     icon: Shield,
+    roles: ['super_admin', 'professional'],
     subItems: [
-      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/admin/appointments", label: "Appointments", icon: CalendarClock },
-      { href: "/admin/notices", label: "Notices", icon: MailWarning },
-      { href: "/admin/users", label: "Users", icon: Users },
-      { href: "/admin/professionals", label: "Professionals", icon: UserSquare },
-      { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign },
-      { href: "/admin/certification-requests", label: "Certification Requests", icon: ShieldCheck },
-      { href: "/admin/service-pricing", label: "Service Pricing", icon: CreditCard },
+      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin', 'professional'] },
+      { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin'] },
+      { href: "/admin/notices", label: "Notices", icon: MailWarning, roles: ['super_admin'] },
+      { href: "/admin/users", label: "Users", icon: Users, roles: ['super_admin', 'professional'] },
+      { href: "/admin/professionals", label: "Professionals", icon: UserSquare, roles: ['super_admin'] },
+      { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign, roles: ['super_admin'] },
+      { href: "/admin/certification-requests", label: "Certification Requests", icon: ShieldCheck, roles: ['super_admin'] },
+      { href: "/admin/service-pricing", label: "Service Pricing", icon: CreditCard, roles: ['super_admin'] },
     ],
   },
-
-  // == COMMON SETTINGS ==
   { 
     label: "Settings", 
     icon: Settings,
+    roles: ['business', 'professional', 'super_admin'],
     subItems: [
-      { href: "/settings/branding", label: "Company Branding", icon: Building },
-      { href: "/settings/users", label: "User Management", icon: Users },
+      { href: "/settings/branding", label: "Company Branding", icon: Building, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/settings/users", label: "User Management", icon: Users, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/settings/professional-profile", label: "Professional Profile", icon: Briefcase, roles: ['professional'] },
     ],
   },
 ];
@@ -179,7 +182,6 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    // Only run on client-side
     if (item.subItems) {
       const checkActive = (subItems: any[]): boolean => {
           return subItems.some(sub => 
@@ -238,6 +240,17 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
   </SidebarMenu>
 );
 
+function filterMenuByRole(menu: any[], role: string): any[] {
+  return menu
+    .filter(item => item.roles.includes(role))
+    .map(item => {
+      if (item.subItems) {
+        return { ...item, subItems: filterMenuByRole(item.subItems, role) };
+      }
+      return item;
+    });
+}
+
 export default function AppLayout({
   children,
 }: {
@@ -245,15 +258,26 @@ export default function AppLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
+  
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, userLoading] = useDocumentData(userDocRef);
+
+  const getRole = () => {
+    if (!user) return null;
+    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    return userData?.userType || 'business';
+  }
+  
+  const userRole = getRole();
 
   React.useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
-
-  if (loading) {
+  
+  if (loading || userLoading) {
       return (
           <div className="flex items-center justify-center h-screen">
               <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -261,9 +285,11 @@ export default function AppLayout({
       );
   }
 
-  if (!user) {
-    return null; // or a redirect component
+  if (!user || !userRole) {
+    return null;
   }
+  
+  const menuItems = filterMenuByRole(allMenuItems, userRole);
 
   return (
     <SidebarProvider>

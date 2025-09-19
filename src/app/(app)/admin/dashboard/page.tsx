@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,29 +10,32 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ArrowRight, Users, CalendarClock, UserSquare, BadgeDollarSign } from "lucide-react";
 import Link from "next/link";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
 import { ClientList } from "@/components/admin/client-list";
-// We can import the sample data to make the dashboard stats dynamic
 import { sampleSubscribers } from "@/app/(app)/admin/subscribers/page";
 import { sampleUsersList } from "@/app/(app)/admin/users/page";
 import { sampleAppointments } from "@/app/(app)/admin/appointments/page";
 import { sampleProfessionals } from "@/app/(app)/admin/professionals/page";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useDocumentData } from "react-firebase-hooks/firestore";
+import { auth, db } from "@/lib/firebase";
+import { doc } from "firebase/firestore";
+import { Loader2 } from "lucide-react";
 
-type UserRole = "Super Admin" | "Professional";
 
 export default function AdminDashboardPage() {
-  // Simulate user role. In a real app, this would come from user context.
-  const [userRole, setUserRole] = useState<UserRole>("Super Admin");
+  const [user] = useAuthState(auth);
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, loading, error] = useDocumentData(userDocRef);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
+  }
+  
+  const userRole = userData?.userType;
 
   const renderSuperAdminDashboard = () => {
     const proSubscribers = sampleSubscribers.filter(s => s.plan === 'Professional').length;
@@ -115,28 +119,15 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            {userRole === "Super Admin"
-              ? "Platform-wide overview and metrics."
-              : "Manage your client portfolio."}
+            {userRole === "professional"
+              ? "Manage your client portfolio."
+              : "Platform-wide overview and metrics."
+              }
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Viewing as:</span>
-            <Select value={userRole} onValueChange={(value) => setUserRole(value as UserRole)}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="Super Admin">Super Admin</SelectItem>
-                    <SelectItem value="Professional">Professional</SelectItem>
-                </SelectContent>
-            </Select>
         </div>
       </div>
 
-      {userRole === "Super Admin"
-        ? renderSuperAdminDashboard()
-        : renderProfessionalDashboard()}
+      {userRole === 'professional' ? renderProfessionalDashboard() : renderSuperAdminDashboard()}
     </div>
   );
 }
