@@ -48,7 +48,6 @@ import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import jsPDF from 'jspdf';
-import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 import { useRouter } from "next/navigation";
 
 
@@ -124,8 +123,9 @@ export default function InvoicesPage() {
   }, [journalVouchers]);
 
 
-  const handleQuickInvoiceCreate = () => {
-    if (!quickInvNum || !quickCustomer || !quickItem || quickRate <= 0) {
+  const handleQuickInvoiceCreate = async () => {
+    const selectedCustomer = customers.find((c: any) => c.id === quickCustomer);
+    if (!quickInvNum || !selectedCustomer || !quickItem || quickRate <= 0) {
       toast({
         variant: "destructive",
         title: "Missing Information",
@@ -133,26 +133,50 @@ export default function InvoicesPage() {
       });
       return;
     }
-    // In a real app, this would also call addJournalVoucher
-    toast({
-        title: "Quick Invoice Created! (Simulation)",
-        description: `Invoice ${quickInvNum} has been created.`
-    });
+    
+    const subtotal = quickQty * quickRate;
+    const tax = subtotal * 0.18; // Assuming 18% tax for simplicity
+    const totalAmount = subtotal + tax;
 
-    // Reset form
-    setQuickInvNum("");
-    setQuickCustomer("");
-    setQuickItem(null);
-    setQuickQty(1);
-    setQuickRate(0);
-    setIsQuickInvoiceOpen(false);
+    const journalLines = [
+        { account: '1210', debit: totalAmount.toFixed(2), credit: '0' },
+        { account: '4010', debit: '0', credit: subtotal.toFixed(2) },
+        { account: '2110', debit: '0', credit: tax.toFixed(2) }
+    ];
+
+    try {
+      await addJournalVoucher({
+            id: `JV-${quickInvNum}`,
+            date: new Date().toISOString().split('T')[0],
+            narration: `Sale to ${selectedCustomer.name} via Invoice #${quickInvNum}`,
+            lines: journalLines,
+            amount: totalAmount,
+            customerId: quickCustomer,
+        });
+
+        toast({
+            title: "Quick Invoice Created!",
+            description: `Invoice ${quickInvNum} has been created and recorded.`
+        });
+
+        // Reset form
+        setQuickInvNum("");
+        setQuickCustomer("");
+        setQuickItem(null);
+        setQuickQty(1);
+        setQuickRate(0);
+        setIsQuickInvoiceOpen(false);
+
+    } catch (e: any) {
+        toast({ variant: "destructive", title: "Failed to save invoice", description: e.message });
+    }
   }
 
   const handleQuickItemChange = (itemId: string) => {
     const selectedItem = items.find((i: any) => i.id === itemId);
     if(selectedItem) {
-        setQuickItem(selectedItem);
-        setQuickRate(selectedItem.sellingPrice);
+        setQuickItem(selectedItem as any);
+        setQuickRate((selectedItem as any).sellingPrice);
     }
   }
 
@@ -413,16 +437,13 @@ export default function InvoicesPage() {
                             <DropdownMenuItem onSelect={() => handleAction('View', invoice)}>
                               <FileText className="mr-2" /> View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
+                             <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
                               <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => {
-                                const queryParams = new URLSearchParams({ duplicate: invoice.id }).toString();
-                                router.push(`/invoices/new?${queryParams}`);
-                            }}>
+                            <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
                               <Copy className="mr-2" /> Duplicate Invoice
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
