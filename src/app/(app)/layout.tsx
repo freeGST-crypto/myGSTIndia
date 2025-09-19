@@ -191,7 +191,9 @@ const allMenuItems = [
 ];
 
 const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(
+    item.subItems?.some((subItem: any) => pathname.startsWith(subItem.href)) || false
+  );
 
   React.useEffect(() => {
     const checkActive = (subItems: any[]): boolean => {
@@ -250,10 +252,8 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
   </SidebarMenu>
 );
 
-function filterMenuByRole(menu: any[], role: string | null): any[] {
-  if (!role) return [];
-
-  return menu.reduce((acc: any[], item: any) => {
+function filterMenuByRole(items: any[], role: string): any[] {
+  return items.reduce((acc: any[], item: any) => {
     // Check if the current user's role is included in the item's roles
     const hasAccess = item.roles && item.roles.includes(role);
 
