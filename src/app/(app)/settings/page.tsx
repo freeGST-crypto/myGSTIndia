@@ -1,13 +1,30 @@
 
 "use client";
 
-import { PlaceholderPage } from "@/components/placeholder-page";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Building, Users, Briefcase } from "lucide-react";
+import { ArrowRight, Building, Users, Briefcase, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { auth, db } from "@/lib/firebase";
+import { doc } from "firebase/firestore";
 
 export default function SettingsPage() {
+    const [user] = useAuthState(auth);
+    const userDocRef = user ? doc(db, 'users', user.uid) : null;
+    const [userData, loading, error] = useDocumentData(userDocRef);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="animate-spin size-8 text-primary" />
+            </div>
+        );
+    }
+    
+    const userRole = userData?.userType;
+
     return (
         <div className="space-y-8">
             <div className="text-center">
@@ -51,24 +68,27 @@ export default function SettingsPage() {
                         </Link>
                     </CardContent>
                 </Card>
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <Briefcase className="text-primary"/> Professional Profile
-                        </CardTitle>
-                        <CardDescription>
-                            Manage your public profile, expertise, and firm details. (For Professionals)
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Link href="/settings/professional-profile" passHref>
-                            <Button>
-                                <span>Update Profile</span>
-                                <ArrowRight className="ml-2 size-4" />
-                            </Button>
-                        </Link>
-                    </CardContent>
-                </Card>
+                
+                {userRole === 'professional' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                            <Briefcase className="text-primary"/> Professional Profile
+                            </CardTitle>
+                            <CardDescription>
+                                Manage your public profile, expertise, and firm details.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Link href="/settings/professional-profile" passHref>
+                                <Button>
+                                    <span>Update Profile</span>
+                                    <ArrowRight className="ml-2 size-4" />
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     );
