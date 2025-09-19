@@ -97,11 +97,9 @@ export default function JournalVoucherPage() {
 
     const visibleJournalVouchers = useMemo(() => {
         const reversedIds = new Set(
-            allVouchers
-                .filter(v => v.id.startsWith("JV-REV-"))
-                .map(v => v.id.replace("JV-REV-", ""))
+            allVouchers.filter(v => v.reverses).map(v => v.reverses)
         );
-        return allVouchers.filter(v => !reversedIds.has(v.id));
+        return allVouchers.filter(v => !reversedIds.has(v.id) && !v.reverses);
     }, [allVouchers]);
 
     const handleDeleteJournalVoucher = async (voucherId: string) => {
@@ -119,8 +117,8 @@ export default function JournalVoucherPage() {
         }));
         
         const reversalVoucher = {
-            id: `JV-REV-${voucherId}-${Date.now()}`,
-            reverses: voucherId,
+            id: `JV-REV-${Date.now()}`, // Generate a unique ID
+            reverses: voucherId, // Keep track of the voucher being reversed
             date: new Date().toISOString().split('T')[0],
             narration: `Reversal of Voucher #${voucherId}`,
             lines: reversalLines,
@@ -137,15 +135,15 @@ export default function JournalVoucherPage() {
 
     const handleVoucherAction = (action: string, voucher: JournalVoucher) => {
         if (action === 'Delete') {
-             if (voucher.id.startsWith("JV-REV-")) {
-                toast({ variant: "destructive", title: "Cannot Delete", description: "This is already a reversal entry and cannot be deleted." });
+             if (voucher.reverses) {
+                toast({ variant: "destructive", title: "Cannot Delete", description: "This is a reversal entry and cannot be deleted." });
                 return;
             }
             handleDeleteJournalVoucher(voucher.id);
         } else if (action === 'View') {
             setSelectedVoucher(voucher);
         } else if (action === 'Edit') {
-             if (voucher.id.startsWith("JV-REV-")) {
+             if (voucher.reverses) {
                 toast({ variant: "destructive", title: "Cannot Edit", description: "Reversal entries cannot be edited." });
                 return;
             }
