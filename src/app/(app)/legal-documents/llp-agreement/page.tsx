@@ -384,7 +384,7 @@ export default function LlpAgreementPage() {
         <p className="text-muted-foreground">Follow the steps to create your Limited Liability Partnership agreement.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>
