@@ -136,7 +136,9 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold">
+            {userRole === 'professional' ? 'Client Workspace' : 'Admin Dashboard'}
+          </h1>
           <p className="text-muted-foreground">
             {userRole === 'professional'
               ? "Manage your client portfolio."

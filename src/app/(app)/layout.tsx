@@ -84,45 +84,45 @@ const allMenuItems = [
   {
     label: "Billing",
     icon: Receipt,
-    roles: ['business', 'professional', 'super_admin'],
+    roles: ['business', 'professional'],
     subItems: [
-      { href: "/billing/invoices", label: "Invoices", icon: Receipt, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/purchases", label: "Purchases", icon: ShoppingCart, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/billing/invoices", label: "Invoices", icon: Receipt, roles: ['business', 'professional'] },
+      { href: "/purchases", label: "Purchases", icon: ShoppingCart, roles: ['business', 'professional'] },
+      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag, roles: ['business', 'professional'] },
+      { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus, roles: ['business', 'professional'] },
+      { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus, roles: ['business', 'professional'] },
     ],
   },
-  { href: "/parties", label: "Parties", icon: Users, roles: ['business', 'professional', 'super_admin'] },
-  { href: "/items", label: "Items", icon: Warehouse, roles: ['business', 'professional', 'super_admin'] },
+  { href: "/parties", label: "Parties", icon: Users, roles: ['business', 'professional'] },
+  { href: "/items", label: "Items", icon: Warehouse, roles: ['business', 'professional'] },
   {
     label: "Compliance",
     icon: FileText,
-    roles: ['business', 'professional', 'super_admin'],
+    roles: ['business', 'professional'],
     subItems: [
-      { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional'] },
+      { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
+      { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy, roles: ['business', 'professional'] },
     ],
   },
-  { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional', 'super_admin'] },
+  { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
   {
     label: "Accounting",
     icon: Calculator,
-    roles: ['business', 'professional', 'super_admin'],
+    roles: ['business', 'professional'],
     subItems: [
-      { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library, roles: ['business', 'professional'] },
+      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet, roles: ['business', 'professional'] },
+      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy, roles: ['business', 'professional'] },
+      { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional'] },
+      { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional'] },
       {
         label: "Financial Statements",
         icon: BookOpen,
-        roles: ['business', 'professional', 'super_admin'],
+        roles: ['business', 'professional'],
         subItems: [
-          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp, roles: ['business', 'professional', 'super_admin'] },
-          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark, roles: ['business', 'professional', 'super_admin'] },
+          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp, roles: ['business', 'professional'] },
+          { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark, roles: ['business', 'professional'] },
         ],
       },
     ],
@@ -130,22 +130,22 @@ const allMenuItems = [
   {
     label: "Reports",
     icon: AreaChart,
-    roles: ['business', 'professional', 'super_admin'],
+    roles: ['business', 'professional'],
     subItems: [
-        { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation, roles: ['business', 'professional', 'super_admin'] },
+        { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation, roles: ['business', 'professional'] },
     ],
   },
    { 
     href: "/ca-certificates", 
     label: "CA Certificates", 
     icon: Award,
-    roles: ['business', 'professional', 'super_admin']
+    roles: ['business', 'professional']
   },
   {
     href: "/legal-documents",
     label: "Legal Documents",
     icon: Shield,
-    roles: ['business', 'professional', 'super_admin']
+    roles: ['business', 'professional']
   },
   {
     href: "/professional-services",
@@ -155,9 +155,24 @@ const allMenuItems = [
   },
   {
     href: "/admin/dashboard",
+    label: "Client Workspace",
+    icon: Briefcase,
+    roles: ['professional'],
+  },
+  {
     label: "Admin",
     icon: ShieldCheck,
-    roles: ['professional', 'super_admin'],
+    roles: ['super_admin'],
+    subItems: [
+        { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin']},
+        { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign, roles: ['super_admin']},
+        { href: "/admin/users", label: "All Users", icon: Users, roles: ['super_admin']},
+        { href: "/admin/professionals", label: "Professionals", icon: UserSquare, roles: ['super_admin']},
+        { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin']},
+        { href: "/admin/notices", label: "Submitted Notices", icon: MailWarning, roles: ['super_admin']},
+        { href: "/admin/service-pricing", label: "On-Demand Pricing", icon: CreditCard, roles: ['super_admin']},
+        { href: "/admin/certification-requests", label: "Certification Requests", icon: FileSignature, roles: ['super_admin']},
+    ]
   },
   { 
     label: "Settings", 
@@ -245,7 +260,9 @@ function filterMenuByRole(menu: any[], role: string): any[] {
         if (filteredSubItems.length > 0) {
           return { ...item, subItems: filteredSubItems };
         }
-        return item.href ? { ...item, subItems: [] } : null;
+        // If an item has a link AND sub-items, but sub-items are all filtered out,
+        // it can still be shown as a top-level link.
+        return item.href ? { ...item, subItems: undefined } : null;
       }
       
       return item;
