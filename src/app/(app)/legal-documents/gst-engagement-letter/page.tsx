@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,11 +21,13 @@ import {
   ArrowLeft,
   ArrowRight,
   FileDown,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useReactToPrint } from "react-to-print";
 
 const services = [
     { id: "registration", label: "GST Registration" },
@@ -65,6 +67,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function GstEngagementLetterPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -82,6 +85,10 @@ export default function GstEngagementLetterPage() {
       consultantResponsibilities: "To prepare and file the GST returns based on the information provided by the client. To advise the client on matters related to GST compliance as covered under the scope of this engagement. To maintain confidentiality of all information provided.",
       termAndTermination: "This engagement will be effective from the date of signing and will continue until terminated by either party with a written notice of 30 days. All outstanding fees must be settled upon termination.",
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -247,7 +254,8 @@ export default function GstEngagementLetterPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated GST Engagement Letter.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent>
+                  <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     <p><strong>Date:</strong> {agreementDate}</p>
                     <p>To,</p>
                     <p><strong>{formData.clientName}</strong><br/>{formData.clientAddress.split('\n').map((line, i) => <span key={i}>{line}<br/></span>)}</p>
@@ -294,9 +302,12 @@ export default function GstEngagementLetterPage() {
                         <p>(Authorized Signatory)</p>
                         <p>Date: _______________</p>
                     </div>
-
+                  </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Letter</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                </CardFooter>
             </Card>
         );
       default:
@@ -315,14 +326,10 @@ export default function GstEngagementLetterPage() {
         <p className="text-muted-foreground">Follow the steps to create a professional engagement letter for GST services.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>
     </div>
   );
 }
-
-    
-
-    

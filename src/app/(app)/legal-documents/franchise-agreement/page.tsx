@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,10 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, ArrowRight, FileDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileDown, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
   franchisorName: z.string().min(3, "Franchisor name is required."),
@@ -49,6 +51,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function FranchiseAgreementPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -64,6 +67,10 @@ export default function FranchiseAgreementPage() {
       termYears: 5,
       jurisdictionCity: "Mumbai",
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -160,7 +167,8 @@ export default function FranchiseAgreementPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Franchise Agreement.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent>
+                  <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     <h2 className="text-center font-bold">FRANCHISE AGREEMENT</h2>
                     
                     <p>This Franchise Agreement is made as of <strong>{agreementDate}</strong>,</p>
@@ -203,9 +211,12 @@ export default function FranchiseAgreementPage() {
                             <p>By: {formData.franchiseeName}</p>
                         </div>
                     </div>
-
+                  </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Agreement</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                </CardFooter>
             </Card>
         );
       default:

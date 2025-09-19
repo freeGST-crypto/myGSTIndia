@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,10 +23,12 @@ import {
   PlusCircle,
   Trash2,
   FileDown,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useReactToPrint } from "react-to-print";
 
 const founderSchema = z.object({
   name: z.string().min(2, "Founder name is required."),
@@ -67,6 +69,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function FoundersAgreementPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -88,6 +91,10 @@ export default function FoundersAgreementPage() {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "founders",
+  });
+  
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const totalEquity = form.watch("founders").reduce((acc, founder) => acc + (founder.equity || 0), 0);
@@ -205,98 +212,103 @@ export default function FoundersAgreementPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Founders' Agreement.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <h2 className="text-center font-bold">FOUNDERS' AGREEMENT</h2>
-                    <p>This Founders' Agreement (the "Agreement") is made and entered into as of <strong>{new Date(formData.effectiveDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong> (the "Effective Date"), by and among:</p>
-                    
-                    {formData.founders.map((p, i) => (
-                       <div key={p.name} className="my-2">
-                           <p><strong>{p.name}</strong>, residing at {p.address} (hereinafter referred to as "Founder {i + 1}"),</p>
-                       </div>
-                    ))}
-                     <p>(Collectively referred to as the "Founders").</p>
-                    
-                    <h4 className="font-bold mt-4">1. PURPOSE</h4>
-                    <p>The Founders agree to collaborate and establish a business venture under the proposed name <strong>{formData.projectName}</strong> (the “Company”), for the purpose of {formData.projectDescription}.</p>
-                    
-                    <h4 className="font-bold mt-4">2. ROLES & RESPONSIBILITIES</h4>
-                    <ul className="list-disc list-inside pl-4 mt-2 space-y-1">
-                        {formData.founders.map(p => (
-                            <li key={p.name}><strong>{p.name} ({p.role}):</strong> {p.responsibilities}</li>
+                <CardContent>
+                    <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                        <h2 className="text-center font-bold">FOUNDERS' AGREEMENT</h2>
+                        <p>This Founders' Agreement (the "Agreement") is made and entered into as of <strong>{new Date(formData.effectiveDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong> (the "Effective Date"), by and among:</p>
+                        
+                        {formData.founders.map((p, i) => (
+                        <div key={p.name} className="my-2">
+                            <p><strong>{p.name}</strong>, residing at {p.address} (hereinafter referred to as "Founder {i + 1}"),</p>
+                        </div>
                         ))}
-                    </ul>
-                    <p>Day-to-day operations may be handled by each Founder within their defined roles. However, major strategic decisions shall require <strong>{formData.decisionMaking}</strong> consent.</p>
+                        <p>(Collectively referred to as the "Founders").</p>
+                        
+                        <h4 className="font-bold mt-4">1. PURPOSE</h4>
+                        <p>The Founders agree to collaborate and establish a business venture under the proposed name <strong>{formData.projectName}</strong> (the “Company”), for the purpose of {formData.projectDescription}.</p>
+                        
+                        <h4 className="font-bold mt-4">2. ROLES & RESPONSIBILITIES</h4>
+                        <ul className="list-disc list-inside pl-4 mt-2 space-y-1">
+                            {formData.founders.map(p => (
+                                <li key={p.name}><strong>{p.name} ({p.role}):</strong> {p.responsibilities}</li>
+                            ))}
+                        </ul>
+                        <p>Day-to-day operations may be handled by each Founder within their defined roles. However, major strategic decisions shall require <strong>{formData.decisionMaking}</strong> consent.</p>
 
 
-                    <h4 className="font-bold mt-4">3. EQUITY & OWNERSHIP</h4>
-                    <p>Upon formation of a legal entity for the Company, the equity securities shall be allocated to the Founders as follows, subject to the vesting schedule in Clause 4:</p>
-                     <ul className="list-disc list-inside pl-4 mt-2 space-y-1">
-                        {formData.founders.map(p => (
-                            <li key={p.name}><strong>{p.name}:</strong> {p.equity}%</li>
-                        ))}
-                    </ul>
+                        <h4 className="font-bold mt-4">3. EQUITY & OWNERSHIP</h4>
+                        <p>Upon formation of a legal entity for the Company, the equity securities shall be allocated to the Founders as follows, subject to the vesting schedule in Clause 4:</p>
+                        <ul className="list-disc list-inside pl-4 mt-2 space-y-1">
+                            {formData.founders.map(p => (
+                                <li key={p.name}><strong>{p.name}:</strong> {p.equity}%</li>
+                            ))}
+                        </ul>
 
-                    <h4 className="font-bold mt-4">4. VESTING SCHEDULE</h4>
-                     <p>The equity allocated to each Founder shall vest over a period of <strong>{formData.vestingYears} years</strong>, with a <strong>{formData.vestingCliffMonths}-month cliff</strong>. This means that if a Founder departs from the Project for any reason before the {formData.vestingCliffMonths}-month cliff is met, they shall forfeit all their equity. After the cliff, equity shall vest monthly in equal installments. Unvested shares of a departing Founder shall be returned to the Company.</p>
-                     
-                    <h4 className="font-bold mt-4">5. CAPITAL CONTRIBUTION</h4>
-                    <p>The initial capital contribution by each Founder to the Company shall be as follows:</p>
-                    <ul className="list-disc list-inside pl-4 mt-2 space-y-1">
-                        {formData.founders.map(p => (
-                            <li key={p.name}><strong>{p.name}:</strong> ₹{p.capitalContribution.toLocaleString('en-IN')}</li>
-                        ))}
-                    </ul>
-                    <p>No Founder shall be entitled to interest on their capital contribution. Any additional capital contributions shall be decided mutually.</p>
+                        <h4 className="font-bold mt-4">4. VESTING SCHEDULE</h4>
+                        <p>The equity allocated to each Founder shall vest over a period of <strong>{formData.vestingYears} years</strong>, with a <strong>{formData.vestingCliffMonths}-month cliff</strong>. This means that if a Founder departs from the Project for any reason before the {formData.vestingCliffMonths}-month cliff is met, they shall forfeit all their equity. After the cliff, equity shall vest monthly in equal installments. Unvested shares of a departing Founder shall be returned to the Company.</p>
+                        
+                        <h4 className="font-bold mt-4">5. CAPITAL CONTRIBUTION</h4>
+                        <p>The initial capital contribution by each Founder to the Company shall be as follows:</p>
+                        <ul className="list-disc list-inside pl-4 mt-2 space-y-1">
+                            {formData.founders.map(p => (
+                                <li key={p.name}><strong>{p.name}:</strong> ₹{p.capitalContribution.toLocaleString('en-IN')}</li>
+                            ))}
+                        </ul>
+                        <p>No Founder shall be entitled to interest on their capital contribution. Any additional capital contributions shall be decided mutually.</p>
 
-                    <h4 className="font-bold mt-4">6. INTELLECTUAL PROPERTY (IP)</h4>
-                    <p>{formData.ipAssignment}</p>
+                        <h4 className="font-bold mt-4">6. INTELLECTUAL PROPERTY (IP)</h4>
+                        <p>{formData.ipAssignment}</p>
 
-                    <h4 className="font-bold mt-4">7. DECISION-MAKING</h4>
-                    <p>Strategic decisions, including but not limited to, fundraising, mergers, acquisitions, issuing new equity, selling the company, or changing the primary business focus, shall require the <strong>{formData.decisionMaking}</strong> approval of all Founders.</p>
+                        <h4 className="font-bold mt-4">7. DECISION-MAKING</h4>
+                        <p>Strategic decisions, including but not limited to, fundraising, mergers, acquisitions, issuing new equity, selling the company, or changing the primary business focus, shall require the <strong>{formData.decisionMaking}</strong> approval of all Founders.</p>
 
-                    <h4 className="font-bold mt-4">8. CONFIDENTIALITY & NON-COMPETE</h4>
-                    <p>{formData.confidentiality} Furthermore, no Founder shall directly or indirectly engage in any business that competes with the Company, during their engagement and for a period of <strong>{formData.nonCompeteYears} year(s)</strong> after ceasing to be a Founder.</p>
+                        <h4 className="font-bold mt-4">8. CONFIDENTIALITY & NON-COMPETE</h4>
+                        <p>{formData.confidentiality} Furthermore, no Founder shall directly or indirectly engage in any business that competes with the Company, during their engagement and for a period of <strong>{formData.nonCompeteYears} year(s)</strong> after ceasing to be a Founder.</p>
 
-                    <h4 className="font-bold mt-4">9. EXIT & TRANSFER OF SHARES (RIGHT OF FIRST REFUSAL)</h4>
-                    <p>If a Founder wishes to sell or transfer their vested shares, they must first offer them to the remaining Founders in proportion to their existing holdings. This offer must be made in writing and shall be open for 30 days. Only if the remaining Founders decline to purchase the shares may they be offered to an external party on the same terms.</p>
-                    
-                    <h4 className="font-bold mt-4">10. DISPUTE RESOLUTION</h4>
-                     <p>{formData.disputeResolution}</p>
-                    
-                    <h4 className="font-bold mt-4">11. TERM & TERMINATION</h4>
-                    <p>This Agreement shall remain in full force and effect until it is superseded by a formal Shareholders’ Agreement upon the incorporation of the Company, or until the Project is mutually dissolved by the Founders.</p>
-                    
-                    <h4 className="font-bold mt-4">12. GOVERNING LAW</h4>
-                    <p>This Agreement shall be governed by and construed in accordance with the laws of India.</p>
+                        <h4 className="font-bold mt-4">9. EXIT & TRANSFER OF SHARES (RIGHT OF FIRST REFUSAL)</h4>
+                        <p>If a Founder wishes to sell or transfer their vested shares, they must first offer them to the remaining Founders in proportion to their existing holdings. This offer must be made in writing and shall be open for 30 days. Only if the remaining Founders decline to purchase the shares may they be offered to an external party on the same terms.</p>
+                        
+                        <h4 className="font-bold mt-4">10. DISPUTE RESOLUTION</h4>
+                        <p>{formData.disputeResolution}</p>
+                        
+                        <h4 className="font-bold mt-4">11. TERM & TERMINATION</h4>
+                        <p>This Agreement shall remain in full force and effect until it is superseded by a formal Shareholders’ Agreement upon the incorporation of the Company, or until the Project is mutually dissolved by the Founders.</p>
+                        
+                        <h4 className="font-bold mt-4">12. GOVERNING LAW</h4>
+                        <p>This Agreement shall be governed by and construed in accordance with the laws of India.</p>
 
-                    <p className="mt-8">IN WITNESS WHEREOF, the Founders have executed this Agreement as of the Effective Date.</p>
-                    
-                     <div className="grid grid-cols-2 gap-16 mt-16">
-                         {formData.founders.map(p => (
-                            <div key={p.name} className="text-left">
-                                <p className="mb-12">_________________________</p>
-                                <p><strong>{p.name}</strong></p>
+                        <p className="mt-8">IN WITNESS WHEREOF, the Founders have executed this Agreement as of the Effective Date.</p>
+                        
+                        <div className="grid grid-cols-2 gap-16 mt-16">
+                            {formData.founders.map(p => (
+                                <div key={p.name} className="text-left">
+                                    <p className="mb-12">_________________________</p>
+                                    <p><strong>{p.name}</strong></p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-16">
+                            <p className="font-bold">WITNESSES:</p>
+                            <div className="grid grid-cols-2 gap-16 mt-16">
+                                <div>
+                                    <p className="mb-12">1. _________________________</p>
+                                    <p>Name: </p>
+                                    <p>Address: </p>
+                                </div>
+                                <div>
+                                    <p className="mb-12">2. _________________________</p>
+                                    <p>Name: </p>
+                                    <p>Address: </p>
+                                </div>
                             </div>
-                         ))}
-                    </div>
-
-                    <div className="mt-16">
-                        <p className="font-bold">WITNESSES:</p>
-                         <div className="grid grid-cols-2 gap-16 mt-16">
-                             <div>
-                                <p className="mb-12">1. _________________________</p>
-                                <p>Name: </p>
-                                <p>Address: </p>
-                            </div>
-                            <div>
-                                <p className="mb-12">2. _________________________</p>
-                                <p>Name: </p>
-                                <p>Address: </p>
-                            </div>
-                         </div>
+                        </div>
                     </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Agreement</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                </CardFooter>
             </Card>
         );
       default:
@@ -315,7 +327,7 @@ export default function FoundersAgreementPage() {
         <p className="text-muted-foreground">Follow the steps to create an essential legal document for your startup.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,10 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, ArrowRight, FileDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileDown, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
   disclosingPartyName: z.string().min(3, "Disclosing party name is required."),
@@ -43,6 +44,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function NdaPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -56,6 +58,10 @@ export default function NdaPage() {
       termYears: 2,
       jurisdictionCity: "Mumbai",
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -135,7 +141,8 @@ export default function NdaPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Non-Disclosure Agreement.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent>
+                  <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     <h2 className="text-center font-bold">NON-DISCLOSURE AGREEMENT</h2>
                     
                     <p>This Non-Disclosure Agreement (the "Agreement") is entered into as of <strong>{agreementDate}</strong> (the "Effective Date"),</p>
@@ -191,9 +198,12 @@ export default function NdaPage() {
                             <p>Title: Authorized Signatory</p>
                         </div>
                     </div>
-
+                  </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Agreement</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                </CardFooter>
             </Card>
         );
       default:
@@ -212,12 +222,10 @@ export default function NdaPage() {
         <p className="text-muted-foreground">Follow the steps to create a standard non-disclosure agreement.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>
     </div>
   );
 }
-
-    

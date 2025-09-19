@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,11 +21,13 @@ import {
   ArrowLeft,
   ArrowRight,
   FileDown,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useReactToPrint } from "react-to-print";
 
 const services = [
     { id: "bookkeeping", label: "Bookkeeping and Maintenance of Accounts" },
@@ -63,6 +65,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function AccountingEngagementLetterPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -79,6 +82,10 @@ export default function AccountingEngagementLetterPage() {
       accountantResponsibilities: "To maintain the books of accounts based on the information provided. To prepare financial statements in accordance with applicable accounting standards. To highlight any material compliance issues noticed during the course of our work. To maintain confidentiality.",
       termAndTermination: "This engagement is for a period of one year, renewable upon mutual consent. Either party may terminate this agreement by providing a written notice of 30 days. All outstanding dues must be cleared at the time of termination.",
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -241,7 +248,8 @@ export default function AccountingEngagementLetterPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Accounting Engagement Letter.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent>
+                  <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     <p><strong>Date:</strong> {agreementDate}</p>
                     <p>To,</p>
                     <p><strong>The Management</strong></p>
@@ -293,9 +301,12 @@ export default function AccountingEngagementLetterPage() {
                         <p>(Director / Authorized Signatory)</p>
                         <p>Date: _______________</p>
                     </div>
-
+                  </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Letter</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+                </CardFooter>
             </Card>
         );
       default:
@@ -321,7 +332,3 @@ export default function AccountingEngagementLetterPage() {
     </div>
   );
 }
-
-    
-
-    

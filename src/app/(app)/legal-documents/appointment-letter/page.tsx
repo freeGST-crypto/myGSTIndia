@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, ArrowRight, FileDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileDown, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
@@ -38,6 +39,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function AppointmentLetterPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -46,6 +48,10 @@ export default function AppointmentLetterPage() {
       companyAddress: "123 Business Avenue, Commerce City, Maharashtra - 400001",
       appointmentDate: new Date().toISOString().split("T")[0],
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -134,51 +140,56 @@ export default function AppointmentLetterPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Appointment Letter.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <div className="text-center"><h2 className="font-bold">APPOINTMENT LETTER</h2></div>
-                    <p><strong>Date:</strong> {formData.appointmentDate ? new Date(formData.appointmentDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}</p>
-                    <p><strong>To,</strong><br/>{formData.employeeName}<br/>{formData.employeeAddress}</p>
-                    <p><strong>Subject: Letter of Appointment</strong></p>
-                    <p>Dear {formData.employeeName},</p>
-                    <p>We are pleased to appoint you in our organization for the position of <strong>{formData.jobTitle}</strong>, effective from your date of joining, which shall be no later than <strong>{formData.joiningDate ? new Date(formData.joiningDate).toLocaleDateString('en-GB', dateOptions) : '[Joining Date]'}</strong>.</p>
-                    
-                    <h4 className="font-bold mt-4">1. Place of Work</h4>
-                    <p>Your initial place of posting will be at our office at {formData.companyAddress}.</p>
+                <CardContent>
+                    <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                        <div className="text-center"><h2 className="font-bold">APPOINTMENT LETTER</h2></div>
+                        <p><strong>Date:</strong> {formData.appointmentDate ? new Date(formData.appointmentDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}</p>
+                        <p><strong>To,</strong><br/>{formData.employeeName}<br/>{formData.employeeAddress}</p>
+                        <p><strong>Subject: Letter of Appointment</strong></p>
+                        <p>Dear {formData.employeeName},</p>
+                        <p>We are pleased to appoint you in our organization for the position of <strong>{formData.jobTitle}</strong>, effective from your date of joining, which shall be no later than <strong>{formData.joiningDate ? new Date(formData.joiningDate).toLocaleDateString('en-GB', dateOptions) : '[Joining Date]'}</strong>.</p>
+                        
+                        <h4 className="font-bold mt-4">1. Place of Work</h4>
+                        <p>Your initial place of posting will be at our office at {formData.companyAddress}.</p>
 
-                    <h4 className="font-bold mt-4">2. Probation Period</h4>
-                    <p>You will be on probation for a period of {formData.probationMonths} months from the date of joining. Upon successful completion of the probation period, your employment will be confirmed in writing.</p>
-                    
-                    <h4 className="font-bold mt-4">3. Compensation</h4>
-                    <p>Your annual Cost to Company (CTC) will be ₹{formData.annualCtc.toLocaleString('en-IN')}. {formData.compensationDetails}</p>
+                        <h4 className="font-bold mt-4">2. Probation Period</h4>
+                        <p>You will be on probation for a period of {formData.probationMonths} months from the date of joining. Upon successful completion of the probation period, your employment will be confirmed in writing.</p>
+                        
+                        <h4 className="font-bold mt-4">3. Compensation</h4>
+                        <p>Your annual Cost to Company (CTC) will be ₹{formData.annualCtc.toLocaleString('en-IN')}. {formData.compensationDetails}</p>
 
-                    <h4 className="font-bold mt-4">4. Working Hours</h4>
-                    <p>{formData.workingHours}</p>
+                        <h4 className="font-bold mt-4">4. Working Hours</h4>
+                        <p>{formData.workingHours}</p>
 
-                    <h4 className="font-bold mt-4">5. Termination</h4>
-                    <p>After confirmation, your employment can be terminated by either party by giving {formData.terminationNoticeMonths} month(s) notice in writing or salary in lieu thereof.</p>
+                        <h4 className="font-bold mt-4">5. Termination</h4>
+                        <p>After confirmation, your employment can be terminated by either party by giving {formData.terminationNoticeMonths} month(s) notice in writing or salary in lieu thereof.</p>
 
-                    <h4 className="font-bold mt-4">6. General Conditions</h4>
-                    <p>Your employment will be governed by the company's policies and rules, which may be amended from time to time. You are required to maintain the confidentiality of all company information.</p>
+                        <h4 className="font-bold mt-4">6. General Conditions</h4>
+                        <p>Your employment will be governed by the company's policies and rules, which may be amended from time to time. You are required to maintain the confidentiality of all company information.</p>
 
-                    <h4 className="font-bold mt-4">7. Governing Law</h4>
-                    <p>This agreement shall be governed by the laws of India, and the courts in {formData.jurisdictionCity} shall have exclusive jurisdiction.</p>
+                        <h4 className="font-bold mt-4">7. Governing Law</h4>
+                        <p>This agreement shall be governed by the laws of India, and the courts in {formData.jurisdictionCity} shall have exclusive jurisdiction.</p>
 
-                    <p>Please sign and return the duplicate copy of this letter in acceptance of the terms and conditions.</p>
+                        <p>Please sign and return the duplicate copy of this letter in acceptance of the terms and conditions.</p>
 
-                    <div className="mt-16">
-                        <p>Yours faithfully,</p>
-                        <p>For <strong>{formData.companyName}</strong></p>
-                        <div className="h-20"></div>
-                        <p><strong>{formData.signerName}</strong><br/>{formData.signerTitle}</p>
-                    </div>
+                        <div className="mt-16">
+                            <p>Yours faithfully,</p>
+                            <p>For <strong>{formData.companyName}</strong></p>
+                            <div className="h-20"></div>
+                            <p><strong>{formData.signerName}</strong><br/>{formData.signerTitle}</p>
+                        </div>
 
-                    <div className="mt-16 pt-8 border-t border-dashed">
-                        <p>I have read and understood the terms and conditions of this appointment and agree to abide by them.</p>
-                        <p className="mt-16">______________________<br/>(Signature of Employee)</p>
-                        <p>Name: {formData.employeeName}</p>
+                        <div className="mt-16 pt-8 border-t border-dashed">
+                            <p>I have read and understood the terms and conditions of this appointment and agree to abide by them.</p>
+                            <p className="mt-16">______________________<br/>(Signature of Employee)</p>
+                            <p>Name: {formData.employeeName}</p>
+                        </div>
                     </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Letter</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                </CardFooter>
             </Card>
         );
       default:
