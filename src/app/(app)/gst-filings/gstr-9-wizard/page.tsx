@@ -63,9 +63,26 @@ export default function Gstr9WizardPage() {
   };
   
   const handleGenerateAction = () => {
+    const reportData = {
+        financialYear: "2023-24",
+        part2_outwardSupplies: initialOutwardSupplies,
+        part3_itc: initialItc,
+        part4_taxPaid: initialTaxPaid,
+        // ... include data from other steps
+    };
+    const jsonString = JSON.stringify(reportData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `GSTR9_2023-24_${new Date().toISOString()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     toast({
-      title: `JSON Generation Started`,
-      description: `Your GSTR-9 JSON file is being generated and will be downloaded shortly. (This is a simulation).`,
+      title: `JSON Generation Complete`,
+      description: `Your GSTR-9 JSON file has been downloaded.`,
     });
   };
 

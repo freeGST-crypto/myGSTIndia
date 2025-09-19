@@ -61,21 +61,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { AccountingContext } from "@/context/accounting-context";
 import { Badge } from "@/components/ui/badge";
+import { allAccounts } from "@/lib/accounts";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, where } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { useAuthState } from "react-firebase-hooks/auth";
 
-const accounts = [
-    { code: "1010", name: "Cash on Hand" },
-    { code: "1020", name: "HDFC Bank" },
-    { code: "1210", name: "Accounts Receivable" },
-    { code: "2010", name: "Accounts Payable" },
-    { code: "4010", name: "Sales Revenue" },
-    { code: "5010", "name": "Rent Expense" },
-];
-
-const invoices = [
-    { id: "INV-001", party: "Global Tech Inc.", amount: 25000.00 },
-    { id: "INV-002", party: "Innovate Solutions", amount: 15000.00 },
-    { id: "INV-004", party: "Synergy Corp", amount: 45000.00 },
-]
 
 export default function VouchersPage() {
     const accountingContext = useContext(AccountingContext);
@@ -84,6 +75,24 @@ export default function VouchersPage() {
     const [transactionType, setTransactionType] = useState<string>("on_account");
     const [date, setDate] = useState<Date | undefined>(new Date());
     const { toast } = useToast();
+    const [user] = useAuthState(auth);
+
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
+
+    const combinedAccounts = useMemo(() => {
+        return [
+            ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts" })),
+            ...customers.map(c => ({ value: c.id, label: `${c.name} (Customer)`, group: "Customers" })),
+            ...vendors.map(v => ({ value: v.id, label: `${v.name} (Vendor)`, group: "Vendors" })),
+        ];
+    }, [allAccounts, customers, vendors]);
+
 
     if (!accountingContext) {
         return <Loader2 className="animate-spin" />;
@@ -343,8 +352,21 @@ export default function VouchersPage() {
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <Label>{dialogType === 'receipt' ? 'Received From' : 'Paid To'}</Label>
-                            <Select><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
-                                <SelectContent>{accounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name}</SelectItem>)}</SelectContent>
+                            <Select>
+                                <SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(combinedAccounts.reduce((acc, curr) => {
+                                        if (!acc[curr.group]) acc[curr.group] = [];
+                                        acc[curr.group].push(curr);
+                                        return acc;
+                                    }, {} as Record<string, any[]>)).map(([group, accounts]) => (
+                                        <div key={group}>
+                                            <p className="px-2 py-1.5 text-sm font-semibold capitalize">{group}</p>
+                                            {accounts.map(acc => <SelectItem key={acc.value} value={acc.value}>{acc.label}</SelectItem>)}
+                                            <Separator className="my-2" />
+                                        </div>
+                                    ))}
+                                </SelectContent>
                             </Select>
                         </div>
                     </div>
@@ -370,11 +392,7 @@ export default function VouchersPage() {
                                         <SelectValue placeholder="Select an invoice to settle" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {invoices.map(inv => (
-                                             <SelectItem key={inv.id} value={inv.id}>
-                                                {inv.id} ({inv.party} - ₹{inv.amount.toFixed(2)})
-                                            </SelectItem>
-                                        ))}
+                                        {/* Invoices would be dynamically populated here */}
                                     </SelectContent>
                                 </Select>
                             </div>

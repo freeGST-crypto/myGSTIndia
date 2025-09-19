@@ -17,6 +17,6 @@ export async function suggestHsnCodeAction(
     console.error("Error in suggestHsnCodeAction:", error);
     // In a real application, you might want to throw a more specific error
     // that the client can handle gracefully.
-    throw new Error("Failed to get HSN code suggestion.");
+    return null;
   }
 }

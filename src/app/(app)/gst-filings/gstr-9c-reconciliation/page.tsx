@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Wand2, Upload, GitCompareArrows, Loader2, ArrowLeft, FileDown, FileSpreadsheet } from "lucide-react";
+import { Wand2, Upload, GitCompareArrows, Loader2, ArrowLeft, FileDown, FileSpreadsheet, FileJson } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import {
@@ -84,6 +84,30 @@ export default function Gstr9cPage() {
   const totalTurnover = turnoverReconData.reduce((acc, item) => acc + item.value, 0);
   const totalTaxableTurnover = taxableTurnoverReconData.reduce((acc, item) => acc + item.value, 0);
   const itcDifference = (itcReconData.find(i=>i.id === 'D')?.value || 0) - (itcReconData.find(i=>i.id === 'E')?.value || 0);
+  
+  const handleGenerateJson = () => {
+    const reportData = {
+        financialYear: "2023-24",
+        reconciliationOfTurnover: turnoverReconData,
+        reconciliationOfTaxableTurnover: taxableTurnoverReconData,
+        reconciliationOfTaxPaid: taxPaidData,
+        reconciliationOfITC: itcReconData,
+    };
+    const jsonString = JSON.stringify(reportData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `GSTR9C_2023-24_${new Date().toISOString()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({
+      title: `JSON Generation Complete`,
+      description: `Your GSTR-9C JSON file has been downloaded.`,
+    });
+  }
 
   return (
     <div className="space-y-8">
@@ -236,7 +260,7 @@ export default function Gstr9cPage() {
             </CardContent>
              <CardFooter className="flex justify-end gap-2">
                 <Button variant="outline"><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                <Button><FileDown className="mr-2"/> Download GSTR-9C</Button>
+                <Button onClick={handleGenerateJson}><FileJson className="mr-2"/> Download GSTR-9C JSON</Button>
              </CardFooter>
         </Card>
     </div>
