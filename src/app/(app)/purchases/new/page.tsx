@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useCallback, memo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -56,6 +56,104 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 
+type LineItem = {
+    itemId: string;
+    description: string;
+    hsn: string;
+    qty: number;
+    rate: number;
+    taxRate: number;
+    amount: number;
+};
+
+type Item = {
+  id: string;
+  name: string;
+  hsn: string;
+  purchasePrice?: number;
+  [key: string]: any;
+};
+
+const PurchaseItemRow = memo(({
+    item,
+    index,
+    handleItemChange,
+    handleRemoveItem,
+    items,
+    itemsLoading,
+    openItemDialog,
+}: {
+    item: LineItem;
+    index: number;
+    handleItemChange: (index: number, field: string, value: any) => void;
+    handleRemoveItem: (index: number) => void;
+    items: Item[];
+    itemsLoading: boolean;
+    openItemDialog: () => void;
+}) => {
+    
+    const handleSelectChange = (itemId: string) => {
+        if (itemId === 'add-new') {
+            openItemDialog();
+        } else {
+            handleItemChange(index, 'itemId', itemId);
+        }
+    };
+
+    return (
+        <TableRow>
+            <TableCell>
+                <Select onValueChange={handleSelectChange} value={item.itemId} disabled={itemsLoading}>
+                    <SelectTrigger>
+                        <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {items.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                         <Separator />
+                        <SelectItem value="add-new" className="text-primary focus:text-primary">
+                           <div className="flex items-center gap-2">
+                            <PlusCircle className="h-4 w-4" /> Add New Item
+                           </div>
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </TableCell>
+            <TableCell>
+                <Input
+                value={item.hsn}
+                onChange={(e) => handleItemChange(index, "hsn", e.target.value)}
+                placeholder="HSN/SAC"
+                />
+            </TableCell>
+            <TableCell>
+                <Input
+                type="number"
+                value={item.qty}
+                onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value))}
+                className="text-right"
+                />
+            </TableCell>
+            <TableCell>
+                <Input
+                type="number"
+                value={item.rate}
+                onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value))}
+                className="text-right"
+                />
+            </TableCell>
+            <TableCell className="text-right font-medium">
+                ₹{item.amount.toFixed(2)}
+            </TableCell>
+            <TableCell className="text-right">
+                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+            </TableCell>
+        </TableRow>
+    );
+});
+PurchaseItemRow.displayName = 'PurchaseItemRow';
+
 
 export default function NewPurchasePage() {
   const accountingContext = useContext(AccountingContext);
@@ -87,11 +185,11 @@ export default function NewPurchasePage() {
 
   const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
-  const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+  const items: Item[] = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [];
 
-  const handleAddItem = () => {
-    setLineItems([
-      ...lineItems,
+  const handleAddItem = useCallback(() => {
+    setLineItems(prev => [
+      ...prev,
       {
         itemId: "",
         description: "",
@@ -102,35 +200,49 @@ export default function NewPurchasePage() {
         amount: 0,
       },
     ]);
-  };
+  }, []);
 
-  const handleRemoveItem = (index: number) => {
-    const list = [...lineItems];
-    list.splice(index, 1);
-    setLineItems(list);
-  };
+  const handleRemoveItem = useCallback((index: number) => {
+    setLineItems(prev => {
+      const list = [...prev];
+      list.splice(index, 1);
+      return list;
+    });
+  }, []);
 
-  const handleItemChange = (index: number, field: string, value: any) => {
-    const list = [...lineItems];
-    const currentItem = list[index] as any;
-    currentItem[field] = value;
+  const handleItemChange = useCallback((index: number, field: string, value: any) => {
+    setLineItems(prev => {
+      const list = [...prev];
+      const currentItem = { ...list[index] } as any;
+      currentItem[field] = value;
 
-    if (field === 'qty' || field === 'rate') {
-      currentItem.amount = currentItem.qty * currentItem.rate;
-    }
-
-    if (field === 'itemId') {
-      const selectedItem = items.find((i: any) => i.id === value);
-      if (selectedItem) {
-        currentItem.description = selectedItem.name;
-        currentItem.rate = selectedItem.purchasePrice || 0;
-        currentItem.hsn = selectedItem.hsn || "";
-        currentItem.amount = currentItem.qty * (selectedItem.purchasePrice || 0);
+      if (field === 'qty' || field === 'rate') {
+        currentItem.amount = (currentItem.qty || 0) * (currentItem.rate || 0);
       }
+
+      if (field === 'itemId') {
+        const selectedItem = items.find((i) => i.id === value);
+        if (selectedItem) {
+          currentItem.description = selectedItem.name;
+          currentItem.rate = selectedItem.purchasePrice || 0;
+          currentItem.hsn = selectedItem.hsn || "";
+          currentItem.amount = (currentItem.qty || 1) * (selectedItem.purchasePrice || 0);
+        }
+      }
+      
+      list[index] = currentItem;
+      return list;
+    });
+  }, [items]);
+  
+  const handleVendorChange = (value: string) => {
+    if (value === 'add-new') {
+        setIsVendorDialogOpen(true);
+    } else {
+        setVendor(value);
     }
-    
-    setLineItems(list);
-  };
+  }
+
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
@@ -193,21 +305,24 @@ export default function NewPurchasePage() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <div className="flex gap-2">
-                <Select onValueChange={setVendor} disabled={vendorsLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={vendorsLoading ? "Loading..." : "Select a vendor"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vendors.map((v) => (
-                      <SelectItem key={v.id} value={v.id}>
-                        {v.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" size="icon" onClick={() => setIsVendorDialogOpen(true)}><PlusCircle /></Button>
-              </div>
+              <Select onValueChange={handleVendorChange} value={vendor} disabled={vendorsLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={vendorsLoading ? "Loading..." : "Select a vendor"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.name}
+                    </SelectItem>
+                  ))}
+                  <Separator />
+                  <SelectItem value="add-new" className="text-primary focus:text-primary">
+                    <div className="flex items-center gap-2">
+                        <PlusCircle className="h-4 w-4" /> Add New Vendor
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
              <div className="space-y-2">
               <Label htmlFor="bill-no">Bill Number</Label>
@@ -257,51 +372,16 @@ export default function NewPurchasePage() {
               </TableHeader>
               <TableBody>
                 {lineItems.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)} disabled={itemsLoading}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {items.map((i: any) => (
-                              <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={item.hsn}
-                        onChange={(e) => handleItemChange(index, "hsn", e.target.value)}
-                        placeholder="HSN/SAC"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={item.qty}
-                        onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={item.rate}
-                        onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value))}
-                        className="text-right"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₹{item.amount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                    </TableCell>
-                  </TableRow>
+                    <PurchaseItemRow 
+                        key={index}
+                        item={item}
+                        index={index}
+                        handleItemChange={handleItemChange}
+                        handleRemoveItem={handleRemoveItem}
+                        items={items}
+                        itemsLoading={itemsLoading}
+                        openItemDialog={() => setIsItemDialogOpen(true)}
+                    />
                 ))}
               </TableBody>
             </Table>
@@ -309,10 +389,6 @@ export default function NewPurchasePage() {
                 <Button variant="outline" size="sm" onClick={handleAddItem}>
                 <PlusCircle className="mr-2" />
                 Add Row
-                </Button>
-                 <Button variant="outline" size="sm" onClick={() => setIsItemDialogOpen(true)}>
-                <PlusCircle className="mr-2" />
-                Add New Item
                 </Button>
             </div>
           </div>
