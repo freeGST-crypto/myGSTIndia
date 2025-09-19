@@ -125,12 +125,18 @@ export default function TrialBalancePage() {
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
     const difference = totalDebits - totalCredits;
 
+    const isMismatched = Math.abs(difference) > 0.01;
+    
     const suspenseEntry = {
         account: "Suspense Account",
         code: "9999",
         debit: difference > 0 ? 0 : -difference,
         credit: difference > 0 ? difference : 0
     };
+
+    const finalTrialBalanceData = isMismatched ? [...trialBalanceData, suspenseEntry] : trialBalanceData;
+    const finalTotalDebits = finalTrialBalanceData.reduce((acc, item) => acc + item.debit, 0);
+    const finalTotalCredits = finalTrialBalanceData.reduce((acc, item) => acc + item.credit, 0);
 
 
     const handleAccountClick = (code: string) => {
@@ -173,27 +179,18 @@ export default function TrialBalancePage() {
     }
 
     const handleExportCsv = () => {
-        const dataToExport = trialBalanceData.map(item => ({
+        const dataToExport = finalTrialBalanceData.map(item => ({
             'Account Code': item.code,
             'Account Name': item.account,
             'Debit (₹)': item.debit.toFixed(2),
             'Credit (₹)': item.credit.toFixed(2),
         }));
-
-        if (Math.abs(difference) > 0.01) {
-            dataToExport.push({
-                 'Account Code': suspenseEntry.code,
-                'Account Name': suspenseEntry.account,
-                'Debit (₹)': suspenseEntry.debit.toFixed(2),
-                'Credit (₹)': suspenseEntry.credit.toFixed(2),
-            });
-        }
         
         const totalRow = {
             'Account Code': '',
             'Account Name': 'Total',
-            'Debit (₹)': (totalDebits + (suspenseEntry.debit || 0)).toFixed(2),
-            'Credit (₹)': (totalCredits + (suspenseEntry.credit || 0)).toFixed(2),
+            'Debit (₹)': finalTotalDebits.toFixed(2),
+            'Credit (₹)': finalTotalCredits.toFixed(2),
         };
         dataToExport.push(totalRow);
         
@@ -281,8 +278,8 @@ export default function TrialBalancePage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {trialBalanceData.map((item) => (
-                            <TableRow key={item.code}>
+                        {finalTrialBalanceData.map((item) => (
+                            <TableRow key={item.code} className={item.code === '9999' ? 'bg-destructive/10 text-destructive' : ''}>
                                 <TableCell>{item.code}</TableCell>
                                 <TableCell 
                                     className="font-medium hover:underline cursor-pointer"
@@ -294,25 +291,17 @@ export default function TrialBalancePage() {
                                 <TableCell className="text-right font-mono">{item.credit > 0 ? item.credit.toFixed(2) : "-"}</TableCell>
                             </TableRow>
                         ))}
-                         {Math.abs(difference) > 0.01 && (
-                             <TableRow className="bg-destructive/10 text-destructive">
-                                <TableCell>{suspenseEntry.code}</TableCell>
-                                <TableCell className="font-medium">{suspenseEntry.account}</TableCell>
-                                <TableCell className="text-right font-mono">{suspenseEntry.debit > 0 ? suspenseEntry.debit.toFixed(2) : "-"}</TableCell>
-                                <TableCell className="text-right font-mono">{suspenseEntry.credit > 0 ? suspenseEntry.credit.toFixed(2) : "-"}</TableCell>
-                             </TableRow>
-                         )}
                     </TableBody>
                     <TableFooter>
                         <TableRow className="bg-muted/50 font-bold hover:bg-muted/50">
                             <TableCell colSpan={2} className="text-right">Total</TableCell>
-                            <TableCell className="text-right font-mono">₹{(totalDebits + (suspenseEntry.debit || 0)).toFixed(2)}</TableCell>
-                            <TableCell className="text-right font-mono">₹{(totalCredits + (suspenseEntry.credit || 0)).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{finalTotalDebits.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{finalTotalCredits.toFixed(2)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
             </div>
-            {Math.abs(difference) > 0.01 && (
+            {isMismatched && (
                 <div 
                     className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center cursor-pointer hover:bg-destructive/20"
                     onClick={() => setIsMismatchDialogOpen(true)}
