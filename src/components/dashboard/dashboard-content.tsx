@@ -15,13 +15,12 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
-import { AccountingProvider } from "@/context/accounting-context";
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
 }
 
-function DashboardCore() {
+export default function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const { journalVouchers, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
@@ -153,13 +152,4 @@ function DashboardCore() {
 
     </div>
   );
-}
-
-
-export default function DashboardContent() {
-    return (
-        <AccountingProvider>
-            <DashboardCore />
-        </AccountingProvider>
-    );
 }
