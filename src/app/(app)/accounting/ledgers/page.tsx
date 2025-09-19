@@ -32,6 +32,11 @@ import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { format } from "date-fns";
 import { allAccounts } from "@/lib/accounts";
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { Separator } from "@/components/ui/separator";
 
 type LedgerEntry = {
     date: string;
@@ -43,14 +48,38 @@ type LedgerEntry = {
 };
 
 export default function LedgersPage() {
-    const { journalVouchers } = useContext(AccountingContext)!;
-    const [selectedAccount, setSelectedAccount] = useState("1210");
+    const { journalVouchers, loading: jvLoading } = useContext(AccountingContext)!;
+    const [user] = useAuthState(auth);
+    const [selectedAccount, setSelectedAccount] = useState<string | undefined>(undefined);
     const [ledgerEntries, setLedgerEntries] = useState<LedgerEntry[]>([]);
     const [balances, setBalances] = useState({ opening: 0, closing: 0, totalDebits: 0, totalCredits: 0 });
     const { toast } = useToast();
 
+    // Fetch customers and vendors
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
+
+    const combinedAccounts = useMemo(() => {
+        return [
+            ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts" })),
+            ...customers.map(c => ({ value: c.id, label: `${c.name} (Customer)`, group: "Customers" })),
+            ...vendors.map(v => ({ value: v.id, label: `${v.name} (Vendor)`, group: "Vendors" })),
+        ];
+    }, [allAccounts, customers, vendors]);
+
+
     const handleViewLedger = () => {
-        const account = allAccounts.find(a => a.code === selectedAccount);
+        if (!selectedAccount) {
+            toast({ variant: "destructive", title: "No Account Selected", description: "Please select an account to view its ledger."});
+            return;
+        }
+
+        const account = combinedAccounts.find(a => a.value === selectedAccount);
         if (!account) return;
 
         const openingBalance = 0; // Simplified for this demo
@@ -59,7 +88,7 @@ export default function LedgersPage() {
         let totalCredits = 0;
 
         const entries: LedgerEntry[] = journalVouchers
-            .filter(voucher => voucher && voucher.id) // Ensure voucher and voucher.id exist
+            .filter(voucher => voucher && voucher.id)
             .flatMap(voucher => 
                 voucher.lines
                     .filter(line => line.account === selectedAccount)
@@ -88,17 +117,19 @@ export default function LedgersPage() {
         
         toast({
             title: "Ledger Generated",
-            description: `Showing ledger for ${account.name}.`,
+            description: `Showing ledger for ${account.label}.`,
         });
     };
     
     const handleExport = () => {
-        const accountName = allAccounts.find(a => a.code === selectedAccount)?.name;
+        const accountName = combinedAccounts.find(a => a.value === selectedAccount)?.label;
         toast({
             title: "Exporting Ledger",
             description: `Your PDF for ${accountName} is being generated.`,
         });
     };
+    
+    const selectedAccountName = combinedAccounts.find(a => a.value === selectedAccount)?.label || "Selected Account";
 
   return (
     <div className="space-y-8">
@@ -109,7 +140,7 @@ export default function LedgersPage() {
                     View detailed transaction history for any account.
                 </p>
             </div>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} disabled={ledgerEntries.length === 0}>
                 <FileDown className="mr-2"/>
                 Export PDF
             </Button>
@@ -120,18 +151,29 @@ export default function LedgersPage() {
                 <CardTitle>Select Ledger</CardTitle>
                 <CardDescription>Choose an account and date range to view its ledger.</CardDescription>
                 <div className="flex flex-col md:flex-row gap-4 pt-4">
-                    <Select onValueChange={setSelectedAccount} defaultValue={selectedAccount}>
+                    <Select onValueChange={setSelectedAccount} value={selectedAccount}>
                         <SelectTrigger className="w-full md:w-[300px]">
                             <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                         <SelectContent>
-                            {allAccounts.map(account => (
-                                <SelectItem key={account.code} value={account.code}>{account.name} ({account.code})</SelectItem>
+                             <div className="font-semibold px-2 py-1.5 text-sm">Main Accounts</div>
+                            {combinedAccounts.filter(a => a.group === "Main Accounts").map(account => (
+                                <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                            ))}
+                            <Separator className="my-2" />
+                            <div className="font-semibold px-2 py-1.5 text-sm">Customers</div>
+                             {combinedAccounts.filter(a => a.group === "Customers").map(account => (
+                                <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                            ))}
+                            <Separator className="my-2" />
+                            <div className="font-semibold px-2 py-1.5 text-sm">Vendors</div>
+                             {combinedAccounts.filter(a => a.group === "Vendors").map(account => (
+                                <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                     <DateRangePicker className="w-full md:w-auto" />
-                    <Button className="w-full md:w-auto" onClick={handleViewLedger}>
+                    <Button className="w-full md:w-auto" onClick={handleViewLedger} disabled={!selectedAccount}>
                         <Search className="mr-2"/>
                         View Ledger
                     </Button>
@@ -142,15 +184,15 @@ export default function LedgersPage() {
         {selectedAccount && (
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">{allAccounts.find(a => a.code === selectedAccount)?.name} Ledger</CardTitle>
+                    <CardTitle className="text-2xl">{selectedAccountName} Ledger</CardTitle>
                     <CardDescription>For the period 01-Apr-2024 to 31-Mar-2025</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                        <StatCard title="Opening Balance" value={`₹${balances.opening.toFixed(2)}`} icon={FileText} />
-                        <StatCard title="Total Debits" value={`₹${balances.totalDebits.toFixed(2)}`} icon={FileText} className="text-red-500" />
-                        <StatCard title="Total Credits" value={`₹${balances.totalCredits.toFixed(2)}`} icon={FileText} className="text-green-500" />
-                        <StatCard title="Closing Balance" value={`₹${balances.closing.toFixed(2)}`} icon={FileText} />
+                        <StatCard title="Opening Balance" value={`₹${balances.opening.toFixed(2)}`} icon={FileText} loading={jvLoading} />
+                        <StatCard title="Total Debits" value={`₹${balances.totalDebits.toFixed(2)}`} icon={FileText} className="text-red-500" loading={jvLoading} />
+                        <StatCard title="Total Credits" value={`₹${balances.totalCredits.toFixed(2)}`} icon={FileText} className="text-green-500" loading={jvLoading} />
+                        <StatCard title="Closing Balance" value={`₹${balances.closing.toFixed(2)}`} icon={FileText} loading={jvLoading} />
                     </div>
                     <div className="overflow-x-auto">
                         <Table>
@@ -176,7 +218,7 @@ export default function LedgersPage() {
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
                                         No entries for this account in the selected period. Click 'View Ledger' to generate.
                                     </TableCell>
                                 </TableRow>
@@ -190,5 +232,3 @@ export default function LedgersPage() {
     </div>
   );
 }
-
-    

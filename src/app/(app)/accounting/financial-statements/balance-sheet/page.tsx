@@ -30,6 +30,10 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const formatCurrency = (value: number) => {
     // A value of -0.000001 should be 0.00, not -0.00
@@ -40,29 +44,42 @@ const formatCurrency = (value: number) => {
 export default function BalanceSheetPage() {
     const { toast } = useToast();
     const { journalVouchers } = useContext(AccountingContext)!;
+    const [user] = useAuthState(auth);
     const [date, setDate] = useState<Date | undefined>(new Date());
+
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
 
     const accountBalances = useMemo(() => {
         const balances: Record<string, number> = {};
-
-        allAccounts.forEach(acc => {
-            balances[acc.code] = 0;
-        });
+        
+        allAccounts.forEach(acc => { balances[acc.code] = 0; });
+        customers.forEach(c => { balances[c.id] = 0; });
+        // Add vendors here too when implemented
 
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
-                if (balances.hasOwnProperty(line.account)) {
-                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
-                     if (accountType === 'Asset' || accountType === 'Expense') {
-                        balances[line.account] += parseFloat(line.debit) - parseFloat(line.credit);
-                    } else { // Liability, Equity, Revenue
-                        balances[line.account] += parseFloat(line.credit) - parseFloat(line.debit);
-                    }
+                if (!balances.hasOwnProperty(line.account)) {
+                    balances[line.account] = 0;
                 }
+                 const debit = parseFloat(line.debit);
+                 const credit = parseFloat(line.credit);
+                 balances[line.account] += debit - credit;
             });
         });
+        
+        // Invert balance for liability/equity/revenue accounts
+        const allDynamicAccounts = [...allAccounts, ...customers.map(c => ({ code: c.id, name: c.name, type: "Asset"}))];
+        Object.keys(balances).forEach(key => {
+            const accDetails = allDynamicAccounts.find(a => a.code === key);
+            if (accDetails && (accDetails.type === "Liability" || accDetails.type === "Equity" || accDetails.type === "Revenue")) {
+                balances[key] = -balances[key];
+            }
+        });
+        
         return balances;
-    }, [journalVouchers]);
+    }, [journalVouchers, customers]);
     
     // Calculate P&L for Retained Earnings
     const netProfit = useMemo(() => {
@@ -95,11 +112,12 @@ export default function BalanceSheetPage() {
     
     const investmentAccounts = allAccounts.filter(a => a.name.includes('Investments'));
     const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
-
-    const currentAssetsAccounts = allAccounts.filter(a => a.type === 'Asset' && !fixedAssetsAccounts.includes(a) && !investmentAccounts.includes(a));
-    const totalCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
-    const totalAssets = netFixedAssets + totalInvestments + totalCurrentAssets;
+    const totalReceivables = customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
+    const currentAssetsAccounts = allAccounts.filter(a => a.type === 'Asset' && !fixedAssetsAccounts.some(fa => fa.code === a.code) && !investmentAccounts.some(ia => ia.code === a.code) && a.code !== '1210');
+    const totalOtherCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+
+    const totalAssets = netFixedAssets + totalInvestments + totalReceivables + totalOtherCurrentAssets;
 
     // Schedules - now derived from data or empty
     const depreciationSchedule: any[] = [];
@@ -207,7 +225,8 @@ export default function BalanceSheetPage() {
                             <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalInvestments)}</TableCell></TableRow>
 
                             <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
-                             {currentAssetsAccounts.map(acc => (
+                            <ReportRow label="Accounts Receivable" value={totalReceivables} isSub />
+                            {currentAssetsAccounts.map(acc => (
                                 <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
                             ))}
                         </TableBody>

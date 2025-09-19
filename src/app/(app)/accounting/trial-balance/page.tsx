@@ -46,6 +46,10 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 
 export default function TrialBalancePage() {
@@ -53,39 +57,46 @@ export default function TrialBalancePage() {
     const { toast } = useToast();
     const router = useRouter();
     const { journalVouchers } = useContext(AccountingContext)!;
+    const [user] = useAuthState(auth);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [isMismatchDialogOpen, setIsMismatchDialogOpen] = useState(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [uploadDate, setUploadDate] = useState<Date | undefined>(new Date());
     const [uploadFile, setUploadFile] = useState<File | null>(null);
 
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
+
     const trialBalanceData = useMemo(() => {
         const balances: Record<string, number> = {};
 
-        allAccounts.forEach(acc => {
-            balances[acc.code] = 0;
-        });
+        // Initialize all possible accounts
+        allAccounts.forEach(acc => { balances[acc.code] = 0; });
+        customers.forEach(c => { balances[c.id] = 0; });
+        vendors.forEach(v => { balances[v.id] = 0; });
 
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
                 if (balances.hasOwnProperty(line.account)) {
-                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
                     const debit = parseFloat(line.debit);
                     const credit = parseFloat(line.credit);
-
-                    // For Assets and Expenses, a debit increases the balance.
-                    if (accountType === 'Asset' || accountType === 'Expense') {
-                        balances[line.account] += debit - credit;
-                    } 
-                    // For Liabilities, Equity, and Revenue, a credit increases the balance.
-                    else {
-                        balances[line.account] += credit - debit;
-                    }
+                    balances[line.account] += debit - credit;
                 }
             });
         });
+        
+        const combinedData = [
+            ...allAccounts.map(acc => ({...acc, group: acc.type})),
+            ...customers.map(c => ({ code: c.id, name: c.name, type: "Asset", group: "Customer" })),
+            ...vendors.map(v => ({ code: v.id, name: v.name, type: "Liability", group: "Vendor" }))
+        ];
 
-        return allAccounts.map(acc => {
+        return combinedData.map(acc => {
             const finalBalance = balances[acc.code] || 0;
             const accountType = acc.type;
             
@@ -106,9 +117,9 @@ export default function TrialBalancePage() {
                 debit: debit,
                 credit: credit,
             };
-        });
+        }).filter(item => item.debit > 0.01 || item.credit > 0.01);
 
-    }, [journalVouchers]);
+    }, [journalVouchers, customers, vendors]);
 
     const totalDebits = trialBalanceData.reduce((acc, item) => acc + item.debit, 0);
     const totalCredits = trialBalanceData.reduce((acc, item) => acc + item.credit, 0);
@@ -123,10 +134,7 @@ export default function TrialBalancePage() {
 
 
     const handleAccountClick = (code: string) => {
-        toast({
-            title: `Viewing Ledger for ${code}`,
-            description: `You would be navigated to the ledger for this account. For now, please use the ledger page directly.`
-        });
+        router.push(`/accounting/ledgers?account=${code}`);
     }
 
     const handleVerifyPost = (entry: any) => {
@@ -245,7 +253,7 @@ export default function TrialBalancePage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {trialBalanceData.filter(item => item.debit > 0 || item.credit > 0).map((item) => (
+                        {trialBalanceData.map((item) => (
                             <TableRow key={item.code}>
                                 <TableCell>{item.code}</TableCell>
                                 <TableCell 
@@ -258,7 +266,7 @@ export default function TrialBalancePage() {
                                 <TableCell className="text-right font-mono">{item.credit > 0 ? item.credit.toFixed(2) : "-"}</TableCell>
                             </TableRow>
                         ))}
-                         {difference !== 0 && (
+                         {Math.abs(difference) > 0.01 && (
                              <TableRow className="bg-destructive/10 text-destructive">
                                 <TableCell>{suspenseEntry.code}</TableCell>
                                 <TableCell className="font-medium">{suspenseEntry.account}</TableCell>
@@ -270,13 +278,13 @@ export default function TrialBalancePage() {
                     <TableFooter>
                         <TableRow className="bg-muted/50 font-bold hover:bg-muted/50">
                             <TableCell colSpan={2} className="text-right">Total</TableCell>
-                            <TableCell className="text-right font-mono">₹{(totalDebits).toFixed(2)}</TableCell>
-                            <TableCell className="text-right font-mono">₹{(totalCredits).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{(totalDebits + (suspenseEntry.debit || 0)).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{(totalCredits + (suspenseEntry.credit || 0)).toFixed(2)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
             </div>
-            {difference !== 0 && (
+            {Math.abs(difference) > 0.01 && (
                 <div 
                     className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center cursor-pointer hover:bg-destructive/20"
                     onClick={() => setIsMismatchDialogOpen(true)}
@@ -370,5 +378,3 @@ export default function TrialBalancePage() {
     </div>
   );
 }
-
-    

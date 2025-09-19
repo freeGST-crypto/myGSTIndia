@@ -106,7 +106,7 @@ const InvoiceItemRow = memo(({
         }
     }, [items, onUpdate, openItemDialog, item.id]);
     
-    const taxableAmount = (item.qty || 0) * (item.rate || 0);
+    const taxableAmount = item.amount;
     const igst = taxableAmount * (item.taxRate / 100);
     const cgst = 0; // Assuming IGST for now
     const sgst = 0;
@@ -270,7 +270,7 @@ export default function NewInvoicePage() {
     }
 
     const journalLines = [
-        { account: '1210', debit: totalAmount.toFixed(2), credit: '0' },
+        { account: selectedCustomer.id, debit: totalAmount.toFixed(2), credit: '0' },
         { account: '4010', debit: '0', credit: subtotal.toFixed(2) },
         { account: '2110', debit: '0', credit: totalTax.toFixed(2) }
     ];

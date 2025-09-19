@@ -11,7 +11,10 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AccountingContext } from "@/context/accounting-context";
-import { allAccounts } from "@/lib/accounts";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, where } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
@@ -19,37 +22,42 @@ const formatCurrency = (value: number) => {
 
 export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { journalVouchers, loading } = useContext(AccountingContext)!;
-  
+  const { journalVouchers, loading: journalLoading } = useContext(AccountingContext)!;
+  const [user] = useAuthState(auth);
+
+  // Fetch customers
+  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+  const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+  const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
+
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
-    allAccounts.forEach(acc => {
-        balances[acc.code] = 0;
-    });
-
+    
+    // Initialize balances for all customers, vendors, and static accounts
+    customers.forEach(c => balances[c.id] = 0);
+    // vendors would be fetched and initialized here as well in a full implementation
+    
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.lines) return;
         voucher.lines.forEach(line => {
-            if (balances.hasOwnProperty(line.account)) {
-                const accountType = allAccounts.find(a => a.code === line.account)?.type;
-                const debit = parseFloat(line.debit);
-                const credit = parseFloat(line.credit);
-
-                if (accountType === 'Asset' || accountType === 'Expense') {
-                    balances[line.account] += debit - credit;
-                } else { // Liability, Equity, Revenue
-                    balances[line.account] += credit - debit;
-                }
+            if (!balances.hasOwnProperty(line.account)) {
+                balances[line.account] = 0;
             }
+            const debit = parseFloat(line.debit);
+            const credit = parseFloat(line.credit);
+            balances[line.account] += debit - credit;
         });
     });
     return balances;
-  }, [journalVouchers]);
+  }, [journalVouchers, customers]);
   
-  const totalReceivables = accountBalances['1210'] || 0;
-  const totalPayables = accountBalances['2010'] || 0;
-  const gstPayable = accountBalances['2110'] || 0;
+  const totalReceivables = useMemo(() => {
+    return customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
+  }, [customers, accountBalances]);
 
+  // Assuming vendor balances would be calculated similarly
+  const totalPayables = accountBalances['2010'] || 0; // This will need vendor logic later
+  const gstPayable = accountBalances['2110'] || 0;
 
   const invoices = useMemo(() => {
     return journalVouchers
@@ -81,7 +89,7 @@ export default function DashboardPage() {
             value={formatCurrency(totalReceivables)}
             icon={IndianRupee}
             description="Balance in Accounts Receivable"
-            loading={loading}
+            loading={journalLoading || customersLoading}
           />
         </Link>
         <Link href="/accounting/ledgers">
@@ -90,7 +98,7 @@ export default function DashboardPage() {
             value={formatCurrency(totalPayables)}
             icon={CreditCard}
             description="Balance in Accounts Payable"
-             loading={loading}
+             loading={journalLoading}
           />
         </Link>
         <Link href="/accounting/ledgers">
@@ -99,16 +107,16 @@ export default function DashboardPage() {
             value={formatCurrency(gstPayable)}
             icon={DollarSign}
             description="Balance in GST Payable"
-             loading={loading}
+             loading={journalLoading}
           />
         </Link>
         <Link href="/parties">
           <StatCard 
             title="Active Customers"
-            value="0"
+            value={String(customers.length)}
             icon={Users}
-            description="No new customers this month"
-             loading={loading}
+            description={`${customers.length} total customers`}
+             loading={customersLoading}
           />
         </Link>
       </div>
@@ -138,7 +146,7 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <RecentActivity invoices={filteredInvoices} loading={loading} />
+          <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
         </CardContent>
       </Card>
 
