@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -111,66 +110,75 @@ export default function ProfitAndLossPage() {
         // Trading Account
         doc.setFontSize(14);
         doc.text("Trading Account", 105, 45, { align: 'center'});
+        
+        const tradingBody = [
+            [
+                { content: "Particulars", styles: { halign: 'left', fontStyle: 'bold' } }, 
+                { content: "Amount (₹)", styles: { halign: 'right', fontStyle: 'bold' } }, 
+                { content: "Particulars", styles: { halign: 'left', fontStyle: 'bold' } }, 
+                { content: "Amount (₹)", styles: { halign: 'right', fontStyle: 'bold' } }
+            ],
+            [
+                "To Purchases (COGS)", 
+                { content: formatCurrency(totalCogs), styles: { halign: 'right' } },
+                "By Sales Revenue", 
+                { content: formatCurrency(totalRevenue), styles: { halign: 'right' } }
+            ],
+             [
+                grossProfit >= 0 ? "To Gross Profit c/d" : "", 
+                { content: grossProfit >= 0 ? formatCurrency(grossProfit) : "", styles: { halign: 'right' } },
+                grossProfit < 0 ? "By Gross Loss c/d" : "", 
+                { content: grossProfit < 0 ? formatCurrency(-grossProfit) : "", styles: { halign: 'right' } }
+            ],
+             [
+                { content: "Total", styles: { fontStyle: 'bold' } }, 
+                { content: formatCurrency(tradingTotal), styles: { halign: 'right', fontStyle: 'bold' } },
+                { content: "Total", styles: { fontStyle: 'bold' } }, 
+                { content: formatCurrency(tradingTotal), styles: { halign: 'right', fontStyle: 'bold' } }
+            ],
+        ];
+
         (doc as any).autoTable({
             startY: 50,
-            body: [
-                [
-                    { content: "Particulars", styles: { halign: 'left', fontStyle: 'bold' } }, 
-                    { content: "Amount (₹)", styles: { halign: 'right', fontStyle: 'bold' } }, 
-                    { content: "Particulars", styles: { halign: 'left', fontStyle: 'bold' } }, 
-                    { content: "Amount (₹)", styles: { halign: 'right', fontStyle: 'bold' } }
-                ],
-                [
-                    "To Purchases (COGS)", 
-                    { content: formatCurrency(totalCogs), styles: { halign: 'right' } },
-                    "By Sales Revenue", 
-                    { content: formatCurrency(totalRevenue), styles: { halign: 'right' } }
-                ],
-                 [
-                    grossProfit >= 0 ? "To Gross Profit c/d" : "", 
-                    { content: grossProfit >= 0 ? formatCurrency(grossProfit) : "", styles: { halign: 'right' } },
-                    grossProfit < 0 ? "By Gross Loss c/d" : "", 
-                    { content: grossProfit < 0 ? formatCurrency(-grossProfit) : "", styles: { halign: 'right' } }
-                ],
-                 [
-                    { content: "Total", styles: { fontStyle: 'bold' } }, 
-                    { content: formatCurrency(tradingTotal), styles: { halign: 'right', fontStyle: 'bold' } },
-                    { content: "Total", styles: { fontStyle: 'bold' } }, 
-                    { content: formatCurrency(tradingTotal), styles: { halign: 'right', fontStyle: 'bold' } }
-                ],
-            ],
+            body: tradingBody,
             theme: 'grid',
-            styles: { fontSize: 10 },
+            styles: { fontSize: 10, cellPadding: 2 },
+            didParseCell: function (data: any) {
+                if (data.row.index > 0 && data.row.raw[data.column.index] === "" && data.column.index % 2 === 0) {
+                     data.cell.styles.border = [false, false, false, false];
+                }
+            }
         });
+
 
         // Profit & Loss Account
         doc.setFontSize(14);
         doc.text("Profit & Loss Account", 105, (doc as any).lastAutoTable.finalY + 15, { align: 'center'});
-        const plBody = [
-            ...operatingExpenses.map(acc => ([
-                `To ${acc.name}`,
-                { content: formatCurrency(accountBalances[acc.code] || 0), styles: { halign: 'right' } },
-                "",
-                ""
-            ])),
-        ];
+        
+        const plBodyDebit = [];
         if (grossProfit < 0) {
-            plBody.unshift(["To Gross Loss b/d", { content: formatCurrency(-grossProfit), styles: { halign: 'right' }}, "", ""]);
+            plBodyDebit.push(["To Gross Loss b/d", { content: formatCurrency(-grossProfit), styles: { halign: 'right' }}]);
         }
+        plBodyDebit.push(...operatingExpenses.map(acc => ([`To ${acc.name}`, { content: formatCurrency(accountBalances[acc.code] || 0), styles: { halign: 'right' }}])));
         if (netProfit >= 0) {
-            plBody.push(["To Net Profit", { content: formatCurrency(netProfit), styles: { halign: 'right' }}, "", ""]);
+            plBodyDebit.push(["To Net Profit", { content: formatCurrency(netProfit), styles: { halign: 'right' }}]);
         }
 
-        const plCreditBody = [];
+        const plBodyCredit = [];
         if (grossProfit >= 0) {
-            plCreditBody.push(["", "", "By Gross Profit b/d", { content: formatCurrency(grossProfit), styles: { halign: 'right' }}]);
+            plBodyCredit.push(["By Gross Profit b/d", { content: formatCurrency(grossProfit), styles: { halign: 'right' }}]);
         }
-         plCreditBody.push(["", "", "By Other Income", { content: formatCurrency(0), styles: { halign: 'right' }}]);
+         plBodyCredit.push(["By Other Income", { content: formatCurrency(0), styles: { halign: 'right' }}]);
         if (netProfit < 0) {
-            plCreditBody.push(["", "", "By Net Loss", { content: formatCurrency(-netProfit), styles: { halign: 'right' }}]);
+            plBodyCredit.push(["By Net Loss", { content: formatCurrency(-netProfit), styles: { halign: 'right' }}]);
         }
         
-        const mergedBody = plBody.map((row, i) => [...row, ...(plCreditBody[i] || ["", ""])]);
+        const maxLength = Math.max(plBodyDebit.length, plBodyCredit.length);
+        const mergedBody = Array.from({ length: maxLength }).map((_, i) => {
+            const debitRow = plBodyDebit[i] || ["", ""];
+            const creditRow = plBodyCredit[i] || ["", ""];
+            return [debitRow[0], debitRow[1], creditRow[0], creditRow[1]];
+        });
 
 
         (doc as any).autoTable({
@@ -185,7 +193,12 @@ export default function ProfitAndLossPage() {
                 ],
              ],
              theme: 'grid',
-             styles: { fontSize: 10 },
+             styles: { fontSize: 10, cellPadding: 2 },
+             didParseCell: function (data: any) {
+                if (data.row.index < mergedBody.length && data.row.raw[data.column.index] === "" && data.column.index % 2 === 0) {
+                     data.cell.styles.border = [false, false, false, false];
+                }
+            }
         });
 
 
