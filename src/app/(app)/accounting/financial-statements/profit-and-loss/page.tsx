@@ -68,19 +68,26 @@ export default function ProfitAndLossPage() {
 
     const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, revenueAccounts]);
     const totalCogs = useMemo(() => (accountBalances['5050'] || 0), [accountBalances]); // Assuming 5050 is Purchases/COGS
-    const totalOperatingExpenses = useMemo(() => expenseAccounts.filter(a => a.code !== '5050').reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, expenseAccounts]);
-
+    
     const grossProfit = totalRevenue - totalCogs;
-    const netProfit = grossProfit - totalOperatingExpenses;
     
     const tradingDebits = totalCogs + (grossProfit >= 0 ? grossProfit : 0);
     const tradingCredits = totalRevenue + (grossProfit < 0 ? -grossProfit : 0);
     const tradingTotal = Math.max(tradingDebits, tradingCredits);
     
-    const plDebits = totalOperatingExpenses + (grossProfit < 0 ? -grossProfit : 0);
-    const plCredits = (grossProfit >= 0 ? grossProfit : 0) + 0; // Other income placeholder
-    const finalPlDebits = plDebits + (netProfit > 0 ? netProfit : 0);
-    const finalPlCredits = plCredits + (netProfit < 0 ? -netProfit : 0);
+    const operatingExpenses = expenseAccounts.filter(a => a.code !== '5050');
+    const totalOperatingExpenses = operatingExpenses.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+    
+    const grossProfitBroughtDown = grossProfit >= 0 ? grossProfit : 0;
+    const grossLossBroughtDown = grossProfit < 0 ? -grossProfit : 0;
+    
+    const plCreditSideTotal = grossProfitBroughtDown; // + other incomes if any
+    const plDebitSideTotal = totalOperatingExpenses + grossLossBroughtDown;
+    
+    const netProfit = plCreditSideTotal - plDebitSideTotal;
+    
+    const finalPlDebits = plDebitSideTotal + (netProfit >= 0 ? netProfit : 0);
+    const finalPlCredits = plCreditSideTotal + (netProfit < 0 ? -netProfit : 0);
     const plTotal = Math.max(finalPlDebits, finalPlCredits);
 
   return (
@@ -165,7 +172,7 @@ export default function ProfitAndLossPage() {
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                              {grossProfit < 0 && <ReportRow label="To Gross Loss b/d" value={-grossProfit} />}
-                             {expenseAccounts.filter(a => a.code !== '5050').map(acc => (
+                             {operatingExpenses.map(acc => (
                                 <ReportRow key={acc.code} label={`To ${acc.name}`} value={accountBalances[acc.code] || 0} />
                              ))}
                              {netProfit >= 0 && <ReportRow label="To Net Profit" value={netProfit} />}
