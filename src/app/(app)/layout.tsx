@@ -71,7 +71,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { auth, db } from '@/lib/firebase';
-import { doc } from 'firebase/firestore';
+import { doc } from "firebase/firestore";
 import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
 import { AccountingProvider } from "@/context/accounting-context";
@@ -155,10 +155,13 @@ const allMenuItems = [
     roles: ['business', 'professional', 'super_admin']
   },
   {
-    href: "/admin/dashboard",
     label: "Client Workspace",
     icon: Briefcase,
     roles: ['professional'],
+    subItems: [
+        { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['professional']},
+        { href: "/admin/users", label: "User & Client Management", icon: Users, roles: ['professional']},
+    ]
   },
   {
     label: "Admin",
@@ -252,18 +255,27 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
 function filterMenuByRole(menu: any[], role: string): any[] {
   return menu
     .map(item => {
+      // If the item doesn't have a roles array, or the user's role is not included, skip it.
       if (!item.roles || !item.roles.includes(role)) {
         return null;
       }
 
+      // If the item has sub-items, recursively filter them.
       if (item.subItems) {
         const filteredSubItems = filterMenuByRole(item.subItems, role);
+        // If there are any visible sub-items left, include the parent menu item.
         if (filteredSubItems.length > 0) {
           return { ...item, subItems: filteredSubItems };
         }
-        return item.href ? { ...item, subItems: undefined } : null;
+        // If there are no visible sub-items, and the parent is NOT a direct link, exclude it.
+        if (!item.href) {
+          return null;
+        }
+        // If it IS a direct link, include it but without the empty sub-items.
+        return { ...item, subItems: undefined };
       }
       
+      // If it's a top-level item with no sub-items, include it.
       return item;
     })
     .filter(Boolean) as any[];
