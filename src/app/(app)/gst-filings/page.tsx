@@ -33,21 +33,14 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
 
 
-const gstr1Summary = [
-    { type: "B2B", invoices: 5, taxableValue: 75000, taxAmount: 13500, total: 88500 },
-    { type: "B2C (Large)", invoices: 2, taxableValue: 300000, taxAmount: 54000, total: 354000 },
-    { type: "B2C (Small)", invoices: 25, taxableValue: 125000, taxAmount: 22500, total: 147500 },
-    { type: "Credit/Debit Notes (Regd)", invoices: 1, taxableValue: -2500, taxAmount: -450, total: -2950 },
-    { type: "Exports", invoices: 1, taxableValue: 50000, taxAmount: 0, total: 50000 },
-];
-
+const gstr1Summary: any[] = [];
 const gstr3bSummary = {
-    outwardTaxable: 547500,
-    outwardTax: 89550,
-    itcAvailable: 65200,
-    itcReversed: 1200,
-    netItc: 64000,
-    taxPayable: 25550,
+    outwardTaxable: 0,
+    outwardTax: 0,
+    itcAvailable: 0,
+    itcReversed: 0,
+    netItc: 0,
+    taxPayable: 0,
 };
 
 
@@ -118,7 +111,7 @@ export default function GstFilingsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {gstr1Summary.map((row) => (
+                                    {gstr1Summary.length > 0 ? gstr1Summary.map((row) => (
                                         <TableRow key={row.type} className="cursor-pointer" onClick={() => handleDrillDown(row.type)}>
                                             <TableCell className="font-medium">{row.type}</TableCell>
                                             <TableCell>{row.invoices}</TableCell>
@@ -126,7 +119,11 @@ export default function GstFilingsPage() {
                                             <TableCell className="text-right">{row.taxAmount.toFixed(2)}</TableCell>
                                             <TableCell className="text-right font-bold">{row.total.toFixed(2)}</TableCell>
                                         </TableRow>
-                                    ))}
+                                    )) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No outward supplies data for this period.</TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
                             </Table>
                         </CardContent>

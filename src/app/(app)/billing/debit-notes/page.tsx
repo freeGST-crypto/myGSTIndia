@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, Edit, Download, Trash2, FileWarning } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AccountingContext } from "@/context/accounting-context";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 
@@ -51,7 +51,7 @@ type DebitNote = {
 }
 
 export default function DebitNotesPage() {
-  const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
   const { toast } = useToast();
   const [selectedNote, setSelectedNote] = useState<DebitNote | null>(null);
   
@@ -81,6 +81,16 @@ export default function DebitNotesPage() {
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
+
+  const totalDebited30d = useMemo(() => {
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    return debitNotes.reduce((acc, note) => {
+      if (new Date(note.date) >= thirtyDaysAgo && note.status === 'Applied') {
+        return acc + note.amount;
+      }
+      return acc;
+    }, 0);
+  }, [debitNotes]);
 
 
   const handleVoidDebitNote = async (debitNoteId: string) => {
@@ -177,15 +187,17 @@ export default function DebitNotesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard 
           title="Total Debited (30d)"
-          value="₹2,000.00"
+          value={`₹${totalDebited30d.toFixed(2)}`}
           icon={IndianRupee}
           description="Total amount for debit notes issued in the last 30 days."
+          loading={loading}
         />
         <StatCard 
           title="Open Debit Notes"
-          value="₹800.00"
+          value="₹0.00"
           icon={FileWarning}
           description="Total value of unapplied debit notes."
+          loading={loading}
         />
       </div>
 

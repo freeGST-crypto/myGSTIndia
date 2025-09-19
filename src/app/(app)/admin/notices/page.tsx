@@ -43,43 +43,9 @@ type Notice = {
   assignedTo?: string;
 };
 
-const sampleNotices: Notice[] = [
-  {
-    id: "NTC-001",
-    clientName: "Global Tech Inc.",
-    clientEmail: "accounts@globaltech.com",
-    noticeType: "GST Department",
-    description: "Received a notice regarding mismatch in GSTR-1 and GSTR-3B for the month of April 2024. The notice mentions a discrepancy of Rs. 15,000 in taxable value.",
-    submissionDate: new Date(),
-    status: "Pending Review",
-  },
-  {
-    id: "NTC-002",
-    clientName: "Innovate LLC",
-    clientEmail: "contact@innovate.llc",
-    noticeType: "Income Tax Department",
-    description: "Notice under section 143(1)(a) for proposed adjustments in the ITR for AY 2023-24. It seems to be related to some disallowed expenses under travel.",
-    submissionDate: new Date(new Date().setDate(new Date().getDate() - 2)),
-    status: "In Progress",
-    assignedTo: "Rohan Sharma, CA"
-  },
-  {
-    id: "NTC-003",
-    clientName: "Synergy Corp",
-    clientEmail: "legal@synergycorp.com",
-    noticeType: "Registrar of Companies (ROC)",
-    description: "Show cause notice for non-filing of Form DPT-3 for the financial year ended March 31, 2024.",
-    submissionDate: new Date(new Date().setDate(new Date().getDate() - 5)),
-    status: "Resolved",
-    assignedTo: "Anjali Singh, CS"
-  },
-];
+const sampleNotices: Notice[] = [];
 
-const sampleProfessionals = [
-    { id: "PRO-001", name: "Rohan Sharma, CA" },
-    { id: "PRO-002", name: "Priya Mehta, Advocate" },
-    { id: "PRO-003", name: "Anjali Singh, CS" },
-];
+const sampleProfessionals: any[] = [];
 
 export default function AdminNoticesPage() {
   const [notices, setNotices] = useState<Notice[]>(sampleNotices);
@@ -143,7 +109,7 @@ export default function AdminNoticesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {notices.map((notice) => (
+              {notices.length > 0 ? notices.map((notice) => (
                 <TableRow key={notice.id}>
                   <TableCell>
                     <div className="font-medium">{notice.clientName}</div>
@@ -174,7 +140,11 @@ export default function AdminNoticesPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No notices submitted.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

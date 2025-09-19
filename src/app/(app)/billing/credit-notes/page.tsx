@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, Edit, Download, Trash2, FileWarning } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AccountingContext } from "@/context/accounting-context";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 
@@ -51,7 +51,7 @@ type CreditNote = {
 }
 
 export default function CreditNotesPage() {
-  const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
   const { toast } = useToast();
   const [selectedNote, setSelectedNote] = useState<CreditNote | null>(null);
   
@@ -81,6 +81,16 @@ export default function CreditNotesPage() {
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
+
+  const totalCredited30d = useMemo(() => {
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    return creditNotes.reduce((acc, note) => {
+      if (new Date(note.date) >= thirtyDaysAgo && note.status === 'Applied') {
+        return acc + note.amount;
+      }
+      return acc;
+    }, 0);
+  }, [creditNotes]);
 
   const handleVoidCreditNote = async (creditNoteId: string) => {
     const originalVoucherId = `JV-${creditNoteId}`;
@@ -176,15 +186,17 @@ export default function CreditNotesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard 
           title="Total Credited (30d)"
-          value="₹9,000.00"
+          value={`₹${totalCredited30d.toFixed(2)}`}
           icon={IndianRupee}
           description="Total amount for credit notes issued in the last 30 days."
+          loading={loading}
         />
         <StatCard 
           title="Open Credit Notes"
-          value="₹1,500.00"
+          value="₹0.00"
           icon={FileWarning}
           description="Total value of unapplied credit notes."
+          loading={loading}
         />
       </div>
 

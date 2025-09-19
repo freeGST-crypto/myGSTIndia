@@ -45,69 +45,9 @@ type Appointment = {
   assignedTo?: string;
 };
 
-const sampleAppointments: Appointment[] = [
-  {
-    id: "APT-001",
-    clientName: "Anjali Singh",
-    clientEmail: "anjali.singh@startup.io",
-    professionalType: "Chartered Accountant (CA)",
-    serviceArea: "Start-up Advisory",
-    preferredDate: new Date(),
-    preferredTime: "10:00 AM - 12:00 PM",
-    mode: "Video Call",
-    status: "Pending",
-  },
-  {
-    id: "APT-002",
-    clientName: "Tech Corp",
-    clientEmail: "sales@techcorp.com",
-    professionalType: "Advocate",
-    serviceArea: "GST",
-    preferredDate: new Date(new Date().setDate(new Date().getDate() + 1)),
-    preferredTime: "02:00 PM - 04:00 PM",
-    status: "Confirmed",
-    assignedTo: "Priya Mehta, Advocate"
-  },
-  {
-    id: "APT-003",
-    clientName: "Innovate LLC",
-    clientEmail: "contact@innovate.llc",
-    professionalType: "Company Secretary (CS)",
-    serviceArea: "LLP / Company Formation",
-    preferredDate: new Date(new Date().setDate(new Date().getDate() - 2)),
-    preferredTime: "12:00 PM - 02:00 PM",
-    status: "Completed",
-    assignedTo: "Rohan Sharma, CS"
-  },
-  {
-    id: "APT-004",
-    clientName: "Digital Goods",
-    clientEmail: "accounts@digitalgoods.com",
-    professionalType: "Cost Accountant (CWA)",
-    serviceArea: "Cost Audit",
-    preferredDate: new Date(new Date().setDate(new Date().getDate() + 3)),
-    preferredTime: "11:00 AM - 01:00 PM",
-    mode: "Video Call",
-    status: "Pending",
-  },
-  {
-    id: "APT-005",
-    clientName: "Retail Chain Inc.",
-    clientEmail: "finance@retailchain.com",
-    professionalType: "Tax Practitioner",
-    serviceArea: "TDS Compliance",
-    preferredDate: new Date(new Date().setDate(new Date().getDate() + 5)),
-    preferredTime: "03:00 PM - 04:00 PM",
-    mode: "Phone Call",
-    status: "Pending",
-  },
-];
+const sampleAppointments: Appointment[] = [];
 
-const sampleProfessionals = [
-    { id: "PRO-001", name: "Rohan Sharma, CA" },
-    { id: "PRO-002", name: "Priya Mehta, Advocate" },
-    { id: "PRO-003", name: "Anjali Singh, CS" },
-];
+const sampleProfessionals: any[] = [];
 
 export default function AppointmentsListPage() {
   const [appointments, setAppointments] = useState(sampleAppointments);
@@ -176,7 +116,7 @@ export default function AppointmentsListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {appointments.map((apt) => (
+              {appointments.length > 0 ? appointments.map((apt) => (
                 <TableRow key={apt.id}>
                   <TableCell>
                     <div className="font-medium">{apt.clientName}</div>
@@ -216,7 +156,11 @@ export default function AppointmentsListPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No appointments found.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

@@ -54,116 +54,7 @@ type Professional = {
     reviews?: number;
 };
 
-const sampleProfessionals: Professional[] = [
-  {
-    id: "PRO-001",
-    name: "Rohan Sharma, CA",
-    type: "ca",
-    firmName: "Sharma & Associates",
-    email: "rohan.sharma@ca-firm.com",
-    city: "Mumbai",
-    specialization: "Startup Advisory, GST",
-    clients: 15,
-    status: "Active",
-    about: "A leading CA firm based in Mumbai, specializing in startup consultation, GST compliance, and audit services for over 10 years.",
-    experience: 10,
-    staffCount: 25,
-    proCount: 5,
-    avatarUrl: "https://picsum.photos/seed/pro1/100/100"
-  },
-  {
-    id: "PRO-002",
-    name: "Priya Mehta, Advocate",
-    type: "advocate",
-    firmName: "Mehta Legal",
-    email: "priya.mehta@legal.com",
-    city: "Delhi",
-    specialization: "Corporate Law, GST Litigation",
-    clients: 8,
-    status: "Active",
-    about: "Expert legal counsel for corporate law, mergers, and high-stakes GST litigation. Based in New Delhi.",
-    experience: 12,
-    staffCount: 10,
-    proCount: 3,
-    avatarUrl: "https://picsum.photos/seed/pro2/100/100"
-  },
-  {
-    id: "PRO-003",
-    name: "Anjali Singh, CS",
-    type: "cs",
-    firmName: "Singh Corporate Services",
-    email: "anjali.s@cs-practitioner.com",
-    city: "Bangalore",
-    specialization: "LLP & Company Formation",
-    clients: 22,
-    status: "Pending Verification",
-    about: "Your one-stop solution for company and LLP formation, annual compliance, and secretarial audits in Bangalore.",
-    experience: 8,
-    staffCount: 8,
-    proCount: 2,
-    avatarUrl: "https://picsum.photos/seed/pro3/100/100"
-  },
-  {
-    id: "PRO-006",
-    name: "Sandeep Verma, CWA",
-    type: "cwa",
-    firmName: "Verma Cost Accountants",
-    email: "s.verma@cwa.com",
-    city: "Chennai",
-    specialization: "Cost Audit, Management Accounting",
-    clients: 12,
-    status: "Active",
-    about: "Specialists in cost accounting and management advisory services for manufacturing industries.",
-    experience: 14,
-    staffCount: 15,
-    proCount: 4,
-    avatarUrl: "https://picsum.photos/seed/pro6/100/100",
-  },
-   {
-    id: "PRO-008",
-    name: "Amit Kumar, Tax Practitioner",
-    type: "tax_practitioner",
-    firmName: "Kumar Tax Consultants",
-    email: "amit.k@taxhelp.com",
-    city: "Kolkata",
-    specialization: "Income Tax Filing, TDS/TCS",
-    clients: 50,
-    status: "Active",
-    about: "20+ years of experience in individual and corporate tax planning and filing.",
-    experience: 18,
-    staffCount: 5,
-    proCount: 2,
-    avatarUrl: "https://picsum.photos/seed/pro8/100/100",
-  },
-   {
-    id: "PRO-009",
-    name: "Sunita Rao, CS",
-    type: "cs",
-    firmName: "Rao & Associates",
-    email: "sunita.rao@csfirm.com",
-    specialization: ["MCA Compliance", "LLP Registration", "PVT Incorporation"],
-    city: "Mumbai",
-    experience: 9,
-    rating: 4.8,
-    reviews: 35,
-    status: "Active",
-    avatarUrl: "https://picsum.photos/seed/pro9/100/100",
-  },
-  {
-    id: "PRO-010",
-    name: "Deepak Verma, CA",
-    type: "ca",
-    firmName: "Verma & Co.",
-    email: "deepak.verma@ca.in",
-    specialization: ["GST", "Audit", "Startup Advisory"],
-    city: "Mumbai",
-    experience: 12,
-    rating: 4.9,
-    reviews: 40,
-    status: "Active",
-    avatarUrl: "https://picsum.photos/seed/pro10/100/100",
-  },
-];
+const sampleProfessionals: Professional[] = [];
 
 export default function ProfessionalsListPage() {
   const [professionals, setProfessionals] = useState<Professional[]>(sampleProfessionals);
@@ -302,7 +193,7 @@ export default function ProfessionalsListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {professionals.map((pro) => (
+              {professionals.length > 0 ? professionals.map((pro) => (
                 <TableRow key={pro.id}>
                   <TableCell>
                     <div className='flex items-center gap-4'>
@@ -335,7 +226,11 @@ export default function ProfessionalsListPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No professionals registered.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

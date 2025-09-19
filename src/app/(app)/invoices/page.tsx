@@ -179,7 +179,7 @@ export default function InvoicesPage() {
         } else {
             toast({
                 title: `Action: ${action}`,
-                description: `This would ${action.toLowerCase()} invoice ${invoice.id}. This feature is a placeholder.`
+                description: `This would ${action.toLowerCase()} invoice ${invoice.id}. This is a placeholder.`
             });
         }
     }
@@ -220,6 +220,10 @@ export default function InvoicesPage() {
         invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [invoices, searchTerm]);
+  
+  const totalOutstanding = useMemo(() => invoices.reduce((acc, inv) => inv.status === 'Pending' ? acc + inv.amount : acc, 0), [invoices]);
+  const totalOverdue = useMemo(() => invoices.reduce((acc, inv) => inv.status === 'Overdue' ? acc + inv.amount : acc, 0), [invoices]);
+  const overdueCount = useMemo(() => invoices.filter(inv => inv.status === 'Overdue').length, [invoices]);
 
   return (
     <div className="space-y-8">
@@ -249,22 +253,25 @@ export default function InvoicesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard 
           title="Total Outstanding"
-          value="₹60,000.00"
+          value={`₹${totalOutstanding.toFixed(2)}`}
           icon={IndianRupee}
           description="Amount yet to be received"
+          loading={journalLoading}
         />
         <StatCard 
           title="Total Overdue"
-          value="₹35,000.00"
+          value={`₹${totalOverdue.toFixed(2)}`}
           icon={AlertCircle}
-          description="1 invoice overdue"
+          description={`${overdueCount} invoice${overdueCount === 1 ? '' : 's'} overdue`}
           className="text-destructive"
+          loading={journalLoading}
         />
         <StatCard 
           title="Paid (Last 30 days)"
-          value="₹25,000.00"
+          value="₹0.00"
           icon={CheckCircle}
-          description="From 1 invoice"
+          description="From 0 invoices"
+          loading={journalLoading}
         />
       </div>
 

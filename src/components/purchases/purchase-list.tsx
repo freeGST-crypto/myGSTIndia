@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useContext } from "react";
@@ -50,7 +51,7 @@ type Purchase = {
 }
 
 export default function PurchaseList() {
-  const { journalVouchers, addJournalVoucher } = useContext(AccountingContext)!;
+  const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
@@ -147,6 +148,10 @@ export default function PurchaseList() {
     );
   }, [purchases, searchTerm]);
 
+  const totalPayables = useMemo(() => purchases.reduce((acc, p) => p.status === 'Pending' ? acc + p.amount : acc, 0), [purchases]);
+  const totalOverdue = useMemo(() => purchases.reduce((acc, p) => p.status === 'Overdue' ? acc + p.amount : acc, 0), [purchases]);
+  const overdueCount = useMemo(() => purchases.filter(p => p.status === 'Overdue').length, [purchases]);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -167,22 +172,25 @@ export default function PurchaseList() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard 
           title="Total Payables"
-          value="₹33,000.00"
+          value={`₹${totalPayables.toFixed(2)}`}
           icon={IndianRupee}
           description="Amount to be paid"
+          loading={loading}
         />
         <StatCard 
           title="Total Overdue"
-          value="₹7,500.00"
+          value={`₹${totalOverdue.toFixed(2)}`}
           icon={AlertCircle}
-          description="1 bill overdue"
+          description={`${overdueCount} bill${overdueCount === 1 ? '' : 's'} overdue`}
           className="text-destructive"
+          loading={loading}
         />
         <StatCard 
           title="Paid (Last 30 days)"
-          value="₹8,500.00"
+          value="₹0.00"
           icon={CheckCircle}
-          description="From 1 bill"
+          description="From 0 bills"
+          loading={loading}
         />
       </div>
 

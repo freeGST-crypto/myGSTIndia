@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -27,35 +28,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Edit, RefreshCw, XCircle } from "lucide-react";
 import { format } from 'date-fns';
 
-const sampleSubscribers = [
-  {
-    id: "SUB-001",
-    user: "Rohan Sharma",
-    email: "rohan.sharma@ca-firm.com",
-    plan: "Pro",
-    status: "Active",
-    startDate: new Date(2023, 10, 1),
-    renewalDate: new Date(2024, 10, 1),
-  },
-  {
-    id: "SUB-002",
-    user: "Innovate LLC",
-    email: "accounts@innovate.llc",
-    plan: "Business",
-    status: "Active",
-    startDate: new Date(2023, 8, 15),
-    renewalDate: new Date(2024, 8, 15),
-  },
-  {
-    id: "SUB-003",
-    user: "Anjali Singh",
-    email: "anjali.s@cs-practitioner.com",
-    plan: "Pro",
-    status: "Cancelled",
-    startDate: new Date(2023, 5, 20),
-    renewalDate: new Date(2024, 5, 20),
-  },
-];
+const sampleSubscribers: any[] = [];
 
 export default function SubscribersListPage() {
   const [subscribers, setSubscribers] = useState(sampleSubscribers);
@@ -91,7 +64,7 @@ export default function SubscribersListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subscribers.map((sub) => (
+              {subscribers.length > 0 ? subscribers.map((sub) => (
                 <TableRow key={sub.id}>
                   <TableCell>
                     <div className="font-medium">{sub.user}</div>
@@ -117,7 +90,11 @@ export default function SubscribersListPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No subscribers found.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

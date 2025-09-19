@@ -38,58 +38,24 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-const sampleUsers = [
-  {
-    id: "USR-001",
-    name: "Rohan Sharma",
-    role: "Professional",
-    gstin: "27ABCDE1234F1Z5",
-    status: "Active",
-    email: "rohan.sharma@ca-firm.com",
-    phone: "9876543210",
-    pan: "ABCDE1234F",
-    address: {
-      line1: "123 Business Avenue",
-      city: "Mumbai",
-      state: "Maharashtra",
-      pincode: "400001",
-    },
-  },
-  {
-    id: "USR-002",
-    name: "Priya Mehta",
-    role: "Business",
-    gstin: "29FGHIJ5678K1Z6",
-    status: "Active",
-    email: "priya.mehta@enterprise.com",
-    phone: "9123456789",
-    pan: "FGHIJ5678K",
-    address: {
-      line1: "456 Commerce Road",
-      city: "Bangalore",
-      state: "Karnataka",
-      pincode: "560001",
-    },
-  },
-  {
-    id: "USR-003",
-    name: "Anjali Singh",
-    role: "Business",
-    gstin: "07LMNOP1234Q1Z9",
-    status: "Pending Onboarding",
-    email: "anjali.singh@startup.io",
-    phone: "8765432109",
-    pan: "LMNOP1234Q",
-    address: {
-      line1: "789 Innovation Hub",
-      city: "Delhi",
-      state: "Delhi",
-      pincode: "110001",
-    },
-  },
-];
+const sampleUsers: any[] = [];
 
-type User = (typeof sampleUsers)[0];
+type User = {
+    id: string;
+    name: string;
+    role: string;
+    gstin: string;
+    status: string;
+    email: string;
+    phone: string;
+    pan: string;
+    address: {
+      line1: string;
+      city: string;
+      state: string;
+      pincode: string;
+    },
+};
 type UserRole = "Super Admin" | "Professional";
 
 
@@ -174,7 +140,7 @@ export default function UserManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {users.length > 0 ? users.map((user) => (
                     <TableRow key={user.id} onClick={() => handleSelectUser(user.id)} className="cursor-pointer">
                       <TableCell>
                         <div className="font-medium">{user.name}</div>
@@ -199,7 +165,11 @@ export default function UserManagementPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">No users found.</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

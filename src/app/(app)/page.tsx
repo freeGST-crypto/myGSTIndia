@@ -19,7 +19,7 @@ const formatCurrency = (value: number) => {
 
 export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { journalVouchers } = useContext(AccountingContext)!;
+  const { journalVouchers, loading } = useContext(AccountingContext)!;
   
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
@@ -80,6 +80,7 @@ export default function DashboardPage() {
             value={formatCurrency(totalReceivables)}
             icon={IndianRupee}
             description="Balance in Accounts Receivable"
+            loading={loading}
           />
         </Link>
         <Link href="/accounting/ledgers">
@@ -88,6 +89,7 @@ export default function DashboardPage() {
             value={formatCurrency(totalPayables)}
             icon={CreditCard}
             description="Balance in Accounts Payable"
+             loading={loading}
           />
         </Link>
         <Link href="/accounting/ledgers">
@@ -96,14 +98,16 @@ export default function DashboardPage() {
             value={formatCurrency(gstPayable)}
             icon={DollarSign}
             description="Balance in GST Payable"
+             loading={loading}
           />
         </Link>
         <Link href="/parties">
           <StatCard 
             title="Active Customers"
-            value="+57"
+            value="0"
             icon={Users}
-            description="+12 since last month"
+            description="No new customers this month"
+             loading={loading}
           />
         </Link>
       </div>
@@ -133,7 +137,7 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <RecentActivity invoices={filteredInvoices} />
+          <RecentActivity invoices={filteredInvoices} loading={loading} />
         </CardContent>
       </Card>
 

@@ -7,9 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowUpRight } from "lucide-react"
+import { ArrowUpRight, Loader2 } from "lucide-react"
 import { Button } from "../ui/button"
 import Link from "next/link"
 
@@ -22,9 +21,10 @@ type Invoice = {
 
 type RecentActivityProps = {
   invoices: Invoice[];
+  loading: boolean;
 };
 
-export function RecentActivity({ invoices }: RecentActivityProps) {
+export function RecentActivity({ invoices, loading }: RecentActivityProps) {
   return (
     <>
        <div className="flex items-center justify-between mb-4">
@@ -50,7 +50,13 @@ export function RecentActivity({ invoices }: RecentActivityProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.length > 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="h-24 text-center">
+                  <Loader2 className="animate-spin mx-auto text-primary" />
+                </TableCell>
+              </TableRow>
+            ) : invoices.length > 0 ? (
                 invoices.map((invoice) => (
                 <TableRow key={invoice.invoice}>
                     <TableCell>
@@ -79,7 +85,7 @@ export function RecentActivity({ invoices }: RecentActivityProps) {
             ) : (
                 <TableRow>
                     <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">
-                        No recent invoices found matching your search.
+                        No recent invoices found.
                     </TableCell>
                 </TableRow>
             )}
@@ -88,5 +94,3 @@ export function RecentActivity({ invoices }: RecentActivityProps) {
     </>
   )
 }
-
-    
