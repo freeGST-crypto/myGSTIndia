@@ -119,8 +119,8 @@ export default function InvoicesPage() {
                 raw: v,
             }
         })
-        .filter(Boolean)
-        .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime()) as Invoice[];
+        .filter((v): v is Invoice => v !== null)
+        .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime());
   }, [journalVouchers]);
 
 
@@ -419,7 +419,10 @@ export default function InvoicesPage() {
                             <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
                               <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
+                            <DropdownMenuItem onSelect={() => {
+                                const queryParams = new URLSearchParams({ duplicate: invoice.id }).toString();
+                                router.push(`/invoices/new?${queryParams}`);
+                            }}>
                               <Copy className="mr-2" /> Duplicate Invoice
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
