@@ -29,12 +29,14 @@ import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
 
 const formatCurrency = (value: number) => {
+    // A value of -0.000001 should be 0.00, not -0.00
+    if (Math.abs(value) < 0.01) value = 0;
     return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default function ProfitAndLossPage() {
     const { toast } = useToast();
-    const { journalVouchers } = useContext(AccountingContext)!;
+    const { journalVouchers, loading } = useContext(AccountingContext)!;
     
     const accountBalances = useMemo(() => {
         const balances: Record<string, number> = {};
@@ -60,50 +62,26 @@ export default function ProfitAndLossPage() {
         });
         return balances;
     }, [journalVouchers]);
+    
+    const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue');
+    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense');
 
-    const data = useMemo(() => {
-        const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
-        const salesCreditNotes = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
-        const purchaseBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
-        const purchaseDebitNotes = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+    const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, revenueAccounts]);
+    const totalCogs = useMemo(() => (accountBalances['5050'] || 0), [accountBalances]); // Assuming 5050 is Purchases/COGS
+    const totalOperatingExpenses = useMemo(() => expenseAccounts.filter(a => a.code !== '5050').reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, expenseAccounts]);
 
-        const totalSales = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
-        const totalSalesReturns = salesCreditNotes.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.debit ? parseFloat(v.lines.find(l => l.account === '4010')!.debit) : 0), 0);
-        
-        const totalPurchases = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '5050')?.debit ? parseFloat(v.lines.find(l => l.account === '5050')!.debit) : 0), 0);
-        const totalPurchaseReturns = purchaseDebitNotes.reduce((acc, v) => acc + (v.lines.find(l => l.account === '5050')?.credit ? parseFloat(v.lines.find(l => l.account === '5050')!.credit) : 0), 0);
-
-        return {
-            revenue: {
-                sales: totalSales - totalSalesReturns,
-                otherIncome: 0, // Placeholder
-            },
-            cogs: {
-                openingStock: 0, // Placeholder
-                purchases: totalPurchases - totalPurchaseReturns,
-                directExpenses: 0, // Placeholder
-                closingStock: 0, // Placeholder
-            },
-            operatingExpenses: {
-                salaries: accountBalances['5020'] || 0,
-                rent: accountBalances['5010'] || 0,
-                marketing: 0, // Placeholder
-                depreciation: accountBalances['5150'] || 0,
-                other: (accountBalances['5030'] || 0) + (accountBalances['5040'] || 0) + (accountBalances['5160'] || 0),
-            },
-        };
-    }, [journalVouchers, accountBalances]);
-
-
-    const tradingDebits = data.cogs.openingStock + data.cogs.purchases + data.cogs.directExpenses;
-    const tradingCredits = data.revenue.sales + data.cogs.closingStock;
-    const grossProfit = tradingCredits - tradingDebits;
-    const tradingTotal = Math.max(tradingDebits + (grossProfit > 0 ? grossProfit : 0), tradingCredits + (grossProfit < 0 ? -grossProfit : 0));
-
-    const plDebits = Object.values(data.operatingExpenses).reduce((sum, val) => sum + val, 0);
-    const plCredits = (grossProfit > 0 ? grossProfit : 0) + data.revenue.otherIncome;
-    const netProfit = plCredits - (plDebits + (grossProfit < 0 ? -grossProfit : 0));
-    const plTotal = Math.max((plDebits + (grossProfit < 0 ? -grossProfit: 0)) + (netProfit > 0 ? netProfit : 0), plCredits + (netProfit < 0 ? -netProfit : 0));
+    const grossProfit = totalRevenue - totalCogs;
+    const netProfit = grossProfit - totalOperatingExpenses;
+    
+    const tradingDebits = totalCogs + (grossProfit > 0 ? grossProfit : 0);
+    const tradingCredits = totalRevenue + (grossProfit < 0 ? -grossProfit : 0);
+    const tradingTotal = Math.max(tradingDebits, tradingCredits);
+    
+    const plDebits = totalOperatingExpenses + (grossProfit < 0 ? -grossProfit : 0);
+    const plCredits = (grossProfit > 0 ? grossProfit : 0) + 0; // Other income placeholder
+    const finalPlDebits = plDebits + (netProfit > 0 ? netProfit : 0);
+    const finalPlCredits = plCredits + (netProfit < 0 ? -netProfit : 0);
+    const plTotal = Math.max(finalPlDebits, finalPlCredits);
 
   return (
     <div className="space-y-8">
@@ -149,9 +127,7 @@ export default function ProfitAndLossPage() {
                     <Table>
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            <ReportRow label="To Opening Stock" value={data.cogs.openingStock} />
-                            <ReportRow label="To Purchases" value={data.cogs.purchases} />
-                            <ReportRow label="To Direct Expenses" value={data.cogs.directExpenses} />
+                            <ReportRow label="To Purchases (COGS)" value={totalCogs} />
                             {grossProfit >= 0 && <ReportRow label="To Gross Profit c/d" value={grossProfit} />}
                         </TableBody>
                          <TableFooter>
@@ -165,8 +141,7 @@ export default function ProfitAndLossPage() {
                     <Table>
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            <ReportRow label="By Sales Revenue" value={data.revenue.sales} />
-                            <ReportRow label="By Closing Stock" value={data.cogs.closingStock} />
+                            <ReportRow label="By Sales Revenue" value={totalRevenue} />
                             {grossProfit < 0 && <ReportRow label="By Gross Loss c/d" value={-grossProfit} />}
                         </TableBody>
                          <TableFooter>
@@ -190,11 +165,9 @@ export default function ProfitAndLossPage() {
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                              {grossProfit < 0 && <ReportRow label="To Gross Loss b/d" value={-grossProfit} />}
-                            <ReportRow label="To Salaries & Wages" value={data.operatingExpenses.salaries} />
-                            <ReportRow label="To Rent Expense" value={data.operatingExpenses.rent} />
-                            <ReportRow label="To Marketing & Advertising" value={data.operatingExpenses.marketing} />
-                            <ReportRow label="To Depreciation" value={data.operatingExpenses.depreciation} />
-                            <ReportRow label="To Other Operating Expenses" value={data.operatingExpenses.other} />
+                             {expenseAccounts.filter(a => a.code !== '5050').map(acc => (
+                                <ReportRow key={acc.code} label={`To ${acc.name}`} value={accountBalances[acc.code] || 0} />
+                             ))}
                              {netProfit >= 0 && <ReportRow label="To Net Profit" value={netProfit} />}
                         </TableBody>
                          <TableFooter>
@@ -209,7 +182,8 @@ export default function ProfitAndLossPage() {
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {grossProfit >= 0 && <ReportRow label="By Gross Profit b/d" value={grossProfit} />}
-                            <ReportRow label="By Other Income" value={data.revenue.otherIncome} />
+                            {/* Placeholder for other income */}
+                             <ReportRow label="By Other Income" value={0} />
                             {netProfit < 0 && <ReportRow label="By Net Loss" value={-netProfit} />}
                         </TableBody>
                          <TableFooter>

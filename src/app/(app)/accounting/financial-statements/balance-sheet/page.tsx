@@ -32,6 +32,8 @@ import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
 
 const formatCurrency = (value: number) => {
+    // A value of -0.000001 should be 0.00, not -0.00
+    if (Math.abs(value) < 0.01) value = 0;
     return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -50,13 +52,11 @@ export default function BalanceSheetPage() {
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
                 if (balances.hasOwnProperty(line.account)) {
-                    const debit = parseFloat(line.debit);
-                    const credit = parseFloat(line.credit);
                     const accountType = allAccounts.find(a => a.code === line.account)?.type;
                      if (accountType === 'Asset' || accountType === 'Expense') {
-                        balances[line.account] += debit - credit;
+                        balances[line.account] += parseFloat(line.debit) - parseFloat(line.credit);
                     } else { // Liability, Equity, Revenue
-                        balances[line.account] += credit - debit;
+                        balances[line.account] += parseFloat(line.credit) - parseFloat(line.debit);
                     }
                 }
             });
@@ -66,61 +66,53 @@ export default function BalanceSheetPage() {
     
     // Calculate P&L for Retained Earnings
     const netProfit = useMemo(() => {
-        const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
-        const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
-        const totalRevenue = revenueAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
-        const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
+        const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue');
+        const expenseAccounts = allAccounts.filter(a => a.type === 'Expense');
+        const totalRevenue = revenueAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+        const totalExpenses = expenseAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
         return totalRevenue - totalExpenses;
     }, [accountBalances]);
 
-
-    const data = useMemo(() => {
-        return {
-            equityAndLiabilities: {
-                capitalAccount: (accountBalances['3010'] || 0),
-                reservesAndSurplus: (accountBalances['3020'] || 0) + netProfit,
-                longTermLoans: (accountBalances['2210'] || 0),
-                currentLiabilities: {
-                    sundryCreditors: (accountBalances['2010'] || 0),
-                    gstPayable: (accountBalances['2110'] || 0),
-                    otherCurrentLiabilities: 0,
-                }
-            },
-            assets: {
-                fixedAssets: {
-                    officeEquipment: accountBalances['1450'] || 0,
-                    lessAccumulatedDepreciation: (accountBalances['1455'] || 0), // Contra-asset, so it's a credit balance naturally. Treat as positive for subtraction display
-                },
-                investments: 0,
-                currentAssets: {
-                    sundryDebtors: accountBalances['1210'] || 0,
-                    cashInHand: accountBalances['1010'] || 0,
-                    bankBalance: accountBalances['1020'] || 0,
-                    prepaidInsurance: accountBalances['1510'] || 0,
-                    officeSupplies: accountBalances['1410'] || 0,
-                }
-            }
-        };
-    }, [accountBalances, netProfit]);
-
-
-    const totalCurrentLiabilities = Object.values(data.equityAndLiabilities.currentLiabilities).reduce((sum, val) => sum + val, 0);
-    const totalEquityAndLiabilities = data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus + data.equityAndLiabilities.longTermLoans + totalCurrentLiabilities;
-
-    const netFixedAssets = data.assets.fixedAssets.officeEquipment - data.assets.fixedAssets.lessAccumulatedDepreciation;
-    const totalCurrentAssets = Object.values(data.assets.currentAssets).reduce((sum, val) => sum + val, 0);
-    const totalAssets = netFixedAssets + data.assets.investments + totalCurrentAssets;
+    // Aggregate Liabilities and Equity
+    const capitalAccount = (accountBalances['3010'] || 0);
+    // Correctly add Net Profit/Loss to Retained Earnings
+    const reservesAndSurplus = (accountBalances['3020'] || 0) + netProfit;
     
-    // Sample static data for schedules - will be made dynamic later
+    const longTermLiabilities = allAccounts
+        .filter(a => a.type === 'Liability' && a.name.includes('Long-Term'))
+        .reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+    
+    const currentLiabilitiesAccounts = allAccounts.filter(a => a.type === 'Liability' && !a.name.includes('Long-Term'));
+    const totalCurrentLiabilities = currentLiabilitiesAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+
+    const totalEquityAndLiabilities = capitalAccount + reservesAndSurplus + longTermLiabilities + totalCurrentLiabilities;
+
+    // Aggregate Assets
+    const fixedAssetsAccounts = allAccounts.filter(a => a.name.includes('Fixed Asset') || a.name.includes('Accumulated Depreciation'));
+    const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc) => {
+        const balance = accountBalances[acc.code] || 0;
+        // Accumulated Depreciation is a contra-asset, its balance will be negative in our logic (credit), so we add.
+        // Or if it's stored as positive, we subtract. The current logic makes it a negative asset balance.
+        return sum + balance;
+    }, 0);
+    
+    const investmentAccounts = allAccounts.filter(a => a.name.includes('Investments'));
+    const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+
+    const currentAssetsAccounts = allAccounts.filter(a => a.type === 'Asset' && !fixedAssetsAccounts.includes(a) && !investmentAccounts.includes(a));
+    const totalCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+    
+    const totalAssets = netFixedAssets + totalInvestments + totalCurrentAssets;
+
+    // Schedules
     const depreciationSchedule = [
         { asset: "Office Equipment", openingWdv: 0, additions: 0, depreciationRate: 20, depreciation: 5000, closingWdv: -5000 },
     ];
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
 
     const capitalAccounts = [
-        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: (accountBalances['3010'] || 0) + (accountBalances['3020'] || 0) + netProfit },
+        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: capitalAccount + reservesAndSurplus },
     ];
-
 
   return (
     <div className="space-y-8">
@@ -183,16 +175,16 @@ export default function BalanceSheetPage() {
                         <TableHeader><TableRow><TableHead>Liabilities & Equity</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Capital Account" value={data.equityAndLiabilities.capitalAccount} isSub />
-                            <ReportRow label="Reserves & Surplus (incl. P&L)" value={data.equityAndLiabilities.reservesAndSurplus} isSub />
+                            <ReportRow label="Capital Account" value={capitalAccount} isSub />
+                            <ReportRow label="Reserves & Surplus (incl. P&L)" value={reservesAndSurplus} isSub />
                             
                             <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Long-Term Loans" value={data.equityAndLiabilities.longTermLoans} isSub />
+                            <ReportRow label="Long-Term Loans" value={longTermLiabilities} isSub />
 
                             <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Sundry Creditors" value={data.equityAndLiabilities.currentLiabilities.sundryCreditors} isSub />
-                            <ReportRow label="GST Payable" value={data.equityAndLiabilities.currentLiabilities.gstPayable} isSub />
-                            <ReportRow label="Other Current Liabilities" value={data.equityAndLiabilities.currentLiabilities.otherCurrentLiabilities} isSub />
+                             {currentLiabilitiesAccounts.map(acc => (
+                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                            ))}
                         </TableBody>
                         <TableFooter>
                             <TableRow className="font-bold bg-muted/50">
@@ -209,18 +201,17 @@ export default function BalanceSheetPage() {
                         <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Office Equipment" value={data.assets.fixedAssets.officeEquipment} isSub />
-                            <ReportRow label="Less: Acc. Depreciation" value={-data.assets.fixedAssets.lessAccumulatedDepreciation} isSub />
+                            {fixedAssetsAccounts.map(acc => (
+                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                            ))}
                             <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
 
-                            <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(data.assets.investments)}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalInvestments)}</TableCell></TableRow>
 
                             <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Office Supplies" value={data.assets.currentAssets.officeSupplies} isSub />
-                            <ReportRow label="Sundry Debtors" value={data.assets.currentAssets.sundryDebtors} isSub />
-                            <ReportRow label="Cash in Hand" value={data.assets.currentAssets.cashInHand} isSub />
-                            <ReportRow label="Bank Balance" value={data.assets.currentAssets.bankBalance} isSub />
-                            <ReportRow label="Prepaid Insurance" value={data.assets.currentAssets.prepaidInsurance} isSub />
+                             {currentAssetsAccounts.map(acc => (
+                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                            ))}
                         </TableBody>
                         <TableFooter>
                             <TableRow className="font-bold bg-muted/50">
@@ -317,7 +308,7 @@ export default function BalanceSheetPage() {
                                         <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.drawings, 0))}</TableCell>
                                     </TableRow>
                                      <TableRow>
-                                        <TableCell className="font-medium">Share of Profit</TableCell>
+                                        <TableCell className="font-medium">Share of Profit/(Loss)</TableCell>
                                         {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.profitShare)}</TableCell>)}
                                         <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.profitShare, 0))}</TableCell>
                                     </TableRow>
