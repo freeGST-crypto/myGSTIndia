@@ -168,7 +168,7 @@ export default function InvoicesPage() {
 
     try {
       await addJournalVoucher({
-            id: `JV-${quickInvNum}`,
+            id: `JV-INV-${quickInvNum}`,
             date: new Date().toISOString().split('T')[0],
             narration: `Sale to ${selectedCustomer.name} via Invoice #${quickInvNum}`,
             lines: journalLines,
@@ -275,40 +275,31 @@ export default function InvoicesPage() {
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
     let finalY = 0;
 
-    const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId);
+    const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId) as any;
     const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F" }; // Mock data
 
     // --- Header ---
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text(companyDetails.name, 14, 22);
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(companyDetails.address, 14, 28);
-    doc.text(`GSTIN: ${companyDetails.gstin} | PAN: ${companyDetails.pan}`, 14, 34);
-
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("TAX INVOICE", pageWidth - 14, 22, { align: "right" });
-    
-    // --- Invoice Details Table ---
-    finalY = 40; // Y position after header
     doc.autoTable({
         body: [
-            [{ content: 'Invoice No:', styles: { fontStyle: 'bold', halign: 'right' } }, { content: invoice.id, styles: { halign: 'left' } }],
-            [{ content: 'Invoice Date:', styles: { fontStyle: 'bold', halign: 'right' } }, { content: format(new Date(invoice.date), "dd-MMM-yyyy"), styles: { halign: 'left' } }],
-            [{ content: 'Due Date:', styles: { fontStyle: 'bold', halign: 'right' } }, { content: format(new Date(invoice.dueDate), "dd-MMM-yyyy"), styles: { halign: 'left' } }],
+            [
+                { content: companyDetails.name, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 16 } },
+                { content: customerDetails?.name || invoice.customer, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 16, halign: 'right' } }
+            ],
+            [
+                { content: companyDetails.address, styles: { fontSize: 9 } },
+                { content: customerDetails?.address1 || 'N/A', styles: { fontSize: 9, halign: 'right' } }
+            ],
+             [
+                { content: `GSTIN: ${companyDetails.gstin}`, styles: { fontSize: 9 } },
+                { content: `GSTIN: ${customerDetails?.gstin || "Unregistered"}`, styles: { fontSize: 9, halign: 'right' } }
+            ],
         ],
-        startY: finalY,
-        margin: { left: pageWidth / 2 + 15 },
+        startY: 15,
         theme: 'plain',
-        tableWidth: 'auto',
-        styles: { fontSize: 10, cellPadding: 1, overflow: 'linebreak' },
+        styles: { cellPadding: 1 },
     });
     finalY = (doc as any).lastAutoTable.finalY + 5;
-
-
+    
     // --- Bill To / Ship To ---
     const billToAddress = `${customerDetails?.name || invoice.customer}\n${customerDetails?.address1 || 'N/A'}\nGSTIN: ${customerDetails?.gstin || "Unregistered"}`;
     doc.autoTable({
@@ -318,6 +309,20 @@ export default function InvoicesPage() {
         theme: 'grid',
         headStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },
         styles: { fontSize: 9, cellPadding: 3 },
+    });
+    finalY = (doc as any).lastAutoTable.finalY;
+
+     // --- Invoice Details Table ---
+    doc.autoTable({
+        body: [
+            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id],
+            [{ content: 'Invoice Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.date), "dd-MMM-yyyy")],
+            [{ content: 'Due Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.dueDate), "dd-MMM-yyyy")],
+        ],
+        startY: finalY + 5,
+        theme: 'plain',
+        tableWidth: 'auto',
+        styles: { fontSize: 10, cellPadding: 1 },
     });
     finalY = (doc as any).lastAutoTable.finalY + 10;
     
@@ -345,7 +350,7 @@ export default function InvoicesPage() {
         body: tableBody,
         startY: finalY,
         theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        headStyles: { fillColor: [22, 163, 74], textColor: 255 },
         columnStyles: {
             0: { cellWidth: 8, halign: 'center' },
             1: { cellWidth: 'auto' },
@@ -375,14 +380,14 @@ export default function InvoicesPage() {
         tableWidth: 'auto',
         styles: { fontSize: 10, cellPadding: 2, halign: 'right' },
     });
+    finalY = (doc as any).lastAutoTable.finalY;
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.text(`Amount in words: ${numberToWords(invoice.amount)}`, 14, finalY + 10);
-    finalY = (doc as any).lastAutoTable.finalY + 15;
-
+    
     // --- Footer section ---
-    const footerY = pageHeight - 50;
+    const footerY = pageHeight - 40;
     doc.line(14, footerY, pageWidth - 14, footerY); // Footer line
 
     // Bank Details
@@ -396,13 +401,6 @@ export default function InvoicesPage() {
     doc.setFont("helvetica", "bold");
     doc.text(`For ${companyDetails.name}`, pageWidth - 14, footerY + 8, { align: 'right' });
     doc.text("Authorised Signatory", pageWidth - 14, footerY + 23, { align: 'right' });
-
-    // Terms & Conditions
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("Terms & Conditions:", 14, finalY > footerY - 25 ? footerY - 25 : finalY);
-    doc.setFont("helvetica", "normal");
-    doc.text("1. Payment is due within 30 days. 2. Interest @18% p.a. will be charged on overdue bills.", 14, finalY > footerY - 25 ? footerY - 20 : finalY + 5);
 
     doc.setFontSize(8);
     doc.setFont("helvetica", "italic");

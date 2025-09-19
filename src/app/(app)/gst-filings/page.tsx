@@ -27,25 +27,51 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileSpreadsheet, GitCompareArrows, FileText, ArrowRight, CalendarIcon } from "lucide-react";
+import { FileSpreadsheet, GitCompareArrows, FileText, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
-import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+
+const getFinancialYears = () => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    const years = [];
+    // If we are in Jan-Mar, the current FY started last year.
+    const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+    for (let i = 0; i < 5; i++) {
+        years.push(`${startYear - i}-${(startYear - i + 1).toString().slice(-2)}`);
+    }
+    return years;
+};
+
+const months = [
+    { value: "04", label: "April" }, { value: "05", label: "May" }, { value: "06", label: "June" },
+    { value: "07", label: "July" }, { value: "08", label: "August" }, { value: "09", label: "September" },
+    { value: "10", label: "October" }, { value: "11", label: "November" }, { value: "12", label: "December" },
+    { value: "01", label: "January" }, { value: "02", label: "February" }, { value: "03", label: "March" }
+];
+
 
 export default function GstFilingsPage() {
-    const [date, setDate] = useState<Date>(new Date());
-    const period = format(date, 'yyyy-MM');
+    const [financialYear, setFinancialYear] = useState(getFinancialYears()[0]);
+    const [month, setMonth] = useState(format(new Date(), 'MM'));
+    
     const { toast } = useToast();
     const { journalVouchers, loading } = useContext(AccountingContext)!;
     
     const { gstr1Summary, gstr3bSummary } = useMemo(() => {
-        const periodStart = startOfMonth(new Date(period));
-        const periodEnd = endOfMonth(new Date(period));
+        const [startYearStr, endYearStr] = financialYear.split('-');
+        const startYear = parseInt(startYearStr);
+        const monthNum = parseInt(month);
+        
+        // Determine the correct year for the selected month
+        const year = monthNum >= 4 ? startYear : startYear + 1;
+        const periodDate = new Date(year, monthNum - 1, 1);
+
+        const periodStart = startOfMonth(periodDate);
+        const periodEnd = endOfMonth(periodDate);
         
         const salesInvoices = journalVouchers.filter(v => {
             if (!v || !v.id || !v.date) return false;
@@ -88,7 +114,7 @@ export default function GstFilingsPage() {
 
         return { gstr1Summary: dynamicGstr1Summary, gstr3bSummary: dynamicGstr3bSummary };
 
-    }, [journalVouchers, period]);
+    }, [journalVouchers, financialYear, month]);
 
 
     const handleDrillDown = (item: string) => {
@@ -97,6 +123,13 @@ export default function GstFilingsPage() {
             description: `A dialog would open showing all transactions related to ${item}.`,
         });
     };
+    
+    const selectedPeriodLabel = useMemo(() => {
+        const monthLabel = months.find(m => m.value === month)?.label;
+        const [startYearStr, endYearStr] = financialYear.split('-');
+        const year = parseInt(month) >= 4 ? startYearStr : `20${endYearStr}`;
+        return `${monthLabel} ${year}`;
+    }, [financialYear, month]);
 
     return (
         <div className="space-y-8">
@@ -107,29 +140,15 @@ export default function GstFilingsPage() {
                         Prepare and review your GSTR-1 and GSTR-3B reports.
                     </p>
                 </div>
-                <div className="flex items-center gap-4">
-                     <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                            "w-[280px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "MMMM yyyy") : <span>Pick a month</span>}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                        <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={(day) => day && setDate(day)}
-                            initialFocus
-                        />
-                        </PopoverContent>
-                    </Popover>
+                 <div className="flex items-center gap-2">
+                     <Select value={financialYear} onValueChange={setFinancialYear}>
+                        <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>{getFinancialYears().map(fy => <SelectItem key={fy} value={fy}>{fy}</SelectItem>)}</SelectContent>
+                    </Select>
+                     <Select value={month} onValueChange={setMonth}>
+                        <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                    </Select>
                      <Link href="/reconciliation/gstr-comparison" passHref>
                         <Button variant="outline">
                             <GitCompareArrows className="mr-2"/>
@@ -150,7 +169,7 @@ export default function GstFilingsPage() {
                 <TabsContent value="gstr-1">
                     <Card>
                         <CardHeader>
-                            <CardTitle>GSTR-1 Summary for {format(date, 'MMMM yyyy')}</CardTitle>
+                            <CardTitle>GSTR-1 Summary for {selectedPeriodLabel}</CardTitle>
                             <CardDescription>Review your outward supplies before filing. Click a row to see details.</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -193,7 +212,7 @@ export default function GstFilingsPage() {
                 <TabsContent value="gstr-3b">
                      <Card>
                         <CardHeader>
-                            <CardTitle>GSTR-3B Summary for {format(date, 'MMMM yyyy')}</CardTitle>
+                            <CardTitle>GSTR-3B Summary for {selectedPeriodLabel}</CardTitle>
                             <CardDescription>Review your monthly summary and tax computation.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
