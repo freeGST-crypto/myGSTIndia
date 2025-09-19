@@ -93,13 +93,13 @@ const PurchaseItemRow = memo(({
     openItemDialog: () => void;
 }) => {
     
-    const handleSelectChange = (itemId: string) => {
+    const handleSelectChange = useCallback((itemId: string) => {
         if (itemId === 'add-new') {
             openItemDialog();
         } else {
             handleItemChange(index, 'itemId', itemId);
         }
-    };
+    }, [index, handleItemChange, openItemDialog]);
 
     return (
         <TableRow>
@@ -226,14 +226,17 @@ export default function NewPurchasePage() {
     });
   }, [items]);
   
-  const handleVendorChange = (value: string) => {
+  const handleVendorChange = useCallback((value: string) => {
     if (value === 'add-new') {
         setIsVendorDialogOpen(true);
     } else {
         setVendor(value);
     }
-  }
+  }, []);
 
+  const openItemDialog = useCallback(() => {
+    setIsItemDialogOpen(true);
+  }, []);
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
@@ -371,7 +374,7 @@ export default function NewPurchasePage() {
                         handleRemoveItem={handleRemoveItem}
                         items={items}
                         itemsLoading={itemsLoading}
-                        openItemDialog={() => setIsItemDialogOpen(true)}
+                        openItemDialog={openItemDialog}
                     />
                 ))}
               </TableBody>

@@ -98,13 +98,13 @@ const InvoiceItemRow = memo(({
     openItemDialog: () => void;
 }) => {
     
-    const handleSelectChange = (itemId: string) => {
+    const handleSelectChange = useCallback((itemId: string) => {
         if (itemId === 'add-new') {
             openItemDialog();
         } else {
             handleItemSelection(index, itemId);
         }
-    };
+    }, [index, handleItemSelection, openItemDialog]);
     
     return (
         <TableRow>
@@ -253,14 +253,17 @@ export default function NewInvoicePage() {
     }
   }, [items]);
   
-  const handleCustomerChange = (value: string) => {
+  const handleCustomerChange = useCallback((value: string) => {
     if (value === 'add-new') {
       setIsCustomerDialogOpen(true);
     } else {
       setCustomer(value);
     }
-  };
+  }, []);
 
+  const openItemDialog = useCallback(() => {
+    setIsItemDialogOpen(true);
+  }, []);
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.taxableAmount, 0);
   const totalIgst = lineItems.reduce((acc, item) => acc + item.igst, 0);
@@ -400,7 +403,7 @@ export default function NewInvoicePage() {
                       handleRemoveItem={handleRemoveItem}
                       items={items}
                       itemsLoading={itemsLoading}
-                      openItemDialog={() => setIsItemDialogOpen(true)}
+                      openItemDialog={openItemDialog}
                   />
                 ))}
               </TableBody>
