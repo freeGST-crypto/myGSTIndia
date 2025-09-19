@@ -156,12 +156,12 @@ const allMenuItems = [
   {
     label: "Admin",
     icon: ShieldCheck,
-    roles: ['super_admin', 'professional'],
+    roles: ['super_admin'], // Corrected: only 'super_admin'
     subItems: [
-      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin', 'professional'] },
+      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin'] },
       { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin'] },
       { href: "/admin/notices", label: "Notices", icon: MailWarning, roles: ['super_admin'] },
-      { href: "/admin/users", label: "Users", icon: Users, roles: ['super_admin', 'professional'] },
+      { href: "/admin/users", label: "Users", icon: Users, roles: ['super_admin'] },
       { href: "/admin/professionals", label: "Professionals", icon: UserSquare, roles: ['super_admin'] },
       { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign, roles: ['super_admin'] },
       { href: "/admin/certification-requests", label: "Certification Requests", icon: ShieldCheck, roles: ['super_admin'] },
@@ -254,14 +254,13 @@ function filterMenuByRole(menu: any[], role: string): any[] {
         if (filteredSubItems.length > 0) {
           return { ...item, subItems: filteredSubItems };
         }
-        // If an item has no visible sub-items, only show it if it's a link itself.
-        // The Admin menu is not a link, so it will be correctly hidden.
+        // Show menu if it's a direct link even if sub-items are all filtered out
         return item.href ? { ...item, subItems: [] } : null;
       }
       
       return item;
     })
-    .filter(Boolean); // This removes the null entries
+    .filter(Boolean) as any[]; // This removes the null entries
 }
 
 export default function AppLayout({

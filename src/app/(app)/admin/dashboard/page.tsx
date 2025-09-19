@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, CalendarClock, UserSquare, BadgeDollarSign } from "lucide-react";
+import { ArrowRight, Users, CalendarClock, UserSquare, BadgeDollarSign, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
@@ -20,28 +20,40 @@ import { sampleUsersList } from "@/app/(app)/admin/users/page";
 import { sampleAppointments } from "@/app/(app)/admin/appointments/page";
 import { sampleProfessionals } from "@/app/(app)/admin/professionals/page";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useDocumentData } from "react-firebase-hooks/firestore";
 import { auth, db } from "@/lib/firebase";
 import { doc } from "firebase/firestore";
-import { Loader2 } from "lucide-react";
+import { useDocumentData } from "react-firebase-hooks/firestore";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
 export default function AdminDashboardPage() {
-  const [user] = useAuthState(auth);
-  
+  const [user, loadingAuth] = useAuthState(auth);
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, loadingUser] = useDocumentData(userDocRef);
+
   const getRole = () => {
     if (!user) return null;
     if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
-    // This is a simplification. In a real app, you'd fetch this from your DB.
-    // For this page, we primarily differentiate super_admin from professional.
-    return 'professional'; 
+    return userData?.userType || null; 
   }
   
   const userRole = getRole();
 
-  if (!user) {
+  if (loadingAuth || loadingUser) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
+  }
+
+  if (!userRole) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Access Denied</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>You do not have permission to view this page.</p>
+            </CardContent>
+        </Card>
+    );
   }
 
   const renderSuperAdminDashboard = () => {
