@@ -32,16 +32,46 @@ import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+
+const generateMonths = () => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+        const d = subMonths(now, i);
+        months.push({
+            value: format(d, 'yyyy-MM'),
+            label: format(d, 'MMMM yyyy'),
+        });
+    }
+    return months;
+};
+
 
 export default function GstFilingsPage() {
-    const [period, setPeriod] = useState("2024-05");
+    const [period, setPeriod] = useState(format(new Date(), 'yyyy-MM'));
     const { toast } = useToast();
-    const { journalVouchers } = useContext(AccountingContext)!;
+    const { journalVouchers, loading } = useContext(AccountingContext)!;
+    const months = generateMonths();
 
     const { gstr1Summary, gstr3bSummary } = useMemo(() => {
-        const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
-        const purchaseBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
-        const purchaseReturns = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+        const periodStart = startOfMonth(new Date(period));
+        const periodEnd = endOfMonth(new Date(period));
+        
+        const salesInvoices = journalVouchers.filter(v => {
+            const vDate = new Date(v.date);
+            return v.id.startsWith("JV-INV-") && vDate >= periodStart && vDate <= periodEnd;
+        });
+        
+        const purchaseBills = journalVouchers.filter(v => {
+            const vDate = new Date(v.date);
+            return v.id.startsWith("JV-BILL-") && vDate >= periodStart && vDate <= periodEnd;
+        });
+        
+        const purchaseReturns = journalVouchers.filter(v => {
+            const vDate = new Date(v.date);
+            return v.id.startsWith("JV-DN-") && vDate >= periodStart && vDate <= periodEnd;
+        });
 
         const b2bTaxableValue = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
         const b2bTaxAmount = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
@@ -66,7 +96,7 @@ export default function GstFilingsPage() {
 
         return { gstr1Summary: dynamicGstr1Summary, gstr3bSummary: dynamicGstr3bSummary };
 
-    }, [journalVouchers]);
+    }, [journalVouchers, period]);
 
 
     const handleDrillDown = (item: string) => {
@@ -91,9 +121,7 @@ export default function GstFilingsPage() {
                             <SelectValue placeholder="Select a period" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="2024-05">May 2024</SelectItem>
-                            <SelectItem value="2024-04">April 2024</SelectItem>
-                            <SelectItem value="2024-03">March 2024</SelectItem>
+                            {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                             <SelectItem value="FY-2023-24">FY 2023-24 (Annual)</SelectItem>
                         </SelectContent>
                     </Select>
@@ -117,7 +145,7 @@ export default function GstFilingsPage() {
                 <TabsContent value="gstr-1">
                     <Card>
                         <CardHeader>
-                            <CardTitle>GSTR-1 Summary for {period}</CardTitle>
+                            <CardTitle>GSTR-1 Summary for {months.find(m => m.value === period)?.label}</CardTitle>
                             <CardDescription>Review your outward supplies before filing. Click a row to see details.</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -160,7 +188,7 @@ export default function GstFilingsPage() {
                 <TabsContent value="gstr-3b">
                      <Card>
                         <CardHeader>
-                            <CardTitle>GSTR-3B Summary for {period}</CardTitle>
+                            <CardTitle>GSTR-3B Summary for {months.find(m => m.value === period)?.label}</CardTitle>
                             <CardDescription>Review your monthly summary and tax computation.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -203,6 +231,7 @@ export default function GstFilingsPage() {
                                     description="(Total Tax - Net ITC)"
                                     icon={FileText}
                                     className="max-w-sm w-full"
+                                    loading={loading}
                                 />
                             </div>
                         </CardContent>
@@ -258,6 +287,4 @@ export default function GstFilingsPage() {
             </Tabs>
         </div>
     );
-
-    
 }

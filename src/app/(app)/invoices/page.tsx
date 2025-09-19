@@ -40,13 +40,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays, isPast } from 'date-fns';
+import { format, addDays, isPast, subDays } from 'date-fns';
 import { AccountingContext } from "@/context/accounting-context";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import jsPDF from 'jspdf';
+import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 
 type Invoice = {
   id: string;
@@ -66,6 +67,7 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   // State for the quick invoice form
+  const [isQuickInvoiceOpen, setIsQuickInvoiceOpen] = useState(false);
   const [quickInvNum, setQuickInvNum] = useState("");
   const [quickCustomer, setQuickCustomer] = useState("");
   const [quickItem, setQuickItem] = useState<{ id: string, name: string, sellingPrice: number} | null>(null);
@@ -135,6 +137,7 @@ export default function InvoicesPage() {
     setQuickItem(null);
     setQuickQty(1);
     setQuickRate(0);
+    setIsQuickInvoiceOpen(false);
   }
 
   const handleQuickItemChange = (itemId: string) => {
@@ -234,6 +237,13 @@ export default function InvoicesPage() {
   const totalOutstanding = useMemo(() => invoices.reduce((acc, inv) => (inv.status === 'Pending' || inv.status === 'Overdue') ? acc + inv.amount : acc, 0), [invoices]);
   const totalOverdue = useMemo(() => invoices.reduce((acc, inv) => inv.status === 'Overdue' ? acc + inv.amount : acc, 0), [invoices]);
   const overdueCount = useMemo(() => invoices.filter(inv => inv.status === 'Overdue').length, [invoices]);
+  
+  const paidLast30Days = useMemo(() => {
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    // Placeholder logic since we don't track payments yet
+    return 0;
+  }, [journalVouchers]);
+
 
   return (
     <div className="space-y-8">
@@ -245,12 +255,10 @@ export default function InvoicesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-            <Link href="/invoices/templates" passHref>
-                <Button variant="outline">
-                    <FileCog className="mr-2"/>
-                    Templates
-                </Button>
-            </Link>
+            <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>
+                <Zap className="mr-2"/>
+                Quick Invoice
+            </Button>
             <Link href="/invoices/new" passHref>
             <Button>
                 <PlusCircle className="mr-2"/>
@@ -278,65 +286,54 @@ export default function InvoicesPage() {
         />
         <StatCard 
           title="Paid (Last 30 days)"
-          value="₹0.00"
+          value={`₹${paidLast30Days.toFixed(2)}`}
           icon={CheckCircle}
           description="From 0 invoices"
           loading={journalLoading}
         />
       </div>
 
-      <Card>
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <Zap className="text-primary" />
-                Quick Invoice
-            </CardTitle>
-            <CardDescription>
-                Create a simple invoice with just the essentials.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                 <div className="space-y-2">
-                    <Label htmlFor="quick-inv-num">Invoice #</Label>
-                    <Input id="quick-inv-num" placeholder="INV-005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
+       <Dialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Quick Invoice</DialogTitle>
+                    <DialogDescription>Create a simple invoice with just the essentials.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="quick-inv-num">Invoice #</Label>
+                        <Input id="quick-inv-num" placeholder="INV-005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="quick-customer">Customer</Label>
+                        <Select value={quickCustomer} onValueChange={setQuickCustomer} disabled={customersLoading}>
+                            <SelectTrigger id="quick-customer"><SelectValue placeholder={customersLoading ? "Loading..." : "Select customer"} /></SelectTrigger>
+                            <SelectContent>{customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="quick-item">Item</Label>
+                        <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange} disabled={itemsLoading}>
+                            <SelectTrigger id="quick-item"><SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} /></SelectTrigger>
+                            <SelectContent>{items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="quick-qty">Qty</Label>
+                            <Input id="quick-qty" type="number" placeholder="1" value={quickQty} onChange={e => setQuickQty(parseInt(e.target.value) || 1)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="quick-rate">Rate (₹)</Label>
+                            <Input id="quick-rate" type="number" placeholder="0.00" value={quickRate} onChange={e => setQuickRate(parseFloat(e.target.value) || 0)} />
+                        </div>
+                     </div>
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="quick-customer">Customer</Label>
-                    <Select value={quickCustomer} onValueChange={setQuickCustomer} disabled={customersLoading}>
-                        <SelectTrigger id="quick-customer">
-                            <SelectValue placeholder={customersLoading ? "Loading..." : "Select customer"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="quick-item">Item</Label>
-                    <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange} disabled={itemsLoading}>
-                        <SelectTrigger id="quick-item">
-                            <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="quick-qty">Qty</Label>
-                    <Input id="quick-qty" type="number" placeholder="1" value={quickQty} onChange={e => setQuickQty(parseInt(e.target.value) || 1)} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="quick-rate">Rate (₹)</Label>
-                    <Input id="quick-rate" type="number" placeholder="0.00" value={quickRate} onChange={e => setQuickRate(parseFloat(e.target.value) || 0)} />
-                </div>
-            </div>
-        </CardContent>
-        <CardContent className="flex justify-end">
-             <Button onClick={handleQuickInvoiceCreate}>Create Quick Invoice</Button>
-        </CardContent>
-      </Card>
+                <DialogFooter>
+                    <Button onClick={handleQuickInvoiceCreate}>Create Quick Invoice</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
       <Card>
         <CardHeader>

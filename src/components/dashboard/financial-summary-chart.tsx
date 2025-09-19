@@ -1,7 +1,9 @@
 
 "use client"
 
+import { useMemo, useContext } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 import {
   Card,
@@ -17,10 +19,8 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
-import { ChartConfig } from "@/components/ui/chart"
-
-const chartData: any[] = []; // Empty data
-
+import { type ChartConfig } from "@/components/ui/chart"
+import { AccountingContext } from "@/context/accounting-context";
 
 const chartConfig = {
   sales: {
@@ -38,6 +38,39 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function FinancialSummaryChart() {
+  const { journalVouchers } = useContext(AccountingContext)!;
+
+  const chartData = useMemo(() => {
+    const data: { [key: string]: { sales: number; purchases: number; month: string } } = {};
+    const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
+
+    // Initialize last 6 months
+    for (let i = 0; i < 6; i++) {
+        const month = format(addMonths(sixMonthsAgo, i), 'MMM');
+        const yearMonth = format(addMonths(sixMonthsAgo, i), 'yyyy-MM');
+        data[yearMonth] = { month, sales: 0, purchases: 0 };
+    }
+
+    journalVouchers.forEach(voucher => {
+        const voucherDate = new Date(voucher.date);
+        if (voucherDate >= sixMonthsAgo) {
+            const yearMonth = format(voucherDate, 'yyyy-MM');
+            
+            if (data[yearMonth]) {
+                if (voucher.id.startsWith("JV-INV-")) {
+                    data[yearMonth].sales += voucher.amount;
+                } else if (voucher.id.startsWith("JV-BILL-")) {
+                    data[yearMonth].purchases += voucher.amount;
+                }
+            }
+        }
+    });
+    
+    return Object.values(data).map(d => ({...d, net: d.sales - d.purchases }));
+
+  }, [journalVouchers]);
+
+
   return (
     <Card>
       <CardHeader>
@@ -54,7 +87,6 @@ export function FinancialSummaryChart() {
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) => value.slice(0, 3)}
               />
               <ChartTooltip
                 cursor={false}
