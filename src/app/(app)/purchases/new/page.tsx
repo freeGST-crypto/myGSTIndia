@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useContext, useCallback, memo } from "react";
@@ -92,7 +91,7 @@ const PurchaseItemRow = memo(({
     openItemDialog: () => void;
 }) => {
     
-    const handleSelectChange = useCallback((itemId: string) => {
+    const handleSelectChange = (itemId: string) => {
         if (itemId === 'add-new') {
             openItemDialog();
         } else {
@@ -104,7 +103,7 @@ const PurchaseItemRow = memo(({
                 onUpdate(item.id, 'hsn', selectedItem.hsn || "");
             }
         }
-    }, [items, onUpdate, openItemDialog, item.id]);
+    };
 
     return (
         <TableRow>
@@ -257,7 +256,7 @@ export default function NewPurchasePage() {
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
         { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, 
-        { account: '2010', debit: '0', credit: totalAmountPayable.toFixed(2) } 
+        { account: selectedVendor.id, debit: '0', credit: totalAmountPayable.toFixed(2) } 
     ];
 
     if (taxOnSourceAmount > 0) {
@@ -381,7 +380,7 @@ export default function NewPurchasePage() {
                         key={item.id}
                         item={item}
                         onRemove={() => handleRemoveItem(item.id)}
-                        onUpdate={(field, value) => handleItemChange(item.id, field, value)}
+                        onUpdate={handleItemChange}
                         items={items}
                         itemsLoading={itemsLoading}
                         openItemDialog={openItemDialog}

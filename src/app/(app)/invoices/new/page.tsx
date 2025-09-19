@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useContext, useEffect, useCallback, memo } from "react";
@@ -92,7 +91,7 @@ const InvoiceItemRow = memo(({
     openItemDialog: () => void;
 }) => {
     
-    const handleSelectChange = useCallback((itemId: string) => {
+    const handleSelectChange = (itemId: string) => {
         if (itemId === 'add-new') {
             openItemDialog();
         } else {
@@ -104,7 +103,7 @@ const InvoiceItemRow = memo(({
                 onUpdate(item.id, 'hsn', selectedItem.hsn || "");
             }
         }
-    }, [items, onUpdate, openItemDialog, item.id]);
+    };
     
     const taxableAmount = item.amount;
     const igst = taxableAmount * (item.taxRate / 100);
