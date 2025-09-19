@@ -239,11 +239,22 @@ export default function InvoicesPage() {
     };
     
     const handleShare = (invoice: Invoice) => {
-        const message = `Dear ${invoice.customer},\n\nHere is a reminder for your invoice:\nInvoice No: ${invoice.id}\nAmount: ₹${invoice.amount.toFixed(2)}\nDue Date: ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}\n\nPlease find the PDF attached. Thank you!\n\n- ${companyInfo.name}`;
+        // First, trigger the PDF download
+        handleDownloadPdf(invoice, true); // Pass true for silent toast
+
+        // Then, prepare and open the WhatsApp link
+        const message = `Dear ${invoice.customer},\n\nHere is a reminder for your invoice:\nInvoice No: ${invoice.id}\nAmount: ₹${invoice.amount.toFixed(2)}\nDue Date: ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}\n\nThank you!\n- ${companyInfo.name}`;
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-        // In a real app, you'd generate and attach the PDF. We simulate this by also triggering a download.
-        handleDownloadPdf(invoice);
+        
+        // Give a slight delay for the download to initiate before opening a new tab
+        setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+            toast({
+                title: "Ready to Share",
+                description: "Your PDF has been downloaded. Please attach it to your WhatsApp message.",
+                duration: 8000,
+            });
+        }, 500);
     }
     
     const companyInfo = {
@@ -256,7 +267,7 @@ export default function InvoicesPage() {
         } else if (action === 'Cancel') {
             await handleCancelInvoice(invoice.id);
         } else if (action === 'Download') {
-            handleDownloadPdf(invoice);
+            handleDownloadPdf(invoice, false);
         } else if (action === 'Share') {
             handleShare(invoice);
         } else if (action === 'Duplicate') {
@@ -283,7 +294,7 @@ export default function InvoicesPage() {
         }
     }
 
-  const handleDownloadPdf = (invoice: Invoice) => {
+  const handleDownloadPdf = (invoice: Invoice, silent: boolean = false) => {
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
@@ -427,7 +438,9 @@ export default function InvoicesPage() {
 
 
     doc.save(`Invoice_${invoice.id}.pdf`);
-    toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+    if (!silent) {
+      toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+    }
   };
 
 
