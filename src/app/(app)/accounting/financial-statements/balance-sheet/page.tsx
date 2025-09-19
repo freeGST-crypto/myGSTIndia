@@ -75,7 +75,6 @@ export default function BalanceSheetPage() {
 
     // Aggregate Liabilities and Equity
     const capitalAccount = (accountBalances['3010'] || 0);
-    // Correctly add Net Profit/Loss to Retained Earnings
     const reservesAndSurplus = (accountBalances['3020'] || 0) + netProfit;
     
     const longTermLiabilities = allAccounts
@@ -91,8 +90,6 @@ export default function BalanceSheetPage() {
     const fixedAssetsAccounts = allAccounts.filter(a => a.name.includes('Fixed Asset') || a.name.includes('Accumulated Depreciation'));
     const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc) => {
         const balance = accountBalances[acc.code] || 0;
-        // Accumulated Depreciation is a contra-asset, its balance will be negative in our logic (credit), so we add.
-        // Or if it's stored as positive, we subtract. The current logic makes it a negative asset balance.
         return sum + balance;
     }, 0);
     
@@ -104,15 +101,16 @@ export default function BalanceSheetPage() {
     
     const totalAssets = netFixedAssets + totalInvestments + totalCurrentAssets;
 
-    // Schedules
-    const depreciationSchedule = [
-        { asset: "Office Equipment", openingWdv: 0, additions: 0, depreciationRate: 20, depreciation: 5000, closingWdv: -5000 },
-    ];
+    // Schedules - now derived from data or empty
+    const depreciationSchedule: any[] = [];
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
 
-    const capitalAccounts = [
-        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: capitalAccount + reservesAndSurplus },
-    ];
+    const capitalAccounts = useMemo(() => {
+        if (journalVouchers.length === 0) return [];
+        return [
+            { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: capitalAccount + reservesAndSurplus },
+        ];
+    }, [journalVouchers, netProfit, capitalAccount, reservesAndSurplus]);
 
   return (
     <div className="space-y-8">
@@ -257,7 +255,7 @@ export default function BalanceSheetPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {depreciationSchedule.map((item) => (
+                                    {depreciationSchedule.length > 0 ? depreciationSchedule.map((item) => (
                                         <TableRow key={item.asset}>
                                             <TableCell className="font-medium">{item.asset}</TableCell>
                                             <TableCell className="text-right font-mono">{formatCurrency(item.openingWdv)}</TableCell>
@@ -266,7 +264,9 @@ export default function BalanceSheetPage() {
                                             <TableCell className="text-right font-mono">{formatCurrency(item.depreciation)}</TableCell>
                                             <TableCell className="text-right font-mono">{formatCurrency(item.closingWdv)}</TableCell>
                                         </TableRow>
-                                    ))}
+                                    )) : (
+                                        <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No depreciation data for this period.</TableCell></TableRow>
+                                    )}
                                 </TableBody>
                                 <TableFooter>
                                     <TableRow className="font-bold bg-muted/50">
@@ -292,26 +292,32 @@ export default function BalanceSheetPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow>
-                                        <TableCell className="font-medium">Opening Balance</TableCell>
-                                        {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.opening)}</TableCell>)}
-                                        <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.opening, 0))}</TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell className="font-medium">Capital Introduced</TableCell>
-                                        {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.introduced)}</TableCell>)}
-                                        <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.introduced, 0))}</TableCell>
-                                    </TableRow>
-                                     <TableRow>
-                                        <TableCell className="font-medium">Drawings</TableCell>
-                                        {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.drawings)}</TableCell>)}
-                                        <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.drawings, 0))}</TableCell>
-                                    </TableRow>
-                                     <TableRow>
-                                        <TableCell className="font-medium">Share of Profit/(Loss)</TableCell>
-                                        {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.profitShare)}</TableCell>)}
-                                        <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.profitShare, 0))}</TableCell>
-                                    </TableRow>
+                                     {capitalAccounts.length > 0 ? (
+                                        <>
+                                            <TableRow>
+                                                <TableCell className="font-medium">Opening Balance</TableCell>
+                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.opening)}</TableCell>)}
+                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.opening, 0))}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-medium">Capital Introduced</TableCell>
+                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.introduced)}</TableCell>)}
+                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.introduced, 0))}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-medium">Drawings</TableCell>
+                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.drawings)}</TableCell>)}
+                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.drawings, 0))}</TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-medium">Share of Profit/(Loss)</TableCell>
+                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.profitShare)}</TableCell>)}
+                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.profitShare, 0))}</TableCell>
+                                            </TableRow>
+                                        </>
+                                     ) : (
+                                        <TableRow><TableCell colSpan={3} className="text-center h-24 text-muted-foreground">No capital account data for this period.</TableCell></TableRow>
+                                     )}
                                 </TableBody>
                                 <TableFooter>
                                     <TableRow className="font-bold bg-muted/50">
