@@ -73,12 +73,12 @@ export default function ProfitAndLossPage() {
     const grossProfit = totalRevenue - totalCogs;
     const netProfit = grossProfit - totalOperatingExpenses;
     
-    const tradingDebits = totalCogs + (grossProfit > 0 ? grossProfit : 0);
+    const tradingDebits = totalCogs + (grossProfit >= 0 ? grossProfit : 0);
     const tradingCredits = totalRevenue + (grossProfit < 0 ? -grossProfit : 0);
     const tradingTotal = Math.max(tradingDebits, tradingCredits);
     
     const plDebits = totalOperatingExpenses + (grossProfit < 0 ? -grossProfit : 0);
-    const plCredits = (grossProfit > 0 ? grossProfit : 0) + 0; // Other income placeholder
+    const plCredits = (grossProfit >= 0 ? grossProfit : 0) + 0; // Other income placeholder
     const finalPlDebits = plDebits + (netProfit > 0 ? netProfit : 0);
     const finalPlCredits = plCredits + (netProfit < 0 ? -netProfit : 0);
     const plTotal = Math.max(finalPlDebits, finalPlCredits);
