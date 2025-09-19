@@ -152,28 +152,36 @@ export default function NewInvoicePage() {
     const currentItem = list[index] as any;
     currentItem[field] = value;
 
-    if (field === 'itemId') {
-      if (value === 'add-new') {
-        setIsItemDialogOpen(true);
-        currentItem.itemId = ""; // Reset selection
-        return;
-      }
-      const selectedItem = items.find(i => i.id === value);
-      if (selectedItem) {
-        currentItem.description = selectedItem.name;
-        currentItem.rate = selectedItem.sellingPrice || 0;
-        currentItem.hsn = selectedItem.hsn || "";
-      }
+    if (field === 'qty' || field === 'rate') {
+      currentItem.taxableAmount = (currentItem.qty || 0) * (currentItem.rate || 0);
     }
-
-    // Recalculate amounts
-    currentItem.taxableAmount = (currentItem.qty || 0) * (currentItem.rate || 0);
-    // Assuming IGST for simplicity. A real app would check buyer's state.
+    
+    // Recalculate tax
     currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
     currentItem.cgst = 0;
     currentItem.sgst = 0;
     
     setLineItems(list);
+  };
+
+  const handleItemSelection = (index: number, itemId: string) => {
+    if (itemId === 'add-new') {
+        setIsItemDialogOpen(true);
+        return;
+    }
+
+    const selectedItem = items.find(i => i.id === itemId);
+    if (selectedItem) {
+        const list = [...lineItems];
+        const currentItem = list[index];
+        currentItem.itemId = itemId;
+        currentItem.description = selectedItem.name;
+        currentItem.rate = selectedItem.sellingPrice || 0;
+        currentItem.hsn = selectedItem.hsn || "";
+        currentItem.taxableAmount = currentItem.qty * (selectedItem.sellingPrice || 0);
+        currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
+        setLineItems(list);
+    }
   };
   
   const handleCustomerChange = (value: string) => {
@@ -316,7 +324,7 @@ export default function NewInvoicePage() {
                 {lineItems.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)} value={item.itemId} disabled={itemsLoading}>
+                       <Select onValueChange={(value) => handleItemSelection(index, value)} value={item.itemId} disabled={itemsLoading}>
                           <SelectTrigger>
                             <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                           </SelectTrigger>
