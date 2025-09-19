@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -93,10 +93,19 @@ export default function JournalVoucherPage() {
         return <Loader2 className="animate-spin" />;
     }
     
-    const { journalVouchers, addJournalVoucher, updateJournalVoucher, loading } = accountingContext;
+    const { journalVouchers: allVouchers, addJournalVoucher, updateJournalVoucher, loading } = accountingContext;
+
+    const visibleJournalVouchers = useMemo(() => {
+        const reversedIds = new Set(
+            allVouchers
+                .filter(v => v.id.startsWith("JV-REV-"))
+                .map(v => v.id.replace("JV-REV-", ""))
+        );
+        return allVouchers.filter(v => !reversedIds.has(v.id));
+    }, [allVouchers]);
 
     const handleDeleteJournalVoucher = async (voucherId: string) => {
-        const originalVoucher = journalVouchers.find(v => v.id === voucherId);
+        const originalVoucher = allVouchers.find(v => v.id === voucherId);
 
         if (!originalVoucher) {
             toast({ variant: "destructive", title: "Error", description: "Original journal voucher not found." });
@@ -109,8 +118,9 @@ export default function JournalVoucherPage() {
             credit: line.debit,
         }));
         
-        const deletionVoucher = {
-            id: `JV-DEL-${voucherId}`,
+        const reversalVoucher = {
+            id: `JV-REV-${voucherId}-${Date.now()}`,
+            reverses: voucherId,
             date: new Date().toISOString().split('T')[0],
             narration: `Reversal of Voucher #${voucherId}`,
             lines: reversalLines,
@@ -118,7 +128,7 @@ export default function JournalVoucherPage() {
         };
 
         try {
-            await addJournalVoucher(deletionVoucher);
+            await addJournalVoucher(reversalVoucher);
             toast({ title: "Voucher Reversed", description: `A reversing entry for voucher #${voucherId} has been created.` });
         } catch (e: any) {
             toast({ variant: "destructive", title: "Reversal Failed", description: e.message });
@@ -127,11 +137,22 @@ export default function JournalVoucherPage() {
 
     const handleVoucherAction = (action: string, voucher: JournalVoucher) => {
         if (action === 'Delete') {
+             if (voucher.id.startsWith("JV-REV-")) {
+                toast({ variant: "destructive", title: "Cannot Delete", description: "This is already a reversal entry and cannot be deleted." });
+                return;
+            }
             handleDeleteJournalVoucher(voucher.id);
         } else if (action === 'View') {
             setSelectedVoucher(voucher);
         } else if (action === 'Edit') {
-            setEditingVoucher(voucher);
+             if (voucher.id.startsWith("JV-REV-")) {
+                toast({ variant: "destructive", title: "Cannot Edit", description: "Reversal entries cannot be edited." });
+                return;
+            }
+            const originalVoucher = allVouchers.find(v => v.id === voucher.id);
+            if (originalVoucher) {
+              setEditingVoucher(originalVoucher);
+            }
         } else {
             toast({
                 title: `${action} Voucher`,
@@ -195,17 +216,15 @@ export default function JournalVoucherPage() {
 
         try {
             if (editingVoucher) {
-                // Update existing voucher
                 await updateJournalVoucher(editingVoucher.id, voucherData);
                 toast({
                     title: "Voucher Updated",
                     description: "Your journal voucher has been updated successfully."
                 });
             } else {
-                 // Create new voucher
                 const newVoucher = {
                     ...voucherData,
-                    id: `JV-${(journalVouchers.length + 1).toString().padStart(3, '0')}`,
+                    id: `JV-${Date.now()}`,
                 };
                 await addJournalVoucher(newVoucher);
                 toast({
@@ -344,7 +363,7 @@ export default function JournalVoucherPage() {
         <CardHeader>
           <CardTitle>Journal Voucher List</CardTitle>
           <CardDescription>
-            A list of all manual journal entries.
+            A list of all manual journal entries. Reversed entries are hidden from this list.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -360,7 +379,7 @@ export default function JournalVoucherPage() {
             </TableHeader>
             <TableBody>
               {loading && <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>}
-              {journalVouchers.map((voucher) => (
+              {visibleJournalVouchers.map((voucher) => (
                 <TableRow key={voucher.id}>
                   <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell className="font-medium">{voucher.id}</TableCell>
@@ -385,7 +404,7 @@ export default function JournalVoucherPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onSelect={() => handleVoucherAction("Delete", voucher)}>
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          Reverse / Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
