@@ -37,8 +37,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 
-const sampleUsers: any[] = [];
+const sampleUsersList: any[] = [];
 
 type User = {
     id: string;
@@ -61,7 +63,7 @@ type UserRole = "Super Admin" | "Professional";
 
 export default function UserManagementPage() {
   const { toast } = useToast();
-  const [users, setUsers] = useState(sampleUsers);
+  const [users, setUsers] = useState(sampleUsersList);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole>("Super Admin");
 
@@ -77,6 +79,26 @@ export default function UserManagementPage() {
       const user = users.find(u => u.id === userId);
       setSelectedUser(user || null);
   }
+
+  const handleExport = () => {
+    const dataToExport = users.map(user => ({
+      Name: user.name,
+      Email: user.email,
+      Phone: user.phone,
+      Role: user.role,
+      GSTIN: user.gstin,
+      PAN: user.pan,
+      Status: user.status,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+    XLSX.writeFile(workbook, `Users_Export_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    toast({
+        title: "Export Successful",
+        description: "The user list has been exported to an Excel file."
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -124,7 +146,7 @@ export default function UserManagementPage() {
                   className="pl-8 sm:w-full"
                 />
               </div>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleExport}>
                 <FileSpreadsheet className="mr-2" />
                 Export to CSV
               </Button>
@@ -228,7 +250,9 @@ export default function UserManagementPage() {
                     <Input placeholder="State" defaultValue={selectedUser.address.state}/>
                     <Input placeholder="Pincode" defaultValue={selectedUser.address.pincode}/>
                 </div>
-                <Button className="w-full">Save Changes</Button>
+                <Button className="w-full" onClick={() => toast({ title: "User Updated", description: "User details have been saved."})}>
+                    Save Changes
+                </Button>
             </CardContent>
           )}
         </Card>

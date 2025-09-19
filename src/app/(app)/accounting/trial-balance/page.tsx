@@ -50,6 +50,7 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { collection, query, where } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import * as XLSX from 'xlsx';
 
 
 export default function TrialBalancePage() {
@@ -61,7 +62,6 @@ export default function TrialBalancePage() {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [isMismatchDialogOpen, setIsMismatchDialogOpen] = useState(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-    const [uploadDate, setUploadDate] = useState<Date | undefined>(new Date());
     const [uploadFile, setUploadFile] = useState<File | null>(null);
 
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
@@ -137,27 +137,23 @@ export default function TrialBalancePage() {
         router.push(`/accounting/ledgers?account=${code}`);
     }
 
-    const handleVerifyPost = (entry: any) => {
-        toast({
-            title: "Verification Action",
-            description: `You have clicked 'Rectify' for the entry: ${entry.account}. A modal would open here to correct this posting.`,
-        });
+    const handleRectifyPost = () => {
+        router.push('/accounting/journal');
+        setIsMismatchDialogOpen(false);
     }
     
     const handleFileUpload = () => {
-        if (!uploadFile || !uploadDate) {
-            toast({ variant: "destructive", title: "Missing Information", description: "Please select a file and a date."});
+        if (!uploadFile) {
+            toast({ variant: "destructive", title: "Missing Information", description: "Please select a file to upload."});
             return;
         }
 
         console.log("Simulating file upload...");
-        console.log("Date:", uploadDate);
         console.log("File Name:", uploadFile.name);
-        console.log("File Size:", uploadFile.size);
 
         toast({
-            title: "Upload Successful",
-            description: `Financial reports will now be generated based on the uploaded Trial Balance as on ${format(uploadDate, "PPP")}. (Simulation)`,
+            title: "Upload Simulated",
+            description: `File '${uploadFile.name}' processed. In a real app, this would update your financial data.`,
         });
         setIsUploadDialogOpen(false);
     }
@@ -175,6 +171,38 @@ export default function TrialBalancePage() {
         document.body.removeChild(link);
         toast({ title: "Template Downloaded", description: "Trial Balance CSV template has been downloaded." });
     }
+
+    const handleExportCsv = () => {
+        const dataToExport = trialBalanceData.map(item => ({
+            'Account Code': item.code,
+            'Account Name': item.account,
+            'Debit (₹)': item.debit.toFixed(2),
+            'Credit (₹)': item.credit.toFixed(2),
+        }));
+
+        if (Math.abs(difference) > 0.01) {
+            dataToExport.push({
+                 'Account Code': suspenseEntry.code,
+                'Account Name': suspenseEntry.account,
+                'Debit (₹)': suspenseEntry.debit.toFixed(2),
+                'Credit (₹)': suspenseEntry.credit.toFixed(2),
+            });
+        }
+        
+        const totalRow = {
+            'Account Code': '',
+            'Account Name': 'Total',
+            'Debit (₹)': (totalDebits + (suspenseEntry.debit || 0)).toFixed(2),
+            'Credit (₹)': (totalCredits + (suspenseEntry.credit || 0)).toFixed(2),
+        };
+        dataToExport.push(totalRow);
+        
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Trial Balance");
+        XLSX.writeFile(workbook, `Trial_Balance_${format(date || new Date(), 'yyyy-MM-dd')}.xlsx`);
+        toast({ title: "Export Successful", description: "Trial Balance has been exported to Excel." });
+    };
 
 
   return (
@@ -198,7 +226,7 @@ export default function TrialBalancePage() {
                     <Upload className="mr-2 h-4 w-4" />
                     Upload CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleExportCsv}>
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Export CSV
                 </DropdownMenuItem>
@@ -322,7 +350,7 @@ export default function TrialBalancePage() {
                             <TableCell className="text-right font-mono">{suspenseEntry.debit > 0 ? suspenseEntry.debit.toFixed(2) : "-"}</TableCell>
                             <TableCell className="text-right font-mono">{suspenseEntry.credit > 0 ? suspenseEntry.credit.toFixed(2) : "-"}</TableCell>
                             <TableCell className="text-right">
-                                <Button size="sm" onClick={() => handleVerifyPost(suspenseEntry)}>Rectify</Button>
+                                <Button size="sm" onClick={handleRectifyPost}>Rectify</Button>
                             </TableCell>
                         </TableRow>
                     </TableBody>
@@ -343,26 +371,6 @@ export default function TrialBalancePage() {
                 </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="tb-date">Trial Balance Date</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !uploadDate && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {uploadDate ? format(uploadDate, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={uploadDate} onSelect={setUploadDate} initialFocus />
-                        </PopoverContent>
-                    </Popover>
-                </div>
                  <div className="space-y-2">
                     <Label htmlFor="tb-file">CSV File</Label>
                     <Input id="tb-file" type="file" accept=".csv" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />

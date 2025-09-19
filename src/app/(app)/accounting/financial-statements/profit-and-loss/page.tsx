@@ -27,6 +27,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useContext, useMemo } from "react";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from "date-fns";
+
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
 
 const formatCurrency = (value: number) => {
     // A value of -0.000001 should be 0.00, not -0.00
@@ -90,6 +99,100 @@ export default function ProfitAndLossPage() {
     const finalPlCredits = plCreditSideTotal + (netProfit < 0 ? -netProfit : 0);
     const plTotal = Math.max(finalPlDebits, finalPlCredits);
 
+    const exportPdf = () => {
+        const doc = new jsPDF();
+        const date = new Date();
+        
+        doc.setFontSize(18);
+        doc.text("Trading and Profit & Loss Account", 105, 22, { align: 'center' });
+        doc.setFontSize(11);
+        doc.text(`For the period from 01-Apr-${date.getFullYear()-1} to 31-Mar-${date.getFullYear()}`, 105, 29, { align: 'center' });
+
+        // Trading Account
+        doc.setFontSize(14);
+        doc.text("Trading Account", 105, 45, { align: 'center'});
+        (doc as any).autoTable({
+            startY: 50,
+            body: [
+                [
+                    { content: "Particulars", styles: { halign: 'left', fontStyle: 'bold' } }, 
+                    { content: "Amount (₹)", styles: { halign: 'right', fontStyle: 'bold' } }, 
+                    { content: "Particulars", styles: { halign: 'left', fontStyle: 'bold' } }, 
+                    { content: "Amount (₹)", styles: { halign: 'right', fontStyle: 'bold' } }
+                ],
+                [
+                    "To Purchases (COGS)", 
+                    { content: formatCurrency(totalCogs), styles: { halign: 'right' } },
+                    "By Sales Revenue", 
+                    { content: formatCurrency(totalRevenue), styles: { halign: 'right' } }
+                ],
+                 [
+                    grossProfit >= 0 ? "To Gross Profit c/d" : "", 
+                    { content: grossProfit >= 0 ? formatCurrency(grossProfit) : "", styles: { halign: 'right' } },
+                    grossProfit < 0 ? "By Gross Loss c/d" : "", 
+                    { content: grossProfit < 0 ? formatCurrency(-grossProfit) : "", styles: { halign: 'right' } }
+                ],
+                 [
+                    { content: "Total", styles: { fontStyle: 'bold' } }, 
+                    { content: formatCurrency(tradingTotal), styles: { halign: 'right', fontStyle: 'bold' } },
+                    { content: "Total", styles: { fontStyle: 'bold' } }, 
+                    { content: formatCurrency(tradingTotal), styles: { halign: 'right', fontStyle: 'bold' } }
+                ],
+            ],
+            theme: 'grid',
+            styles: { fontSize: 10 },
+        });
+
+        // Profit & Loss Account
+        doc.setFontSize(14);
+        doc.text("Profit & Loss Account", 105, (doc as any).lastAutoTable.finalY + 15, { align: 'center'});
+        const plBody = [
+            ...operatingExpenses.map(acc => ([
+                `To ${acc.name}`,
+                { content: formatCurrency(accountBalances[acc.code] || 0), styles: { halign: 'right' } },
+                "",
+                ""
+            ])),
+        ];
+        if (grossProfit < 0) {
+            plBody.unshift(["To Gross Loss b/d", { content: formatCurrency(-grossProfit), styles: { halign: 'right' }}, "", ""]);
+        }
+        if (netProfit >= 0) {
+            plBody.push(["To Net Profit", { content: formatCurrency(netProfit), styles: { halign: 'right' }}, "", ""]);
+        }
+
+        const plCreditBody = [];
+        if (grossProfit >= 0) {
+            plCreditBody.push(["", "", "By Gross Profit b/d", { content: formatCurrency(grossProfit), styles: { halign: 'right' }}]);
+        }
+         plCreditBody.push(["", "", "By Other Income", { content: formatCurrency(0), styles: { halign: 'right' }}]);
+        if (netProfit < 0) {
+            plCreditBody.push(["", "", "By Net Loss", { content: formatCurrency(-netProfit), styles: { halign: 'right' }}]);
+        }
+        
+        const mergedBody = plBody.map((row, i) => [...row, ...(plCreditBody[i] || ["", ""])]);
+
+
+        (doc as any).autoTable({
+             startY: (doc as any).lastAutoTable.finalY + 20,
+             body: [
+                 ...mergedBody,
+                 [
+                    { content: "Total", styles: { fontStyle: 'bold' } }, 
+                    { content: formatCurrency(plTotal), styles: { halign: 'right', fontStyle: 'bold' } },
+                    { content: "Total", styles: { fontStyle: 'bold' } }, 
+                    { content: formatCurrency(plTotal), styles: { halign: 'right', fontStyle: 'bold' } }
+                ],
+             ],
+             theme: 'grid',
+             styles: { fontSize: 10 },
+        });
+
+
+        doc.save(`P&L_Report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+        toast({ title: "Export Successful", description: "Your P&L report has been exported as a PDF." });
+    }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -99,7 +202,7 @@ export default function ProfitAndLossPage() {
             Summary of revenues, costs, and expenses in a horizontal T-form.
           </p>
         </div>
-        <Button onClick={() => toast({ title: "Exporting PDF", description: "Your P&L report is being generated."})}>
+        <Button onClick={exportPdf}>
           <FileDown className="mr-2"/>
           Export PDF
         </Button>

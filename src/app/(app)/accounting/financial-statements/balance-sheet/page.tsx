@@ -34,6 +34,14 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { collection, query, where } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
 
 const formatCurrency = (value: number) => {
     // A value of -0.000001 should be 0.00, not -0.00
@@ -69,12 +77,11 @@ export default function BalanceSheetPage() {
             });
         });
         
-        // Invert balance for liability/equity/revenue accounts so credit balances are positive
         const allDynamicAccounts = [...allAccounts, ...customers.map(c => ({ code: c.id, name: c.name, type: "Asset"}))];
         Object.keys(balances).forEach(key => {
             const accDetails = allDynamicAccounts.find(a => a.code === key);
             if (accDetails && (accDetails.type === "Liability" || accDetails.type === "Equity" || accDetails.type === "Revenue")) {
-                balances[key] = -balances[key];
+                if(balances[key] !== 0) balances[key] = -balances[key];
             }
         });
         
@@ -114,7 +121,7 @@ export default function BalanceSheetPage() {
     const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
     const totalReceivables = customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
-    const currentAssetsAccounts = allAccounts.filter(a => a.type === 'Asset' && !fixedAssetsAccounts.some(fa => fa.code === a.code) && !investmentAccounts.some(ia => ia.code === a.code) && a.code !== '1210');
+    const currentAssetsAccounts = allAccounts.filter(a => a.type === 'Asset' && !fixedAssetsAccounts.some(fa => fa.code === a.code) && !investmentAccounts.some(ia => ia.code === a.code) && !customers.some(c => c.id === a.code));
     const totalOtherCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
 
     const totalAssets = netFixedAssets + totalInvestments + totalReceivables + totalOtherCurrentAssets;
@@ -129,6 +136,63 @@ export default function BalanceSheetPage() {
             { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: capitalAccount + reservesAndSurplus },
         ];
     }, [journalVouchers, netProfit, capitalAccount, reservesAndSurplus]);
+    
+    const exportPdf = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("Balance Sheet", 14, 22);
+        doc.setFontSize(11);
+        doc.text(`As on ${date ? format(date, "PPP") : 'selected date'}`, 14, 29);
+
+        // Liabilities and Equity
+        const liabilitiesData = [
+            ["Capital & Reserves", ""],
+            ["  Capital Account", formatCurrency(capitalAccount)],
+            ["  Reserves & Surplus (incl. P&L)", formatCurrency(reservesAndSurplus)],
+            ["Long-Term Liabilities", ""],
+            ["  Long-Term Loans", formatCurrency(longTermLiabilities)],
+            ["Current Liabilities", ""],
+            ...currentLiabilitiesAccounts.map(acc => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
+        ];
+        (doc as any).autoTable({
+            head: [['Liabilities & Equity', 'Amount (₹)']],
+            body: liabilitiesData,
+            startY: 40,
+            theme: 'striped',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+            foot: [
+                ['Total', formatCurrency(totalEquityAndLiabilities)]
+            ],
+            footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] }
+        });
+
+        // Assets
+        const assetsData = [
+            ["Fixed Assets", ""],
+            ...fixedAssetsAccounts.map(acc => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
+            ["Net Fixed Assets", formatCurrency(netFixedAssets)],
+            ["Investments", formatCurrency(totalInvestments)],
+            ["Current Assets", ""],
+            ["  Accounts Receivable", formatCurrency(totalReceivables)],
+            ...currentAssetsAccounts.map(acc => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
+        ];
+         (doc as any).autoTable({
+            head: [['Assets', 'Amount (₹)']],
+            body: assetsData,
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            theme: 'striped',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+            foot: [
+                ['Total', formatCurrency(totalAssets)]
+            ],
+            footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] }
+        });
+
+        doc.save(`Balance_Sheet_${format(date || new Date(), "yyyy-MM-dd")}.pdf`);
+        toast({ title: "Export Successful", description: "Your Balance Sheet has been exported as a PDF." });
+    }
 
   return (
     <div className="space-y-8">
@@ -139,7 +203,7 @@ export default function BalanceSheetPage() {
             A snapshot of your company's financial health.
           </p>
         </div>
-        <Button onClick={() => toast({ title: "Exporting PDF", description: "Your Balance Sheet is being generated."})}>
+        <Button onClick={exportPdf}>
           <FileDown className="mr-2"/>
           Export PDF
         </Button>
