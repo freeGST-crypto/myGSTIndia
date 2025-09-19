@@ -52,10 +52,6 @@ export default function BalanceSheetPage() {
                 if (balances.hasOwnProperty(line.account)) {
                     const debit = parseFloat(line.debit);
                     const credit = parseFloat(line.credit);
-                     // For Assets & Expenses, Balance = Dr - Cr
-                    // For Liabilities, Equity, Revenue, Balance = Cr - Dr
-                    // In our system, we store balances from a debit-positive perspective for assets/expenses
-                    // and credit-positive for liabilities/equity/revenue
                     const accountType = allAccounts.find(a => a.code === line.account)?.type;
                      if (accountType === 'Asset' || accountType === 'Expense') {
                         balances[line.account] += debit - credit;
@@ -69,12 +65,13 @@ export default function BalanceSheetPage() {
     }, [journalVouchers]);
     
     // Calculate P&L for Retained Earnings
-    const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
-    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
-    
-    const totalRevenue = revenueAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
-    const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
-    const netProfit = totalRevenue - totalExpenses;
+    const netProfit = useMemo(() => {
+        const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue').map(a => a.code);
+        const expenseAccounts = allAccounts.filter(a => a.type === 'Expense').map(a => a.code);
+        const totalRevenue = revenueAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
+        const totalExpenses = expenseAccounts.reduce((sum, code) => sum + (accountBalances[code] || 0), 0);
+        return totalRevenue - totalExpenses;
+    }, [accountBalances]);
 
 
     const data = useMemo(() => {
@@ -121,7 +118,7 @@ export default function BalanceSheetPage() {
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
 
     const capitalAccounts = [
-        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: data.equityAndLiabilities.capitalAccount + data.equityAndLiabilities.reservesAndSurplus },
+        { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: (accountBalances['3010'] || 0) + (accountBalances['3020'] || 0) + netProfit },
     ];
 
 

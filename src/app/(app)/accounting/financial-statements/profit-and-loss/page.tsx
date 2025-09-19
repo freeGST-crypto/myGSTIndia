@@ -101,9 +101,9 @@ export default function ProfitAndLossPage() {
     const tradingTotal = Math.max(tradingDebits + (grossProfit > 0 ? grossProfit : 0), tradingCredits + (grossProfit < 0 ? -grossProfit : 0));
 
     const plDebits = Object.values(data.operatingExpenses).reduce((sum, val) => sum + val, 0);
-    const plCredits = grossProfit + data.revenue.otherIncome;
-    const netProfit = plCredits - plDebits;
-    const plTotal = Math.max(plDebits + (netProfit > 0 ? netProfit : 0), plCredits + (netProfit < 0 ? -netProfit : 0));
+    const plCredits = (grossProfit > 0 ? grossProfit : 0) + data.revenue.otherIncome;
+    const netProfit = plCredits - (plDebits + (grossProfit < 0 ? -grossProfit : 0));
+    const plTotal = Math.max((plDebits + (grossProfit < 0 ? -grossProfit: 0)) + (netProfit > 0 ? netProfit : 0), plCredits + (netProfit < 0 ? -netProfit : 0));
 
   return (
     <div className="space-y-8">
