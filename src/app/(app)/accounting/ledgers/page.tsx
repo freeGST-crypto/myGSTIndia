@@ -59,6 +59,7 @@ export default function LedgersPage() {
         let totalCredits = 0;
 
         const entries: LedgerEntry[] = journalVouchers
+            .filter(voucher => voucher && voucher.id) // Ensure voucher and voucher.id exist
             .flatMap(voucher => 
                 voucher.lines
                     .filter(line => line.account === selectedAccount)
