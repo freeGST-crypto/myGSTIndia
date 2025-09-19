@@ -110,6 +110,11 @@ export default function NewInvoicePage() {
     currentItem[field] = value;
 
     if (field === 'itemId') {
+      if (value === 'add-new') {
+        setIsItemDialogOpen(true);
+        currentItem.itemId = ""; // Reset selection
+        return;
+      }
       const selectedItem = items.find(i => i.id === value);
       if (selectedItem) {
         currentItem.description = selectedItem.name;
@@ -127,6 +132,15 @@ export default function NewInvoicePage() {
     
     setLineItems(list);
   };
+  
+  const handleCustomerChange = (value: string) => {
+    if (value === 'add-new') {
+      setIsCustomerDialogOpen(true);
+    } else {
+      setCustomer(value);
+    }
+  };
+
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.taxableAmount, 0);
   const totalIgst = lineItems.reduce((acc, item) => acc + item.igst, 0);
@@ -191,21 +205,24 @@ export default function NewInvoicePage() {
           <div className="grid md:grid-cols-3 gap-6">
              <div className="space-y-2">
               <Label>Bill To</Label>
-              <div className="flex gap-2">
-                <Select onValueChange={setCustomer} disabled={customersLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}><PlusCircle/></Button>
-              </div>
+               <Select onValueChange={handleCustomerChange} value={customer} disabled={customersLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                  <Separator />
+                  <SelectItem value="add-new" className="text-primary focus:text-primary">
+                    <div className="flex items-center gap-2">
+                      <PlusCircle className="h-4 w-4" /> Add New Customer
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-no">Invoice Number</Label>
@@ -255,12 +272,18 @@ export default function NewInvoicePage() {
                 {lineItems.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)} disabled={itemsLoading}>
+                       <Select onValueChange={(value) => handleItemChange(index, "itemId", value)} value={item.itemId} disabled={itemsLoading}>
                           <SelectTrigger>
                             <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                           </SelectTrigger>
                           <SelectContent>
                             {items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                            <Separator />
+                            <SelectItem value="add-new" className="text-primary focus:text-primary">
+                               <div className="flex items-center gap-2">
+                                <PlusCircle className="h-4 w-4" /> Add New Item
+                               </div>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                     </TableCell>
@@ -284,10 +307,6 @@ export default function NewInvoicePage() {
                 <Button variant="outline" size="sm" onClick={handleAddItem}>
                 <PlusCircle className="mr-2" />
                 Add Row
-                </Button>
-                 <Button variant="outline" size="sm" onClick={() => setIsItemDialogOpen(true)}>
-                <PlusCircle className="mr-2" />
-                Add New Item
                 </Button>
             </div>
           </div>
