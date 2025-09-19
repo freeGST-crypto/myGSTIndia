@@ -59,19 +59,18 @@ export default function DebitNotesPage() {
     const allDebitNotes = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
     const voidedDebitNoteIds = new Set(
         journalVouchers
-            .filter(v => v.id.startsWith("JV-VOID-DN-"))
-            .map(v => v.id.replace("JV-VOID-", ""))
+            .filter(v => v.reverses?.startsWith("JV-DN-"))
+            .map(v => v.reverses)
     );
 
     return allDebitNotes
         .map(v => {
-            const debitNoteId = v.id.replace("JV-", "");
-            const isVoided = voidedDebitNoteIds.has(debitNoteId);
+            const isVoided = voidedDebitNoteIds.has(v.id);
             const vendor = v.narration.split(" issued to ")[1]?.split(" against Bill #")[0] || "N/A";
             const originalPurchase = v.narration.split(" against Bill #")[1] || "N/A";
 
             return {
-                id: debitNoteId,
+                id: v.id.replace("JV-", ""),
                 vendor,
                 date: v.date,
                 originalPurchase,
@@ -109,7 +108,8 @@ export default function DebitNotesPage() {
     }));
 
     const voidVoucher = {
-        id: `JV-VOID-${debitNoteId}`,
+        id: `JV-VOID-DN-${Date.now()}`,
+        reverses: originalVoucherId,
         date: new Date().toISOString().split('T')[0],
         narration: `Voiding of Debit Note #${debitNoteId}`,
         lines: reversalLines,

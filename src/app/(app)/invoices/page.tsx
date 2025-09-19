@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays } from 'date-fns';
+import { format, addDays, isPast } from 'date-fns';
 import { AccountingContext } from "@/context/accounting-context";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
@@ -80,25 +80,34 @@ export default function InvoicesPage() {
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
-  const invoices = useMemo(() => {
+  const invoices: Invoice[] = useMemo(() => {
     const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
     const cancelledInvoiceIds = new Set(
         journalVouchers
-            .filter(v => v.id.startsWith("JV-CNL-"))
-            .map(v => v.id.replace("JV-CNL-", "INV-"))
+            .filter(v => v.reverses?.startsWith("JV-INV-"))
+            .map(v => v.reverses)
     );
 
     return salesInvoices
         .map(v => {
-            const invoiceId = v.id.replace("JV-", "");
-            const isCancelled = cancelledInvoiceIds.has(invoiceId);
+            const isCancelled = cancelledInvoiceIds.has(v.id);
+            const dueDate = addDays(new Date(v.date), 30);
+            const isOverdue = !isCancelled && isPast(dueDate);
+            
+            let status = "Pending";
+            if (isCancelled) {
+                status = "Cancelled";
+            } else if (isOverdue) {
+                status = "Overdue";
+            }
+            
             return {
-                id: invoiceId,
+                id: v.id.replace("JV-", ""),
                 customer: v.narration.replace("Sale to ", "").split(" via")[0],
                 date: v.date,
-                dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
+                dueDate: format(dueDate, 'yyyy-MM-dd'),
                 amount: v.amount,
-                status: isCancelled ? "Cancelled" : "Pending", // Status logic now includes cancelled
+                status: status,
             }
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -153,7 +162,8 @@ export default function InvoicesPage() {
         }));
 
         const cancellationVoucher = {
-            id: `JV-CNL-${invoiceId.replace("INV-","")}`,
+            id: `JV-CNL-${Date.now()}`,
+            reverses: originalVoucherId,
             date: new Date().toISOString().split('T')[0],
             narration: `Cancellation of Invoice #${invoiceId}`,
             lines: reversalLines,
@@ -221,7 +231,7 @@ export default function InvoicesPage() {
     );
   }, [invoices, searchTerm]);
   
-  const totalOutstanding = useMemo(() => invoices.reduce((acc, inv) => inv.status === 'Pending' ? acc + inv.amount : acc, 0), [invoices]);
+  const totalOutstanding = useMemo(() => invoices.reduce((acc, inv) => (inv.status === 'Pending' || inv.status === 'Overdue') ? acc + inv.amount : acc, 0), [invoices]);
   const totalOverdue = useMemo(() => invoices.reduce((acc, inv) => inv.status === 'Overdue' ? acc + inv.amount : acc, 0), [invoices]);
   const overdueCount = useMemo(() => invoices.filter(inv => inv.status === 'Overdue').length, [invoices]);
 

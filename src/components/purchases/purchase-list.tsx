@@ -38,7 +38,7 @@ import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCi
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
 import { AccountingContext } from "@/context/accounting-context";
-import { format, addDays } from "date-fns";
+import { format, addDays, isPast } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 type Purchase = {
@@ -60,21 +60,30 @@ export default function PurchaseList() {
     const allBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
     const deletedBillIds = new Set(
         journalVouchers
-            .filter(v => v.id.startsWith("JV-DEL-"))
-            .map(v => v.id.replace("JV-DEL-", ""))
+            .filter(v => v.reverses?.startsWith("JV-BILL-"))
+            .map(v => v.reverses)
     );
     
     return allBills
         .map(v => {
-            const billId = v.id.replace("JV-", "");
-            const isDeleted = deletedBillIds.has(billId);
+            const isDeleted = deletedBillIds.has(v.id);
+            const dueDate = addDays(new Date(v.date), 30);
+            const isOverdue = !isDeleted && isPast(dueDate);
+
+            let status = "Pending";
+            if (isDeleted) {
+                status = "Deleted";
+            } else if (isOverdue) {
+                status = "Overdue";
+            }
+            
             return {
-                id: billId,
+                id: v.id.replace("JV-", ""),
                 vendor: v.narration.replace("Purchase from ", "").split(" against")[0],
                 date: v.date,
-                dueDate: format(addDays(new Date(v.date), 30), 'yyyy-MM-dd'),
+                dueDate: format(dueDate, 'yyyy-MM-dd'),
                 amount: v.amount,
-                status: isDeleted ? "Deleted" : "Pending",
+                status: status,
             }
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -96,7 +105,8 @@ export default function PurchaseList() {
     }));
 
     const deletionVoucher = {
-        id: `JV-DEL-${billId}`,
+        id: `JV-DEL-${Date.now()}`,
+        reverses: originalVoucherId,
         date: new Date().toISOString().split('T')[0],
         narration: `Deletion of Purchase Bill #${billId}`,
         lines: reversalLines,
@@ -148,7 +158,7 @@ export default function PurchaseList() {
     );
   }, [purchases, searchTerm]);
 
-  const totalPayables = useMemo(() => purchases.reduce((acc, p) => p.status === 'Pending' ? acc + p.amount : acc, 0), [purchases]);
+  const totalPayables = useMemo(() => purchases.reduce((acc, p) => (p.status === 'Pending' || p.status === 'Overdue') ? acc + p.amount : acc, 0), [purchases]);
   const totalOverdue = useMemo(() => purchases.reduce((acc, p) => p.status === 'Overdue' ? acc + p.amount : acc, 0), [purchases]);
   const overdueCount = useMemo(() => purchases.filter(p => p.status === 'Overdue').length, [purchases]);
 

@@ -59,19 +59,18 @@ export default function CreditNotesPage() {
     const allCreditNotes = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
     const voidedCreditNoteIds = new Set(
         journalVouchers
-            .filter(v => v.id.startsWith("JV-VOID-CN-"))
-            .map(v => v.id.replace("JV-VOID-", ""))
+            .filter(v => v.reverses?.startsWith("JV-CN-"))
+            .map(v => v.reverses)
     );
     
     return allCreditNotes
         .map(v => {
-            const creditNoteId = v.id.replace("JV-", "");
-            const isVoided = voidedCreditNoteIds.has(creditNoteId);
+            const isVoided = voidedCreditNoteIds.has(v.id);
             const customer = v.narration.split(" issued to ")[1]?.split(" against ")[0] || "N/A";
             const originalInvoice = v.narration.split(" against Invoice #")[1] || "N/A";
 
             return {
-                id: creditNoteId,
+                id: v.id.replace("JV-", ""),
                 customer,
                 date: v.date,
                 originalInvoice,
@@ -108,7 +107,8 @@ export default function CreditNotesPage() {
     }));
 
     const voidVoucher = {
-        id: `JV-VOID-${creditNoteId}`,
+        id: `JV-VOID-CN-${Date.now()}`,
+        reverses: originalVoucherId,
         date: new Date().toISOString().split('T')[0],
         narration: `Voiding of Credit Note #${creditNoteId}`,
         lines: reversalLines,

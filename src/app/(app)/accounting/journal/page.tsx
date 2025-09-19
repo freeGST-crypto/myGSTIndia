@@ -96,10 +96,13 @@ export default function JournalVoucherPage() {
     const { journalVouchers: allVouchers, addJournalVoucher, updateJournalVoucher, loading } = accountingContext;
 
     const visibleJournalVouchers = useMemo(() => {
-        const reversedIds = new Set(
-            allVouchers.filter(v => v.reverses).map(v => v.reverses)
-        );
-        return allVouchers.filter(v => !reversedIds.has(v.id) && !v.reverses);
+      const reversedIds = new Set(
+        allVouchers
+          .filter(v => v.reverses)
+          .map(v => v.reverses)
+      );
+
+      return allVouchers.filter(v => !reversedIds.has(v.id) && !v.reverses);
     }, [allVouchers]);
 
     const handleDeleteJournalVoucher = async (voucherId: string) => {
@@ -117,8 +120,8 @@ export default function JournalVoucherPage() {
         }));
         
         const reversalVoucher = {
-            id: `JV-REV-${Date.now()}`, // Generate a unique ID
-            reverses: voucherId, // Keep track of the voucher being reversed
+            id: `JV-REV-${Date.now()}`,
+            reverses: voucherId,
             date: new Date().toISOString().split('T')[0],
             narration: `Reversal of Voucher #${voucherId}`,
             lines: reversalLines,
