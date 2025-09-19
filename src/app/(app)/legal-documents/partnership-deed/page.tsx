@@ -47,7 +47,7 @@ const partnerSchema = z.object({
     age: z.coerce.number().positive("Age must be a positive number."),
     address: z.string().min(10, "Address is required."),
     capitalContribution: z.coerce.number().positive("Must be a positive number."),
-    profitShare: z.coerce.number().min(0).max(100, "Must be between 0 and 100."),
+    profitShare: z.coerce.number().min(0, { message: "Cannot be negative" }).max(100, { message: "Cannot exceed 100" }),
     isWorkingPartner: z.boolean().default(false)
 });
 
@@ -59,7 +59,13 @@ const formSchema = z.object({
   partnershipDuration: z.enum(["at-will", "fixed-term"]),
   termYears: z.coerce.number().optional(),
   
-  partners: z.array(partnerSchema).min(2, "At least two partners are required."),
+  partners: z.array(partnerSchema).min(2, "At least two partners are required.")
+    .refine(partners => {
+        const totalProfitShare = partners.reduce((acc, p) => acc + (p.profitShare || 0), 0);
+        return totalProfitShare === 100;
+    }, {
+        message: "Total profit share must equal 100%.",
+    }),
   
   interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional(),
   partnerRemuneration: z.coerce.number().min(0).optional(),
@@ -93,8 +99,8 @@ export default function PartnershipDeedPage() {
       commencementDate: new Date().toISOString().split("T")[0],
       partnershipDuration: "at-will",
       partners: [
-        { name: "", parentage: "", age: 0, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
-        { name: "", parentage: "", age: 0, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
+        { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
+        { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
       ],
       interestOnCapital: 12,
       partnerRemuneration: 0,
@@ -113,7 +119,9 @@ export default function PartnershipDeedPage() {
     name: "partners",
   });
 
-  const totalProfitShare = form.watch("partners").reduce((acc, partner) => acc + (partner.profitShare || 0), 0);
+  const partnersWatch = form.watch("partners");
+  const totalProfitShare = partnersWatch.reduce((acc, partner) => acc + (Number(partner.profitShare) || 0), 0);
+
 
   const handleSuggestClauses = async () => {
     const businessActivity = form.getValues("businessActivity");
@@ -153,14 +161,6 @@ export default function PartnershipDeedPage() {
             break;
         case 2:
             fieldsToValidate = ["partners"];
-             if (form.getValues("partners").length < 2) {
-                form.setError("partners", { type: "manual", message: "A partnership requires at least two partners." });
-                return;
-            }
-            if (totalProfitShare !== 100) {
-                 form.setError("partners", { type: "manual", message: `Total profit share must be 100%, but it is currently ${totalProfitShare}%.` });
-                 return;
-            }
             break;
         case 3:
             fieldsToValidate = ["interestOnCapital", "partnerRemuneration"];
@@ -244,6 +244,9 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 2: Partner Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
+              <FormField control={form.control} name="totalCapital" render={({ field }) => (<FormItem><FormLabel>Total Capital Contribution of LLP (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              {form.formState.errors.totalCapital && <p className="text-sm font-medium text-destructive">{form.formState.errors.totalCapital.message}</p>}
+              <Separator />
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
                   <h3 className="font-medium">Partner {index + 1}</h3>
@@ -282,9 +285,8 @@ export default function PartnershipDeedPage() {
                   )}/>
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 0, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
-               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {totalProfitShare !== 100 && !form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">Total profit share must equal 100%. Current total: {totalProfitShare}%</p>}
+              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
+               {form.formState.errors.partners && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.message}</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -646,13 +648,10 @@ export default function PartnershipDeedPage() {
         <p className="text-muted-foreground">Follow the steps to create your legal document.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>
     </div>
   );
 }
-
-
-    
