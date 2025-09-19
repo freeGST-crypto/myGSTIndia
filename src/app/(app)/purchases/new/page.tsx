@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useCallback, memo } from "react";
+import { useState, useContext, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -179,11 +179,11 @@ export default function NewPurchasePage() {
   
   const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
   const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
-  const vendors = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+  const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [vendorsSnapshot]);
 
   const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
-  const items: Item[] = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [];
+  const items: Item[] = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [], [itemsSnapshot]);
 
   const openItemDialog = useCallback(() => {
     setIsItemDialogOpen(true);

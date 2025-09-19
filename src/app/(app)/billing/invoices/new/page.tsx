@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useEffect, useCallback, memo } from "react";
+import { useState, useContext, useEffect, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -160,11 +160,11 @@ export default function NewInvoicePage() {
   
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
-  const customers = customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+  const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
 
   const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
-  const items: Item[] = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [];
+  const items: Item[] = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [], [itemsSnapshot]);
 
   useEffect(() => {
     const editId = searchParams.get('edit') || searchParams.get('duplicate');
