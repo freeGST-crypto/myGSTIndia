@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useContext } from "react";
@@ -49,7 +50,7 @@ type Purchase = {
     status: string;
 }
 
-export default function PurchaseList() {
+export default function PurchasesPage() {
   const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();

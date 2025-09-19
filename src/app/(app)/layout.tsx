@@ -239,18 +239,6 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
   </SidebarMenu>
 );
 
-const accountingPaths = [
-  "/", // Dashboard
-  "/invoices",
-  "/purchases",
-  "/billing",
-  "/parties",
-  "/items",
-  "/accounting",
-  "/gst-filings",
-  "/reconciliation",
-];
-
 export default function AppLayout({
   children,
 }: {
@@ -259,8 +247,6 @@ export default function AppLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [user, loading, error] = useAuthState(auth);
-
-  const needsAccountingContext = accountingPaths.some(p => pathname.startsWith(p));
 
   React.useEffect(() => {
     if (!loading && !user) {
@@ -303,13 +289,9 @@ export default function AppLayout({
         <Header />
         <main className="flex-1 p-4 sm:p-6">
            <ClientOnly>
-             {needsAccountingContext ? (
-                <AccountingProvider>
-                    {children}
-                </AccountingProvider>
-              ) : (
-                children
-              )}
+              <AccountingProvider>
+                  {children}
+              </AccountingProvider>
           </ClientOnly>
         </main>
       </SidebarInset>
