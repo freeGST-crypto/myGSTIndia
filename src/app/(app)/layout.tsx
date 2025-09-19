@@ -156,9 +156,9 @@ const allMenuItems = [
   {
     label: "Admin",
     icon: ShieldCheck,
-    roles: ['super_admin'],
+    roles: ['super_admin', 'professional'],
     subItems: [
-      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin'] },
+      { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin', 'professional'] },
       { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin'] },
       { href: "/admin/notices", label: "Notices", icon: MailWarning, roles: ['super_admin'] },
       { href: "/admin/users", label: "Users", icon: Users, roles: ['super_admin', 'professional'] },
@@ -245,22 +245,23 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
 function filterMenuByRole(menu: any[], role: string): any[] {
   return menu
     .map(item => {
-      // Check if the current item is accessible for the role
-      if (!item.roles.includes(role)) {
+      if (!item.roles || !item.roles.includes(role)) {
         return null;
       }
-      // If it has sub-items, filter them recursively
+
       if (item.subItems) {
         const filteredSubItems = filterMenuByRole(item.subItems, role);
-        // Only include the parent item if it has visible sub-items
         if (filteredSubItems.length > 0) {
-            return { ...item, subItems: filteredSubItems };
+          return { ...item, subItems: filteredSubItems };
         }
-        // If no sub-items are visible, don't include the parent either, unless it has a direct link
+        // If an item has no visible sub-items, only show it if it's a link itself.
+        // The Admin menu is not a link, so it will be correctly hidden.
         return item.href ? { ...item, subItems: [] } : null;
       }
+      
       return item;
-    }).filter(item => item !== null);
+    })
+    .filter(Boolean); // This removes the null entries
 }
 
 export default function AppLayout({
