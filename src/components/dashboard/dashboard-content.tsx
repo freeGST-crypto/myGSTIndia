@@ -24,13 +24,14 @@ const formatCurrency = (value: number) => {
 export default function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const accountingContext = useContext(AccountingContext);
-
+  const [user] = useAuthState(auth);
+  
   if (!accountingContext) {
+    // This can happen briefly on initial load or if context is not provided
     return <div>Loading Accounting Data...</div>;
   }
 
   const { journalVouchers, loading: journalLoading } = accountingContext;
-  const [user] = useAuthState(auth);
 
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
