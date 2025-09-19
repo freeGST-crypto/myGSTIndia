@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo, useContext } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -34,21 +35,22 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search, FileCog } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
-import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, isPast, subDays } from 'date-fns';
-import { AccountingContext } from "@/context/accounting-context";
+import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import jsPDF from 'jspdf';
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
+import { useRouter } from "next/navigation";
+
 
 type Invoice = {
   id: string;
@@ -57,11 +59,13 @@ type Invoice = {
   dueDate: string;
   amount: number;
   status: string;
+  raw: JournalVoucher;
 }
 
 export default function InvoicesPage() {
   const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
@@ -93,6 +97,7 @@ export default function InvoicesPage() {
 
     return salesInvoices
         .map(v => {
+            if (!v) return null;
             const isCancelled = cancelledInvoiceIds.has(v.id);
             const dueDate = addDays(new Date(v.date), 30);
             const isOverdue = !isCancelled && isPast(dueDate);
@@ -111,9 +116,11 @@ export default function InvoicesPage() {
                 dueDate: format(dueDate, 'yyyy-MM-dd'),
                 amount: v.amount,
                 status: status,
+                raw: v,
             }
         })
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        .filter(Boolean)
+        .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime()) as Invoice[];
   }, [journalVouchers]);
 
 
@@ -155,7 +162,7 @@ export default function InvoicesPage() {
 
         if (!originalVoucher) {
             toast({ variant: "destructive", title: "Error", description: "Original invoice transaction not found." });
-            return;
+            return false;
         }
 
         // Create the reversal entry
@@ -178,18 +185,36 @@ export default function InvoicesPage() {
         try {
             await addJournalVoucher(cancellationVoucher);
             toast({ title: "Invoice Cancelled", description: `Invoice #${invoiceId} has been successfully cancelled.` });
+            return true;
         } catch (e: any) {
             toast({ variant: "destructive", title: "Cancellation Failed", description: e.message });
+            return false;
         }
     };
     
-    const handleAction = (action: string, invoice: Invoice) => {
+    const handleAction = async (action: string, invoice: Invoice) => {
         if (action === 'View') {
             setSelectedInvoice(invoice);
         } else if (action === 'Cancel') {
-            handleCancelInvoice(invoice.id);
+            await handleCancelInvoice(invoice.id);
         } else if (action === 'Download') {
             handleDownloadPdf(invoice);
+        } else if (action === 'Duplicate') {
+            const queryParams = new URLSearchParams({
+                duplicate: invoice.id
+            }).toString();
+            router.push(`/invoices/new?${queryParams}`);
+        } else if (action === 'Edit') {
+            toast({ title: 'Editing Invoice...', description: `Cancelling ${invoice.id} and creating a new draft.` });
+            const cancelled = await handleCancelInvoice(invoice.id);
+            if (cancelled) {
+                const queryParams = new URLSearchParams({
+                    edit: invoice.id
+                }).toString();
+                router.push(`/invoices/new?${queryParams}`);
+            } else {
+                 toast({ variant: 'destructive', title: 'Edit Failed', description: `Could not cancel the original invoice.` });
+            }
         } else {
             toast({
                 title: `Action: ${action}`,
@@ -388,7 +413,7 @@ export default function InvoicesPage() {
                             <DropdownMenuItem onSelect={() => handleAction('View', invoice)}>
                               <FileText className="mr-2" /> View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)}>
+                            <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
@@ -398,15 +423,7 @@ export default function InvoicesPage() {
                               <Copy className="mr-2" /> Duplicate Invoice
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleAction('Generate E-Waybill JSON', invoice)}>
-                              <FileJson className="mr-2" /> Generate E-Waybill JSON
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                                className="text-destructive"
-                                onSelect={() => handleAction('Cancel', invoice)}
-                                disabled={invoice.status === 'Cancelled'}
-                            >
+                            <DropdownMenuItem className="text-destructive" onSelect={() => handleAction('Cancel', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Trash2 className="mr-2" /> Cancel Invoice
                             </DropdownMenuItem>
                         </DropdownMenuContent>

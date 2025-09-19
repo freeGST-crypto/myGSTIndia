@@ -46,18 +46,36 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { AccountingContext } from "@/context/accounting-context";
+import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
-import { collection, addDoc, query, where } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
+import { useRouter, useSearchParams } from "next/navigation";
+
+type LineItem = {
+    itemId: string;
+    description: string;
+    hsn: string;
+    qty: number;
+    rate: number;
+    taxableAmount: number;
+    taxRate: number;
+    igst: number;
+    cgst: number;
+    sgst: number;
+};
 
 export default function NewInvoicePage() {
   const accountingContext = useContext(AccountingContext);
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [user] = useAuthState(auth);
+  
+  const { journalVouchers } = useContext(AccountingContext)!;
 
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [customer, setCustomer] = useState("");
@@ -66,18 +84,9 @@ export default function NewInvoicePage() {
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
   
-  const [lineItems, setLineItems] = useState([
+  const [lineItems, setLineItems] = useState<LineItem[]>([
     {
-      itemId: "",
-      description: "",
-      hsn: "",
-      qty: 1,
-      rate: 0,
-      taxableAmount: 0,
-      taxRate: 18,
-      igst: 0,
-      cgst: 0,
-      sgst: 0,
+      itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxableAmount: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0
     },
   ]);
   
@@ -88,6 +97,40 @@ export default function NewInvoicePage() {
   const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+
+  useEffect(() => {
+    const editId = searchParams.get('edit') || searchParams.get('duplicate');
+    if (editId && journalVouchers.length > 0 && items.length > 0) {
+      const voucherToLoad = journalVouchers.find(v => v.id === `JV-${editId}`);
+      if (voucherToLoad) {
+        setInvoiceDate(new Date(voucherToLoad.date));
+        setCustomer(voucherToLoad.customerId || "");
+        
+        // Don't reuse invoice number if duplicating, suggest new one if editing
+        if (searchParams.get('edit')) {
+            setInvoiceNumber(voucherToLoad.id.replace('JV-', ''));
+        }
+
+        // Reconstruct line items from journal lines
+        const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
+        // This is a simplified reconstruction. A real app would need more data stored in the JV.
+        if (salesLine) {
+            setLineItems([{
+                 itemId: "", // Cannot determine original item from journal alone
+                 description: "Reconstructed from journal",
+                 hsn: "",
+                 qty: 1,
+                 rate: parseFloat(salesLine.credit),
+                 taxableAmount: parseFloat(salesLine.credit),
+                 taxRate: 18, // Assuming 18%
+                 igst: parseFloat(voucherToLoad.lines.find(l=>l.account==='2110')?.credit || '0'),
+                 cgst: 0,
+                 sgst: 0,
+            }]);
+        }
+      }
+    }
+  }, [searchParams, journalVouchers, items]);
 
   const handleAddItem = () => {
     setLineItems([
@@ -175,6 +218,7 @@ export default function NewInvoicePage() {
             customerId: customer,
         });
         toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
+        router.push("/invoices");
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
     }
