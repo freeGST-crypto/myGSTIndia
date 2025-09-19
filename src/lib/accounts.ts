@@ -6,6 +6,7 @@ export const allAccounts = [
   { code: "1410", name: "Office Supplies", type: "Asset" },
   { code: "1450", name: "Office Equipment", type: "Asset" },
   { code: "1455", name: "Accumulated Depreciation", type: "Asset" }, // Contra Asset
+  { code: "1460", name: "TDS Receivable", type: "Asset" },
   { code: "1510", name: "Prepaid Insurance", type: "Asset" },
   { code: "2010", name: "Accounts Payable", type: "Liability" },
   { code: "2110", name: "GST Payable", type: "Liability" },

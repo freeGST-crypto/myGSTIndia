@@ -3,6 +3,7 @@
 
 import { useState, useContext, useEffect, useCallback, memo } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
@@ -53,7 +54,6 @@ import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
-import { useRouter, useSearchParams } from "next/navigation";
 
 type LineItem = {
     id: string; // Unique ID for key prop
@@ -62,11 +62,7 @@ type LineItem = {
     hsn: string;
     qty: number;
     rate: number;
-    taxableAmount: number;
     taxRate: number;
-    igst: number;
-    cgst: number;
-    sgst: number;
 };
 
 type Item = {
@@ -88,7 +84,7 @@ const InvoiceItemRow = memo(({
 }: {
     item: LineItem;
     onRemove: () => void;
-    onUpdate: (field: keyof LineItem, value: any) => void;
+    onUpdate: (id: string, field: keyof LineItem, value: any) => void;
     items: Item[];
     itemsLoading: boolean;
     openItemDialog: () => void;
@@ -100,13 +96,18 @@ const InvoiceItemRow = memo(({
         } else {
             const selectedItem = items.find(i => i.id === itemId);
             if (selectedItem) {
-                onUpdate('itemId', itemId);
-                onUpdate('description', selectedItem.name);
-                onUpdate('rate', selectedItem.sellingPrice || 0);
-                onUpdate('hsn', selectedItem.hsn || "");
+                onUpdate(item.id, 'itemId', itemId);
+                onUpdate(item.id, 'description', selectedItem.name);
+                onUpdate(item.id, 'rate', selectedItem.sellingPrice || 0);
+                onUpdate(item.id, 'hsn', selectedItem.hsn || "");
             }
         }
-    }, [items, onUpdate, openItemDialog]);
+    }, [items, onUpdate, openItemDialog, item.id]);
+    
+    const taxableAmount = (item.qty || 0) * (item.rate || 0);
+    const igst = taxableAmount * (item.taxRate / 100);
+    const cgst = 0; // Assuming IGST for now
+    const sgst = 0;
 
     return (
         <TableRow>
@@ -126,13 +127,13 @@ const InvoiceItemRow = memo(({
                     </SelectContent>
                 </Select>
             </TableCell>
-            <TableCell><Input type="number" value={item.qty} onChange={(e) => onUpdate("qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
-            <TableCell><Input type="number" value={item.rate} onChange={(e) => onUpdate("rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
-            <TableCell className="text-right font-medium">₹{item.taxableAmount.toFixed(2)}</TableCell>
-            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => onUpdate("taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
-            <TableCell className="text-right font-mono">₹{item.igst.toFixed(2)}</TableCell>
-            <TableCell className="text-right font-mono">₹{item.cgst.toFixed(2)}</TableCell>
-            <TableCell className="text-right font-mono">₹{item.sgst.toFixed(2)}</TableCell>
+            <TableCell><Input type="number" value={item.qty} onChange={(e) => onUpdate(item.id, "qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
+            <TableCell><Input type="number" value={item.rate} onChange={(e) => onUpdate(item.id, "rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
+            <TableCell className="text-right font-medium">₹{taxableAmount.toFixed(2)}</TableCell>
+            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => onUpdate(item.id, "taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
+            <TableCell className="text-right font-mono">₹{igst.toFixed(2)}</TableCell>
+            <TableCell className="text-right font-mono">₹{cgst.toFixed(2)}</TableCell>
+            <TableCell className="text-right font-mono">₹{sgst.toFixed(2)}</TableCell>
             <TableCell className="text-right">
                <Button variant="ghost" size="icon" onClick={onRemove}>
                   <Trash2 className="h-4 w-4 text-destructive" />
@@ -145,7 +146,7 @@ InvoiceItemRow.displayName = 'InvoiceItemRow';
 
 const createNewLineItem = (): LineItem => ({
   id: `${Date.now()}-${Math.random()}`,
-  itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxableAmount: 0, taxRate: 18, igst: 0, cgst: 0, sgst: 0
+  itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxRate: 18
 });
 
 export default function NewInvoicePage() {
@@ -160,6 +161,7 @@ export default function NewInvoicePage() {
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [customer, setCustomer] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [tdsRate, setTdsRate] = useState(0);
   
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -195,11 +197,7 @@ export default function NewInvoicePage() {
                  hsn: "",
                  qty: 1,
                  rate: parseFloat(salesLine.credit),
-                 taxableAmount: parseFloat(salesLine.credit),
                  taxRate: 18,
-                 igst: parseFloat(voucherToLoad.lines.find(l=>l.account==='2110')?.credit || '0'),
-                 cgst: 0,
-                 sgst: 0,
             }]);
         }
       }
@@ -218,16 +216,7 @@ export default function NewInvoicePage() {
     setLineItems(prev => {
         return prev.map(item => {
             if (item.id === id) {
-                const updatedItem = { ...item, [field]: value };
-
-                // Recalculate derived fields
-                if (['qty', 'rate', 'taxRate'].includes(field as string)) {
-                    updatedItem.taxableAmount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
-                    updatedItem.igst = updatedItem.taxableAmount * (updatedItem.taxRate / 100);
-                    updatedItem.cgst = 0; // Assuming IGST for simplicity
-                    updatedItem.sgst = 0;
-                }
-                return updatedItem;
+                return { ...item, [field]: value };
             }
             return item;
         });
@@ -246,12 +235,14 @@ export default function NewInvoicePage() {
     setIsItemDialogOpen(true);
   }, []);
 
-  const subtotal = lineItems.reduce((acc, item) => acc + item.taxableAmount, 0);
-  const totalIgst = lineItems.reduce((acc, item) => acc + item.igst, 0);
-  const totalCgst = lineItems.reduce((acc, item) => acc + item.cgst, 0);
-  const totalSgst = lineItems.reduce((acc, item) => acc + item.sgst, 0);
+  const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
+  const totalIgst = lineItems.reduce((acc, item) => acc + (item.qty * item.rate * item.taxRate / 100), 0);
+  const totalCgst = 0; // Assuming IGST for simplicity
+  const totalSgst = 0;
   const totalTax = totalIgst + totalCgst + totalSgst;
-  const totalAmount = subtotal + totalTax;
+  const grandTotal = subtotal + totalTax;
+  const tdsAmount = (subtotal * tdsRate) / 100;
+  const totalAmount = grandTotal - tdsAmount;
 
   const handleSaveInvoice = async () => {
     if (!accountingContext) return;
@@ -269,13 +260,18 @@ export default function NewInvoicePage() {
         { account: '2110', debit: '0', credit: totalTax.toFixed(2) }
     ];
 
+    if (tdsAmount > 0) {
+      journalLines.push({ account: '1460', debit: tdsAmount.toFixed(2), credit: '0'}); // TDS Receivable
+    }
+
+
     try {
         await addJournalVoucher({
             id: `JV-${invoiceNumber}`,
             date: invoiceDate ? format(invoiceDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
             narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceNumber}`,
             lines: journalLines,
-            amount: totalAmount,
+            amount: grandTotal, // Store the gross amount in the journal
             customerId: customer,
         });
         toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
@@ -379,7 +375,7 @@ export default function NewInvoicePage() {
                       key={item.id}
                       item={item}
                       onRemove={() => handleRemoveItem(item.id)}
-                      onUpdate={(field, value) => handleItemChange(item.id, field, value)}
+                      onUpdate={handleItemChange}
                       items={items}
                       itemsLoading={itemsLoading}
                       openItemDialog={openItemDialog}
@@ -401,8 +397,14 @@ export default function NewInvoicePage() {
               <div className="flex justify-between"><span className="text-muted-foreground">IGST</span><span>₹{totalIgst.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">CGST</span><span>₹{totalCgst.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">SGST</span><span>₹{totalSgst.toFixed(2)}</span></div>
+              <div className="flex justify-between font-semibold"><span className="text-muted-foreground">Gross Total</span><span>₹{grandTotal.toFixed(2)}</span></div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tds-rate">TDS/TCS Rate (%)</Label>
+                <Input id="tds-rate" type="number" value={tdsRate} onChange={e => setTdsRate(parseFloat(e.target.value) || 0)} className="w-24 text-right" />
+              </div>
+               <div className="flex justify-between"><span className="text-muted-foreground">TDS/TCS Amount</span><span className="text-red-500">- ₹{tdsAmount.toFixed(2)}</span></div>
               <Separator/>
-              <div className="flex justify-between font-bold text-lg"><span>Total</span><span>₹{totalAmount.toFixed(2)}</span></div>
+              <div className="flex justify-between font-bold text-lg"><span>Net Receivable</span><span>₹{totalAmount.toFixed(2)}</span></div>
             </div>
           </div>
           <Separator />

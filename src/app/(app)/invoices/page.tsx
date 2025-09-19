@@ -3,6 +3,7 @@
 
 import { useState, useMemo, useContext } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -35,7 +36,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, FileJson, Zap, Search } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -48,8 +49,13 @@ import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import jsPDF from 'jspdf';
-import { useRouter } from "next/navigation";
+import 'jspdf-autotable';
 
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
 
 type Invoice = {
   id: string;
@@ -247,18 +253,109 @@ export default function InvoicesPage() {
         }
     }
 
-    const handleDownloadPdf = (invoice: any) => {
-        const doc = new jsPDF();
-        doc.setFontSize(22);
-        doc.text("INVOICE", 105, 20, { align: "center" });
-        doc.setFontSize(12);
-        doc.text(`Invoice #: ${invoice.id}`, 14, 40);
-        doc.text(`Date: ${format(new Date(invoice.date), "dd MMM, yyyy")}`, 14, 46);
-        doc.text(`Customer: ${invoice.customer}`, 14, 60);
-        doc.text(`Amount: Rs. ${invoice.amount.toFixed(2)}`, 14, 70);
-        doc.save(`Invoice_${invoice.id}.pdf`);
-        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
-    }
+  const handleDownloadPdf = (invoice: Invoice) => {
+    const doc = new jsPDF();
+    const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId);
+    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F" }; // Mock data
+
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(companyDetails.name, 14, 20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(companyDetails.address, 14, 26);
+    doc.text(`GSTIN: ${companyDetails.gstin} | PAN: ${companyDetails.pan}`, 14, 32);
+    
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("TAX INVOICE", 200, 20, { align: "right" });
+
+    // Bill To & Ship To
+    doc.line(14, 40, 200, 40); // separator
+    doc.setFont("helvetica", "bold");
+    doc.text("Bill To:", 14, 46);
+    doc.setFont("helvetica", "normal");
+    doc.text(customerDetails?.name || invoice.customer, 14, 52);
+    doc.text(customerDetails?.address1 || "N/A", 14, 58);
+    doc.text(`GSTIN: ${customerDetails?.gstin || "N/A"}`, 14, 64);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice No:", 140, 46);
+    doc.setFont("helvetica", "normal");
+    doc.text(invoice.id, 165, 46);
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice Date:", 140, 52);
+    doc.setFont("helvetica", "normal");
+    doc.text(format(new Date(invoice.date), "dd-MMM-yyyy"), 165, 52);
+    doc.setFont("helvetica", "bold");
+    doc.text("Due Date:", 140, 58);
+    doc.setFont("helvetica", "normal");
+    doc.text(format(new Date(invoice.dueDate), "dd-MMM-yyyy"), 165, 58);
+    doc.line(14, 70, 200, 70);
+
+    // Items Table
+    const salesLine = invoice.raw.lines.find(l => l.account === '4010');
+    const taxLine = invoice.raw.lines.find(l => l.account === '2110');
+    const subtotal = parseFloat(salesLine?.credit || '0');
+    const taxAmount = parseFloat(taxLine?.credit || '0');
+    
+    const tableBody = [[
+        1,
+        "Service as per narration", // Placeholder description
+        "9983", // Placeholder HSN
+        1,
+        subtotal.toFixed(2),
+        ((taxAmount / subtotal) * 100).toFixed(2),
+        taxAmount.toFixed(2),
+        subtotal.toFixed(2),
+    ]];
+
+    doc.autoTable({
+        head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Tax %', 'Tax Amt', 'Total']],
+        body: tableBody,
+        startY: 75,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+    });
+    
+    let finalY = (doc as any).lastAutoTable.finalY || 100;
+
+    // Totals Section
+    doc.setFontSize(10);
+    doc.text("Subtotal", 140, finalY + 8);
+    doc.text(subtotal.toFixed(2), 200, finalY + 8, { align: 'right' });
+    doc.text("IGST", 140, finalY + 14);
+    doc.text(taxAmount.toFixed(2), 200, finalY + 14, { align: 'right' });
+    doc.setFont("helvetica", "bold");
+    doc.text("Grand Total", 140, finalY + 20);
+    doc.text(`Rs. ${invoice.amount.toFixed(2)}`, 200, finalY + 20, { align: 'right' });
+
+    // Bank Details & Terms
+    finalY += 30;
+    doc.setFont("helvetica", "bold");
+    doc.text("Bank Details:", 14, finalY);
+    doc.setFont("helvetica", "normal");
+    doc.text("Bank: HDFC Bank | A/c No: 1234567890 | IFSC: HDFC0001234", 14, finalY + 6);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Terms & Conditions:", 14, finalY + 14);
+    doc.setFont("helvetica", "normal");
+    const terms = doc.splitTextToSize("1. Payment is due within 30 days. 2. Interest @18% p.a. will be charged on overdue bills.", 180);
+    doc.text(terms, 14, finalY + 20);
+    
+    // Footer
+    finalY = doc.internal.pageSize.height - 40;
+    doc.line(14, finalY, 200, finalY);
+    doc.text("For GSTEase Solutions Pvt. Ltd.", 140, finalY + 15, { align: 'right'});
+    // space for signature
+    doc.text("Authorised Signatory", 140, finalY + 30, { align: 'right'});
+    doc.setFontSize(8);
+    doc.text("This is a GSTEase Generated Invoice.", 14, doc.internal.pageSize.height - 10);
+    
+    doc.save(`Invoice_${invoice.id}.pdf`);
+    toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+};
 
 
   const getStatusBadge = (status: string) => {
