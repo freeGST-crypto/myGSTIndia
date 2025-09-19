@@ -7,9 +7,12 @@ export const allAccounts = [
   { code: "1450", name: "Office Equipment", type: "Asset" },
   { code: "1455", name: "Accumulated Depreciation", type: "Asset" }, // Contra Asset
   { code: "1460", name: "TDS Receivable", type: "Asset" },
+  { code: "1470", name: "TCS Receivable", type: "Asset" },
   { code: "1510", name: "Prepaid Insurance", type: "Asset" },
   { code: "2010", name: "Accounts Payable", type: "Liability" },
   { code: "2110", name: "GST Payable", type: "Liability" },
+  { code: "2120", name: "TCS Payable", type: "Liability" },
+  { code: "2130", name: "TDS Payable", type: "Liability" },
   { code: "2210", name: "Long-Term Loans", type: "Liability" },
   { code: "3010", name: "Owner's Equity", type: "Equity" },
   { code: "3020", name: "Retained Earnings", type: "Equity" },

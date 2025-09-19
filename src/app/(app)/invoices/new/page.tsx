@@ -54,6 +54,7 @@ import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type LineItem = {
     id: string; // Unique ID for key prop
@@ -63,6 +64,7 @@ type LineItem = {
     qty: number;
     rate: number;
     taxRate: number;
+    amount: number;
 };
 
 type Item = {
@@ -89,7 +91,7 @@ const InvoiceItemRow = memo(({
     itemsLoading: boolean;
     openItemDialog: () => void;
 }) => {
-
+    
     const handleSelectChange = useCallback((itemId: string) => {
         if (itemId === 'add-new') {
             openItemDialog();
@@ -129,7 +131,7 @@ const InvoiceItemRow = memo(({
             </TableCell>
             <TableCell><Input type="number" value={item.qty} onChange={(e) => onUpdate(item.id, "qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
             <TableCell><Input type="number" value={item.rate} onChange={(e) => onUpdate(item.id, "rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
-            <TableCell className="text-right font-medium">₹{taxableAmount.toFixed(2)}</TableCell>
+            <TableCell className="text-right font-medium">₹{item.amount.toFixed(2)}</TableCell>
             <TableCell><Input type="number" value={item.taxRate} onChange={(e) => onUpdate(item.id, "taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
             <TableCell className="text-right font-mono">₹{igst.toFixed(2)}</TableCell>
             <TableCell className="text-right font-mono">₹{cgst.toFixed(2)}</TableCell>
@@ -146,7 +148,7 @@ InvoiceItemRow.displayName = 'InvoiceItemRow';
 
 const createNewLineItem = (): LineItem => ({
   id: `${Date.now()}-${Math.random()}`,
-  itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxRate: 18
+  itemId: "", description: "", hsn: "", qty: 1, rate: 0, taxRate: 18, amount: 0,
 });
 
 export default function NewInvoicePage() {
@@ -161,7 +163,8 @@ export default function NewInvoicePage() {
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [customer, setCustomer] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [tdsRate, setTdsRate] = useState(0);
+  const [taxType, setTaxType] = useState<'none' | 'tds' | 'tcs'>('none');
+  const [taxRate, setTaxRate] = useState(0);
   
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -198,6 +201,7 @@ export default function NewInvoicePage() {
                  qty: 1,
                  rate: parseFloat(salesLine.credit),
                  taxRate: 18,
+                 amount: parseFloat(salesLine.credit),
             }]);
         }
       }
@@ -216,7 +220,11 @@ export default function NewInvoicePage() {
     setLineItems(prev => {
         return prev.map(item => {
             if (item.id === id) {
-                return { ...item, [field]: value };
+                const updatedItem = { ...item, [field]: value };
+                 if (['qty', 'rate'].includes(field as string)) {
+                  updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+                }
+                return updatedItem;
             }
             return item;
         });
@@ -235,14 +243,21 @@ export default function NewInvoicePage() {
     setIsItemDialogOpen(true);
   }, []);
 
-  const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
-  const totalIgst = lineItems.reduce((acc, item) => acc + (item.qty * item.rate * item.taxRate / 100), 0);
+  const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
+  const totalIgst = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
   const totalCgst = 0; // Assuming IGST for simplicity
   const totalSgst = 0;
   const totalTax = totalIgst + totalCgst + totalSgst;
   const grandTotal = subtotal + totalTax;
-  const tdsAmount = (subtotal * tdsRate) / 100;
-  const totalAmount = grandTotal - tdsAmount;
+
+  const taxOnSourceAmount = (subtotal * taxRate) / 100;
+  let totalAmount = grandTotal;
+  if (taxType === 'tds') {
+    totalAmount -= taxOnSourceAmount;
+  } else if (taxType === 'tcs') {
+    totalAmount += taxOnSourceAmount;
+  }
+
 
   const handleSaveInvoice = async () => {
     if (!accountingContext) return;
@@ -260,8 +275,12 @@ export default function NewInvoicePage() {
         { account: '2110', debit: '0', credit: totalTax.toFixed(2) }
     ];
 
-    if (tdsAmount > 0) {
-      journalLines.push({ account: '1460', debit: tdsAmount.toFixed(2), credit: '0'}); // TDS Receivable
+    if (taxOnSourceAmount > 0) {
+      if (taxType === 'tds') {
+        journalLines.push({ account: '1460', debit: taxOnSourceAmount.toFixed(2), credit: '0'}); // TDS Receivable
+      } else if (taxType === 'tcs') {
+        journalLines.push({ account: '2120', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TCS Payable
+      }
     }
 
 
@@ -398,11 +417,23 @@ export default function NewInvoicePage() {
               <div className="flex justify-between"><span className="text-muted-foreground">CGST</span><span>₹{totalCgst.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">SGST</span><span>₹{totalSgst.toFixed(2)}</span></div>
               <div className="flex justify-between font-semibold"><span className="text-muted-foreground">Gross Total</span><span>₹{grandTotal.toFixed(2)}</span></div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="tds-rate">TDS/TCS Rate (%)</Label>
-                <Input id="tds-rate" type="number" value={tdsRate} onChange={e => setTdsRate(parseFloat(e.target.value) || 0)} className="w-24 text-right" />
+              <Separator />
+               <div className="space-y-2">
+                <Label>Tax at Source</Label>
+                <RadioGroup value={taxType} onValueChange={(value) => setTaxType(value as any)} className="grid grid-cols-3 gap-4">
+                    <div><RadioGroupItem value="none" id="tax-none"/><Label htmlFor="tax-none" className="ml-2">None</Label></div>
+                    <div><RadioGroupItem value="tds" id="tax-tds"/><Label htmlFor="tax-tds" className="ml-2">TDS</Label></div>
+                    <div><RadioGroupItem value="tcs" id="tax-tcs"/><Label htmlFor="tax-tcs" className="ml-2">TCS</Label></div>
+                </RadioGroup>
               </div>
-               <div className="flex justify-between"><span className="text-muted-foreground">TDS/TCS Amount</span><span className="text-red-500">- ₹{tdsAmount.toFixed(2)}</span></div>
+              {taxType !== 'none' && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tax-rate">{taxType.toUpperCase()} Rate (%)</Label>
+                  <Input id="tax-rate" type="number" value={taxRate} onChange={e => setTaxRate(parseFloat(e.target.value) || 0)} className="w-24 text-right" />
+                </div>
+              )}
+               {taxType === 'tds' && <div className="flex justify-between"><span className="text-muted-foreground">TDS Amount</span><span className="text-red-500">- ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
+               {taxType === 'tcs' && <div className="flex justify-between"><span className="text-muted-foreground">TCS Amount</span><span className="text-green-600">+ ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
               <Separator/>
               <div className="flex justify-between font-bold text-lg"><span>Net Receivable</span><span>₹{totalAmount.toFixed(2)}</span></div>
             </div>

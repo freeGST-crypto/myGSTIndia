@@ -55,6 +55,7 @@ import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type LineItem = {
     id: string; // Unique ID for key prop
@@ -85,7 +86,7 @@ const PurchaseItemRow = memo(({
 }: {
     item: LineItem;
     onRemove: () => void;
-    onUpdate: (field: keyof LineItem, value: any) => void;
+    onUpdate: (id: string, field: keyof LineItem, value: any) => void;
     items: Item[];
     itemsLoading: boolean;
     openItemDialog: () => void;
@@ -97,13 +98,13 @@ const PurchaseItemRow = memo(({
         } else {
              const selectedItem = items.find((i) => i.id === itemId);
             if (selectedItem) {
-                onUpdate('itemId', itemId);
-                onUpdate('description', selectedItem.name);
-                onUpdate('rate', selectedItem.purchasePrice || 0);
-                onUpdate('hsn', selectedItem.hsn || "");
+                onUpdate(item.id, 'itemId', itemId);
+                onUpdate(item.id, 'description', selectedItem.name);
+                onUpdate(item.id, 'rate', selectedItem.purchasePrice || 0);
+                onUpdate(item.id, 'hsn', selectedItem.hsn || "");
             }
         }
-    }, [items, onUpdate, openItemDialog]);
+    }, [items, onUpdate, openItemDialog, item.id]);
 
     return (
         <TableRow>
@@ -126,7 +127,7 @@ const PurchaseItemRow = memo(({
             <TableCell>
                 <Input
                 value={item.hsn}
-                onChange={(e) => onUpdate("hsn", e.target.value)}
+                onChange={(e) => onUpdate(item.id, "hsn", e.target.value)}
                 placeholder="HSN/SAC"
                 />
             </TableCell>
@@ -134,7 +135,7 @@ const PurchaseItemRow = memo(({
                 <Input
                 type="number"
                 value={item.qty}
-                onChange={(e) => onUpdate("qty", parseInt(e.target.value) || 0)}
+                onChange={(e) => onUpdate(item.id, "qty", parseInt(e.target.value) || 0)}
                 className="text-right"
                 />
             </TableCell>
@@ -142,7 +143,7 @@ const PurchaseItemRow = memo(({
                 <Input
                 type="number"
                 value={item.rate}
-                onChange={(e) => onUpdate("rate", parseFloat(e.target.value) || 0)}
+                onChange={(e) => onUpdate(item.id, "rate", parseFloat(e.target.value) || 0)}
                 className="text-right"
                 />
             </TableCell>
@@ -179,6 +180,8 @@ export default function NewPurchasePage() {
   const [billDate, setBillDate] = useState<Date | undefined>(new Date());
   const [vendor, setVendor] = useState("");
   const [billNumber, setBillNumber] = useState("");
+  const [taxType, setTaxType] = useState<'none' | 'tds' | 'tcs'>('none');
+  const [taxRate, setTaxRate] = useState(0);
   
   const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -206,11 +209,9 @@ export default function NewPurchasePage() {
       return prev.map(item => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value };
-
-          // Recalculate derived fields
-          if (['qty', 'rate'].includes(field as string)) {
-            updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
-          }
+           if (['qty', 'rate'].includes(field as string)) {
+              updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+            }
           return updatedItem;
         }
         return item;
@@ -232,7 +233,16 @@ export default function NewPurchasePage() {
 
   const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
-  const totalAmount = subtotal + totalTax;
+  const totalBillAmount = subtotal + totalTax;
+
+  const taxOnSourceAmount = (subtotal * taxRate) / 100;
+  let totalAmountPayable = totalBillAmount;
+  if (taxType === 'tds') {
+    totalAmountPayable -= taxOnSourceAmount;
+  } else if (taxType === 'tcs') {
+    totalAmountPayable += taxOnSourceAmount;
+  }
+
 
   const handleSaveBill = async () => {
     if (!accountingContext) return;
@@ -247,8 +257,17 @@ export default function NewPurchasePage() {
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
         { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, 
-        { account: '2010', debit: '0', credit: totalAmount.toFixed(2) } 
+        { account: '2010', debit: '0', credit: totalAmountPayable.toFixed(2) } 
     ];
+
+    if (taxOnSourceAmount > 0) {
+      if (taxType === 'tds') {
+        journalLines.push({ account: '2130', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TDS Payable
+      } else if (taxType === 'tcs') {
+        journalLines.push({ account: '1470', debit: taxOnSourceAmount.toFixed(2), credit: '0'}); // TCS Receivable
+      }
+    }
+
 
     try {
         await addJournalVoucher({
@@ -256,7 +275,7 @@ export default function NewPurchasePage() {
             date: billDate ? format(billDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
             narration: `Purchase from ${selectedVendor.name} against Bill #${billNumber}`,
             lines: journalLines,
-            amount: totalAmount,
+            amount: totalBillAmount,
             vendorId: vendor,
         });
         toast({ title: "Purchase Bill Saved", description: `Journal entry for bill #${billNumber} has been automatically created.` });
@@ -389,9 +408,31 @@ export default function NewPurchasePage() {
                 <span>₹{totalTax.toFixed(2)}</span>
               </div>
               <Separator/>
+              <div className="flex justify-between font-semibold">
+                <span>Total Bill Amount</span>
+                <span>₹{totalBillAmount.toFixed(2)}</span>
+              </div>
+              <Separator />
+               <div className="space-y-2">
+                <Label>Tax at Source</Label>
+                <RadioGroup value={taxType} onValueChange={(value) => setTaxType(value as any)} className="grid grid-cols-3 gap-4">
+                    <div><RadioGroupItem value="none" id="tax-none"/><Label htmlFor="tax-none" className="ml-2">None</Label></div>
+                    <div><RadioGroupItem value="tds" id="tax-tds"/><Label htmlFor="tax-tds" className="ml-2">TDS</Label></div>
+                    <div><RadioGroupItem value="tcs" id="tax-tcs"/><Label htmlFor="tax-tcs" className="ml-2">TCS</Label></div>
+                </RadioGroup>
+              </div>
+               {taxType !== 'none' && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tax-rate">{taxType.toUpperCase()} Rate (%)</Label>
+                  <Input id="tax-rate" type="number" value={taxRate} onChange={e => setTaxRate(parseFloat(e.target.value) || 0)} className="w-24 text-right" />
+                </div>
+              )}
+               {taxType === 'tds' && <div className="flex justify-between"><span className="text-muted-foreground">TDS Amount</span><span className="text-red-500">- ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
+               {taxType === 'tcs' && <div className="flex justify-between"><span className="text-muted-foreground">TCS Amount</span><span className="text-green-600">+ ₹{taxOnSourceAmount.toFixed(2)}</span></div>}
+              <Separator/>
               <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>₹{totalAmount.toFixed(2)}</span>
+                <span>Total Amount Payable</span>
+                <span>₹{totalAmountPayable.toFixed(2)}</span>
               </div>
             </div>
           </div>
