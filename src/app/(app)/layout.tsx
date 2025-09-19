@@ -74,7 +74,7 @@ import { doc } from 'firebase/firestore';
 import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
 
-const SUPER_ADMIN_UID = 'h2nO3s8eZkXYiL143y7pZ1g5zZ23';
+const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
 const allMenuItems = [
   { href: "/", label: "Dashboard", icon: Gauge, roles: ['business', 'professional', 'super_admin'] },
