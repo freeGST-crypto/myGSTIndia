@@ -42,15 +42,15 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
     const journalVouchersQuery = user ? query(journalVouchersRef, where("userId", "==", user.uid)) : null;
     const [journalVouchersSnapshot, loading, error] = useCollection(journalVouchersQuery);
 
-    const journalVouchers: JournalVoucher[] = journalVouchersSnapshot?.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as JournalVoucher & { firestoreId: string })) || [];
+    const journalVouchers: JournalVoucher[] = journalVouchersSnapshot?.docs.map(doc => doc.data() as JournalVoucher) || [];
 
     const addJournalVoucher = async (voucher: Omit<JournalVoucher, 'userId'>) => {
         if (!user) throw new Error("User not authenticated");
         
         // Use the provided `id` (e.g., "JV-INV-001") as the document ID in Firestore.
-        // This makes lookups and updates much simpler and avoids needing to query.
+        // Also, ensure the `id` is saved within the document data itself.
         const docRef = doc(db, "journalVouchers", voucher.id);
-        await setDoc(docRef, { ...voucher, userId: user.uid });
+        await setDoc(docRef, { ...voucher, userId: user.uid, id: voucher.id });
     };
     
     const updateJournalVoucher = async (id: string, voucherData: Partial<Omit<JournalVoucher, 'id' | 'userId'>>) => {
