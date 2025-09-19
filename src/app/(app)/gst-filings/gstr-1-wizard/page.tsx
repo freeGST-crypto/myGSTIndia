@@ -71,7 +71,7 @@ export default function Gstr1WizardPage() {
 
   const b2bInvoicesFromJournal = useMemo(() => {
     return journalVouchers
-      .filter(v => v.id.startsWith("JV-INV-"))
+      .filter(v => v && v.id && v.id.startsWith("JV-INV-"))
       .map(v => {
         const customer = customers.find(c => v.customerId === c.id);
         const taxableValue = v.lines.find(l => l.account === '4010')?.credit || '0';

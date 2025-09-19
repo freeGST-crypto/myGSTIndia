@@ -56,10 +56,10 @@ export default function CreditNotesPage() {
   const [selectedNote, setSelectedNote] = useState<CreditNote | null>(null);
   
   const creditNotes: CreditNote[] = useMemo(() => {
-    const allCreditNotes = journalVouchers.filter(v => v.id.startsWith("JV-CN-"));
+    const allCreditNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-CN-"));
     const voidedCreditNoteIds = new Set(
         journalVouchers
-            .filter(v => v.reverses?.startsWith("JV-CN-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("JV-CN-"))
             .map(v => v.reverses)
     );
     

@@ -57,10 +57,10 @@ export default function PurchaseList() {
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
   const purchases: Purchase[] = useMemo(() => {
-    const allBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
+    const allBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-BILL-"));
     const deletedBillIds = new Set(
         journalVouchers
-            .filter(v => v.reverses?.startsWith("JV-BILL-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("JV-BILL-"))
             .map(v => v.reverses)
     );
     

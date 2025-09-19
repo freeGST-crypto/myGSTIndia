@@ -56,10 +56,10 @@ export default function DebitNotesPage() {
   const [selectedNote, setSelectedNote] = useState<DebitNote | null>(null);
   
   const debitNotes: DebitNote[] = useMemo(() => {
-    const allDebitNotes = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+    const allDebitNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-DN-"));
     const voidedDebitNoteIds = new Set(
         journalVouchers
-            .filter(v => v.reverses?.startsWith("JV-DN-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("JV-DN-"))
             .map(v => v.reverses)
     );
 

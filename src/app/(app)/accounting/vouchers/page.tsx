@@ -93,11 +93,13 @@ export default function VouchersPage() {
 
     const { receipts, payments } = useMemo(() => {
         const reversedIds = new Set(
-            journalVouchers.filter(v => v.reverses).map(v => v.reverses)
+            journalVouchers
+              .filter(v => v && v.reverses)
+              .map(v => v.reverses)
         );
 
         const allReceipts = journalVouchers
-            .filter(v => v.id.startsWith("JV-RV-"))
+            .filter(v => v && v.id && v.id.startsWith("JV-RV-"))
             .map(v => {
                 const isReversed = reversedIds.has(v.id);
                 return {
@@ -111,7 +113,7 @@ export default function VouchersPage() {
             });
 
         const allPayments = journalVouchers
-            .filter(v => v.id.startsWith("JV-PV-"))
+            .filter(v => v && v.id && v.id.startsWith("JV-PV-"))
             .map(v => {
                 const isReversed = reversedIds.has(v.id);
                  return {

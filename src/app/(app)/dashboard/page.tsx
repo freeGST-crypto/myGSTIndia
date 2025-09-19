@@ -28,6 +28,7 @@ export default function DashboardPage() {
     });
 
     journalVouchers.forEach(voucher => {
+        if (!voucher || !voucher.lines) return;
         voucher.lines.forEach(line => {
             if (balances.hasOwnProperty(line.account)) {
                 const accountType = allAccounts.find(a => a.code === line.account)?.type;
@@ -52,7 +53,7 @@ export default function DashboardPage() {
 
   const invoices = useMemo(() => {
     return journalVouchers
-        .filter(v => v.id.startsWith("JV-INV-"))
+        .filter(v => v && v.id && v.id.startsWith("JV-INV-"))
         .slice(0, 5)
         .map(v => ({
             invoice: v.id.replace("JV-", ""),

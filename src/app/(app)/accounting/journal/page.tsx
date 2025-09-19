@@ -98,11 +98,11 @@ export default function JournalVoucherPage() {
     const visibleJournalVouchers = useMemo(() => {
       const reversedIds = new Set(
         allVouchers
-          .filter(v => v.reverses)
+          .filter(v => v && v.reverses)
           .map(v => v.reverses)
       );
 
-      return allVouchers.filter(v => !reversedIds.has(v.id) && !v.reverses);
+      return allVouchers.filter(v => v && v.id && !reversedIds.has(v.id) && !v.reverses);
     }, [allVouchers]);
 
     const handleDeleteJournalVoucher = async (voucherId: string) => {

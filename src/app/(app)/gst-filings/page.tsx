@@ -59,16 +59,19 @@ export default function GstFilingsPage() {
         const periodEnd = endOfMonth(new Date(period));
         
         const salesInvoices = journalVouchers.filter(v => {
+            if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
             return v.id.startsWith("JV-INV-") && vDate >= periodStart && vDate <= periodEnd;
         });
         
         const purchaseBills = journalVouchers.filter(v => {
+            if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
             return v.id.startsWith("JV-BILL-") && vDate >= periodStart && vDate <= periodEnd;
         });
         
         const purchaseReturns = journalVouchers.filter(v => {
+             if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
             return v.id.startsWith("JV-DN-") && vDate >= periodStart && vDate <= periodEnd;
         });

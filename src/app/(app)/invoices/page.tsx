@@ -84,10 +84,10 @@ export default function InvoicesPage() {
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const invoices: Invoice[] = useMemo(() => {
-    const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
+    const salesInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-INV-"));
     const cancelledInvoiceIds = new Set(
         journalVouchers
-            .filter(v => v.reverses?.startsWith("JV-INV-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("JV-INV-"))
             .map(v => v.reverses)
     );
 

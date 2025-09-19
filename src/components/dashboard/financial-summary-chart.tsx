@@ -46,12 +46,14 @@ export function FinancialSummaryChart() {
 
     // Initialize last 6 months
     for (let i = 0; i < 6; i++) {
-        const month = format(addMonths(sixMonthsAgo, i), 'MMM');
-        const yearMonth = format(addMonths(sixMonthsAgo, i), 'yyyy-MM');
+        const monthDate = addMonths(sixMonthsAgo, i);
+        const month = format(monthDate, 'MMM');
+        const yearMonth = format(monthDate, 'yyyy-MM');
         data[yearMonth] = { month, sales: 0, purchases: 0 };
     }
 
     journalVouchers.forEach(voucher => {
+        if (!voucher || !voucher.id || !voucher.date) return;
         const voucherDate = new Date(voucher.date);
         if (voucherDate >= sixMonthsAgo) {
             const yearMonth = format(voucherDate, 'yyyy-MM');
