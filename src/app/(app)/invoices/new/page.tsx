@@ -82,7 +82,7 @@ const InvoiceItemRow = memo(({
     item,
     index,
     handleItemChange,
-    handleItemSelection,
+    setLineItems,
     handleRemoveItem,
     items,
     itemsLoading,
@@ -91,7 +91,7 @@ const InvoiceItemRow = memo(({
     item: LineItem;
     index: number;
     handleItemChange: (index: number, field: string, value: any) => void;
-    handleItemSelection: (index: number, itemId: string) => void;
+    setLineItems: React.Dispatch<React.SetStateAction<LineItem[]>>;
     handleRemoveItem: (index: number) => void;
     items: Item[];
     itemsLoading: boolean;
@@ -102,9 +102,23 @@ const InvoiceItemRow = memo(({
         if (itemId === 'add-new') {
             openItemDialog();
         } else {
-            handleItemSelection(index, itemId);
+            const selectedItem = items.find(i => i.id === itemId);
+            if (selectedItem) {
+                setLineItems(prev => {
+                    const list = [...prev];
+                    const currentItem = { ...list[index] };
+                    currentItem.itemId = itemId;
+                    currentItem.description = selectedItem.name;
+                    currentItem.rate = selectedItem.sellingPrice || 0;
+                    currentItem.hsn = selectedItem.hsn || "";
+                    currentItem.taxableAmount = currentItem.qty * (selectedItem.sellingPrice || 0);
+                    currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
+                    list[index] = currentItem;
+                    return list;
+                });
+            }
         }
-    }, [index, handleItemSelection, openItemDialog]);
+    }, [index, items, openItemDialog, setLineItems]);
     
     return (
         <TableRow>
@@ -234,24 +248,6 @@ export default function NewInvoicePage() {
         return list;
     });
   }, []);
-
-  const handleItemSelection = useCallback((index: number, itemId: string) => {
-    const selectedItem = items.find(i => i.id === itemId);
-    if (selectedItem) {
-        setLineItems(prev => {
-            const list = [...prev];
-            const currentItem = { ...list[index] };
-            currentItem.itemId = itemId;
-            currentItem.description = selectedItem.name;
-            currentItem.rate = selectedItem.sellingPrice || 0;
-            currentItem.hsn = selectedItem.hsn || "";
-            currentItem.taxableAmount = currentItem.qty * (selectedItem.sellingPrice || 0);
-            currentItem.igst = currentItem.taxableAmount * (currentItem.taxRate / 100);
-            list[index] = currentItem;
-            return list;
-        });
-    }
-  }, [items]);
   
   const handleCustomerChange = useCallback((value: string) => {
     if (value === 'add-new') {
@@ -399,7 +395,7 @@ export default function NewInvoicePage() {
                       item={item}
                       index={index}
                       handleItemChange={handleItemChange}
-                      handleItemSelection={handleItemSelection}
+                      setLineItems={setLineItems}
                       handleRemoveItem={handleRemoveItem}
                       items={items}
                       itemsLoading={itemsLoading}
