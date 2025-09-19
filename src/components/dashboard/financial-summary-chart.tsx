@@ -3,7 +3,7 @@
 
 import { useMemo, useContext } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 
 import {
   Card,
