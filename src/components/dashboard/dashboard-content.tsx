@@ -26,7 +26,7 @@ export default function DashboardContent() {
   const accountingContext = useContext(AccountingContext);
 
   if (!accountingContext) {
-    return <div>Loading...</div>;
+    return <div>Loading Accounting Data...</div>;
   }
 
   const { journalVouchers, loading: journalLoading } = accountingContext;
@@ -39,7 +39,9 @@ export default function DashboardContent() {
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
     
-    customers.forEach(c => balances[c.id] = 0);
+    customers.forEach(c => {
+        if(c.id) balances[c.id] = 0;
+    });
     
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.lines) return;
@@ -56,7 +58,12 @@ export default function DashboardContent() {
   }, [journalVouchers, customers]);
   
   const totalReceivables = useMemo(() => {
-    return customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
+    return customers.reduce((sum, customer) => {
+        if (customer.id) {
+            return sum + (accountBalances[customer.id] || 0)
+        }
+        return sum;
+    }, 0);
   }, [customers, accountBalances]);
 
   const totalPayables = accountBalances['2010'] || 0;

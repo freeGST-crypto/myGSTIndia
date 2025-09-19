@@ -51,7 +51,10 @@ type Purchase = {
 }
 
 export default function PurchasesPage() {
-  const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
+  const accountingContext = useContext(AccountingContext);
+  if (!accountingContext) throw new Error("AccountingContext not found");
+  const { journalVouchers, addJournalVoucher, loading } = accountingContext;
+  
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);

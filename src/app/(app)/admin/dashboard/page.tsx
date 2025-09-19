@@ -148,7 +148,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {userRole === 'super_admin' ? renderSuperAdminDashboard() : renderProfessionalDashboard()}
+      {userRole === 'super_admin' ? renderSuperAdminDashboard() : userRole === 'professional' ? renderProfessionalDashboard() : <p>You do not have a valid role to view this dashboard.</p>}
     </div>
   );
 }

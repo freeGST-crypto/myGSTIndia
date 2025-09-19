@@ -17,15 +17,22 @@ import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 
 const formatCurrency = (value: number) => {
+    if (isNaN(value)) return '₹0.00';
     return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
 }
 
 export default function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { journalVouchers, loading: journalLoading } = useContext(AccountingContext)!;
+  const accountingContext = useContext(AccountingContext);
   const [user] = useAuthState(auth);
+  
+  if (!accountingContext) {
+    // This can happen briefly on initial load or if context is not provided
+    return <div>Loading Accounting Data...</div>;
+  }
 
-  // Fetch customers
+  const { journalVouchers, loading: journalLoading } = accountingContext;
+
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
@@ -33,9 +40,7 @@ export default function DashboardContent() {
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
     
-    // Initialize balances for all customers, vendors, and static accounts
     customers.forEach(c => balances[c.id] = 0);
-    // vendors would be fetched and initialized here as well in a full implementation
     
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.lines) return;
@@ -55,8 +60,7 @@ export default function DashboardContent() {
     return customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
   }, [customers, accountBalances]);
 
-  // Assuming vendor balances would be calculated similarly
-  const totalPayables = accountBalances['2010'] || 0; // This will need vendor logic later
+  const totalPayables = accountBalances['2010'] || 0;
   const gstPayable = accountBalances['2110'] || 0;
 
   const invoices = useMemo(() => {
@@ -67,7 +71,7 @@ export default function DashboardContent() {
             invoice: v.id.replace("JV-", ""),
             customer: v.narration.replace("Sale to ", "").split(" via")[0],
             amount: formatCurrency(v.amount),
-            status: "Pending", // Status logic to be implemented later
+            status: "Pending",
         }));
   }, [journalVouchers]);
 

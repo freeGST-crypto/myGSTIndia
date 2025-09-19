@@ -1,0 +1,30 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user owns the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Users can only read/update their own user document
+    match /users/{userId} {
+      allow read, update: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated(); // Allow creation on signup
+    }
+
+    // Rules for collections where documents are owned by a user
+    match /{collection}/{docId} {
+      // Allow read, write, delete only if the user is authenticated and their UID
+      // matches the 'userId' field in the document.
+      allow read, write, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+  }
+}

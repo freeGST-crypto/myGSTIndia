@@ -79,7 +79,7 @@ import { Suspense } from "react";
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
 const allMenuItems = [
-  { href: "/", label: "Dashboard", icon: Gauge, roles: ['business', 'professional', 'super_admin'] },
+  { href: "/dashboard", label: "Dashboard", icon: Gauge, roles: ['business', 'professional', 'super_admin'] },
   { href: "/pricing", label: "Pricing", icon: BadgeDollarSign, roles: ['business', 'professional', 'super_admin'] },
   {
     label: "Billing",
@@ -260,8 +260,6 @@ function filterMenuByRole(menu: any[], role: string): any[] {
         if (filteredSubItems.length > 0) {
           return { ...item, subItems: filteredSubItems };
         }
-        // If an item has a link AND sub-items, but sub-items are all filtered out,
-        // it can still be shown as a top-level link.
         return item.href ? { ...item, subItems: undefined } : null;
       }
       

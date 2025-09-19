@@ -1,13 +1,10 @@
 
 "use client";
 
-import DashboardContent from '@/components/dashboard/dashboard-content';
-import { AccountingProvider } from '@/context/accounting-context';
+import DashboardPage from './dashboard/page';
 
 export default function Page() {
     return (
-        <AccountingProvider>
-            <DashboardContent />
-        </AccountingProvider>
+        <DashboardPage />
     );
 }
