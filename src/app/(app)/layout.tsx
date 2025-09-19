@@ -194,15 +194,13 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (item.subItems) {
-      const checkActive = (subItems: any[]): boolean => {
-          return subItems.some(sub => 
-              (sub.href && pathname.startsWith(sub.href)) || 
-              (sub.subItems && checkActive(sub.subItems))
-          );
-      };
-      setIsOpen(checkActive(item.subItems));
-    }
+    const checkActive = (subItems: any[]): boolean => {
+        return subItems.some(sub => 
+            (sub.href && pathname.startsWith(sub.href)) || 
+            (sub.subItems && checkActive(sub.subItems))
+        );
+    };
+    setIsOpen(checkActive(item.subItems));
   }, [pathname, item.subItems]);
 
 
@@ -252,33 +250,31 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
   </SidebarMenu>
 );
 
-function filterMenuByRole(menu: any[], role: string): any[] {
-  return menu
-    .map(item => {
-      // If the item doesn't have a roles array, or the user's role is not included, skip it.
-      if (!item.roles || !item.roles.includes(role)) {
-        return null;
-      }
+function filterMenuByRole(menu: any[], role: string | null): any[] {
+  if (!role) return [];
 
-      // If the item has sub-items, recursively filter them.
-      if (item.subItems) {
-        const filteredSubItems = filterMenuByRole(item.subItems, role);
-        // If there are any visible sub-items left, include the parent menu item.
-        if (filteredSubItems.length > 0) {
-          return { ...item, subItems: filteredSubItems };
-        }
-        // If there are no visible sub-items, and the parent is NOT a direct link, exclude it.
-        if (!item.href) {
-          return null;
-        }
-        // If it IS a direct link, include it but without the empty sub-items.
-        return { ...item, subItems: undefined };
+  return menu.reduce((acc: any[], item: any) => {
+    // Check if the current user's role is included in the item's roles
+    const hasAccess = item.roles && item.roles.includes(role);
+
+    if (!hasAccess) {
+      return acc;
+    }
+
+    // If the item has sub-items, filter them recursively
+    if (item.subItems) {
+      const accessibleSubItems = filterMenuByRole(item.subItems, role);
+      // Only include the parent menu item if it has visible sub-items
+      if (accessibleSubItems.length > 0) {
+        acc.push({ ...item, subItems: accessibleSubItems });
       }
-      
-      // If it's a top-level item with no sub-items, include it.
-      return item;
-    })
-    .filter(Boolean) as any[];
+    } else {
+      // If it's a top-level item with no sub-items, include it
+      acc.push(item);
+    }
+
+    return acc;
+  }, []);
 }
 
 
