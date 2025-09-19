@@ -40,7 +40,7 @@ import { Separator } from "@/components/ui/separator";
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 
-const sampleUsersList = [
+export const sampleUsersList = [
     {
         id: "USR-001",
         name: "Innovate LLC",

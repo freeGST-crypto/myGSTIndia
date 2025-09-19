@@ -45,7 +45,7 @@ type Appointment = {
   assignedTo?: string;
 };
 
-const sampleAppointments: Appointment[] = [
+export const sampleAppointments: Appointment[] = [
     {
         id: "APT001",
         clientName: "Priya Mehta",

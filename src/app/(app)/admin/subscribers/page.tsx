@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Edit, RefreshCw, XCircle } from "lucide-react";
 import { format } from 'date-fns';
 
-const sampleSubscribers = [
+export const sampleSubscribers = [
     {
         id: "SUB001",
         user: "Innovate LLC",

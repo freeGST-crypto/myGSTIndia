@@ -54,13 +54,14 @@ type Professional = {
     reviews?: number;
 };
 
-const sampleProfessionals: Professional[] = [
+export const sampleProfessionals: Professional[] = [
     {
         id: "PRO-001",
         name: "Rohan Sharma, CA",
         type: "ca",
         firmName: "Sharma & Associates",
         email: "rohan.sharma@ca-firm.com",
+        city: "Mumbai",
         specialization: ["Startup Advisory", "GST", "Audit"],
         clients: 25,
         status: "Active",
@@ -78,6 +79,7 @@ const sampleProfessionals: Professional[] = [
         type: "advocate",
         firmName: "Mehta Legal",
         email: "priya.mehta@legal.com",
+        city: "Delhi",
         specialization: ["Corporate Law", "GST Litigation"],
         clients: 40,
         status: "Active",
@@ -95,6 +97,7 @@ const sampleProfessionals: Professional[] = [
         type: "cs",
         firmName: "Singh Corporate Services",
         email: "anjali.s@cs-practitioner.com",
+        city: "Bangalore",
         specialization: ["LLP Registration", "MCA Compliance"],
         clients: 50,
         status: "Pending Verification",
