@@ -81,39 +81,25 @@ const PurchaseItemRow = memo(({
     index,
     onRemove,
     handleItemChange,
+    handleSelectChange,
     items,
     itemsLoading,
-    openItemDialog,
 }: {
     item: LineItem;
     index: number;
-    onRemove: () => void;
+    onRemove: (index: number) => void;
     handleItemChange: (index: number, field: keyof LineItem, value: any) => void;
+    handleSelectChange: (index: number, itemId: string) => void;
     items: Item[];
     itemsLoading: boolean;
-    openItemDialog: () => void;
 }) => {
-    
-    const handleSelectChange = (itemId: string) => {
-        if (itemId === 'add-new') {
-            openItemDialog();
-        } else {
-             const selectedItem = items.find((i) => i.id === itemId);
-            if (selectedItem) {
-                handleItemChange(index, 'itemId', itemId);
-                handleItemChange(index, 'description', selectedItem.name);
-                handleItemChange(index, 'rate', selectedItem.purchasePrice || 0);
-                handleItemChange(index, 'hsn', selectedItem.hsn || "");
-            }
-        }
-    };
     
     const taxableAmount = item.qty * item.rate;
 
     return (
         <TableRow>
             <TableCell>
-                <Select onValueChange={handleSelectChange} value={item.itemId} disabled={itemsLoading}>
+                <Select onValueChange={(value) => handleSelectChange(index, value)} value={item.itemId} disabled={itemsLoading}>
                     <SelectTrigger>
                         <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                     </SelectTrigger>
@@ -155,7 +141,7 @@ const PurchaseItemRow = memo(({
                 ₹{taxableAmount.toFixed(2)}
             </TableCell>
             <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={onRemove}>
+                <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
             </TableCell>
@@ -199,6 +185,10 @@ export default function NewPurchasePage() {
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
   const items: Item[] = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [];
 
+  const openItemDialog = useCallback(() => {
+    setIsItemDialogOpen(true);
+  }, []);
+
   const handleAddItem = useCallback(() => {
     setLineItems(prev => [...prev, createNewLineItem()]);
   }, []);
@@ -208,16 +198,44 @@ export default function NewPurchasePage() {
   }, []);
   
   const handleItemChange = useCallback((index: number, field: keyof LineItem, value: any) => {
-    setLineItems(prev => {
-      const newItems = [...prev];
-      const updatedItem = { ...newItems[index], [field]: value };
-      if (field === 'qty' || field === 'rate') {
-          updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
-      }
-      newItems[index] = updatedItem;
-      return newItems;
-    });
+    setLineItems(prev =>
+      prev.map((item, i) => {
+        if (i === index) {
+          const updatedItem = { ...item, [field]: value };
+          if (field === 'qty' || field === 'rate' || field === 'taxRate') {
+            updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+          }
+          return updatedItem;
+        }
+        return item;
+      })
+    );
   }, []);
+  
+  const handleSelectChange = useCallback((index: number, itemId: string) => {
+    if (itemId === 'add-new') {
+        openItemDialog();
+        return;
+    }
+    const selectedItem = items.find(i => i.id === itemId);
+    if (selectedItem) {
+      setLineItems(prev =>
+        prev.map((item, i) => {
+          if (i === index) {
+            return {
+              ...item,
+              itemId: itemId,
+              description: selectedItem.name,
+              rate: selectedItem.purchasePrice || 0,
+              hsn: selectedItem.hsn || "",
+              amount: (item.qty || 0) * (selectedItem.purchasePrice || 0)
+            };
+          }
+          return item;
+        })
+      );
+    }
+  }, [items, openItemDialog]);
 
   const handleVendorChange = useCallback((value: string) => {
     if (value === 'add-new') {
@@ -225,10 +243,6 @@ export default function NewPurchasePage() {
     } else {
         setVendor(value);
     }
-  }, []);
-
-  const openItemDialog = useCallback(() => {
-    setIsItemDialogOpen(true);
   }, []);
 
   const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
@@ -381,11 +395,11 @@ export default function NewPurchasePage() {
                         key={item.id}
                         item={item}
                         index={index}
-                        onRemove={() => handleRemoveItem(index)}
+                        onRemove={handleRemoveItem}
                         handleItemChange={handleItemChange}
+                        handleSelectChange={handleSelectChange}
                         items={items}
                         itemsLoading={itemsLoading}
-                        openItemDialog={openItemDialog}
                     />
                 ))}
               </TableBody>
@@ -458,3 +472,5 @@ export default function NewPurchasePage() {
     </div>
   );
 }
+
+    

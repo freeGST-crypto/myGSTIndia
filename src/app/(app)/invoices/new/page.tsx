@@ -81,32 +81,18 @@ const InvoiceItemRow = memo(({
     index,
     onRemove,
     handleItemChange,
+    handleSelectChange,
     items,
     itemsLoading,
-    openItemDialog,
 }: {
     item: LineItem;
     index: number;
-    onRemove: () => void;
+    onRemove: (index: number) => void;
     handleItemChange: (index: number, field: keyof LineItem, value: any) => void;
+    handleSelectChange: (index: number, itemId: string) => void;
     items: Item[];
     itemsLoading: boolean;
-    openItemDialog: () => void;
 }) => {
-    
-    const handleSelectChange = (itemId: string) => {
-        if (itemId === 'add-new') {
-            openItemDialog();
-        } else {
-            const selectedItem = items.find(i => i.id === itemId);
-            if (selectedItem) {
-                handleItemChange(index, 'itemId', itemId);
-                handleItemChange(index, 'description', selectedItem.name);
-                handleItemChange(index, 'rate', selectedItem.sellingPrice || 0);
-                handleItemChange(index, 'hsn', selectedItem.hsn || "");
-            }
-        }
-    };
     
     const taxableAmount = item.qty * item.rate;
     const igst = taxableAmount * (item.taxRate / 100);
@@ -116,7 +102,7 @@ const InvoiceItemRow = memo(({
     return (
         <TableRow>
             <TableCell>
-                <Select onValueChange={handleSelectChange} value={item.itemId} disabled={itemsLoading}>
+                <Select onValueChange={(value) => handleSelectChange(index, value)} value={item.itemId} disabled={itemsLoading}>
                     <SelectTrigger>
                         <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
                     </SelectTrigger>
@@ -139,7 +125,7 @@ const InvoiceItemRow = memo(({
             <TableCell className="text-right font-mono">₹{cgst.toFixed(2)}</TableCell>
             <TableCell className="text-right font-mono">₹{sgst.toFixed(2)}</TableCell>
             <TableCell className="text-right">
-               <Button variant="ghost" size="icon" onClick={onRemove}>
+               <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
             </TableCell>
@@ -201,13 +187,17 @@ export default function NewInvoicePage() {
                  hsn: "",
                  qty: 1,
                  rate: parseFloat(salesLine.credit),
-                 taxRate: 18,
+                 taxRate: 18, // Assuming 18% for simplicity
                  amount: parseFloat(salesLine.credit),
             }]);
         }
       }
     }
   }, [searchParams, journalVouchers, items]);
+
+  const openItemDialog = useCallback(() => {
+    setIsItemDialogOpen(true);
+  }, []);
 
   const handleAddItem = useCallback(() => {
     setLineItems(prev => [...prev, createNewLineItem()]);
@@ -217,19 +207,45 @@ export default function NewInvoicePage() {
     setLineItems(prev => prev.filter((_, i) => i !== index));
   }, []);
 
- const handleItemChange = useCallback((index: number, field: keyof LineItem, value: any) => {
-    setLineItems(prev => {
-        const newItems = [...prev];
-        const updatedItem = { ...newItems[index], [field]: value };
-        
-        if (field === 'qty' || field === 'rate') {
+  const handleItemChange = useCallback((index: number, field: keyof LineItem, value: any) => {
+    setLineItems(prev =>
+      prev.map((item, i) => {
+        if (i === index) {
+          const updatedItem = { ...item, [field]: value };
+          if (field === 'qty' || field === 'rate' || field === 'taxRate') {
             updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+          }
+          return updatedItem;
         }
-        
-        newItems[index] = updatedItem;
-        return newItems;
-    });
+        return item;
+      })
+    );
   }, []);
+
+  const handleSelectChange = useCallback((index: number, itemId: string) => {
+    if (itemId === 'add-new') {
+        openItemDialog();
+        return;
+    }
+    const selectedItem = items.find(i => i.id === itemId);
+    if(selectedItem) {
+        setLineItems(prev =>
+            prev.map((item, i) => {
+                if (i === index) {
+                    return {
+                        ...item,
+                        itemId: itemId,
+                        description: selectedItem.name,
+                        rate: selectedItem.sellingPrice || 0,
+                        hsn: selectedItem.hsn || "",
+                        amount: (item.qty || 0) * (selectedItem.sellingPrice || 0)
+                    };
+                }
+                return item;
+            })
+        );
+    }
+  }, [items, openItemDialog]);
   
   const handleCustomerChange = useCallback((value: string) => {
     if (value === 'add-new') {
@@ -237,10 +253,6 @@ export default function NewInvoicePage() {
     } else {
       setCustomer(value);
     }
-  }, []);
-
-  const openItemDialog = useCallback(() => {
-    setIsItemDialogOpen(true);
   }, []);
 
   const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
@@ -394,11 +406,11 @@ export default function NewInvoicePage() {
                       key={item.id}
                       item={item}
                       index={index}
-                      onRemove={() => handleRemoveItem(index)}
+                      onRemove={handleRemoveItem}
                       handleItemChange={handleItemChange}
+                      handleSelectChange={handleSelectChange}
                       items={items}
                       itemsLoading={itemsLoading}
-                      openItemDialog={openItemDialog}
                   />
                 ))}
               </TableBody>
@@ -445,3 +457,5 @@ export default function NewInvoicePage() {
     </div>
   );
 }
+
+    
