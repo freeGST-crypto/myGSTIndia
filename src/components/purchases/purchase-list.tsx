@@ -3,6 +3,7 @@
 
 import { useState, useMemo, useContext } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -37,7 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Copy, Trash2, Search } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
-import { AccountingContext } from "@/context/accounting-context";
+import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
 import { format, addDays, isPast } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,12 +49,14 @@ type Purchase = {
     dueDate: string;
     amount: number;
     status: string;
+    raw: JournalVoucher;
 }
 
 export default function PurchasesPage() {
   const accountingContext = useContext(AccountingContext);
   if (!accountingContext) throw new Error("AccountingContext not found");
   const { journalVouchers, addJournalVoucher, loading } = accountingContext;
+  const router = useRouter();
   
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -69,6 +72,7 @@ export default function PurchasesPage() {
     
     return allBills
         .map(v => {
+            if (!v) return null;
             const isDeleted = deletedBillIds.has(v.id);
             const dueDate = addDays(new Date(v.date), 30);
             const isOverdue = !isDeleted && isPast(dueDate);
@@ -87,18 +91,20 @@ export default function PurchasesPage() {
                 dueDate: format(dueDate, 'yyyy-MM-dd'),
                 amount: v.amount,
                 status: status,
+                raw: v,
             }
         })
+        .filter((v): v is Purchase => v !== null)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [journalVouchers]);
   
-  const handleDeleteBill = async (billId: string) => {
+  const handleDeleteBill = async (billId: string): Promise<boolean> => {
     const originalVoucherId = `JV-${billId}`;
     const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
 
     if (!originalVoucher) {
         toast({ variant: "destructive", title: "Error", description: "Original purchase transaction not found." });
-        return;
+        return false;
     }
 
     const reversalLines = originalVoucher.lines.map(line => ({
@@ -120,17 +126,31 @@ export default function PurchasesPage() {
     try {
         await addJournalVoucher(deletionVoucher);
         toast({ title: "Purchase Bill Deleted", description: `Purchase bill #${billId} has been successfully deleted.` });
+        return true;
     } catch (e: any) {
         toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
+        return false;
     }
   };
   
-   const handleAction = (action: string, purchase: Purchase) => {
+   const handleAction = async (action: string, purchase: Purchase) => {
         if (action === 'View') {
             setSelectedPurchase(purchase);
         } else if (action === 'Delete') {
-            handleDeleteBill(purchase.id);
-        } else {
+            await handleDeleteBill(purchase.id);
+        } else if (action === 'Edit') {
+             toast({ title: 'Editing Purchase Bill...', description: `Cancelling ${purchase.id} and creating a new draft.` });
+            const deleted = await handleDeleteBill(purchase.id);
+            if (deleted) {
+                const queryParams = new URLSearchParams({
+                    edit: purchase.id
+                }).toString();
+                router.push(`/purchases/new?${queryParams}`);
+            } else {
+                 toast({ variant: 'destructive', title: 'Edit Failed', description: `Could not delete the original bill.` });
+            }
+        }
+        else {
             toast({
                 title: `Action: ${action}`,
                 description: `This would ${action.toLowerCase()} bill ${purchase.id}. This is a placeholder.`
@@ -259,7 +279,7 @@ export default function PurchasesPage() {
                                 <DropdownMenuItem onSelect={() => handleAction('View', purchase)}>
                                   <FileText className="mr-2" /> View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleAction('Edit', purchase)}>
+                                <DropdownMenuItem onSelect={() => handleAction('Edit', purchase)} disabled={purchase.status === 'Deleted'}>
                                   <Edit className="mr-2" /> Edit Bill
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => handleAction('Duplicate', purchase)}>

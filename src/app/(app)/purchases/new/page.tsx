@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useState, useContext, useCallback, useMemo, memo } from "react";
+import { useState, useContext, useCallback, useMemo, memo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
@@ -165,7 +166,11 @@ const createNewLineItem = (): LineItem => ({
 export default function NewPurchasePage() {
   const accountingContext = useContext(AccountingContext);
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [user] = useAuthState(auth);
+  
+  const { journalVouchers } = useContext(AccountingContext)!;
 
   const [billDate, setBillDate] = useState<Date | undefined>(new Date());
   const [vendor, setVendor] = useState("");
@@ -184,6 +189,50 @@ export default function NewPurchasePage() {
   const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
   const items: Item[] = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [], [itemsSnapshot]);
+  
+    useEffect(() => {
+    const editId = searchParams.get('edit') || searchParams.get('duplicate');
+    if (editId && journalVouchers.length > 0 && items.length > 0) {
+      const voucherToLoad = journalVouchers.find(v => v.id === `JV-${editId}`);
+      if (voucherToLoad) {
+        setBillDate(new Date(voucherToLoad.date));
+        setVendor(voucherToLoad.vendorId || "");
+        
+        if (searchParams.get('edit')) {
+            setBillNumber(voucherToLoad.id.replace('JV-', ''));
+        }
+
+        const purchaseLine = voucherToLoad.lines.find(l => l.account === '5050');
+        const taxLine = voucherToLoad.lines.find(l => l.account === '2110');
+        const tdsLine = voucherToLoad.lines.find(l => l.account === '2130');
+        const tcsLine = voucherToLoad.lines.find(l => l.account === '1470');
+
+        const subtotal = parseFloat(purchaseLine?.debit || '0');
+        const taxAmount = parseFloat(taxLine?.debit || '0');
+
+        if (tdsLine) setTaxType('tds');
+        if (tcsLine) setTaxType('tcs');
+
+        if (subtotal > 0) {
+            const taxRate = (taxAmount / subtotal) * 100;
+            const itemFromNarration = voucherToLoad.narration.split(" for ")[1]?.split(" from ")[0];
+
+            let matchedItem = items.find(i => i.name.toLowerCase() === itemFromNarration?.toLowerCase());
+
+            setLineItems([{
+                 id: `${Date.now()}-${Math.random()}`,
+                 itemId: matchedItem?.id || "",
+                 description: matchedItem?.name || voucherToLoad.narration,
+                 hsn: matchedItem?.hsn || "",
+                 qty: 1, 
+                 rate: subtotal,
+                 taxRate: isNaN(taxRate) ? 18 : taxRate,
+                 amount: subtotal,
+            }]);
+        }
+      }
+    }
+  }, [searchParams, journalVouchers, items]);
 
   const openItemDialog = useCallback(() => {
     setIsItemDialogOpen(true);
@@ -293,6 +342,7 @@ export default function NewPurchasePage() {
             vendorId: vendor,
         });
         toast({ title: "Purchase Bill Saved", description: `Journal entry for bill #${billNumber} has been automatically created.` });
+        router.push("/purchases");
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
     }
