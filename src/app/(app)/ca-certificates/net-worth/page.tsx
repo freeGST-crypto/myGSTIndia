@@ -75,6 +75,12 @@ export default function NetWorthCertificatePage() {
   const { fields: assetFields, append: appendAsset, remove: removeAsset } = useFieldArray({ control: form.control, name: "assets" });
   const { fields: liabilityFields, append: appendLiability, remove: removeLiability } = useFieldArray({ control: form.control, name: "liabilities" });
   
+  const watchedAssets = form.watch("assets");
+  const watchedLiabilities = form.watch("liabilities");
+  const totalAssets = watchedAssets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
+  const totalLiabilities = watchedLiabilities.reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
+  const netWorth = totalAssets - totalLiabilities;
+  
   const handleGenerateDraft = async () => {
     const isValid = await form.trigger();
     if(isValid) {
@@ -98,11 +104,6 @@ export default function NetWorthCertificatePage() {
     onAfterPrint: () => toast({ title: "Print job sent." }),
   });
 
-
-  const totalAssets = form.watch("assets").reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
-  const totalLiabilities = form.watch("liabilities").reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
-  const netWorth = totalAssets - totalLiabilities;
-  
 
   const renderStepContent = () => {
     switch(step) {

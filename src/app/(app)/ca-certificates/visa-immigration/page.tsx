@@ -68,11 +68,11 @@ export default function VisaImmigrationCertificatePage() {
   const { fields: loanFields, append: appendLoan, remove: removeLoan } = useFieldArray({ control: form.control, name: "educationLoan" });
 
   const watchAllFields = form.watch();
-  const totalImmovable = watchAllFields.immovableProperties.reduce((acc, asset) => acc + asset.value, 0);
-  const totalLiquid = watchAllFields.liquidAssets.reduce((acc, asset) => acc + asset.value, 0);
-  const totalBank = watchAllFields.bankBalances.reduce((acc, asset) => acc + asset.value, 0);
-  const totalIncome = watchAllFields.currentIncome.reduce((acc, asset) => acc + asset.value, 0);
-  const totalLoan = watchAllFields.educationLoan.reduce((acc, asset) => acc + asset.value, 0);
+  const totalImmovable = watchAllFields.immovableProperties.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
+  const totalLiquid = watchAllFields.liquidAssets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
+  const totalBank = watchAllFields.bankBalances.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
+  const totalIncome = watchAllFields.currentIncome.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
+  const totalLoan = watchAllFields.educationLoan.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
   const grandTotal = totalImmovable + totalLiquid + totalBank + totalIncome + totalLoan;
   
   const toUsd = (inr: number) => watchAllFields.usdRate > 0 ? inr / watchAllFields.usdRate : 0;
