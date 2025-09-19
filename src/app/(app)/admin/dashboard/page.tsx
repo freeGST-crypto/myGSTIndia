@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
   const getRole = () => {
     if (!user) return null;
     if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
-    return userData?.userType || null; 
+    return userData?.userType || 'business'; 
   }
   
   const userRole = getRole();
@@ -131,24 +131,57 @@ export default function AdminDashboardPage() {
       </Card>
     </div>
   );
+  
+  const renderBusinessDashboard = () => (
+    <div className="space-y-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Business Overview</CardTitle>
+          <CardDescription>
+            Your subscriptions, appointments, and invoices.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Welcome, Business Owner! Here you’ll see only your business-related data.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+
+  const renderDashboard = () => {
+    switch (userRole) {
+      case 'super_admin':
+        return renderSuperAdminDashboard();
+      case 'professional':
+        return renderProfessionalDashboard();
+      case 'business':
+        return renderBusinessDashboard();
+      default:
+        return <p>You do not have a valid role to view this dashboard.</p>;
+    }
+  }
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">
-            {userRole === 'professional' ? 'Client Workspace' : 'Admin Dashboard'}
+            {userRole === 'professional' ? 'Client Workspace' : userRole === 'super_admin' ? 'Admin Dashboard' : 'Business Dashboard'}
           </h1>
           <p className="text-muted-foreground">
             {userRole === 'professional'
               ? "Manage your client portfolio."
-              : "Platform-wide overview and metrics."
-              }
+              : userRole === 'super_admin'
+              ? "Platform-wide overview and metrics."
+              : "Your business at a glance."
+            }
           </p>
         </div>
       </div>
+      
+      {renderDashboard()}
 
-      {userRole === 'super_admin' ? renderSuperAdminDashboard() : userRole === 'professional' ? renderProfessionalDashboard() : <p>You do not have a valid role to view this dashboard.</p>}
     </div>
   );
 }
