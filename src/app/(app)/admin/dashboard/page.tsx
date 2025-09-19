@@ -150,16 +150,16 @@ export default function AdminDashboardPage() {
 
 
   const renderDashboard = () => {
-    switch (userRole) {
-      case 'super_admin':
-        return renderSuperAdminDashboard();
-      case 'professional':
-        return renderProfessionalDashboard();
-      case 'business':
-        return renderBusinessDashboard();
-      default:
-        return <p>You do not have a valid role to view this dashboard.</p>;
-    }
+    return (
+      <>
+        {userRole === 'super_admin' && renderSuperAdminDashboard()}
+        {userRole === 'professional' && renderProfessionalDashboard()}
+        {userRole === 'business' && renderBusinessDashboard()}
+        {!['super_admin', 'professional', 'business'].includes(userRole as string) && (
+          <p>You do not have a valid role to view this dashboard.</p>
+        )}
+      </>
+    );
   }
 
   return (
@@ -185,3 +185,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
