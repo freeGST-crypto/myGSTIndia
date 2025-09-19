@@ -27,33 +27,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileSpreadsheet, GitCompareArrows, FileText, ArrowRight } from "lucide-react";
+import { FileSpreadsheet, GitCompareArrows, FileText, ArrowRight, CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
-
-const generateMonths = () => {
-    const months = [];
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-        const d = subMonths(now, i);
-        months.push({
-            value: format(d, 'yyyy-MM'),
-            label: format(d, 'MMMM yyyy'),
-        });
-    }
-    return months;
-};
-
+import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export default function GstFilingsPage() {
-    const [period, setPeriod] = useState(format(new Date(), 'yyyy-MM'));
+    const [date, setDate] = useState<Date>(new Date());
+    const period = format(date, 'yyyy-MM');
     const { toast } = useToast();
     const { journalVouchers, loading } = useContext(AccountingContext)!;
-    const months = generateMonths();
-
+    
     const { gstr1Summary, gstr3bSummary } = useMemo(() => {
         const periodStart = startOfMonth(new Date(period));
         const periodEnd = endOfMonth(new Date(period));
@@ -119,15 +108,28 @@ export default function GstFilingsPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
-                     <Select defaultValue={period} onValueChange={setPeriod}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select a period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                            <SelectItem value="FY-2023-24">FY 2023-24 (Annual)</SelectItem>
-                        </SelectContent>
-                    </Select>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "w-[280px] justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, "MMMM yyyy") : <span>Pick a month</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={(day) => day && setDate(day)}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
                      <Link href="/reconciliation/gstr-comparison" passHref>
                         <Button variant="outline">
                             <GitCompareArrows className="mr-2"/>
@@ -148,7 +150,7 @@ export default function GstFilingsPage() {
                 <TabsContent value="gstr-1">
                     <Card>
                         <CardHeader>
-                            <CardTitle>GSTR-1 Summary for {months.find(m => m.value === period)?.label}</CardTitle>
+                            <CardTitle>GSTR-1 Summary for {format(date, 'MMMM yyyy')}</CardTitle>
                             <CardDescription>Review your outward supplies before filing. Click a row to see details.</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -191,7 +193,7 @@ export default function GstFilingsPage() {
                 <TabsContent value="gstr-3b">
                      <Card>
                         <CardHeader>
-                            <CardTitle>GSTR-3B Summary for {months.find(m => m.value === period)?.label}</CardTitle>
+                            <CardTitle>GSTR-3B Summary for {format(date, 'MMMM yyyy')}</CardTitle>
                             <CardDescription>Review your monthly summary and tax computation.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
