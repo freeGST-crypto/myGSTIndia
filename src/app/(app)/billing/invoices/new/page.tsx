@@ -168,7 +168,7 @@ export default function NewInvoicePage() {
 
   useEffect(() => {
     const editId = searchParams.get('edit') || searchParams.get('duplicate');
-    if (editId && journalVouchers.length > 0) {
+    if (editId && journalVouchers.length > 0 && items.length > 0) {
       const voucherToLoad = journalVouchers.find(v => v.id === `JV-${editId}`);
       if (voucherToLoad) {
         setInvoiceDate(new Date(voucherToLoad.date));
@@ -180,25 +180,38 @@ export default function NewInvoicePage() {
 
         const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
         const taxLine = voucherToLoad.lines.find(l => l.account === '2110');
+        const tdsLine = voucherToLoad.lines.find(l => l.account === '1460');
+        const tcsLine = voucherToLoad.lines.find(l => l.account === '2120');
+
         const subtotal = parseFloat(salesLine?.credit || '0');
         const taxAmount = parseFloat(taxLine?.credit || '0');
 
+        if (tdsLine) setTaxType('tds');
+        if (tcsLine) setTaxType('tcs');
+
         if (subtotal > 0) {
             const taxRate = (taxAmount / subtotal) * 100;
+            const itemFromNarration = voucherToLoad.narration.split(" for ")[1]?.split(" to ")[0];
+
+            let matchedItem = items.find(i => i.name.toLowerCase() === itemFromNarration?.toLowerCase());
+
+            // A more robust way to handle single-item invoice reconstruction
             setLineItems([{
                  id: `${Date.now()}-${Math.random()}`,
-                 itemId: "", // This would need more logic to map back to an item
-                 description: voucherToLoad.narration,
-                 hsn: "", // Not stored in journal
-                 qty: 1, // Not stored, so default to 1
+                 itemId: matchedItem?.id || "",
+                 description: matchedItem?.name || voucherToLoad.narration,
+                 hsn: matchedItem?.hsn || "",
+                 qty: 1, 
                  rate: subtotal,
-                 taxRate: taxRate,
+                 taxRate: isNaN(taxRate) ? 18 : taxRate,
                  amount: subtotal,
             }]);
+        } else {
+             // Handle multi-line item reconstruction if needed in the future
         }
       }
     }
-  }, [searchParams, journalVouchers]);
+}, [searchParams, journalVouchers, items]);
 
   const openItemDialog = useCallback(() => {
     setIsItemDialogOpen(true);
