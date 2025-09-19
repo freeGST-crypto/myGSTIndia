@@ -37,6 +37,14 @@ import { collection, query, where } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Separator } from "@/components/ui/separator";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
 
 type LedgerEntry = {
     date: string;
@@ -122,11 +130,61 @@ export default function LedgersPage() {
     };
     
     const handleExport = () => {
-        const accountName = combinedAccounts.find(a => a.value === selectedAccount)?.label;
-        toast({
-            title: "Exporting Ledger",
-            description: `Your PDF for ${accountName} is being generated.`,
+        if (ledgerEntries.length === 0) {
+            toast({ variant: "destructive", title: "No Data", description: "Please generate a ledger before exporting." });
+            return;
+        }
+        
+        const accountName = combinedAccounts.find(a => a.value === selectedAccount)?.label || "Ledger";
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text(`Ledger Account: ${accountName}`, 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text("For the period 01-Apr-2024 to 31-Mar-2025", 14, 29);
+
+        doc.autoTable({
+            startY: 40,
+            head: [['', '']],
+            body: [
+                ['Opening Balance', `₹${balances.opening.toFixed(2)}`],
+                ['Total Debits', `₹${balances.totalDebits.toFixed(2)}`],
+                ['Total Credits', `₹${balances.totalCredits.toFixed(2)}`],
+                [{ content: 'Closing Balance', styles: { fontStyle: 'bold' } }, { content: `₹${balances.closing.toFixed(2)}`, styles: { fontStyle: 'bold' } }],
+            ],
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: false, textColor: 0 },
+            bodyStyles: { cellWidth: 'wrap'},
+            tableWidth: 90
         });
+
+        const tableColumn = ["Date", "Particulars", "Voucher Type", "Debit (₹)", "Credit (₹)", "Balance (₹)"];
+        const tableRows = ledgerEntries.map(entry => [
+            entry.date,
+            entry.particulars,
+            entry.type,
+            entry.debit > 0 ? entry.debit.toFixed(2) : '-',
+            entry.credit > 0 ? entry.credit.toFixed(2) : '-',
+            entry.balance.toFixed(2),
+        ]);
+
+        doc.autoTable({
+            startY: (doc as any).lastAutoTable.finalY + 15,
+            head: [tableColumn],
+            body: tableRows,
+            theme: 'striped',
+            headStyles: { fillColor: [22, 163, 74] },
+            columnStyles: {
+                3: { halign: 'right' },
+                4: { halign: 'right' },
+                5: { halign: 'right' },
+            }
+        });
+
+        doc.save(`Ledger_${accountName.replace(/ /g, '_')}.pdf`);
+        toast({ title: "Export Successful", description: "Your ledger has been exported as a PDF." });
     };
     
     const selectedAccountName = combinedAccounts.find(a => a.value === selectedAccount)?.label || "Selected Account";
