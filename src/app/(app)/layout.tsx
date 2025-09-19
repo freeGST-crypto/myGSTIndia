@@ -43,6 +43,7 @@ import {
   ConciergeBell,
   LayoutDashboard,
   MailWarning,
+  FileSignature,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
