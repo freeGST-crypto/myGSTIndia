@@ -73,6 +73,8 @@ import { auth, db } from '@/lib/firebase';
 import { doc } from 'firebase/firestore';
 import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
+import { AccountingProvider } from "@/context/accounting-context";
+import { Suspense } from "react";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
@@ -242,15 +244,20 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
 
 function filterMenuByRole(menu: any[], role: string): any[] {
   return menu
-    .filter(item => item.roles.includes(role))
     .map(item => {
+      // Check if the current item is accessible for the role
+      if (!item.roles.includes(role)) {
+        return null;
+      }
+      // If it has sub-items, filter them recursively
       if (item.subItems) {
         const filteredSubItems = filterMenuByRole(item.subItems, role);
         // Only include the parent item if it has visible sub-items
         if (filteredSubItems.length > 0) {
             return { ...item, subItems: filteredSubItems };
         }
-        return null;
+        // If no sub-items are visible, don't include the parent either, unless it has a direct link
+        return item.href ? { ...item, subItems: [] } : null;
       }
       return item;
     }).filter(item => item !== null);
@@ -297,32 +304,36 @@ export default function AppLayout({
   const menuItems = filterMenuByRole(allMenuItems, userRole);
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
-            <GstEaseLogo className="size-8 shrink-0" />
-            <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-              GSTEase
-            </span>
-          </div>
-        </SidebarHeader>
-        <Separator />
-        <SidebarContent>
-            <NavMenu items={menuItems} pathname={pathname} />
-        </SidebarContent>
-        <SidebarFooter>
-          {/* Footer content can go here if needed in the future */}
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <Header />
-        <main className="flex-1 p-4 sm:p-6">
-           <ClientOnly>
-                {children}
-          </ClientOnly>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <AccountingProvider>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2 p-2">
+              <GstEaseLogo className="size-8 shrink-0" />
+              <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
+                GSTEase
+              </span>
+            </div>
+          </SidebarHeader>
+          <Separator />
+          <SidebarContent>
+              <NavMenu items={menuItems} pathname={pathname} />
+          </SidebarContent>
+          <SidebarFooter>
+            {/* Footer content can go here if needed in the future */}
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 p-4 sm:p-6">
+            <ClientOnly>
+                <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>}>
+                  {children}
+                </Suspense>
+            </ClientOnly>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </AccountingProvider>
   );
 }

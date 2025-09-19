@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {userRole === 'professional' ? renderProfessionalDashboard() : renderSuperAdminDashboard()}
+      {userRole === 'super_admin' ? renderSuperAdminDashboard() : renderProfessionalDashboard()}
     </div>
   );
 }

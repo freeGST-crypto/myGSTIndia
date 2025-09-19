@@ -26,15 +26,12 @@ export default function DashboardContent() {
   const accountingContext = useContext(AccountingContext);
 
   if (!accountingContext) {
-    // This can happen briefly while the context is loading.
-    // A more robust solution might involve a loading skeleton here.
     return <div>Loading...</div>;
   }
 
   const { journalVouchers, loading: journalLoading } = accountingContext;
   const [user] = useAuthState(auth);
 
-  // Fetch customers
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);

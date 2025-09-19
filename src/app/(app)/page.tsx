@@ -1,6 +1,8 @@
 
-import DashboardPage from "./dashboard/page";
+"use client";
+
+import DashboardContent from "@/components/dashboard/dashboard-content";
 
 export default function Page() {
-    return <DashboardPage />;
+    return <DashboardContent />;
 }
