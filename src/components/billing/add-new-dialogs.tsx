@@ -28,6 +28,10 @@ const partySchema = z.object({
     gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN format.").optional().or(z.literal("")),
     email: z.string().email("Invalid email.").optional().or(z.literal("")),
     phone: z.string().optional(),
+    address1: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    pincode: z.string().optional(),
 });
 
 const itemSchema = z.object({
@@ -39,7 +43,7 @@ const itemSchema = z.object({
     sellingPrice: z.coerce.number().min(0).optional(),
 });
 
-export const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) => {
+export function PartyDialog({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
@@ -93,7 +97,7 @@ export const PartyDialog = ({ open, onOpenChange, type }: { open: boolean, onOpe
     );
 };
 
-export const ItemDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
+export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
