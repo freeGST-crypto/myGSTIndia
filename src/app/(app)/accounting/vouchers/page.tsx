@@ -92,40 +92,42 @@ export default function VouchersPage() {
     const { journalVouchers, addJournalVoucher, loading } = accountingContext;
 
     const { receipts, payments } = useMemo(() => {
-        const deletedIds = new Set(
-            journalVouchers.filter(v => v.id.startsWith("JV-DEL-"))
-                         .map(v => v.id.replace("JV-DEL-", ""))
+        const reversedIds = new Set(
+            journalVouchers.filter(v => v.reverses).map(v => v.reverses)
         );
 
         const allReceipts = journalVouchers
             .filter(v => v.id.startsWith("JV-RV-"))
             .map(v => {
-                const isDeleted = deletedIds.has(v.id.replace("JV-", ""));
+                const isReversed = reversedIds.has(v.id);
                 return {
                     id: v.id.replace("JV-", ""),
                     date: v.date,
                     party: v.narration.split(" from ")[1]?.split(" against")[0] || v.narration,
                     amount: v.amount,
                     mode: v.lines.some(l => l.account === '1010') ? 'Cash' : 'Bank',
-                    status: isDeleted ? 'Deleted' : 'Active'
+                    status: isReversed ? 'Reversed' : 'Active'
                 };
             });
 
         const allPayments = journalVouchers
             .filter(v => v.id.startsWith("JV-PV-"))
             .map(v => {
-                const isDeleted = deletedIds.has(v.id.replace("JV-", ""));
+                const isReversed = reversedIds.has(v.id);
                  return {
                     id: v.id.replace("JV-", ""),
                     date: v.date,
                     party: v.narration.split(" to ")[1]?.split(" for")[0] || v.narration,
                     amount: v.amount,
                     mode: v.lines.some(l => l.account === '1010') ? 'Cash' : 'Bank',
-                    status: isDeleted ? 'Deleted' : 'Active'
+                    status: isReversed ? 'Reversed' : 'Active'
                 };
             });
 
-        return { receipts: allReceipts, payments: allPayments };
+        return { 
+            receipts: allReceipts.filter(v => !reversedIds.has(`JV-${v.id}`)),
+            payments: allPayments.filter(v => !reversedIds.has(`JV-${v.id}`))
+        };
     }, [journalVouchers]);
     
     const handleDeleteVoucher = async (voucherId: string) => {
@@ -143,21 +145,20 @@ export default function VouchersPage() {
             credit: line.debit,
         }));
         
-        const deletionIdPrefix = voucherId.startsWith('RV') ? 'DEL-RV' : 'DEL-PV';
-
-        const deletionVoucher = {
-            id: `JV-DEL-${voucherId}`,
+        const reversalVoucher = {
+            id: `JV-REV-${Date.now()}`,
+            reverses: originalVoucherId,
             date: new Date().toISOString().split('T')[0],
-            narration: `Deletion of Voucher #${voucherId}`,
+            narration: `Reversal of Voucher #${voucherId}`,
             lines: reversalLines,
             amount: originalVoucher.amount,
         };
 
         try {
-            await addJournalVoucher(deletionVoucher);
-            toast({ title: "Voucher Deleted", description: `Voucher #${voucherId} has been successfully deleted.` });
+            await addJournalVoucher(reversalVoucher);
+            toast({ title: "Voucher Reversed", description: `Voucher #${voucherId} has been successfully reversed.` });
         } catch (e: any) {
-            toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
+            toast({ variant: "destructive", title: "Reversal Failed", description: e.message });
         }
     };
     
@@ -239,7 +240,7 @@ export default function VouchersPage() {
                         <TableCell className="font-medium">{voucher.id}</TableCell>
                         <TableCell>{voucher.party}</TableCell>
                         <TableCell>{voucher.mode}</TableCell>
-                         <TableCell><Badge variant={voucher.status === 'Deleted' ? 'destructive' : 'default'}>{voucher.status}</Badge></TableCell>
+                         <TableCell><Badge variant={voucher.status === 'Reversed' ? 'destructive' : 'default'}>{voucher.status}</Badge></TableCell>
                         <TableCell className="text-right font-mono">₹{voucher.amount.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
@@ -249,7 +250,7 @@ export default function VouchersPage() {
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onSelect={() => handleAction("View", voucher.id)}><FileText className="mr-2"/>View Details</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => handleAction("Edit", voucher.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", voucher.id)} disabled={voucher.status === 'Deleted'}>
+                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", voucher.id)} disabled={voucher.status === 'Reversed'}>
                                         <Trash2 className="mr-2"/>Delete
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -291,7 +292,7 @@ export default function VouchersPage() {
                         <TableCell className="font-medium">{voucher.id}</TableCell>
                         <TableCell>{voucher.party}</TableCell>
                         <TableCell>{voucher.mode}</TableCell>
-                        <TableCell><Badge variant={voucher.status === 'Deleted' ? 'destructive' : 'default'}>{voucher.status}</Badge></TableCell>
+                        <TableCell><Badge variant={voucher.status === 'Reversed' ? 'destructive' : 'default'}>{voucher.status}</Badge></TableCell>
                         <TableCell className="text-right font-mono">₹{voucher.amount.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
@@ -301,7 +302,7 @@ export default function VouchersPage() {
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onSelect={() => handleAction("View", voucher.id)}><FileText className="mr-2"/>View Details</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => handleAction("Edit", voucher.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
-                                     <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", voucher.id)} disabled={voucher.status === 'Deleted'}>
+                                     <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", voucher.id)} disabled={voucher.status === 'Reversed'}>
                                         <Trash2 className="mr-2"/>Delete
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
