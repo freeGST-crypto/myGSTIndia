@@ -78,15 +78,17 @@ type Item = {
 // Memoized Invoice Item Row to prevent re-renders
 const InvoiceItemRow = memo(({
     item,
+    index,
     onRemove,
-    onUpdate,
+    handleItemChange,
     items,
     itemsLoading,
     openItemDialog,
 }: {
     item: LineItem;
+    index: number;
     onRemove: () => void;
-    onUpdate: (id: string, field: keyof LineItem, value: any) => void;
+    handleItemChange: (index: number, field: keyof LineItem, value: any) => void;
     items: Item[];
     itemsLoading: boolean;
     openItemDialog: () => void;
@@ -98,15 +100,15 @@ const InvoiceItemRow = memo(({
         } else {
             const selectedItem = items.find(i => i.id === itemId);
             if (selectedItem) {
-                onUpdate(item.id, 'itemId', itemId);
-                onUpdate(item.id, 'description', selectedItem.name);
-                onUpdate(item.id, 'rate', selectedItem.sellingPrice || 0);
-                onUpdate(item.id, 'hsn', selectedItem.hsn || "");
+                handleItemChange(index, 'itemId', itemId);
+                handleItemChange(index, 'description', selectedItem.name);
+                handleItemChange(index, 'rate', selectedItem.sellingPrice || 0);
+                handleItemChange(index, 'hsn', selectedItem.hsn || "");
             }
         }
     };
     
-    const taxableAmount = item.amount;
+    const taxableAmount = item.qty * item.rate;
     const igst = taxableAmount * (item.taxRate / 100);
     const cgst = 0; // Assuming IGST for now
     const sgst = 0;
@@ -129,10 +131,10 @@ const InvoiceItemRow = memo(({
                     </SelectContent>
                 </Select>
             </TableCell>
-            <TableCell><Input type="number" value={item.qty} onChange={(e) => onUpdate(item.id, "qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
-            <TableCell><Input type="number" value={item.rate} onChange={(e) => onUpdate(item.id, "rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
-            <TableCell className="text-right font-medium">₹{item.amount.toFixed(2)}</TableCell>
-            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => onUpdate(item.id, "taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
+            <TableCell><Input type="number" value={item.qty} onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
+            <TableCell><Input type="number" value={item.rate} onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
+            <TableCell className="text-right font-medium">₹{taxableAmount.toFixed(2)}</TableCell>
+            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => handleItemChange(index, "taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
             <TableCell className="text-right font-mono">₹{igst.toFixed(2)}</TableCell>
             <TableCell className="text-right font-mono">₹{cgst.toFixed(2)}</TableCell>
             <TableCell className="text-right font-mono">₹{sgst.toFixed(2)}</TableCell>
@@ -211,22 +213,21 @@ export default function NewInvoicePage() {
     setLineItems(prev => [...prev, createNewLineItem()]);
   }, []);
 
-  const handleRemoveItem = useCallback((id: string) => {
-    setLineItems(prev => prev.filter(item => item.id !== id));
+  const handleRemoveItem = useCallback((index: number) => {
+    setLineItems(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleItemChange = useCallback((id: string, field: keyof LineItem, value: any) => {
+ const handleItemChange = useCallback((index: number, field: keyof LineItem, value: any) => {
     setLineItems(prev => {
-        return prev.map(item => {
-            if (item.id === id) {
-                const updatedItem = { ...item, [field]: value };
-                 if (['qty', 'rate'].includes(field as string)) {
-                  updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
-                }
-                return updatedItem;
-            }
-            return item;
-        });
+        const newItems = [...prev];
+        const updatedItem = { ...newItems[index], [field]: value };
+        
+        if (field === 'qty' || field === 'rate') {
+            updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
+        }
+        
+        newItems[index] = updatedItem;
+        return newItems;
     });
   }, []);
   
@@ -242,8 +243,8 @@ export default function NewInvoicePage() {
     setIsItemDialogOpen(true);
   }, []);
 
-  const subtotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
-  const totalIgst = lineItems.reduce((acc, item) => acc + (item.amount * item.taxRate / 100), 0);
+  const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
+  const totalIgst = lineItems.reduce((acc, item) => acc + (item.qty * item.rate * item.taxRate / 100), 0);
   const totalCgst = 0; // Assuming IGST for simplicity
   const totalSgst = 0;
   const totalTax = totalIgst + totalCgst + totalSgst;
@@ -388,12 +389,13 @@ export default function NewInvoicePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lineItems.map((item) => (
+                {lineItems.map((item, index) => (
                   <InvoiceItemRow
                       key={item.id}
                       item={item}
-                      onRemove={() => handleRemoveItem(item.id)}
-                      onUpdate={handleItemChange}
+                      index={index}
+                      onRemove={() => handleRemoveItem(index)}
+                      handleItemChange={handleItemChange}
                       items={items}
                       itemsLoading={itemsLoading}
                       openItemDialog={openItemDialog}
