@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useContext } from "react";
 import {
   Card,
   CardContent,
@@ -31,22 +31,43 @@ import { FileSpreadsheet, GitCompareArrows, FileText, ArrowRight } from "lucide-
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
-
-
-const gstr1Summary: any[] = [];
-const gstr3bSummary = {
-    outwardTaxable: 0,
-    outwardTax: 0,
-    itcAvailable: 0,
-    itcReversed: 0,
-    netItc: 0,
-    taxPayable: 0,
-};
-
+import { AccountingContext } from "@/context/accounting-context";
 
 export default function GstFilingsPage() {
     const [period, setPeriod] = useState("2024-05");
     const { toast } = useToast();
+    const { journalVouchers } = useContext(AccountingContext)!;
+
+    const { gstr1Summary, gstr3bSummary } = useMemo(() => {
+        const salesInvoices = journalVouchers.filter(v => v.id.startsWith("JV-INV-"));
+        const purchaseBills = journalVouchers.filter(v => v.id.startsWith("JV-BILL-"));
+        const purchaseReturns = journalVouchers.filter(v => v.id.startsWith("JV-DN-"));
+
+        const b2bTaxableValue = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
+        const b2bTaxAmount = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+        
+        const dynamicGstr1Summary = [
+            { type: "B2B Supplies", invoices: salesInvoices.length, taxableValue: b2bTaxableValue, taxAmount: b2bTaxAmount, total: b2bTaxableValue + b2bTaxAmount },
+        ];
+
+        const itcAvailable = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
+        const itcReversed = purchaseReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+        const netItc = itcAvailable - itcReversed;
+        const taxPayable = b2bTaxAmount - netItc;
+        
+        const dynamicGstr3bSummary = {
+            outwardTaxable: b2bTaxableValue,
+            outwardTax: b2bTaxAmount,
+            itcAvailable,
+            itcReversed,
+            netItc,
+            taxPayable: taxPayable > 0 ? taxPayable : 0,
+        };
+
+        return { gstr1Summary: dynamicGstr1Summary, gstr3bSummary: dynamicGstr3bSummary };
+
+    }, [journalVouchers]);
+
 
     const handleDrillDown = (item: string) => {
         toast({
@@ -111,7 +132,7 @@ export default function GstFilingsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {gstr1Summary.length > 0 ? gstr1Summary.map((row) => (
+                                    {gstr1Summary.length > 0 && gstr1Summary[0].invoices > 0 ? gstr1Summary.map((row) => (
                                         <TableRow key={row.type} className="cursor-pointer" onClick={() => handleDrillDown(row.type)}>
                                             <TableCell className="font-medium">{row.type}</TableCell>
                                             <TableCell>{row.invoices}</TableCell>
