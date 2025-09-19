@@ -188,5 +188,3 @@ export default function CapitalContributionCertificatePage() {
     </div>
   );
 }
-
-    
