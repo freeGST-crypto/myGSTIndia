@@ -827,7 +827,6 @@ export default function Gstr1WizardPage() {
                         <AlertDescription>
                             This table is automatically populated based on the documents you've created in GSTEase (invoices, credit notes, etc.). Review the summary below.
                         </AlertDescription>
-npm run build
                     </Alert>
                     <Table className="mt-4">
                         <TableHeader>
