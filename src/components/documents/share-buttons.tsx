@@ -7,7 +7,6 @@ import { Printer, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { cn } from "@/lib/utils";
 
 interface ShareButtonsProps {
   contentRef: React.RefObject<HTMLDivElement>;
