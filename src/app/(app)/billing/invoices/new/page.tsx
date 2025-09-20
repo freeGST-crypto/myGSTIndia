@@ -55,6 +55,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type LineItem = {
     id: string; // Unique ID for key prop
@@ -155,6 +156,7 @@ export default function NewInvoicePage() {
   
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
+  const [useShippingAddress, setUseShippingAddress] = useState(false);
   
   const [lineItems, setLineItems] = useState<LineItem[]>([createNewLineItem()]);
   
@@ -353,7 +355,7 @@ export default function NewInvoicePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid md:grid-cols-3 gap-6">
-             <div className="space-y-2">
+             <div className="space-y-2 md:col-span-2">
               <Label>Bill To</Label>
                <Select onValueChange={handleCustomerChange} value={customer} disabled={customersLoading}>
                 <SelectTrigger>
@@ -400,39 +402,56 @@ export default function NewInvoicePage() {
             </div>
           </div>
           
+          <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="shipping-address" checked={useShippingAddress} onCheckedChange={(checked) => setUseShippingAddress(checked as boolean)} />
+                    <label htmlFor="shipping-address" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Ship to a different address
+                    </label>
+                </div>
+                {useShippingAddress && (
+                    <div className="p-4 border rounded-md space-y-4 animate-in fade-in-50">
+                        <Label>Shipping Address</Label>
+                        <Textarea placeholder="Enter the full shipping address" />
+                    </div>
+                )}
+            </div>
+
           <Separator />
 
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Items</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[25%]">Item</TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Taxable Amt</TableHead>
-                  <TableHead>Tax Rate</TableHead>
-                  <TableHead>IGST</TableHead>
-                  <TableHead>CGST</TableHead>
-                  <TableHead>SGST</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lineItems.map((item, index) => (
-                  <InvoiceItemRow
-                      key={item.id}
-                      item={item}
-                      index={index}
-                      onRemove={handleRemoveItem}
-                      handleItemChange={handleItemChange}
-                      handleSelectChange={handleSelectChange}
-                      items={items}
-                      itemsLoading={itemsLoading}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[25%] min-w-[200px]">Item</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Rate</TableHead>
+                    <TableHead>Taxable Amt</TableHead>
+                    <TableHead>Tax Rate</TableHead>
+                    <TableHead>IGST</TableHead>
+                    <TableHead>CGST</TableHead>
+                    <TableHead>SGST</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {lineItems.map((item, index) => (
+                    <InvoiceItemRow
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        onRemove={handleRemoveItem}
+                        handleItemChange={handleItemChange}
+                        handleSelectChange={handleSelectChange}
+                        items={items}
+                        itemsLoading={itemsLoading}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
              <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleAddItem}>
                 <PlusCircle className="mr-2" />
