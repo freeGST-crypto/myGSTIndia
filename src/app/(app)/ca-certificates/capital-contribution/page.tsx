@@ -154,9 +154,9 @@ export default function CapitalContributionCertificatePage() {
                     <CardDescription>Review the generated certificate. You can print it or send it for certification.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">
-                       <header className="text-center border-b-2 border-primary pb-4 mb-8">
-                            <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
+                     <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8 bg-card text-card-foreground">
+                        <header className="text-center border-b-2 pb-4 mb-8" style={{ borderColor: 'hsl(var(--sidebar-background))' }}>
+                            <h1 className="text-2xl font-bold m-0" style={{ color: 'hsl(var(--sidebar-background))' }}>S. KRANTHI KUMAR & Co.</h1>
                             <p className="text-sm m-0">Chartered Accountants</p>
                             <p className="text-xs m-0">H.No. 2-2-1130/2/A, G-1, Amberpet, Hyderabad-500013</p>
                             <p className="text-xs m-0">Email: skkandco@gmail.com</p>
