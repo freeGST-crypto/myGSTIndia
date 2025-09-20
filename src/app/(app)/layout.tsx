@@ -168,6 +168,7 @@ const allMenuItems = [
     roles: ['business', 'professional', 'super_admin'],
     subItems: [
         { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
+        { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
         { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
@@ -354,7 +355,7 @@ export default function AppLayout({
              </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="pt-10">
+        <SidebarInset className="mt-8">
           <Header />
           <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background">
             <ClientOnly>
