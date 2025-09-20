@@ -29,6 +29,8 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 
 const services = [
     { id: "bookkeeping", label: "Bookkeeping and Maintenance of Accounts" },
@@ -215,13 +217,17 @@ export default function AccountingEngagementLetterPage() {
                 />
                 <Separator/>
                 <div className="grid md:grid-cols-2 gap-4">
-                     <FormField control={form.control} name="feeStructure" render={({ field }) => ( <FormItem><FormLabel>Fee Structure</FormLabel><FormControl>
-                        <select {...field} className="h-10 w-full rounded-md border border-input px-3">
-                            <option value="monthly_retainer">Monthly Retainer</option>
-                            <option value="quarterly_retainer">Quarterly Retainer</option>
-                            <option value="annual_retainer">Annual Retainer</option>
-                        </select>
-                     </FormControl><FormMessage /></FormItem> )}/>
+                     <FormField control={form.control} name="feeStructure" render={({ field }) => ( 
+                     <FormItem><FormLabel>Fee Structure</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="monthly_retainer">Monthly Retainer</SelectItem>
+                                <SelectItem value="quarterly_retainer">Quarterly Retainer</SelectItem>
+                                <SelectItem value="annual_retainer">Annual Retainer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                     <FormMessage /></FormItem> )}/>
                      <FormField control={form.control} name="feeAmount" render={({ field }) => ( <FormItem><FormLabel>Professional Fee (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                 </div>
             </CardContent>
