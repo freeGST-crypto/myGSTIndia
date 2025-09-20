@@ -25,10 +25,10 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { GstEaseLogo } from "../icons"
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 
@@ -50,6 +50,33 @@ export function LoginForm() {
     },
   });
 
+   useEffect(() => {
+    const handleRedirectResult = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // User has successfully signed in via redirect.
+          toast({ title: "Login Successful", description: "Welcome!" });
+          router.push("/");
+        } else {
+            // No redirect result, probably a direct page load
+            setIsLoading(false);
+        }
+      } catch (error: any) {
+        console.error("Google Login Error:", error);
+        toast({
+          variant: "destructive",
+          title: "Google Login Failed",
+          description: error.message || "An unknown error occurred.",
+        });
+        setIsLoading(false);
+      }
+    };
+
+    handleRedirectResult();
+  }, [router, toast]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
@@ -70,21 +97,9 @@ export function LoginForm() {
 
   async function handleGoogleLogin() {
     setIsLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast({ title: "Login Successful", description: "Welcome!" });
-      router.push("/");
-    } catch (error: any) {
-       console.error("Google Login Error: ", error);
-       toast({
-        variant: "destructive",
-        title: "Google Login Failed",
-        description: error.message || "An unknown error occurred.",
-      });
-    } finally {
-        setIsLoading(false);
-    }
+    const provider = new GoogleAuthProvider();
+    // Use signInWithRedirect instead of signInWithPopup
+    await signInWithRedirect(auth, provider);
   }
 
   return (
