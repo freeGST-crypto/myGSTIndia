@@ -6,16 +6,14 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { ShareButtons } from "@/components/documents/share-buttons";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 
@@ -183,54 +181,40 @@ export default function NetWorthCertificatePage() {
       onAfterPrint: () => toast({ title: "Print/Save job sent." }),
   });
 
-  const generatePdfForSharing = async (): Promise<File | null> => {
+  const handleShare = async () => {
     const content = printRef.current;
-    if (!content) return null;
-    try {
+    if (!content) {
+      toast({ variant: 'destructive', title: 'Content not found' });
+      return;
+    }
+     try {
         const { default: html2canvas } = await import('html2canvas');
         const canvas = await html2canvas(content, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        
-        const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'px',
-            format: [canvas.width, canvas.height]
-        });
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        const pdfBlob = pdf.output('blob');
-        return new File([pdfBlob], `Net_Worth_${form.getValues("clientName")}.pdf`, { type: 'application/pdf' });
-    } catch (error) {
-        console.error("Error generating PDF:", error);
-        toast({ variant: 'destructive', title: 'PDF Generation Failed' });
-        return null;
-    }
-  };
-
-  const handleShare = async () => {
-    const pdfFile = await generatePdfForSharing();
-    if (!pdfFile) return;
-
-    if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
-        try {
-            await navigator.share({
-                title: `Net Worth Certificate for ${form.getValues("clientName")}`,
-                text: `Dear ${form.getValues("clientName")},\n\nPlease find attached the Net Worth Certificate as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`,
-                files: [pdfFile],
-            });
-            toast({ title: 'Shared Successfully!' });
-        } catch (error) {
-            console.error('Share failed:', error);
-            if ((error as any).name !== 'AbortError') {
-                 toast({ variant: 'destructive', title: 'Share Failed' });
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                 toast({ variant: 'destructive', title: 'PDF Generation Failed' });
+                return;
             }
-        }
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Sharing Not Supported",
-            description: "Your browser does not support file sharing.",
-        });
+            const pdfFile = new File([blob], `Net_Worth_${form.getValues("clientName")}.pdf`, { type: 'application/pdf' });
+             if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    title: `Net Worth Certificate for ${form.getValues("clientName")}`,
+                    text: `Dear ${form.getValues("clientName")},\n\nPlease find attached the Net Worth Certificate as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`,
+                    files: [pdfFile],
+                });
+                toast({ title: 'Shared Successfully!' });
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Sharing Not Supported",
+                    description: "Your browser does not support file sharing.",
+                });
+            }
+        }, 'image/png');
+
+    } catch (error) {
+        console.error("Error generating PDF for sharing:", error);
+        toast({ variant: 'destructive', title: 'Share Failed' });
     }
   };
 
@@ -337,10 +321,14 @@ export default function NetWorthCertificatePage() {
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <ShareButtons
-                            onPrint={handlePrint}
-                            onShare={handleShare}
-                         />
+                         <div className="flex gap-2">
+                           <Button variant="outline" onClick={handlePrint}>
+                               <Printer className="mr-2" /> Print / Save PDF
+                           </Button>
+                           <Button onClick={handleShare}>
+                               <MessageSquare className="mr-2" /> Share
+                           </Button>
+                         </div>
                     </CardFooter>
                 </Card>
             )
@@ -367,5 +355,3 @@ export default function NetWorthCertificatePage() {
     </div>
   );
 }
-
-    
