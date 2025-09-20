@@ -6,7 +6,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
 import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from "react-to-print";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 
 const assetSchema = z.object({
@@ -275,7 +276,9 @@ export default function NetWorthCertificatePage() {
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
                          <div>
-                            <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+                            <button onClick={handlePrint} className={cn(buttonVariants())}>
+                                <Printer className="mr-2"/> Print / Save PDF
+                            </button>
                             <Button type="button" className="ml-2" onClick={() => toast({title: "Request Sent", description: "Draft sent to admin for certification."})}>
                                 <FileSignature className="mr-2"/> Request Certification
                             </Button>
