@@ -31,7 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { z } from "zod";
 import { PartyDialog } from "@/components/billing/add-new-dialogs";
 
@@ -46,11 +46,13 @@ const partySchema = z.object({
     pincode: z.string().optional(),
 });
 
-type Party = z.infer<typeof partySchema> & { id: string; };
+export type Party = z.infer<typeof partySchema> & { id: string; };
 
 export default function PartiesPage() {
     const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
     const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
+    const [editingParty, setEditingParty] = useState<Party | null>(null);
+
     const [customerSearchTerm, setCustomerSearchTerm] = useState("");
     const [vendorSearchTerm, setVendorSearchTerm] = useState("");
     const { toast } = useToast();
@@ -95,22 +97,37 @@ export default function PartiesPage() {
         );
     }, [vendors, vendorSearchTerm]);
 
-    const handleAction = (action: string, partyName: string) => {
-        if (action === 'Delete') {
+    const handleEdit = (party: Party, type: 'Customer' | 'Vendor') => {
+      setEditingParty(party);
+      if (type === 'Customer') {
+        setIsCustomerDialogOpen(true);
+      } else {
+        setIsVendorDialogOpen(true);
+      }
+    };
+    
+    const handleDelete = async (party: Party, type: 'Customer' | 'Vendor') => {
+        try {
+            const collectionName = type === 'Customer' ? 'customers' : 'vendors';
+            await deleteDoc(doc(db, collectionName, party.id));
+            toast({ title: `${type} Deleted`, description: `${party.name} has been removed.` });
+        } catch (e) {
             toast({
                 variant: 'destructive',
-                title: 'Action Disabled',
-                description: `Deleting '${partyName}' is disabled to maintain data integrity. An archival feature will be added in the future.`,
-            });
-        } else {
-             toast({
-                title: 'Action Incomplete',
-                description: `This would ${action.toLowerCase()} the party '${partyName}'. This feature is a placeholder.`,
+                title: 'Deletion Failed',
+                description: `Could not delete ${party.name}.`,
             });
         }
     };
 
-    const PartyTable = ({ parties, loading }: { parties: Party[], loading: boolean }) => (
+    const closeDialogs = () => {
+        setIsCustomerDialogOpen(false);
+        setIsVendorDialogOpen(false);
+        setEditingParty(null);
+    }
+
+
+    const PartyTable = ({ parties, loading, type }: { parties: Party[], loading: boolean, type: 'Customer' | 'Vendor' }) => (
         <Table>
             <TableHeader>
                 <TableRow>
@@ -142,11 +159,11 @@ export default function PartiesPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onSelect={() => handleAction('Edit', party.name)}>
+                                    <DropdownMenuItem onSelect={() => handleEdit(party, type)}>
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleAction('Delete', party.name)}>
+                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleDelete(party, type)}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
@@ -208,11 +225,11 @@ export default function PartiesPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <ImportExportMenu type="Customer" />
-                            <Button onClick={() => setIsCustomerDialogOpen(true)}>
+                            <Button onClick={() => { setEditingParty(null); setIsCustomerDialogOpen(true); }}>
                                 <PlusCircle className="mr-2"/>
                                 Add Customer
                             </Button>
-                            <PartyDialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} type="Customer" />
+                            <PartyDialog open={isCustomerDialogOpen} onOpenChange={closeDialogs} type="Customer" party={editingParty} />
                         </div>
                     </div>
                     <div className="relative">
@@ -227,7 +244,7 @@ export default function PartiesPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PartyTable parties={filteredCustomers} loading={customersLoading}/>
+                    <PartyTable parties={filteredCustomers} loading={customersLoading} type="Customer"/>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -241,11 +258,11 @@ export default function PartiesPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <ImportExportMenu type="Vendor" />
-                            <Button onClick={() => setIsVendorDialogOpen(true)}>
+                            <Button onClick={() => { setEditingParty(null); setIsVendorDialogOpen(true); }}>
                                 <PlusCircle className="mr-2"/>
                                 Add Vendor
                             </Button>
-                            <PartyDialog open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} type="Vendor" />
+                            <PartyDialog open={isVendorDialogOpen} onOpenChange={closeDialogs} type="Vendor" party={editingParty} />
                         </div>
                     </div>
                      <div className="relative">
@@ -260,7 +277,7 @@ export default function PartiesPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PartyTable parties={filteredVendors} loading={vendorsLoading}/>
+                    <PartyTable parties={filteredVendors} loading={vendorsLoading} type="Vendor"/>
                 </CardContent>
             </Card>
         </TabsContent>

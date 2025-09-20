@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -16,12 +17,24 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "../ui/textarea";
+
+type Party = {
+  id: string;
+  name: string;
+  gstin?: string;
+  email?: string;
+  phone?: string;
+  address1?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+};
 
 const partySchema = z.object({
     name: z.string().min(2, "Name is required."),
@@ -43,7 +56,7 @@ const itemSchema = z.object({
     sellingPrice: z.coerce.number().min(0).optional(),
 });
 
-export function PartyDialog({ open, onOpenChange, type }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor' }) {
+export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor', party: Party | null }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
@@ -51,6 +64,14 @@ export function PartyDialog({ open, onOpenChange, type }: { open: boolean, onOpe
         resolver: zodResolver(partySchema),
         defaultValues: { name: '', gstin: '', email: '', phone: '' },
     });
+    
+    useEffect(() => {
+      if (party && open) {
+        form.reset(party);
+      } else if (!open) {
+        form.reset({ name: '', gstin: '', email: '', phone: '' });
+      }
+    }, [party, open, form]);
 
     const onSubmit = async (values: z.infer<typeof partySchema>) => {
          if (!user) {
@@ -59,15 +80,27 @@ export function PartyDialog({ open, onOpenChange, type }: { open: boolean, onOpe
         }
         const collectionName = type === 'Customer' ? 'customers' : 'vendors';
         try {
-            await addDoc(collection(db, collectionName), { ...values, userId: user.uid });
-            toast({ title: `${type} Added`, description: `${values.name} has been saved.` });
+            if (party) {
+                // Update existing party
+                const partyDocRef = doc(db, collectionName, party.id);
+                await updateDoc(partyDocRef, values);
+                toast({ title: `${type} Updated`, description: `${values.name} has been updated.` });
+            } else {
+                // Add new party
+                await addDoc(collection(db, collectionName), { ...values, userId: user.uid });
+                toast({ title: `${type} Added`, description: `${values.name} has been saved.` });
+            }
+            
             onOpenChange(false);
-            form.reset();
         } catch (e) {
-            console.error("Error adding document: ", e);
-            toast({ variant: "destructive", title: "Error", description: `Could not save ${type}.` });
+            console.error("Error saving document: ", e);
+            toast({ variant: "destructive", title: "Error", description: `Could not save ${type.toLowerCase()}.` });
         }
     };
+
+    const dialogTitle = party ? `Edit ${type}` : `Add New ${type}`;
+    const dialogDescription = party ? `Update the details for ${party.name}.` : `Enter the details for your new ${type.toLowerCase()}.`;
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,8 +108,8 @@ export function PartyDialog({ open, onOpenChange, type }: { open: boolean, onOpe
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <DialogHeader>
-                            <DialogTitle>Add New {type}</DialogTitle>
-                            <DialogDescription>Enter the details for your new {type.toLowerCase()}.</DialogDescription>
+                            <DialogTitle>{dialogTitle}</DialogTitle>
+                            <DialogDescription>{dialogDescription}</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><Label>Name</Label><FormControl><Input placeholder={`${type}'s legal name`} {...field} /></FormControl><FormMessage /></FormItem> )}/>
