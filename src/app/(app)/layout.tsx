@@ -194,7 +194,7 @@ const allMenuItems = [
         { href: "/admin/notices", label: "Submitted Notices", icon: MailWarning, roles: ['super_admin']},
         { href: "/admin/service-pricing", label: "On-Demand Pricing", icon: CreditCard, roles: ['super_admin']},
         { href: "/admin/certification-requests", label: "Certification Requests", icon: FileSignature, roles: ['super_admin']},
-        { href: "/blog", label: "Manage Blog", icon: Newspaper, roles: ['super_admin'] },
+        { href: "/admin/blog", label: "Manage Blog", icon: Newspaper, roles: ['super_admin'] },
     ]
   },
   { 
@@ -355,9 +355,9 @@ export default function AppLayout({
              </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="mt-8">
+        <SidebarInset>
           <Header />
-          <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background">
+          <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8">
             <ClientOnly>
                 <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>}>
                   {children}
