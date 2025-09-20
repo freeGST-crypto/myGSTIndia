@@ -1,14 +1,13 @@
 
 "use client";
 
-import { useRef } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "../ui/button";
 
 interface ShareButtonsProps {
   contentRef: React.RefObject<HTMLDivElement>;
