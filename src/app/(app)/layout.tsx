@@ -344,7 +344,7 @@ export default function AppLayout({
           <SidebarFooter>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>
+        <SidebarInset className="pt-8">
           <Header />
           <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background">
             <ClientOnly>
