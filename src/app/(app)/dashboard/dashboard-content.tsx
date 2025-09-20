@@ -16,6 +16,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { allAccounts } from "@/lib/accounts";
+import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -110,6 +111,7 @@ export default function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-8">
+      <MarketingCarousel />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Link href="/accounting/ledgers">
           <StatCard 
