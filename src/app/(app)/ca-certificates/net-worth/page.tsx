@@ -64,7 +64,7 @@ const CertificateToPrint = forwardRef<HTMLDivElement, { formData: FormData }>(({
     const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
 
     return (
-        <div ref={ref} className="prose dark:prose-invert max-w-none p-8">
+        <div ref={ref} className="prose dark:prose-invert max-w-none p-8 bg-background">
             <header className="text-center border-b-2 border-primary pb-4 mb-8">
                 <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
                 <p className="text-sm m-0">Chartered Accountants</p>
