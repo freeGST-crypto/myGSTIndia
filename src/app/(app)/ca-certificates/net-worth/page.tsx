@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, forwardRef } from "react";
+import { useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,14 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer, MessageSquare } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer, MessageSquare, FileDown } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useReactToPrint } from "react-to-print";
-import jsPDF from "jspdf";
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -47,107 +46,53 @@ const numberToWords = (num: number): string => {
     const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
     if (!n) return '';
     let str = '';
-    str += (n[1] != '00') ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
-    str += (n[2] != '00') ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
-    str += (n[3] != '00') ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
-    str += (n[4] != '00') ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
-    str += (n[5] != '00') ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+    str += (parseInt(n[1]) != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+    str += (parseInt(n[2]) != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+    str += (parseInt(n[3]) != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+    str += (parseInt(n[4]) != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+    str += (parseInt(n[5]) != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
     return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
 }
 
-// **MOVED OUTSIDE THE MAIN COMPONENT**
-// This is the printable component, correctly defined with forwardRef.
-const CertificateToPrint = forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
+// Define the printable component OUTSIDE the main component
+const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
+    const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+
     const totalAssets = formData.assets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
     const totalLiabilities = formData.liabilities.reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
     const netWorth = totalAssets - totalLiabilities;
-    const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-
+    
     return (
-        <div ref={ref} className="prose dark:prose-invert max-w-none p-8 bg-background">
-            <header className="text-center border-b-2 border-primary pb-4 mb-8">
-                <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
-                <p className="text-sm m-0">Chartered Accountants</p>
-                <p className="text-xs m-0">H.No. 2-2-1130/2/A, G-1, Amberpet, Hyderabad-500013</p>
-                <p className="text-xs m-0">Email: skkandco@gmail.com</p>
-            </header>
-
-            <div className="flex justify-between items-start mb-6">
-                <div>
-                    <p className="font-bold text-sm">To Whom It May Concern</p>
-                </div>
-                <div className="text-right">
-                    <p className="font-semibold">UDIN: [UDIN GOES HERE]</p>
-                    <p className="text-sm">Date: {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)}</p>
-                </div>
-            </div>
+        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none p-8 leading-relaxed">
+            <h4 className="font-bold text-center">TO WHOM IT MAY CONCERN</h4>
+            <h4 className="font-bold text-center underline">NET WORTH CERTIFICATE</h4>
             
-            <p>
-                This is to certify that the Net Worth of <strong>Sri {formData.clientName}</strong>, S/o (or other relation) [Parent's Name], R/o {formData.clientAddress} (PAN: {formData.clientPan}) as on {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)} is as follows:
-            </p>
+            <p>This is to certify that the Net Worth of Sri <strong>{formData.clientName}</strong>, S/o (or other relation) [Parent's Name], R/o {formData.clientAddress} (PAN: <strong>{formData.clientPan}</strong>) as on <strong>{new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)}</strong> is as follows:</p>
 
-            <Table className="my-4">
-                <TableHeader>
-                    <TableRow className="bg-muted/50">
-                        <TableHead className="font-bold text-foreground">ASSETS</TableHead>
-                        <TableHead className="text-right font-bold text-foreground">Amount in Rs</TableHead>
-                    </TableRow>
-                </TableHeader>
+            <h5 className="font-bold mt-4">A. ASSETS</h5>
+             <Table>
+                <TableHeader><TableRow><TableHead className="w-2/3">Description</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                 <TableBody>
-                    {formData.assets.map((asset, i) => (
-                        <TableRow key={i}>
-                            <TableCell>{asset.description}</TableCell>
-                            <TableCell className="text-right font-mono">{asset.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                        </TableRow>
-                    ))}
+                    {formData.assets.map((a, i) => <TableRow key={i}><TableCell>{a.description}</TableCell><TableCell className="text-right font-mono">{a.value.toLocaleString('en-IN')}</TableCell></TableRow>)}
                 </TableBody>
-                <TableFoot>
-                    <TableRow className="font-bold bg-muted/50">
-                        <TableCell>Total Assets</TableCell>
-                        <TableCell className="text-right font-mono">{totalAssets.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                    </TableRow>
-                </TableFoot>
-            </Table>
-
-            <Table className="my-4">
-                <TableHeader>
-                    <TableRow className="bg-muted/50">
-                        <TableHead className="font-bold text-foreground">LIABILITIES</TableHead>
-                        <TableHead className="text-right font-bold text-foreground">Amount in Rs</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                     {formData.liabilities.map((lib, i) => (
-                        <TableRow key={i}>
-                            <TableCell>Less: {lib.description}</TableCell>
-                            <TableCell className="text-right font-mono">{lib.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-                <TableFoot>
-                    <TableRow className="font-bold bg-muted/50">
-                        <TableCell>Total Liabilities</TableCell>
-                        <TableCell className="text-right font-mono">{totalLiabilities.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                    </TableRow>
-                </TableFoot>
+                <TableFoot><TableRow><TableCell className="font-bold">Total Assets</TableCell><TableCell className="text-right font-bold font-mono">{totalAssets.toLocaleString('en-IN')}</TableCell></TableRow></TableFoot>
             </Table>
             
-            <Table className="my-4">
+            <h5 className="font-bold mt-4">B. LIABILITIES</h5>
+             <Table>
+                <TableHeader><TableRow><TableHead className="w-2/3">Description</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                 <TableBody>
-                    <TableRow className="font-bold text-lg bg-primary/10">
-                        <TableCell>NET WORTH AS ON {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions).toUpperCase()}</TableCell>
-                        <TableCell className="text-right font-mono">{netWorth.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                    </TableRow>
+                     {formData.liabilities.map((l, i) => <TableRow key={i}><TableCell>{l.description}</TableCell><TableCell className="text-right font-mono">{l.value.toLocaleString('en-IN')}</TableCell></TableRow>)}
                 </TableBody>
+                 <TableFoot><TableRow><TableCell className="font-bold">Total Liabilities</TableCell><TableCell className="text-right font-bold font-mono">{totalLiabilities.toLocaleString('en-IN')}</TableCell></TableRow></TableFoot>
             </Table>
-            <p>(Rupees {numberToWords(netWorth)} only)</p>
 
-            <p className="mt-8 text-xs">
-                This certificate is issued based on the information and records produced before us and is true to the best of our knowledge and belief.
-            </p>
+            <h5 className="font-bold mt-4">NET WORTH (A - B)</h5>
+            <p>The net worth of <strong>{formData.clientName}</strong> as on {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)} is <strong>₹{netWorth.toLocaleString('en-IN')}</strong> (Rupees {numberToWords(netWorth)} only).</p>
 
-            <div className="mt-24 text-right">
-                <p className="font-bold">For S. KRANTHI KUMAR & Co.</p>
+            <div className="mt-16">
+                <p>This certificate is issued based on the information and records produced before us and is true to the best of our knowledge and belief.</p>
+                <p className="mt-8 font-bold">For S. KRANTHI KUMAR & Co.</p>
                 <p>Chartered Accountants</p>
                 <div className="h-20"></div>
                 <p>(S. Kranthi Kumar)</p>
@@ -178,9 +123,8 @@ export default function NetWorthCertificatePage() {
   });
   
   const handlePrint = useReactToPrint({
-      content: () => printRef.current,
-      documentTitle: `Net_Worth_${form.getValues("clientName")}`,
-      onAfterPrint: () => toast({ title: "Print/Save job sent." }),
+    content: () => printRef.current,
+    documentTitle: `Net_Worth_${form.getValues("clientName")}.pdf`,
   });
 
   const handleShare = async () => {
@@ -200,7 +144,7 @@ export default function NetWorthCertificatePage() {
              if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
                 await navigator.share({
                     title: `Net Worth Certificate for ${form.getValues("clientName")}`,
-                    text: `Dear ${form.getValues("clientName")},\n\nPlease find attached the Net Worth Certificate as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`,
+                    text: `Please find the attached Net Worth Certificate.`,
                     files: [pdfFile],
                 });
                 toast({ title: 'Shared Successfully!' });
@@ -226,7 +170,7 @@ export default function NetWorthCertificatePage() {
   const handleGenerateDraft = async () => {
     const isValid = await form.trigger();
     if(isValid) {
-        setStep(4); // Move to preview step
+        setStep(4);
         toast({
             title: "Draft Ready for Preview",
             description: "Review the generated certificate below.",
@@ -306,26 +250,24 @@ export default function NetWorthCertificatePage() {
                  </Card>
             )
         case 4:
-            const formData = form.getValues();
-            
             return (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Final Preview</CardTitle>
-                        <CardDescription>Review the generated certificate. You can print it or send it for certification.</CardDescription>
+                        <CardTitle>Final Preview & Actions</CardTitle>
+                        <CardDescription>Review the generated certificate. You can now print, download, or share it.</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <div className="border rounded-lg">
-                           <CertificateToPrint formData={formData} ref={printRef} />
+                            <CertificateToPrint ref={printRef} formData={form.getValues()} />
                          </div>
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
                          <div className="flex gap-2">
-                           <Button variant="outline" onClick={handlePrint}>
+                           <Button variant="default" onClick={handlePrint}>
                                <Printer className="mr-2" /> Print / Save PDF
                            </Button>
-                           <Button onClick={handleShare}>
+                           <Button variant="outline" onClick={handleShare}>
                                <MessageSquare className="mr-2" /> Share
                            </Button>
                          </div>
