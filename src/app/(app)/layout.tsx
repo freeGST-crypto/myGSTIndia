@@ -347,7 +347,7 @@ export default function AppLayout({
         <SidebarInset>
           <Marquee />
           <Header />
-          <main className="flex-1 p-4 sm:p-6">
+          <main className="flex-1 p-4 sm:p-6 bg-background">
             <ClientOnly>
                 <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>}>
                   {children}
