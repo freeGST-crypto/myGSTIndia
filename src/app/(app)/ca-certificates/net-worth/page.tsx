@@ -10,13 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer, MessageSquare, FileDown } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useReactToPrint } from "react-to-print";
-import html2canvas from "html2canvas";
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -55,8 +54,10 @@ const numberToWords = (num: number): string => {
     return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
 }
 
-// Define the printable component OUTSIDE the main component
-const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
+// Define the printable component as a class component to ensure a stable ref for react-to-print
+class CertificateToPrint extends React.Component<{ formData: FormData }> {
+  render() {
+    const { formData } = this.props;
     const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
 
     const totalAssets = formData.assets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
@@ -64,7 +65,7 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
     const netWorth = totalAssets - totalLiabilities;
     
     return (
-        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none p-8 leading-relaxed">
+        <div className="prose prose-sm dark:prose-invert max-w-none p-8 leading-relaxed">
             <h4 className="font-bold text-center">TO WHOM IT MAY CONCERN</h4>
             <h4 className="font-bold text-center underline">NET WORTH CERTIFICATE</h4>
             
@@ -102,14 +103,14 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
             </div>
         </div>
     );
-});
-CertificateToPrint.displayName = 'CertificateToPrint';
+  }
+}
 
 
 export default function NetWorthCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<CertificateToPrint>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -127,43 +128,6 @@ export default function NetWorthCertificatePage() {
     content: () => printRef.current,
     documentTitle: `Net_Worth_${form.getValues("clientName")}.pdf`,
   });
-
-  const handleShare = async () => {
-    const content = printRef.current;
-    if (!content) {
-      toast({ variant: 'destructive', title: 'Content not found' });
-      return;
-    }
-     try {
-        const canvas = await html2canvas(content, { scale: 2 });
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
-                 toast({ variant: 'destructive', title: 'PDF Generation Failed' });
-                return;
-            }
-            const pdfFile = new File([blob], `Net_Worth_${form.getValues("clientName")}.pdf`, { type: 'application/pdf' });
-             if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    title: `Net Worth Certificate for ${form.getValues("clientName")}`,
-                    text: `Please find the attached Net Worth Certificate.`,
-                    files: [pdfFile],
-                });
-                toast({ title: 'Shared Successfully!' });
-            } else {
-                 toast({
-                    variant: "destructive",
-                    title: "Sharing Not Supported",
-                    description: "Your browser does not support file sharing.",
-                });
-            }
-        }, 'image/png');
-
-    } catch (error) {
-        console.error("Error generating PDF for sharing:", error);
-        toast({ variant: 'destructive', title: 'Share Failed' });
-    }
-  };
-
 
   const { fields: assetFields, append: appendAsset, remove: removeAsset } = useFieldArray({ control: form.control, name: "assets" });
   const { fields: liabilityFields, append: appendLiability, remove: removeLiability } = useFieldArray({ control: form.control, name: "liabilities" });
@@ -267,9 +231,6 @@ export default function NetWorthCertificatePage() {
                          <div className="flex gap-2">
                            <Button variant="default" onClick={handlePrint}>
                                <Printer className="mr-2" /> Print / Save PDF
-                           </Button>
-                           <Button variant="outline" onClick={handleShare}>
-                               <MessageSquare className="mr-2" /> Share
                            </Button>
                          </div>
                     </CardFooter>
