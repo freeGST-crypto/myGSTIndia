@@ -6,16 +6,16 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useReactToPrint } from "react-to-print";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
+
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -42,7 +42,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function VisaImmigrationCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -87,11 +87,6 @@ export default function VisaImmigrationCertificatePage() {
          toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields." });
     }
   }
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Financial_Questionnaire_${form.getValues("studentName")}`,
-  });
 
   const renderStepContent = () => {
     switch(step) {
@@ -149,6 +144,8 @@ export default function VisaImmigrationCertificatePage() {
                 { source: "CURRENT INCOME", value: totalIncome },
                 { source: "EDUCATIONAL LOAN", value: totalLoan },
             ];
+
+            const whatsappMessage = `Dear ${formData.studentName},\n\nPlease find attached the Financial Questionnaire for your visa application.\n\nTotal funds: ${toUsd(grandTotal).toLocaleString('en-US', { style: 'currency', currency: 'USD'})}\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
 
             return (
                 <Card>
@@ -214,7 +211,11 @@ export default function VisaImmigrationCertificatePage() {
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(2)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save PDF</button>
+                         <ShareButtons
+                            contentRef={printRef}
+                            fileName={`Financial_Questionnaire_${formData.studentName}`}
+                            whatsappMessage={whatsappMessage}
+                         />
                     </CardFooter>
                 </Card>
             )

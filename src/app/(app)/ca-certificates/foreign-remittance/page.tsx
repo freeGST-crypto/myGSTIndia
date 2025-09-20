@@ -8,12 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   remitterName: z.string().min(3, "Remitter's name is required."),
@@ -33,7 +33,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function ForeignRemittancePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -60,11 +60,6 @@ export default function ForeignRemittancePage() {
         toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
     }
   }
-  
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Form15CB_${form.getValues("remitterName")}`,
-  });
   
   const handleCertificationRequest = () => {
       toast({
@@ -120,6 +115,8 @@ export default function ForeignRemittancePage() {
     if (step === 2) {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+        const whatsappMessage = `Dear ${formData.remitterName},\n\nPlease find attached the draft Form 15CB for your review.\n\nRemittance to: ${formData.remitteeName}\nAmount: ${formData.remittanceAmount} ${formData.remittanceCurrency}\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+
         return (
              <Card>
                 <CardHeader>
@@ -168,9 +165,13 @@ export default function ForeignRemittancePage() {
                 </CardContent>
                 <CardFooter className="justify-between">
                      <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
-                     <div>
-                        <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
-                        <Button type="button" className="ml-2" onClick={handleCertificationRequest}>
+                     <div className="flex gap-2">
+                        <ShareButtons
+                            contentRef={printRef}
+                            fileName={`Form15CB_${formData.remitterName}`}
+                            whatsappMessage={whatsappMessage}
+                        />
+                        <Button type="button" onClick={handleCertificationRequest}>
                             <FileSignature className="mr-2"/> Request Certification
                         </Button>
                      </div>
@@ -198,5 +199,3 @@ export default function ForeignRemittancePage() {
     </div>
   );
 }
-
-    

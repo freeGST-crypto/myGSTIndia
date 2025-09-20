@@ -9,13 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useReactToPrint } from "react-to-print";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 
 const assetSchema = z.object({
@@ -59,7 +59,7 @@ const numberToWords = (num: number): string => {
 export default function NetWorthCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -98,13 +98,6 @@ export default function NetWorthCertificatePage() {
         });
     }
   }
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Net_Worth_Certificate_${form.getValues("clientName")}`,
-    onAfterPrint: () => toast({ title: "Print job sent." }),
-  });
-
 
   const renderStepContent = () => {
     switch(step) {
@@ -174,6 +167,8 @@ export default function NetWorthCertificatePage() {
         case 4:
             const formData = form.getValues();
             const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+            const whatsappMessage = `Dear ${formData.clientName},\n\nPlease find attached the Net Worth Certificate as requested.\n\nNet Worth: ₹${netWorth.toLocaleString('en-IN')}\nAs on: ${new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)}\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+            
             return (
                 <Card>
                     <CardHeader>
@@ -275,14 +270,11 @@ export default function NetWorthCertificatePage() {
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <div>
-                            <button onClick={handlePrint} className={cn(buttonVariants())}>
-                                <Printer className="mr-2"/> Print / Save PDF
-                            </button>
-                            <Button type="button" className="ml-2" onClick={() => toast({title: "Request Sent", description: "Draft sent to admin for certification."})}>
-                                <FileSignature className="mr-2"/> Request Certification
-                            </Button>
-                         </div>
+                         <ShareButtons
+                            contentRef={printRef}
+                            fileName={`Net_Worth_${formData.clientName}`}
+                            whatsappMessage={whatsappMessage}
+                         />
                     </CardFooter>
                 </Card>
             )

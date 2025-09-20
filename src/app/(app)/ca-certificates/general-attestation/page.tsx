@@ -8,12 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   clientName: z.string().min(3, "Client name is required."),
@@ -28,7 +28,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function GeneralAttestationPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -51,11 +51,6 @@ export default function GeneralAttestationPage() {
     }
   }
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Certificate_${form.getValues("subject")}`,
-  });
-  
   const handleCertificationRequest = () => {
       toast({
           title: "Request Sent",
@@ -91,6 +86,8 @@ export default function GeneralAttestationPage() {
     if (step === 2) {
       const formData = form.getValues();
       const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+      const whatsappMessage = `Dear ${formData.clientName},\n\nPlease find attached the draft certificate regarding "${formData.subject}" for your review.\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+
       return (
         <Card>
           <CardHeader>
@@ -127,8 +124,12 @@ export default function GeneralAttestationPage() {
           </CardContent>
           <CardFooter className="justify-between">
                <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
-               <div>
-                  <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+               <div className="flex gap-2">
+                    <ShareButtons
+                        contentRef={printRef}
+                        fileName={`Certificate_${formData.subject}`}
+                        whatsappMessage={whatsappMessage}
+                    />
                   <Button type="button" className="ml-2" onClick={handleCertificationRequest}>
                       <FileSignature className="mr-2"/> Request Certification
                   </Button>
@@ -157,5 +158,3 @@ export default function GeneralAttestationPage() {
     </div>
   );
 }
-
-    

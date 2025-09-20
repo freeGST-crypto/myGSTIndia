@@ -13,10 +13,10 @@ import { ArrowLeft, FileSignature, ArrowRight, Printer, Loader2 } from "lucide-r
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useReactToPrint } from "react-to-print";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   entityName: z.string().min(3, "Entity name is required."),
@@ -50,7 +50,7 @@ const numberToWords = (num: number): string => {
 export default function CapitalContributionCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
   const [user] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -77,11 +77,6 @@ export default function CapitalContributionCertificatePage() {
         toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
     }
   }
-  
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Capital_Contribution_Certificate_${form.getValues("entityName")}`,
-  });
   
   const handleCertificationRequest = async () => {
       if (!user) {
@@ -150,6 +145,8 @@ export default function CapitalContributionCertificatePage() {
     if (step === 2) {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+        const whatsappMessage = `Dear ${formData.contributorName},\n\nPlease find attached the Capital Contribution Certificate as requested.\n\nAmount: ₹${formData.contributionAmount.toLocaleString('en-IN')}\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+
         return (
              <Card>
                 <CardHeader>
@@ -186,9 +183,13 @@ export default function CapitalContributionCertificatePage() {
                 </CardContent>
                 <CardFooter className="justify-between">
                      <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
-                     <div>
-                        <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
-                        <Button type="button" className="ml-2" onClick={handleCertificationRequest} disabled={isSubmitting}>
+                     <div className="flex gap-2">
+                         <ShareButtons
+                            contentRef={printRef}
+                            fileName={`Capital_Contribution_${formData.entityName}`}
+                            whatsappMessage={whatsappMessage}
+                        />
+                        <Button type="button" onClick={handleCertificationRequest} disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <FileSignature className="mr-2"/>}
                             Request Certification
                         </Button>

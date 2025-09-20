@@ -69,6 +69,7 @@ import {
 // Import export helpers
 import { exportToPdf, exportToExcel } from "@/lib/cma-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const initialAssets: FixedAsset[] = [
   { id: 1, name: "Plant & Machinery", cost: 1000000, depreciationRate: 15, additionYear: 0 },
@@ -171,29 +172,6 @@ export default function CmaReportGeneratorPage() {
   const handleDownloadTemplate = () => {
     toast({ title: "Template Downloaded", description: "A template for audited financials has been downloaded. (Simulation)"});
   }
-
-  const handleExport = (format: 'pdf' | 'excel') => {
-      if (!generatedReport) {
-          toast({ variant: 'destructive', title: 'No Report Data', description: 'Please generate the CMA report first.'});
-          return;
-      }
-      const reportDataForExport = {
-          operatingStatement: { title: "Operating Statement", ...generatedReport.operatingStatement },
-          balanceSheet: { title: "Analysis of Balance Sheet", ...generatedReport.balanceSheet },
-          cashFlow: { title: "Cash Flow Statement", ...generatedReport.cashFlow },
-          ratioAnalysis: { title: "Ratio Analysis", ...generatedReport.ratioAnalysis },
-          fundFlow: { title: "Fund Flow Statement", ...generatedReport.fundFlow },
-          mpbf: { title: "MPBF Assessment", ...generatedReport.mpbf },
-          repaymentSchedule: { title: "Loan Repayment Schedule", ...generatedReport.repaymentSchedule },
-          aiObservations: aiObservations || "AI observations have not been generated yet.",
-      };
-
-      if (format === 'pdf') {
-          exportToPdf(reportDataForExport);
-      } else {
-          exportToExcel(reportDataForExport);
-      }
-  };
 
   const handleCertificationRequest = () => {
       toast({
@@ -433,8 +411,8 @@ export default function CmaReportGeneratorPage() {
                            {isAiLoading ? <Loader2 className="mr-2 animate-spin"/> : <BrainCircuit className="mr-2" />}
                            Get AI Observations
                         </Button>
-                        <Button variant="outline" onClick={() => handleExport('excel')}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                        <Button variant="outline" onClick={() => handleExport('pdf')}><FileDown className="mr-2"/> Export to PDF</Button>
+                        <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
+                        <Button variant="outline" onClick={() => exportToPdf(generatedReport)}><FileDown className="mr-2"/> Export to PDF</Button>
                     </div>
                 </CardFooter>
             </Card>
@@ -477,8 +455,8 @@ export default function CmaReportGeneratorPage() {
                  <CardFooter className="flex justify-between">
                     <Button variant="secondary" onClick={() => setActiveTab('report')}>Back to Report</Button>
                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => handleExport('excel')}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                        <Button variant="outline" onClick={() => handleExport('pdf')}><FileDown className="mr-2"/> Export to PDF</Button>
+                        <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
+                        <Button variant="outline" onClick={() => exportToPdf(generatedReport)}><FileDown className="mr-2"/> Export to PDF</Button>
                     </div>
                 </CardFooter>
             </Card>

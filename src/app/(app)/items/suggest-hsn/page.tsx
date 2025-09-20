@@ -60,8 +60,9 @@ export default function SuggestHsnPage() {
       const response = await suggestHsnCodeAction({
         productOrServiceDescription: values.description,
       });
-      if (response) {
+      if (response?.hsnCode) {
         setResult(response);
+        toast({ title: "HSN Code Suggestion Received!"});
       } else {
         toast({
           variant: "destructive",
