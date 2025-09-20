@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, Table
 import { Textarea } from "@/components/ui/textarea";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
-
+import html2canvas from 'html2canvas';
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -55,6 +55,8 @@ const numberToWords = (num: number): string => {
     return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
 }
 
+// **MOVED OUTSIDE THE MAIN COMPONENT**
+// This is the printable component, correctly defined with forwardRef.
 const CertificateToPrint = forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
     const totalAssets = formData.assets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
     const totalLiabilities = formData.liabilities.reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
@@ -188,7 +190,6 @@ export default function NetWorthCertificatePage() {
       return;
     }
      try {
-        const { default: html2canvas } = await import('html2canvas');
         const canvas = await html2canvas(content, { scale: 2 });
         canvas.toBlob(async (blob) => {
             if (!blob) {
@@ -315,8 +316,7 @@ export default function NetWorthCertificatePage() {
                     </CardHeader>
                     <CardContent>
                          <div className="border rounded-lg">
-                           <CertificateToPrint formData={formData} />
-                           <div style={{ display: 'none' }}><CertificateToPrint ref={printRef} formData={formData} /></div>
+                           <CertificateToPrint formData={formData} ref={printRef} />
                          </div>
                     </CardContent>
                     <CardFooter className="justify-between">
