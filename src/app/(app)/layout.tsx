@@ -44,6 +44,9 @@ import {
   LayoutDashboard,
   MailWarning,
   FileSignature,
+  Newspaper,
+  Info,
+  Contact,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -76,6 +79,7 @@ import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
 import { AccountingProvider } from "@/context/accounting-context";
 import { Suspense } from "react";
+import { Marquee } from "@/components/layout/marquee";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
@@ -153,6 +157,16 @@ const allMenuItems = [
     label: "Professional Services",
     icon: ConciergeBell,
     roles: ['business', 'professional', 'super_admin']
+  },
+  {
+    label: "Resources",
+    icon: Info,
+    roles: ['business', 'professional', 'super_admin'],
+    subItems: [
+        { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
+        { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
+        { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
+    ],
   },
   {
     label: "Client Workspace",
@@ -331,6 +345,7 @@ export default function AppLayout({
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
+          <Marquee />
           <Header />
           <main className="flex-1 p-4 sm:p-6">
             <ClientOnly>
