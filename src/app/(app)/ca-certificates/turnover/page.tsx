@@ -13,8 +13,7 @@ import { ArrowLeft, FileSignature, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { useReactToPrint } from "react-to-print";
-import html2canvas from 'html2canvas';
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   entityName: z.string().min(3, "Entity name is required."),
@@ -59,55 +58,12 @@ export default function TurnoverCertificatePage() {
       dataSource: "audited financial statements",
     },
   });
-  
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Turnover_Certificate_${form.getValues("entityName")}`,
-    onAfterPrint: () => toast({ title: "Print/Save job sent." }),
-  });
-
-  const handleShare = async () => {
-    const content = printRef.current;
-    if (!content) {
-      toast({ variant: 'destructive', title: 'Content not found' });
-      return;
-    }
-     try {
-        const canvas = await html2canvas(content, { scale: 2 });
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
-                 toast({ variant: 'destructive', title: 'PDF Generation Failed' });
-                return;
-            }
-            const pdfFile = new File([blob], `Turnover_Certificate_${form.getValues("entityName")}.pdf`, { type: 'application/pdf' });
-             if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    title: `Turnover Certificate for ${form.getValues("entityName")}`,
-                    text: `Dear ${form.getValues("entityName")},\n\nPlease find attached the Turnover Certificate for FY ${form.getValues("financialYear")} as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`,
-                    files: [pdfFile],
-                });
-                toast({ title: 'Shared Successfully!' });
-            } else {
-                 toast({
-                    variant: "destructive",
-                    title: "Sharing Not Supported",
-                    description: "Your browser does not support file sharing.",
-                });
-            }
-        }, 'image/png');
-
-    } catch (error) {
-        console.error("Error generating PDF for sharing:", error);
-        toast({ variant: 'destructive', title: 'Share Failed' });
-    }
-  };
-
 
   const handlePreview = async () => {
     const isValid = await form.trigger();
     if(isValid) {
         setStep(2);
-        toast({ title: "Draft Ready", description: "Review the certificate before printing." });
+        toast({ title: "Draft Ready", description: "Review the certificate before proceeding." });
     } else {
         toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
     }
@@ -149,11 +105,13 @@ export default function TurnoverCertificatePage() {
     if (step === 2) {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+        const whatsappMessage = `Dear ${formData.entityName},\n\nPlease find attached the Turnover Certificate for FY ${formData.financialYear}.\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+
         return (
              <Card>
                 <CardHeader>
                     <CardTitle>Final Preview</CardTitle>
-                    <CardDescription>Review the generated certificate. You can print it or send it for certification.</CardDescription>
+                    <CardDescription>Review the generated certificate. You can download or share it.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">
@@ -212,8 +170,11 @@ export default function TurnoverCertificatePage() {
                 <CardFooter className="justify-between">
                      <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back to Edit</Button>
                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={handlePrint}>Print / Save PDF</Button>
-                        <Button onClick={handleShare}>Share</Button>
+                        <ShareButtons
+                            contentRef={printRef}
+                            fileName={`Turnover_Certificate_${formData.entityName}`}
+                            whatsappMessage={whatsappMessage}
+                        />
                         <Button type="button" onClick={handleCertificationRequest}>
                             <FileSignature className="mr-2"/> Request Certification
                         </Button>

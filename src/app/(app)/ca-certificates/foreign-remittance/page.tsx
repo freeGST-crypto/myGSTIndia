@@ -55,7 +55,7 @@ export default function ForeignRemittancePage() {
     const isValid = await form.trigger();
     if(isValid) {
         setStep(2);
-        toast({ title: "Draft Ready", description: "Review the Form 15CB before printing." });
+        toast({ title: "Draft Ready", description: "Review the Form 15CB before proceeding." });
     } else {
         toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
     }
@@ -121,7 +121,7 @@ export default function ForeignRemittancePage() {
              <Card>
                 <CardHeader>
                     <CardTitle>Final Preview</CardTitle>
-                    <CardDescription>Review the generated Form 15CB. You can print it or send it for certification.</CardDescription>
+                    <CardDescription>Review the generated Form 15CB. You can download, share, or send it for certification.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">

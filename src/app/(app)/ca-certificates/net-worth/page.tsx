@@ -10,12 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useReactToPrint } from "react-to-print";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -54,10 +54,8 @@ const numberToWords = (num: number): string => {
     return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
 }
 
-// Define the printable component as a class component to ensure a stable ref for react-to-print
-class CertificateToPrint extends React.Component<{ formData: FormData }> {
-  render() {
-    const { formData } = this.props;
+// Define the printable component OUTSIDE the main component
+const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
     const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
 
     const totalAssets = formData.assets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
@@ -65,7 +63,7 @@ class CertificateToPrint extends React.Component<{ formData: FormData }> {
     const netWorth = totalAssets - totalLiabilities;
     
     return (
-        <div className="prose prose-sm dark:prose-invert max-w-none p-8 leading-relaxed">
+        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none p-8 leading-relaxed">
             <h4 className="font-bold text-center">TO WHOM IT MAY CONCERN</h4>
             <h4 className="font-bold text-center underline">NET WORTH CERTIFICATE</h4>
             
@@ -103,14 +101,14 @@ class CertificateToPrint extends React.Component<{ formData: FormData }> {
             </div>
         </div>
     );
-  }
-}
+});
+CertificateToPrint.displayName = 'CertificateToPrint';
 
 
 export default function NetWorthCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const printRef = useRef<CertificateToPrint>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -122,11 +120,6 @@ export default function NetWorthCertificatePage() {
       assets: [{ description: "Immovable Property - Residential Flat", value: 5000000 }],
       liabilities: [{ description: "Housing Loan from HDFC Bank", value: 2000000 }],
     },
-  });
-  
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Net_Worth_${form.getValues("clientName")}.pdf`,
   });
 
   const { fields: assetFields, append: appendAsset, remove: removeAsset } = useFieldArray({ control: form.control, name: "assets" });
@@ -215,6 +208,9 @@ export default function NetWorthCertificatePage() {
                  </Card>
             )
         case 4:
+            const formData = form.getValues();
+            const whatsappMessage = `Dear ${formData.clientName},\n\nPlease find attached the Net Worth Certificate as on ${new Date(formData.asOnDate).toLocaleDateString('en-GB')}.\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+
             return (
                 <Card>
                     <CardHeader>
@@ -223,16 +219,16 @@ export default function NetWorthCertificatePage() {
                     </CardHeader>
                     <CardContent>
                          <div className="border rounded-lg">
-                            <CertificateToPrint ref={printRef} formData={form.getValues()} />
+                            <CertificateToPrint ref={printRef} formData={formData} />
                          </div>
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <div className="flex gap-2">
-                           <Button variant="default" onClick={handlePrint}>
-                               <Printer className="mr-2" /> Print / Save PDF
-                           </Button>
-                         </div>
+                         <ShareButtons
+                            contentRef={printRef}
+                            fileName={`Net_Worth_${formData.clientName}`}
+                            whatsappMessage={whatsappMessage}
+                         />
                     </CardFooter>
                 </Card>
             )

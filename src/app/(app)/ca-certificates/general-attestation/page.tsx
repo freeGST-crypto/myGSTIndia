@@ -45,7 +45,7 @@ export default function GeneralAttestationPage() {
     const isValid = await form.trigger();
     if(isValid) {
         setStep(2);
-        toast({ title: "Draft Ready", description: "Review the certificate before printing." });
+        toast({ title: "Draft Ready", description: "Review the certificate before proceeding." });
     } else {
         toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
     }
@@ -92,7 +92,7 @@ export default function GeneralAttestationPage() {
         <Card>
           <CardHeader>
               <CardTitle>Final Preview</CardTitle>
-              <CardDescription>Review the generated certificate. You can print it or send it for certification.</CardDescription>
+              <CardDescription>Review the generated certificate. You can download, share, or send it for certification.</CardDescription>
           </CardHeader>
           <CardContent>
                <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">
