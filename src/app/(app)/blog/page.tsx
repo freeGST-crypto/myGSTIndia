@@ -3,10 +3,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, User } from "lucide-react";
+import { ArrowRight, Calendar, User, Linkedin, Twitter, Facebook } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { SocialShareButtons } from "@/components/social-share-buttons";
 
 const samplePosts = [
     {
@@ -18,6 +19,7 @@ const samplePosts = [
         excerpt: "Input Tax Credit (ITC) is the backbone of the GST regime. This article breaks down the conditions for claiming ITC, common pitfalls to avoid, and best practices for reconciliation.",
         imageUrl: "https://picsum.photos/seed/blog1/600/400",
         imageHint: "tax documents calculator",
+        shareUrl: "/blog/1"
     },
     {
         id: "2",
@@ -28,6 +30,7 @@ const samplePosts = [
         excerpt: "For startups, maintaining clean and accurate books is not just about compliance; it's about survival. Discover why proper bookkeeping from day one is crucial for fundraising, decision-making, and long-term success.",
         imageUrl: "https://picsum.photos/seed/blog2/600/400",
         imageHint: "ledger books desk",
+        shareUrl: "/blog/2"
     },
     {
         id: "3",
@@ -38,6 +41,7 @@ const samplePosts = [
         excerpt: "Making payments to foreign entities involves specific compliance requirements under the Income Tax Act. Learn about the significance of Form 15CA and 15CB and when you need to file them.",
         imageUrl: "https://picsum.photos/seed/blog3/600/400",
         imageHint: "globe currency",
+        shareUrl: "/blog/3"
     },
 ];
 
@@ -80,12 +84,13 @@ export default function BlogPage() {
                         <CardContent className="flex-grow">
                             <CardDescription>{post.excerpt}</CardDescription>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="flex justify-between items-center">
                             <Link href="#" passHref>
                                 <Button variant="outline">
                                     Read More <ArrowRight className="ml-2 size-4"/>
                                 </Button>
                             </Link>
+                             <SocialShareButtons url={post.shareUrl} title={post.title} />
                         </CardFooter>
                     </Card>
                 ))}

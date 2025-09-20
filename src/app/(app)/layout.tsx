@@ -47,6 +47,10 @@ import {
   Newspaper,
   Info,
   Contact,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Instagram,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -164,7 +168,6 @@ const allMenuItems = [
     roles: ['business', 'professional', 'super_admin'],
     subItems: [
         { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
-        { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
         { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
@@ -190,6 +193,7 @@ const allMenuItems = [
         { href: "/admin/notices", label: "Submitted Notices", icon: MailWarning, roles: ['super_admin']},
         { href: "/admin/service-pricing", label: "On-Demand Pricing", icon: CreditCard, roles: ['super_admin']},
         { href: "/admin/certification-requests", label: "Certification Requests", icon: FileSignature, roles: ['super_admin']},
+        { href: "/blog", label: "Manage Blog", icon: Newspaper, roles: ['super_admin'] },
     ]
   },
   { 
@@ -342,9 +346,15 @@ export default function AppLayout({
               <NavMenu items={menuItems} pathname={pathname} />
           </SidebarContent>
           <SidebarFooter>
+             <div className="flex items-center justify-center gap-4 p-4 group-data-[collapsible=icon]:hidden">
+                <Link href="#" target="_blank"><Facebook className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
+                <Link href="#" target="_blank"><Twitter className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
+                <Link href="#" target="_blank"><Linkedin className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
+                 <Link href="#" target="_blank"><Instagram className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
+             </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="pt-8">
+        <SidebarInset className="pt-10">
           <Header />
           <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background">
             <ClientOnly>
