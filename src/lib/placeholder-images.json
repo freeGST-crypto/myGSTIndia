@@ -1,23 +1,22 @@
-
 {
   "placeholderImages": [
     {
       "id": "carousel-1",
-      "description": "AI-Powered ITC Reconciliation Feature",
-      "imageUrl": "https://picsum.photos/seed/gst1/1200/500",
-      "imageHint": "tax finance"
+      "description": "Streamline Your Finances with Advanced Accounting",
+      "imageUrl": "https://picsum.photos/seed/finance/1200/500",
+      "imageHint": "accounting charts"
     },
     {
       "id": "carousel-2",
-      "description": "Effortless GSTR Filing Feature",
-      "imageUrl": "https://picsum.photos/seed/gst2/1200/500",
-      "imageHint": "documents forms"
+      "description": "Effortless GST Compliance and Filing",
+      "imageUrl": "https://picsum.photos/seed/tax/1200/500",
+      "imageHint": "tax documents"
     },
     {
       "id": "carousel-3",
-      "description": "Comprehensive Accounting Tools Feature",
-      "imageUrl": "https://picsum.photos/seed/gst3/1200/500",
-      "imageHint": "charts graphs"
+      "description": "Generate CMA Reports with AI-Powered Insights",
+      "imageUrl": "https://picsum.photos/seed/reports/1200/500",
+      "imageHint": "business meeting"
     }
   ]
 }
