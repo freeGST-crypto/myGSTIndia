@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, UserPlus, Info, Eraser } from "lucide-react";
+import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, UserPlus, Info, Eraser, Landmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
 import { analyzeLogoAction, generateTermsAction } from './actions';
@@ -52,6 +52,9 @@ const formSchema = z.object({
   pincode: z.string().regex(/^[1-9][0-9]{5}$/, { message: "Invalid pincode." }),
   invoicePrefix: z.string().optional(),
   invoiceNextNumber: z.coerce.number().int().positive({ message: "Must be a positive number."}).optional(),
+  bankName: z.string().optional(),
+  bankAccount: z.string().optional(),
+  bankIfsc: z.string().optional(),
   defaultPaymentTerms: z.string().optional(),
   terms: z.string().optional(),
   professionals: z.array(professionalSchema).optional(),
@@ -85,6 +88,9 @@ export default function BrandingPage() {
             defaultPaymentTerms: "net30",
             terms: "",
             professionals: [],
+            bankName: "HDFC Bank",
+            bankAccount: "1234567890",
+            bankIfsc: "HDFC0001234",
         },
     });
 
@@ -319,7 +325,7 @@ export default function BrandingPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Invoice & Payment Settings</CardTitle>
-                            <CardDescription>Set default numbering, payment terms, and conditions for your invoices.</CardDescription>
+                            <CardDescription>Set default numbering, bank details, payment terms, and conditions for your invoices.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div>
@@ -357,6 +363,33 @@ export default function BrandingPage() {
                                 </Alert>
                             </div>
                              <Separator/>
+                             <div>
+                                <h3 className="text-lg font-medium mb-4 flex items-center gap-2"><Landmark/>Bank Details</h3>
+                                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                     <FormField control={form.control} name="bankName" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Bank Name</FormLabel>
+                                            <FormControl><Input placeholder="e.g., HDFC Bank" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <FormField control={form.control} name="bankAccount" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Account Number</FormLabel>
+                                            <FormControl><Input placeholder="1234567890" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <FormField control={form.control} name="bankIfsc" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>IFSC Code</FormLabel>
+                                            <FormControl><Input placeholder="HDFC0001234" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                 </div>
+                             </div>
+                            <Separator/>
                             <FormField
                                 control={form.control}
                                 name="defaultPaymentTerms"

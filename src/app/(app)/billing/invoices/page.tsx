@@ -317,7 +317,7 @@ export default function InvoicesPage() {
     let finalY = 15;
 
     const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId) as any;
-    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F" }; // Mock data
+    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234" }; // Mock data
 
     // --- Header ---
     doc.setFontSize(20);
@@ -396,11 +396,11 @@ export default function InvoicesPage() {
     ]];
 
     doc.autoTable({
-        head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Taxable Value', 'Tax Rate', 'Tax Amt', 'Total']],
+        head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Taxable Value', 'Tax Amt', 'Total']],
+        headStyles: { fillColor: [65, 0, 135], textColor: 255 }, // Dark purple
         body: tableBody,
         startY: finalY,
         theme: 'striped',
-        headStyles: { fillColor: [65, 0, 135], textColor: 255 }, // Dark purple
         columnStyles: {
             0: { cellWidth: 8, halign: 'center' },
             1: { cellWidth: 'auto' },
@@ -408,9 +408,8 @@ export default function InvoicesPage() {
             3: { cellWidth: 10, halign: 'right' },
             4: { cellWidth: 20, halign: 'right' },
             5: { cellWidth: 22, halign: 'right' },
-            6: { cellWidth: 15, halign: 'right' },
-            7: { cellWidth: 20, halign: 'right' },
-            8: { cellWidth: 22, halign: 'right' },
+            6: { cellWidth: 20, halign: 'right' },
+            7: { cellWidth: 22, halign: 'right' },
         }
     });
     finalY = (doc as any).lastAutoTable.finalY;
@@ -435,11 +434,29 @@ export default function InvoicesPage() {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.text(`Amount in words: ${numberToWords(invoice.amount)}`, 14, finalY + 10);
+    finalY += 15;
+
+    // --- Bank Details ---
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Bank Details for Payment:", 14, finalY);
+    doc.setFont("helvetica", "normal");
+    doc.autoTable({
+        body: [
+            ["Bank Name:", companyDetails.bankName],
+            ["Account No:", companyDetails.bankAccount],
+            ["IFSC Code:", companyDetails.bankIfsc],
+        ],
+        startY: finalY + 2,
+        theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 1 }
+    });
+    finalY = (doc as any).lastAutoTable.finalY + 10;
     
     // --- Signature section ---
-    let signatureY = pageHeight - 50; // Position higher up
-    if (finalY + 40 > signatureY) { // Check if content overlaps
-        signatureY = finalY + 20;
+    let signatureY = pageHeight - 40; 
+    if (finalY > signatureY) {
+        signatureY = finalY;
     }
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
@@ -448,17 +465,11 @@ export default function InvoicesPage() {
 
 
     // --- Footer section ---
-    const footerY = pageHeight - 20;
+    const footerY = pageHeight - 15;
     doc.line(14, footerY, pageWidth - 14, footerY); // Line above footer
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("Bank Details:", 14, footerY + 8);
-    doc.setFont("helvetica", "normal");
-    doc.text("Bank: HDFC Bank | A/c No: 1234567890 | IFSC: HDFC0001234", 14, footerY + 13);
-    
     doc.setFontSize(8);
     doc.setFont("helvetica", "italic");
-    doc.text("This is a GSTEase Generated Invoice.", pageWidth / 2, pageHeight - 8, { align: 'center'});
+    doc.text("Generated with GSTEase. Explore our GST filing and reconciliation tools!", pageWidth / 2, footerY + 8, { align: 'center'});
 
     if (silent) {
         return doc.output('blob');
