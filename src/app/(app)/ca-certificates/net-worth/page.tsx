@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ShareButtons } from "@/components/documents/share-buttons";
 import { useReactToPrint } from "react-to-print";
+import jsPDF from "jspdf";
 
 
 const assetSchema = z.object({
@@ -178,7 +179,61 @@ export default function NetWorthCertificatePage() {
   
   const handlePrint = useReactToPrint({
       content: () => printRef.current,
+      documentTitle: `Net_Worth_${form.getValues("clientName")}`,
+      onAfterPrint: () => toast({ title: "Print/Save job sent." }),
   });
+
+  const generatePdfForSharing = async (): Promise<File | null> => {
+    const content = printRef.current;
+    if (!content) return null;
+    try {
+        const { default: html2canvas } = await import('html2canvas');
+        const canvas = await html2canvas(content, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        const pdfBlob = pdf.output('blob');
+        return new File([pdfBlob], `Net_Worth_${form.getValues("clientName")}.pdf`, { type: 'application/pdf' });
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+        toast({ variant: 'destructive', title: 'PDF Generation Failed' });
+        return null;
+    }
+  };
+
+  const handleShare = async () => {
+    const pdfFile = await generatePdfForSharing();
+    if (!pdfFile) return;
+
+    if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
+        try {
+            await navigator.share({
+                title: `Net Worth Certificate for ${form.getValues("clientName")}`,
+                text: `Dear ${form.getValues("clientName")},\n\nPlease find attached the Net Worth Certificate as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`,
+                files: [pdfFile],
+            });
+            toast({ title: 'Shared Successfully!' });
+        } catch (error) {
+            console.error('Share failed:', error);
+            if ((error as any).name !== 'AbortError') {
+                 toast({ variant: 'destructive', title: 'Share Failed' });
+            }
+        }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Sharing Not Supported",
+            description: "Your browser does not support file sharing.",
+        });
+    }
+  };
+
 
   const { fields: assetFields, append: appendAsset, remove: removeAsset } = useFieldArray({ control: form.control, name: "assets" });
   const { fields: liabilityFields, append: appendLiability, remove: removeLiability } = useFieldArray({ control: form.control, name: "liabilities" });
@@ -267,7 +322,6 @@ export default function NetWorthCertificatePage() {
             )
         case 4:
             const formData = form.getValues();
-            const whatsappMessage = `Dear ${formData.clientName},\n\nPlease find attached the Net Worth Certificate as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
             
             return (
                 <Card>
@@ -277,15 +331,16 @@ export default function NetWorthCertificatePage() {
                     </CardHeader>
                     <CardContent>
                          <div className="border rounded-lg">
-                           <CertificateToPrint ref={printRef} formData={formData} />
+                           <CertificateToPrint formData={formData} />
+                           <div style={{ display: 'none' }}><CertificateToPrint ref={printRef} formData={formData} /></div>
                          </div>
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <div>
-                            <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
-                            {/* ShareButtons would go here if needed, but we implement the simpler print button first to fix the bug */}
-                         </div>
+                         <ShareButtons
+                            onPrint={handlePrint}
+                            onShare={handleShare}
+                         />
                     </CardFooter>
                 </Card>
             )
@@ -312,3 +367,5 @@ export default function NetWorthCertificatePage() {
     </div>
   );
 }
+
+    
