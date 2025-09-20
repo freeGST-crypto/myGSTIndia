@@ -25,13 +25,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, UserPlus, Info } from "lucide-react";
+import { Loader2, Wand2, Upload, Building, FileSignature, Trash2, UserPlus, Info, Eraser } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
 import { analyzeLogoAction, generateTermsAction } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SignatureCanvas from 'react-signature-canvas';
 
 const professionalSchema = z.object({
   name: z.string().min(2, "Name is required."),
@@ -59,15 +60,14 @@ const formSchema = z.object({
 export default function BrandingPage() {
     const [logoPreview, setLogoPreview] = useState<string | null>("https://placehold.co/200x200/e2e8f0/64748b?text=Your+Logo%5CnHere");
     const [logoFile, setLogoFile] = useState<File | null>(null);
-    const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
-    const [signatureFile, setSignatureFile] = useState<File | null>(null);
+    const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
     const [isGeneratingTerms, setIsGeneratingTerms] = useState(false);
     const [isAnalyzingLogo, setIsAnalyzingLogo] = useState(false);
     const [logoAnalysis, setLogoAnalysis] = useState<string | null>(null);
     const { toast } = useToast();
 
     const logoInputRef = useRef<HTMLInputElement>(null);
-    const signatureInputRef = useRef<HTMLInputElement>(null);
+    const sigCanvasRef = useRef<SignatureCanvas>(null);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -104,6 +104,21 @@ export default function BrandingPage() {
             reader.readAsDataURL(file);
         }
     };
+
+    const clearSignature = () => {
+      sigCanvasRef.current?.clear();
+      setSignatureDataUrl(null);
+    }
+    
+    const saveSignature = () => {
+      if(sigCanvasRef.current?.isEmpty()) {
+        toast({variant: "destructive", title: "Empty Signature", description: "Please draw a signature before saving."})
+        return;
+      }
+      const dataUrl = sigCanvasRef.current?.getTrimmedCanvas().toDataURL('image/png');
+      setSignatureDataUrl(dataUrl || null);
+      toast({title: "Signature Saved", description: "Your drawn signature has been captured."})
+    }
     
     const handleGenerateTerms = async () => {
         const companyName = form.getValues("companyName");
@@ -161,7 +176,7 @@ export default function BrandingPage() {
     const nextInvoiceNumberFormatted = `${watchInvoicePrefix}${watchInvoiceNextNumber}`;
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+        console.log({ ...values, signature: signatureDataUrl });
         toast({ title: "Settings Saved!", description: "Your branding information has been updated." });
     }
 
@@ -250,10 +265,10 @@ export default function BrandingPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Branding Assets</CardTitle>
-                            <CardDescription>Upload your company logo and a default signature for documents.</CardDescription>
+                            <CardDescription>Upload your company logo and provide a signature for documents.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid md:grid-cols-2 gap-8">
-                            <div className="space-y-4">
+                             <div className="space-y-4">
                                 <FormLabel>Company Logo</FormLabel>
                                 <div className="flex items-center gap-4">
                                     <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50 overflow-hidden">
@@ -285,16 +300,18 @@ export default function BrandingPage() {
                             </div>
                              <div className="space-y-4">
                                 <FormLabel>Digital Signature</FormLabel>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative w-24 h-24 rounded-md border flex items-center justify-center bg-muted/50 overflow-hidden">
-                                        {signaturePreview ? <Image src={signaturePreview} alt="Signature Preview" fill className="object-contain p-2" /> : <FileSignature className="size-8 text-muted-foreground" />}
-                                    </div>
-                                    <Button type="button" variant="outline" onClick={() => signatureInputRef.current?.click()}>
-                                        <Upload className="mr-2" /> Upload Signature
-                                    </Button>
-                                    <input type="file" ref={signatureInputRef} onChange={(e) => handleFileChange(e, setSignaturePreview, setSignatureFile)} className="hidden" accept="image/*" />
+                                <div className="w-full h-40 border rounded-md bg-muted/50">
+                                    <SignatureCanvas
+                                        ref={sigCanvasRef}
+                                        penColor='black'
+                                        canvasProps={{ className: 'w-full h-full' }}
+                                    />
                                 </div>
-                                <FormDescription>Upload an image of your authorized signatory's signature.</FormDescription>
+                                 <div className="flex gap-2">
+                                    <Button type="button" variant="outline" size="sm" onClick={clearSignature}><Eraser className="mr-2"/> Clear</Button>
+                                    <Button type="button" size="sm" onClick={saveSignature}><FileSignature className="mr-2"/> Save Signature</Button>
+                                </div>
+                                <FormDescription>Draw your signature in the box above. It will be used on documents like invoices.</FormDescription>
                             </div>
                         </CardContent>
                     </Card>

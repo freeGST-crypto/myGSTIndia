@@ -33,7 +33,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search, MessageSquare } from "lucide-react";
@@ -322,7 +321,9 @@ export default function InvoicesPage() {
     // --- Header ---
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(65, 0, 135); // Dark Purple from theme
     doc.text("TAX INVOICE", pageWidth / 2, finalY, { align: "center" });
+    doc.setTextColor(0, 0, 0); // Reset color
     finalY += 10;
     
     // --- Seller/Buyer Details ---
@@ -398,7 +399,7 @@ export default function InvoicesPage() {
         body: tableBody,
         startY: finalY,
         theme: 'striped',
-        headStyles: { fillColor: [51, 51, 51], textColor: 255 },
+        headStyles: { fillColor: [65, 0, 135], textColor: 255 }, // Dark purple
         columnStyles: {
             0: { cellWidth: 8, halign: 'center' },
             1: { cellWidth: 'auto' },
@@ -434,23 +435,29 @@ export default function InvoicesPage() {
     doc.setFont('helvetica', 'normal');
     doc.text(`Amount in words: ${numberToWords(invoice.amount)}`, 14, finalY + 10);
     
-    // --- Footer section ---
-    const footerY = pageHeight - 35;
-    doc.line(14, footerY, pageWidth - 14, footerY); 
+    // --- Signature section ---
+    let signatureY = pageHeight - 50; // Position higher up
+    if (finalY + 40 > signatureY) { // Check if content overlaps
+        signatureY = finalY + 20;
+    }
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(`For ${companyDetails.name}`, pageWidth - 14, signatureY, { align: 'right' });
+    doc.text("Authorised Signatory", pageWidth - 14, signatureY + 15, { align: 'right' });
 
+
+    // --- Footer section ---
+    const footerY = pageHeight - 20;
+    doc.line(14, footerY, pageWidth - 14, footerY); // Line above footer
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("Bank Details:", 14, footerY + 8);
     doc.setFont("helvetica", "normal");
     doc.text("Bank: HDFC Bank | A/c No: 1234567890 | IFSC: HDFC0001234", 14, footerY + 13);
     
-    doc.setFont("helvetica", "bold");
-    doc.text(`For ${companyDetails.name}`, pageWidth - 14, footerY + 8, { align: 'right' });
-    doc.text("Authorised Signatory", pageWidth - 14, footerY + 20, { align: 'right' });
-
     doc.setFontSize(8);
     doc.setFont("helvetica", "italic");
-    doc.text("This is a GSTEase Generated Invoice.", pageWidth / 2, pageHeight - 10, { align: 'center'});
+    doc.text("This is a GSTEase Generated Invoice.", pageWidth / 2, pageHeight - 8, { align: 'center'});
 
     if (silent) {
         return doc.output('blob');
@@ -704,5 +711,3 @@ export default function InvoicesPage() {
     </div>
   );
 }
-
-    
