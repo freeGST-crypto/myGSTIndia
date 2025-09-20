@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, forwardRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,13 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import { useReactToPrint } from "react-to-print";
 
 
 const assetSchema = z.object({
@@ -55,6 +56,108 @@ const numberToWords = (num: number): string => {
     return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
 }
 
+const CertificateToPrint = forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
+    const totalAssets = formData.assets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
+    const totalLiabilities = formData.liabilities.reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
+    const netWorth = totalAssets - totalLiabilities;
+    const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+
+    return (
+        <div ref={ref} className="prose dark:prose-invert max-w-none p-8">
+            <header className="text-center border-b-2 border-primary pb-4 mb-8">
+                <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
+                <p className="text-sm m-0">Chartered Accountants</p>
+                <p className="text-xs m-0">H.No. 2-2-1130/2/A, G-1, Amberpet, Hyderabad-500013</p>
+                <p className="text-xs m-0">Email: skkandco@gmail.com</p>
+            </header>
+
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <p className="font-bold text-sm">To Whom It May Concern</p>
+                </div>
+                <div className="text-right">
+                    <p className="font-semibold">UDIN: [UDIN GOES HERE]</p>
+                    <p className="text-sm">Date: {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)}</p>
+                </div>
+            </div>
+            
+            <p>
+                This is to certify that the Net Worth of <strong>Sri {formData.clientName}</strong>, S/o (or other relation) [Parent's Name], R/o {formData.clientAddress} (PAN: {formData.clientPan}) as on {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)} is as follows:
+            </p>
+
+            <Table className="my-4">
+                <TableHeader>
+                    <TableRow className="bg-muted/50">
+                        <TableHead className="font-bold text-foreground">ASSETS</TableHead>
+                        <TableHead className="text-right font-bold text-foreground">Amount in Rs</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {formData.assets.map((asset, i) => (
+                        <TableRow key={i}>
+                            <TableCell>{asset.description}</TableCell>
+                            <TableCell className="text-right font-mono">{asset.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+                <TableFoot>
+                    <TableRow className="font-bold bg-muted/50">
+                        <TableCell>Total Assets</TableCell>
+                        <TableCell className="text-right font-mono">{totalAssets.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                    </TableRow>
+                </TableFoot>
+            </Table>
+
+            <Table className="my-4">
+                <TableHeader>
+                    <TableRow className="bg-muted/50">
+                        <TableHead className="font-bold text-foreground">LIABILITIES</TableHead>
+                        <TableHead className="text-right font-bold text-foreground">Amount in Rs</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                     {formData.liabilities.map((lib, i) => (
+                        <TableRow key={i}>
+                            <TableCell>Less: {lib.description}</TableCell>
+                            <TableCell className="text-right font-mono">{lib.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+                <TableFoot>
+                    <TableRow className="font-bold bg-muted/50">
+                        <TableCell>Total Liabilities</TableCell>
+                        <TableCell className="text-right font-mono">{totalLiabilities.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                    </TableRow>
+                </TableFoot>
+            </Table>
+            
+            <Table className="my-4">
+                <TableBody>
+                    <TableRow className="font-bold text-lg bg-primary/10">
+                        <TableCell>NET WORTH AS ON {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions).toUpperCase()}</TableCell>
+                        <TableCell className="text-right font-mono">{netWorth.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+            <p>(Rupees {numberToWords(netWorth)} only)</p>
+
+            <p className="mt-8 text-xs">
+                This certificate is issued based on the information and records produced before us and is true to the best of our knowledge and belief.
+            </p>
+
+            <div className="mt-24 text-right">
+                <p className="font-bold">For S. KRANTHI KUMAR & Co.</p>
+                <p>Chartered Accountants</p>
+                <div className="h-20"></div>
+                <p>(S. Kranthi Kumar)</p>
+                <p>Proprietor</p>
+                <p>Membership No: 224983</p>
+            </div>
+        </div>
+    );
+});
+CertificateToPrint.displayName = 'CertificateToPrint';
+
 
 export default function NetWorthCertificatePage() {
   const { toast } = useToast();
@@ -72,15 +175,13 @@ export default function NetWorthCertificatePage() {
       liabilities: [{ description: "Housing Loan from HDFC Bank", value: 2000000 }],
     },
   });
+  
+  const handlePrint = useReactToPrint({
+      content: () => printRef.current,
+  });
 
   const { fields: assetFields, append: appendAsset, remove: removeAsset } = useFieldArray({ control: form.control, name: "assets" });
   const { fields: liabilityFields, append: appendLiability, remove: removeLiability } = useFieldArray({ control: form.control, name: "liabilities" });
-  
-  const watchedAssets = form.watch("assets");
-  const watchedLiabilities = form.watch("liabilities");
-  const totalAssets = watchedAssets.reduce((acc, asset) => acc + (Number(asset.value) || 0), 0);
-  const totalLiabilities = watchedLiabilities.reduce((acc, liability) => acc + (Number(liability.value) || 0), 0);
-  const netWorth = totalAssets - totalLiabilities;
   
   const handleGenerateDraft = async () => {
     const isValid = await form.trigger();
@@ -166,8 +267,7 @@ export default function NetWorthCertificatePage() {
             )
         case 4:
             const formData = form.getValues();
-            const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-            const whatsappMessage = `Dear ${formData.clientName},\n\nPlease find attached the Net Worth Certificate as requested.\n\nNet Worth: ₹${netWorth.toLocaleString('en-IN')}\nAs on: ${new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)}\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
+            const whatsappMessage = `Dear ${formData.clientName},\n\nPlease find attached the Net Worth Certificate as requested.\n\nThank you,\nS. KRANTHI KUMAR & Co.`;
             
             return (
                 <Card>
@@ -176,105 +276,16 @@ export default function NetWorthCertificatePage() {
                         <CardDescription>Review the generated certificate. You can print it or send it for certification.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                         <div ref={printRef} className="prose dark:prose-invert max-w-none border rounded-lg p-8">
-                           <header className="text-center border-b-2 border-primary pb-4 mb-8">
-                                <h1 className="text-2xl font-bold text-primary m-0">S. KRANTHI KUMAR & Co.</h1>
-                                <p className="text-sm m-0">Chartered Accountants</p>
-                                <p className="text-xs m-0">H.No. 2-2-1130/2/A, G-1, Amberpet, Hyderabad-500013</p>
-                                <p className="text-xs m-0">Email: skkandco@gmail.com</p>
-                           </header>
-
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <p className="font-bold text-sm">To Whom It May Concern</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-semibold">UDIN: [UDIN GOES HERE]</p>
-                                    <p className="text-sm">Date: {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)}</p>
-                                </div>
-                            </div>
-                            
-                             <p>
-                                This is to certify that the Net Worth of <strong>Sri {formData.clientName}</strong>, S/o (or other relation) [Parent's Name], R/o {formData.clientAddress} (PAN: {formData.clientPan}) as on {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions)} is as follows:
-                            </p>
-
-                            <Table className="my-4">
-                                <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                        <TableHead className="font-bold text-foreground">ASSETS</TableHead>
-                                        <TableHead className="text-right font-bold text-foreground">Amount in Rs</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {formData.assets.map((asset, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell>{asset.description}</TableCell>
-                                            <TableCell className="text-right font-mono">{asset.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                                <TableFoot>
-                                    <TableRow className="font-bold bg-muted/50">
-                                        <TableCell>Total Assets</TableCell>
-                                        <TableCell className="text-right font-mono">{totalAssets.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                                    </TableRow>
-                                </TableFoot>
-                            </Table>
-
-                             <Table className="my-4">
-                                <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                        <TableHead className="font-bold text-foreground">LIABILITIES</TableHead>
-                                        <TableHead className="text-right font-bold text-foreground">Amount in Rs</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                     {formData.liabilities.map((lib, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell>Less: {lib.description}</TableCell>
-                                            <TableCell className="text-right font-mono">{lib.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                                <TableFoot>
-                                    <TableRow className="font-bold bg-muted/50">
-                                        <TableCell>Total Liabilities</TableCell>
-                                        <TableCell className="text-right font-mono">{totalLiabilities.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                                    </TableRow>
-                                </TableFoot>
-                            </Table>
-                            
-                             <Table className="my-4">
-                                <TableBody>
-                                    <TableRow className="font-bold text-lg bg-primary/10">
-                                        <TableCell>NET WORTH AS ON {new Date(formData.asOnDate).toLocaleDateString('en-GB', dateOptions).toUpperCase()}</TableCell>
-                                        <TableCell className="text-right font-mono">{netWorth.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                            <p>(Rupees {numberToWords(netWorth)} only)</p>
-
-                            <p className="mt-8 text-xs">
-                                This certificate is issued based on the information and records produced before us and is true to the best of our knowledge and belief.
-                            </p>
-
-                            <div className="mt-24 text-right">
-                                <p className="font-bold">For S. KRANTHI KUMAR & Co.</p>
-                                <p>Chartered Accountants</p>
-                                <div className="h-20"></div>
-                                <p>(S. Kranthi Kumar)</p>
-                                <p>Proprietor</p>
-                                <p>Membership No: 224983</p>
-                            </div>
-                        </div>
+                         <div className="border rounded-lg">
+                           <CertificateToPrint ref={printRef} formData={formData} />
+                         </div>
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <ShareButtons
-                            contentRef={printRef}
-                            fileName={`Net_Worth_${formData.clientName}`}
-                            whatsappMessage={whatsappMessage}
-                         />
+                         <div>
+                            <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                            {/* ShareButtons would go here if needed, but we implement the simpler print button first to fix the bug */}
+                         </div>
                     </CardFooter>
                 </Card>
             )

@@ -4,11 +4,9 @@
 import { useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
-import { Printer, MessageSquare, FileDown } from "lucide-react";
+import { Printer, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 type ShareButtonsProps = {
   contentRef: React.RefObject<HTMLDivElement>;
@@ -25,50 +23,56 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
     onAfterPrint: () => toast({ title: "Print/Save job sent." }),
   });
 
-  const generatePdfBlob = (): Blob | null => {
+  const generatePdfForSharing = async (): Promise<File | null> => {
     const content = contentRef.current;
     if (!content) return null;
 
-    // This is a simplified PDF generation. 
-    // For complex layouts, a more robust library or approach would be needed.
-    const doc = new jsPDF();
-    doc.html(content, {
-      callback: function (doc) {
-        // This callback is async, which makes returning the blob tricky.
-        // The navigator.share API needs the file upfront.
-      },
-      margin: [15, 15, 15, 15],
-      autoPaging: 'text',
-      width: 180,
-      windowWidth: 675 
-    });
-    // The above doc.html is async. A direct return isn't feasible.
-    // For a working solution, we'll generate a simpler PDF for sharing.
-    const simpleDoc = new jsPDF();
-    simpleDoc.text(content.innerText, 15, 15);
-    return simpleDoc.output('blob');
+    try {
+        const { default: html2canvas } = await import('html2canvas');
+        const canvas = await html2canvas(content, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        const pdfBlob = pdf.output('blob');
+        return new File([pdfBlob], `${fileName}.pdf`, { type: 'application/pdf' });
+    } catch (error) {
+        console.error("Error generating PDF for sharing:", error);
+        toast({ variant: 'destructive', title: 'PDF Generation Failed' });
+        return null;
+    }
   };
 
+
   const handleShare = async () => {
-    if (!navigator.share) {
-      toast({
-        variant: "destructive",
-        title: "Not Supported",
-        description: "Your browser does not support the Web Share API. Please use a mobile browser.",
-      });
-      return;
-    }
-    
-    // For this demo, we'll share text as direct PDF Blob sharing from jsPDF is complex.
-    try {
-        await navigator.share({
-            title: fileName,
-            text: whatsappMessage,
+    const pdfFile = await generatePdfForSharing();
+    if (!pdfFile) return;
+
+    if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
+        try {
+            await navigator.share({
+                title: fileName,
+                text: whatsappMessage,
+                files: [pdfFile],
+            });
+            toast({ title: 'Shared Successfully!' });
+        } catch (error) {
+            console.error('Share failed:', error);
+            if ((error as any).name !== 'AbortError') {
+                 toast({ variant: 'destructive', title: 'Share Failed' });
+            }
+        }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Not Supported",
+            description: "Your browser does not support file sharing. Please use a modern mobile browser.",
         });
-        toast({ title: 'Shared Successfully!' });
-    } catch (error) {
-        console.error('Share failed:', error);
-        toast({ variant: 'destructive', title: 'Share Failed' });
     }
   };
 
