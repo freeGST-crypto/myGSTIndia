@@ -298,8 +298,8 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type }: { trans
                             {type === 'statement' ? 'Upload a statement to see transactions.' : 'No book transactions for this period.'}
                         </TableCell></TableRow>
                     ) : (
-                        transactions.map(tx => (
-                            <TableRow key={tx.id} data-state={selectedTxs.has(tx.id) ? "selected" : ""}>
+                        transactions.map((tx, index) => (
+                            <TableRow key={`${tx.id}-${index}`} data-state={selectedTxs.has(tx.id) ? "selected" : ""}>
                                 <TableCell>
                                     {tx.matched ? (
                                         <Badge variant="secondary" className="flex items-center justify-center h-6 w-6 p-0"><Check className="size-4 text-green-600"/></Badge>
