@@ -38,6 +38,7 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 const initialEmployees = [
     { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, netSalary: 88000 },
@@ -80,7 +81,7 @@ export default function EmployeesPage() {
                     <DialogTitle>Add New Employee</DialogTitle>
                     <DialogDescription>Enter the details for the new employee.</DialogDescription>
                 </DialogHeader>
-                <div className="max-h-[60vh] overflow-y-auto p-4 space-y-6">
+                <div className="max-h-[70vh] overflow-y-auto p-4 space-y-6">
                     <h3 className="font-semibold text-lg">Personal Information</h3>
                     <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2"><Label>Employee Name</Label><Input/></div>
@@ -89,19 +90,49 @@ export default function EmployeesPage() {
                         <div className="space-y-2"><Label>Date of Birth</Label><Input type="date"/></div>
                     </div>
                      <Separator/>
-                    <h3 className="font-semibold text-lg">Job Details</h3>
+                    <h3 className="font-semibold text-lg">Employment Details</h3>
                      <div className="grid md:grid-cols-3 gap-4">
                         <div className="space-y-2"><Label>Employee ID</Label><Input/></div>
-                        <div className="space-y-2"><Label>Designation</Label><Input/></div>
                         <div className="space-y-2"><Label>Date of Joining</Label><Input type="date"/></div>
+                        <div className="space-y-2"><Label>Designation</Label><Input/></div>
+                        <div className="space-y-2"><Label>Department</Label><Input/></div>
+                        <div className="space-y-2"><Label>Work Location</Label><Input/></div>
                     </div>
                      <Separator/>
-                     <h3 className="font-semibold text-lg">Salary Components (Monthly)</h3>
+                     <h3 className="font-semibold text-lg">Compensation Details</h3>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="space-y-2"><Label>Annual CTC (₹)</Label><Input type="number"/></div>
+                        <div className="space-y-2"><Label>Pay Frequency</Label>
+                          <Select defaultValue="monthly">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="daily">Daily</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Salary components (monthly basis):</p>
                       <div className="grid md:grid-cols-3 gap-4">
                         <div className="space-y-2"><Label>Basic Salary (₹)</Label><Input type="number"/></div>
                         <div className="space-y-2"><Label>House Rent Allowance (HRA) (₹)</Label><Input type="number"/></div>
                         <div className="space-y-2"><Label>Special Allowance (₹)</Label><Input type="number"/></div>
                     </div>
+                     <Separator/>
+                     <h3 className="font-semibold text-lg">Attendance &amp; Leave Policy</h3>
+                     <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2"><Label>Working Days per Month</Label><Input type="number" defaultValue="22"/></div>
+                         <div className="space-y-2"><Label>Leave Policy</Label>
+                          <Select>
+                            <SelectTrigger><SelectValue placeholder="Assign a policy"/></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="standard">Standard Policy</SelectItem>
+                              <SelectItem value="senior">Senior Staff Policy</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                     </div>
                      <Separator/>
                      <h3 className="font-semibold text-lg">Statutory & Bank Details</h3>
                      <div className="grid md:grid-cols-2 gap-4">
