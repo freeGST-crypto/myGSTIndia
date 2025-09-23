@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   Card,
   CardContent,
@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { AccountingContext } from "@/context/accounting-context";
 
 const initialEmployees = [
     { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0 },
@@ -66,6 +67,7 @@ export default function RunPayrollPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [financialYear, setFinancialYear] = useState(getFinancialYears()[0]);
     const [month, setMonth] = useState(months[new Date().getMonth()]);
+    const accountingContext = useContext(AccountingContext);
     
     const [payrollData, setPayrollData] = useState(initialEmployees.map(emp => ({...emp, ...calculateSalary(emp)})));
     
@@ -82,17 +84,47 @@ export default function RunPayrollPage() {
         });
     };
 
-    const handleProcessPayroll = () => {
+    const handleProcessPayroll = async () => {
+        if (!accountingContext) return;
         setIsLoading(true);
-        // Simulate API call and journal voucher creation
-        setTimeout(() => {
+
+        const { addJournalVoucher } = accountingContext;
+
+        const totalGross = payrollData.reduce((acc, emp) => acc + emp.grossEarnings, 0);
+        const totalNet = payrollData.reduce((acc, emp) => acc + emp.netSalary, 0);
+        const totalPf = payrollData.reduce((acc, emp) => acc + emp.pf, 0);
+        const totalPt = payrollData.reduce((acc, emp) => acc + emp.professionalTax, 0);
+        const totalTds = payrollData.reduce((acc, emp) => acc + emp.incomeTax, 0);
+        const totalLwf = payrollData.reduce((acc, emp) => acc + emp.lwf, 0);
+
+        const salaryPayableVoucher = {
+            id: `JV-SAL-${financialYear.replace('-', '')}-${month.toUpperCase()}`,
+            date: format(new Date(), 'yyyy-MM-dd'),
+            narration: `Salary for the month of ${month} ${financialYear}`,
+            lines: [
+                { account: '5020', debit: String(totalGross), credit: '0' }, // Debit Salaries and Wages
+                { account: '2010', debit: '0', credit: String(totalNet) },    // Credit Accounts Payable (as Salary Payable)
+                { account: '2130', debit: '0', credit: String(totalPf + totalTds + totalLwf + totalPt) }, // Credit TDS/Statutory Payable
+            ],
+            amount: totalGross,
+        };
+        
+        try {
+            await addJournalVoucher(salaryPayableVoucher);
             setIsLoading(false);
             setStep(2);
             toast({
                 title: "Payroll Processed Successfully!",
-                description: `Salary for ${month}, ${financialYear} has been processed.`,
+                description: `Salary for ${month}, ${financialYear} has been processed and a journal voucher has been created.`,
             });
-        }, 1500);
+        } catch (error) {
+            setIsLoading(false);
+            toast({
+                variant: 'destructive',
+                title: "Failed to Post Journal Voucher",
+                description: "There was an error creating the salary voucher.",
+            });
+        }
     };
     
     const totalNetSalary = payrollData.reduce((acc, emp) => acc + emp.netSalary, 0);
