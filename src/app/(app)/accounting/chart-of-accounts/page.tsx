@@ -168,7 +168,7 @@ export default function ChartOfAccountsPage() {
     if (categoryAccounts.length === 0) return null;
     
     return (
-        <div className="mb-4">
+        <div key={category} className="mb-4">
             <h3 className="font-semibold text-lg mb-2">{title}</h3>
             <div className="border rounded-md">
             <Table>
