@@ -109,15 +109,16 @@ export default function InvoicesPage() {
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const invoices: Invoice[] = useMemo(() => {
-    // Filter out reversal entries from the main list of sales invoices
-    const salesInvoices = journalVouchers.filter(v => v && v.narration && v.narration.includes("via Invoice #") && !v.reverses);
+    const allInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-INV-") && !v.reverses);
+    
     const cancelledInvoiceIds = new Set(
         journalVouchers
             .filter(v => v && v.reverses && v.reverses.startsWith("JV-INV-"))
             .map(v => v.reverses)
     );
-
-    return salesInvoices
+    
+    return allInvoices
+        .filter(v => !cancelledInvoiceIds.has(v.id))
         .map(v => {
             if (!v) return null;
             const isCancelled = cancelledInvoiceIds.has(v.id);
