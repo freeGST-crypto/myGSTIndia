@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -52,6 +51,13 @@ const formSchema = z.object({
   ptEnabled: z.boolean().default(true),
   ptRegistrationNumber: z.string().optional(),
   ptState: z.string().min(2, "State is required for PT."),
+  
+  incomeTaxEnabled: z.boolean().default(true),
+  tanNumber: z.string().optional(),
+
+  lwfEnabled: z.boolean().default(true),
+  lwfRegistrationNumber: z.string().optional(),
+  lwfState: z.string().optional(),
 });
 
 export default function PayrollSettingsPage() {
@@ -68,6 +74,9 @@ export default function PayrollSettingsPage() {
       esiEmployerContribution: 3.25,
       ptEnabled: true,
       ptState: "Maharashtra",
+      incomeTaxEnabled: true,
+      lwfEnabled: true,
+      lwfState: "Maharashtra",
     },
   });
   
@@ -94,7 +103,7 @@ export default function PayrollSettingsPage() {
                 <CardHeader>
                     <CardTitle>Statutory Components</CardTitle>
                     <CardDescription>
-                        Enable and configure PF, ESI, and Professional Tax settings for your organization.
+                        Enable and configure PF, ESI, and other statutory settings for your organization.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
@@ -183,6 +192,62 @@ export default function PayrollSettingsPage() {
                             </div>
                         )}
                     </div>
+                     {/* Income Tax (TDS) Section */}
+                    <div>
+                        <FormField
+                            control={form.control}
+                            name="incomeTaxEnabled"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Income Tax (TDS)</FormLabel>
+                                    <FormDescription>Manage TDS deductions on employee salaries.</FormDescription>
+                                </div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {form.watch("incomeTaxEnabled") && (
+                            <div className="space-y-4 pt-4 pl-4 border-l border-r border-b rounded-b-lg p-4">
+                                <FormField control={form.control} name="tanNumber" render={({ field }) => (<FormItem><FormLabel>TAN (Tax Deduction and Collection Account Number)</FormLabel><FormControl><Input placeholder="e.g. ABCD12345E" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            </div>
+                        )}
+                    </div>
+                     {/* Labour Welfare Fund (LWF) Section */}
+                    <div>
+                        <FormField
+                            control={form.control}
+                            name="lwfEnabled"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Labour Welfare Fund (LWF)</FormLabel>
+                                    <FormDescription>State-specific contribution for employee welfare.</FormDescription>
+                                </div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {form.watch("lwfEnabled") && (
+                            <div className="space-y-4 pt-4 pl-4 border-l border-r border-b rounded-b-lg p-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <FormField control={form.control} name="lwfRegistrationNumber" render={({ field }) => (<FormItem><FormLabel>LWF Registration Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={form.control} name="lwfState" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>State</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select a state" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {states.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}/>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 
@@ -207,5 +272,3 @@ export default function PayrollSettingsPage() {
     </div>
   );
 }
-
-    
