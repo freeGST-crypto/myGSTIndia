@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useContext } from "react";
+import { useState, useMemo, useContext, memo } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { DollarSign, IndianRupee, CreditCard, Users, Search } from "lucide-react";
 import { FinancialSummaryChart } from "@/components/dashboard/financial-summary-chart";
@@ -24,7 +24,7 @@ const formatCurrency = (value: number) => {
     return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
 }
 
-export default function DashboardContent() {
+function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const accountingContext = useContext(AccountingContext);
   const [user] = useAuthState(auth);
@@ -91,10 +91,10 @@ export default function DashboardContent() {
 
   const invoices = useMemo(() => {
     return journalVouchers
-        .filter(v => v && v.id && v.id.startsWith("JV-INV-"))
+        .filter(v => v && v.id && v.id.startsWith("INV-"))
         .slice(0, 5)
         .map(v => ({
-            invoice: v.id.replace("JV-", ""),
+            invoice: v.id,
             customer: v.narration.replace("Sale to ", "").split(" via")[0],
             amount: formatCurrency(v.amount),
             status: "Pending",
@@ -184,3 +184,7 @@ export default function DashboardContent() {
     </div>
   );
 }
+
+export default memo(DashboardContent);
+
+    

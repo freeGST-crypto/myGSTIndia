@@ -5,7 +5,7 @@ import { useEffect, useCallback } from 'react';
 
 type HotkeyMap = Map<string, (event: KeyboardEvent) => void>;
 
-export function useHotkeys(hotkeys: HotkeyMap, dependencies: any[] = []) {
+export function useHotkeys(hotkeys: HotkeyMap) {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const key = event.key.toLowerCase();
     const ctrl = event.ctrlKey || event.metaKey; // For Mac's Cmd key
@@ -26,8 +26,7 @@ export function useHotkeys(hotkeys: HotkeyMap, dependencies: any[] = []) {
       event.preventDefault();
       callback(event);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...dependencies, hotkeys]);
+  }, [hotkeys]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -36,3 +35,5 @@ export function useHotkeys(hotkeys: HotkeyMap, dependencies: any[] = []) {
     };
   }, [handleKeyDown]);
 }
+
+    

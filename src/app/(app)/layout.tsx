@@ -315,7 +315,7 @@ export default function AppLayout({
   const userRole = getRole();
 
   // Define hotkeys
-  useHotkeys(new Map([
+  const hotkeyMap = React.useMemo(() => new Map([
     // Vouchers
     ['ctrl+i', () => router.push('/billing/invoices/new')],
     ['ctrl+p', () => router.push('/purchases/new')],
@@ -331,7 +331,9 @@ export default function AppLayout({
     // Masters
     ['alt+p', () => router.push('/parties')],
     ['alt+i', () => router.push('/items')],
-  ]));
+  ]), [router]);
+
+  useHotkeys(hotkeyMap);
 
 
   React.useEffect(() => {
@@ -393,3 +395,5 @@ export default function AppLayout({
     </AccountingProvider>
   );
 }
+
+    
