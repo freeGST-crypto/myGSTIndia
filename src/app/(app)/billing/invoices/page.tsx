@@ -109,11 +109,11 @@ export default function InvoicesPage() {
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const invoices: Invoice[] = useMemo(() => {
-    const allInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-INV-") && !v.reverses);
+    const allInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("INV-") && !v.reverses);
     
     const cancelledInvoiceIds = new Set(
         journalVouchers
-            .filter(v => v && v.reverses && v.reverses.startsWith("JV-INV-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("INV-"))
             .map(v => v.reverses)
     );
     
@@ -159,6 +159,7 @@ export default function InvoicesPage() {
     const subtotal = quickQty * quickRate;
     const tax = subtotal * 0.18; // Assuming 18% tax for simplicity
     const totalAmount = subtotal + tax;
+    const invoiceId = `INV-${quickInvNum}`;
 
     const journalLines = [
         { account: selectedCustomer.id, debit: totalAmount.toFixed(2), credit: '0' },
@@ -168,9 +169,9 @@ export default function InvoicesPage() {
 
     try {
       await addJournalVoucher({
-            id: `JV-INV-${quickInvNum}`, // Construct the ID here
+            id: invoiceId,
             date: new Date().toISOString().split('T')[0],
-            narration: `Sale to ${selectedCustomer.name} via Invoice #${quickInvNum}`,
+            narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceId}`,
             lines: journalLines,
             amount: totalAmount,
             customerId: quickCustomer,
@@ -178,7 +179,7 @@ export default function InvoicesPage() {
 
         toast({
             title: "Quick Invoice Created!",
-            description: `Invoice ${quickInvNum} has been created and recorded.`
+            description: `Invoice ${invoiceId} has been created and recorded.`
         });
 
         // Reset form
@@ -203,8 +204,7 @@ export default function InvoicesPage() {
   }
 
     const handleCancelInvoice = async (invoiceId: string) => {
-        const originalVoucherId = invoiceId;
-        const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+        const originalVoucher = journalVouchers.find(v => v.id === invoiceId);
 
         if (!originalVoucher) {
             toast({ variant: "destructive", title: "Error", description: "Original invoice transaction not found." });
@@ -219,10 +219,10 @@ export default function InvoicesPage() {
         }));
 
         const cancellationVoucher = {
-            id: `JV-CANCEL-${Date.now()}`,
-            reverses: originalVoucherId,
+            id: `CANCEL-${invoiceId}-${Date.now()}`,
+            reverses: invoiceId,
             date: new Date().toISOString().split('T')[0],
-            narration: `Cancellation of Invoice #${originalVoucherId.replace('JV-', '')}`,
+            narration: `Cancellation of Invoice #${invoiceId}`,
             lines: reversalLines,
             amount: originalVoucher.amount,
             customerId: originalVoucher.customerId,
@@ -288,7 +288,7 @@ export default function InvoicesPage() {
             await handleShare(invoice);
         } else if (action === 'Duplicate') {
             const queryParams = new URLSearchParams({
-                duplicate: invoice.id.replace('JV-', '')
+                duplicate: invoice.id
             }).toString();
             router.push(`/billing/invoices/new?${queryParams}`);
         } else if (action === 'Edit') {
@@ -296,7 +296,7 @@ export default function InvoicesPage() {
             const cancelled = await handleCancelInvoice(invoice.id);
             if (cancelled) {
                 const queryParams = new URLSearchParams({
-                    edit: invoice.id.replace('JV-', '')
+                    edit: invoice.id
                 }).toString();
                 router.push(`/billing/invoices/new?${queryParams}`);
             } else {
@@ -364,7 +364,7 @@ export default function InvoicesPage() {
     
     doc.autoTable({
         body: [
-            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id.replace('JV-', '')],
+            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id],
             [{ content: 'Invoice Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.date), "dd-MMM-yyyy")],
             [{ content: 'Due Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.dueDate), "dd-MMM-yyyy")],
         ],
@@ -473,8 +473,8 @@ export default function InvoicesPage() {
     if (silent) {
         return doc.output('blob');
     } else {
-        doc.save(`Invoice_${invoice.id.replace('JV-', '')}.pdf`);
-        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id.replace('JV-', '')}.`});
+        doc.save(`Invoice_${invoice.id}.pdf`);
+        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
         return null;
     }
   };
@@ -571,7 +571,7 @@ export default function InvoicesPage() {
                 <div className="grid gap-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="quick-inv-num">Invoice #</Label>
-                        <Input id="quick-inv-num" placeholder="INV-005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
+                        <Input id="quick-inv-num" placeholder="005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="quick-customer">Customer</Label>
@@ -638,7 +638,7 @@ export default function InvoicesPage() {
                 <TableBody>
                 {filteredInvoices.map((invoice) => (
                     <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.id.replace('JV-', '')}</TableCell>
+                    <TableCell className="font-medium">{invoice.id}</TableCell>
                     <TableCell>{invoice.customer}</TableCell>
                     <TableCell>{format(new Date(invoice.date), "dd MMM, yyyy")}</TableCell>
                     <TableCell>{format(new Date(invoice.dueDate), "dd MMM, yyyy")}</TableCell>
@@ -688,7 +688,7 @@ export default function InvoicesPage() {
         <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Invoice Details: {selectedInvoice.id.replace('JV-', '')}</DialogTitle>
+                    <DialogTitle>Invoice Details: {selectedInvoice.id}</DialogTitle>
                     <DialogDescription>
                         Details for the invoice issued to {selectedInvoice.customer}.
                     </DialogDescription>

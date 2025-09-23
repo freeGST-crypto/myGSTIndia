@@ -56,10 +56,10 @@ export default function DebitNotesPage() {
   const [selectedNote, setSelectedNote] = useState<DebitNote | null>(null);
   
   const debitNotes: DebitNote[] = useMemo(() => {
-    const allDebitNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-DN-"));
+    const allDebitNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("DN-"));
     const voidedDebitNoteIds = new Set(
         journalVouchers
-            .filter(v => v && v.reverses && v.reverses.startsWith("JV-DN-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("DN-"))
             .map(v => v.reverses)
     );
 
@@ -93,8 +93,7 @@ export default function DebitNotesPage() {
 
 
   const handleVoidDebitNote = async (debitNoteId: string) => {
-    const originalVoucherId = debitNoteId;
-    const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+    const originalVoucher = journalVouchers.find(v => v.id === debitNoteId);
 
     if (!originalVoucher) {
         toast({ variant: "destructive", title: "Error", description: "Original debit note transaction not found." });
@@ -108,8 +107,8 @@ export default function DebitNotesPage() {
     }));
 
     const voidVoucher = {
-        id: `JV-VOID-DN-${Date.now()}`,
-        reverses: originalVoucherId,
+        id: `VOID-${debitNoteId}-${Date.now()}`,
+        reverses: debitNoteId,
         date: new Date().toISOString().split('T')[0],
         narration: `Voiding of Debit Note #${debitNoteId}`,
         lines: reversalLines,
@@ -224,7 +223,7 @@ export default function DebitNotesPage() {
             <TableBody>
               {debitNotes.map((note) => (
                 <TableRow key={note.id}>
-                  <TableCell className="font-medium">{note.id.replace("JV-","")}</TableCell>
+                  <TableCell className="font-medium">{note.id}</TableCell>
                   <TableCell>{note.vendor}</TableCell>
                   <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell>{note.originalPurchase}</TableCell>

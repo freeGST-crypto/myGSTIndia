@@ -56,10 +56,10 @@ export default function CreditNotesPage() {
   const [selectedNote, setSelectedNote] = useState<CreditNote | null>(null);
   
   const creditNotes: CreditNote[] = useMemo(() => {
-    const allCreditNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-CN-"));
+    const allCreditNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("CN-"));
     const voidedCreditNoteIds = new Set(
         journalVouchers
-            .filter(v => v && v.reverses && v.reverses.startsWith("JV-CN-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("CN-"))
             .map(v => v.reverses)
     );
     
@@ -92,8 +92,7 @@ export default function CreditNotesPage() {
   }, [creditNotes]);
 
   const handleVoidCreditNote = async (creditNoteId: string) => {
-    const originalVoucherId = creditNoteId;
-    const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+    const originalVoucher = journalVouchers.find(v => v.id === creditNoteId);
 
     if (!originalVoucher) {
         toast({ variant: "destructive", title: "Error", description: "Original credit note transaction not found." });
@@ -107,8 +106,8 @@ export default function CreditNotesPage() {
     }));
 
     const voidVoucher = {
-        id: `JV-VOID-CN-${Date.now()}`,
-        reverses: originalVoucherId,
+        id: `VOID-${creditNoteId}-${Date.now()}`,
+        reverses: creditNoteId,
         date: new Date().toISOString().split('T')[0],
         narration: `Voiding of Credit Note #${creditNoteId}`,
         lines: reversalLines,
@@ -223,7 +222,7 @@ export default function CreditNotesPage() {
             <TableBody>
               {creditNotes.map((note) => (
                 <TableRow key={note.id}>
-                  <TableCell className="font-medium">{note.id.replace("JV-","")}</TableCell>
+                  <TableCell className="font-medium">{note.id}</TableCell>
                   <TableCell>{note.customer}</TableCell>
                   <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell>{note.originalInvoice}</TableCell>

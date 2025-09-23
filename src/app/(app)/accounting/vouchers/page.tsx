@@ -108,11 +108,11 @@ export default function VouchersPage() {
         );
 
         const allReceipts = journalVouchers
-            .filter(v => v && v.id && v.id.startsWith("JV-RV-"))
+            .filter(v => v && v.id && v.id.startsWith("RV-"))
             .map(v => {
                 const isReversed = reversedIds.has(v.id);
                 return {
-                    id: v.id.replace("JV-", ""),
+                    id: v.id,
                     date: v.date,
                     party: v.narration.split(" from ")[1]?.split(" against")[0] || v.narration,
                     amount: v.amount,
@@ -122,11 +122,11 @@ export default function VouchersPage() {
             });
 
         const allPayments = journalVouchers
-            .filter(v => v && v.id && v.id.startsWith("JV-PV-"))
+            .filter(v => v && v.id && v.id.startsWith("PV-"))
             .map(v => {
                 const isReversed = reversedIds.has(v.id);
                  return {
-                    id: v.id.replace("JV-", ""),
+                    id: v.id,
                     date: v.date,
                     party: v.narration.split(" to ")[1]?.split(" for")[0] || v.narration,
                     amount: v.amount,
@@ -136,14 +136,13 @@ export default function VouchersPage() {
             });
 
         return { 
-            receipts: allReceipts.filter(v => !reversedIds.has(`JV-${v.id}`)),
-            payments: allPayments.filter(v => !reversedIds.has(`JV-${v.id}`))
+            receipts: allReceipts.filter(v => !reversedIds.has(v.id)),
+            payments: allPayments.filter(v => !reversedIds.has(v.id))
         };
     }, [journalVouchers]);
     
     const handleDeleteVoucher = async (voucherId: string) => {
-        const originalVoucherId = `JV-${voucherId}`;
-        const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+        const originalVoucher = journalVouchers.find(v => v.id === voucherId);
 
         if (!originalVoucher) {
             toast({ variant: "destructive", title: "Error", description: "Original voucher transaction not found." });
@@ -157,8 +156,8 @@ export default function VouchersPage() {
         }));
         
         const reversalVoucher = {
-            id: `JV-REV-${Date.now()}`,
-            reverses: originalVoucherId,
+            id: `REV-${voucherId}-${Date.now()}`,
+            reverses: voucherId,
             date: new Date().toISOString().split('T')[0],
             narration: `Reversal of Voucher #${voucherId}`,
             lines: reversalLines,

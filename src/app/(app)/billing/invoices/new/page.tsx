@@ -171,13 +171,13 @@ export default function NewInvoicePage() {
   useEffect(() => {
     const editId = searchParams.get('edit') || searchParams.get('duplicate');
     if (editId && journalVouchers.length > 0 && items.length > 0) {
-      const voucherToLoad = journalVouchers.find(v => v.id === `JV-${editId}`);
+      const voucherToLoad = journalVouchers.find(v => v.id === editId);
       if (voucherToLoad) {
         setInvoiceDate(new Date(voucherToLoad.date));
         setCustomer(voucherToLoad.customerId || "");
         
         if (searchParams.get('edit')) {
-            setInvoiceNumber(voucherToLoad.id.replace('JV-', ''));
+            setInvoiceNumber(voucherToLoad.id.replace('INV-', ''));
         }
 
         const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
@@ -300,6 +300,8 @@ export default function NewInvoicePage() {
         toast({ variant: "destructive", title: "Missing Details", description: "Please select a customer and enter an invoice number."});
         return;
     }
+    
+    const invoiceId = `INV-${invoiceNumber}`;
 
     const journalLines = [
         { account: selectedCustomer.id, debit: totalAmount.toFixed(2), credit: '0' },
@@ -317,15 +319,15 @@ export default function NewInvoicePage() {
 
     try {
         await addJournalVoucher({
-            id: `JV-INV-${invoiceNumber}`,
+            id: invoiceId,
             date: invoiceDate ? format(invoiceDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-            narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceNumber}`,
+            narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceId}`,
             lines: journalLines,
             amount: grandTotal, // Store the gross amount in the journal
             customerId: customer,
         });
 
-        toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
+        toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceId} has been automatically created.` });
         router.push("/billing/invoices");
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });
@@ -344,7 +346,7 @@ export default function NewInvoicePage() {
       </div>
 
       <PartyDialog type="Customer" open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen} />
-      <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} />
+      <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} item={null} />
 
       <Card>
         <CardHeader>
@@ -356,7 +358,7 @@ export default function NewInvoicePage() {
         <CardContent className="space-y-6">
           <div className="grid md:grid-cols-3 gap-6">
              <div className="space-y-2 md:col-span-2">
-              <Label>Bill To</Label>
+              <Label>Customer</Label>
                <Select onValueChange={handleCustomerChange} value={customer} disabled={customersLoading}>
                 <SelectTrigger>
                   <SelectValue placeholder={customersLoading ? "Loading..." : "Select a customer"} />
@@ -378,7 +380,7 @@ export default function NewInvoicePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-no">Invoice Number</Label>
-              <Input id="invoice-no" placeholder="e.g., INV-001" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
+              <Input id="invoice-no" placeholder="e.g., 001" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Invoice Date</Label>

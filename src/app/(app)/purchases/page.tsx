@@ -63,10 +63,10 @@ export default function PurchasesPage() {
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
   const purchases: Purchase[] = useMemo(() => {
-    const allBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-BILL-"));
+    const allBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("BILL-"));
     const deletedBillIds = new Set(
         journalVouchers
-            .filter(v => v && v.reverses && v.reverses.startsWith("JV-BILL-"))
+            .filter(v => v && v.reverses && v.reverses.startsWith("BILL-"))
             .map(v => v.reverses)
     );
     
@@ -99,8 +99,7 @@ export default function PurchasesPage() {
   }, [journalVouchers]);
   
   const handleDeleteBill = async (billId: string): Promise<boolean> => {
-    const originalVoucherId = billId;
-    const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
+    const originalVoucher = journalVouchers.find(v => v.id === billId);
 
     if (!originalVoucher) {
         toast({ variant: "destructive", title: "Error", description: "Original purchase transaction not found." });
@@ -114,10 +113,10 @@ export default function PurchasesPage() {
     }));
 
     const deletionVoucher = {
-        id: `JV-DEL-${Date.now()}`,
-        reverses: originalVoucherId,
+        id: `DEL-${billId}-${Date.now()}`,
+        reverses: billId,
         date: new Date().toISOString().split('T')[0],
-        narration: `Deletion of Purchase Bill #${originalVoucherId.replace("JV-", "")}`,
+        narration: `Deletion of Purchase Bill #${billId}`,
         lines: reversalLines,
         amount: originalVoucher.amount,
         vendorId: originalVoucher.vendorId,
@@ -125,7 +124,7 @@ export default function PurchasesPage() {
 
     try {
         await addJournalVoucher(deletionVoucher);
-        toast({ title: "Purchase Bill Deleted", description: `Purchase bill #${originalVoucherId.replace("JV-", "")} has been successfully deleted.` });
+        toast({ title: "Purchase Bill Deleted", description: `Purchase bill #${billId} has been successfully deleted.` });
         return true;
     } catch (e: any) {
         toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
@@ -139,11 +138,11 @@ export default function PurchasesPage() {
         } else if (action === 'Delete') {
             await handleDeleteBill(purchase.id);
         } else if (action === 'Edit') {
-             toast({ title: 'Editing Purchase Bill...', description: `Deleting ${purchase.id.replace("JV-", "")} and creating a new draft.` });
+             toast({ title: 'Editing Purchase Bill...', description: `Deleting ${purchase.id} and creating a new draft.` });
             const deleted = await handleDeleteBill(purchase.id);
             if (deleted) {
                 const queryParams = new URLSearchParams({
-                    edit: purchase.id.replace('JV-', '')
+                    edit: purchase.id
                 }).toString();
                 router.push(`/purchases/new?${queryParams}`);
             } else {
@@ -153,7 +152,7 @@ export default function PurchasesPage() {
         else {
             toast({
                 title: `Action: ${action}`,
-                description: `This would ${action.toLowerCase()} bill ${purchase.id.replace("JV-", "")}. This is a placeholder.`
+                description: `This would ${action.toLowerCase()} bill ${purchase.id}. This is a placeholder.`
             });
         }
     }
@@ -261,7 +260,7 @@ export default function PurchasesPage() {
                     <TableBody>
                     {filteredPurchases.map((purchase) => (
                         <TableRow key={purchase.id}>
-                        <TableCell className="font-medium">{purchase.id.replace("JV-","")}</TableCell>
+                        <TableCell className="font-medium">{purchase.id}</TableCell>
                         <TableCell>{purchase.vendor}</TableCell>
                         <TableCell>{format(new Date(purchase.date), "dd MMM, yyyy")}</TableCell>
                         <TableCell>{format(new Date(purchase.dueDate), "dd MMM, yyyy")}</TableCell>
@@ -304,7 +303,7 @@ export default function PurchasesPage() {
         <Dialog open={!!selectedPurchase} onOpenChange={(open) => !open && setSelectedPurchase(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Purchase Bill Details: {selectedPurchase.id.replace("JV-", "")}</DialogTitle>
+                    <DialogTitle>Purchase Bill Details: {selectedPurchase.id}</DialogTitle>
                     <DialogDescription>
                         Details for the bill received from {selectedPurchase.vendor}.
                     </DialogDescription>
