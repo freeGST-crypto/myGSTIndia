@@ -333,7 +333,7 @@ export default function NewPurchasePage() {
 
     try {
         await addJournalVoucher({
-            id: `BILL-${billNumber}`,
+            id: `JV-BILL-${billNumber}`,
             date: billDate ? format(billDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
             narration: `Purchase from ${selectedVendor.name} against Bill #${billNumber}`,
             lines: journalLines,
@@ -360,7 +360,7 @@ export default function NewPurchasePage() {
       </div>
 
       <PartyDialog type="Vendor" open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} />
-      <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} />
+      <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} item={null} />
 
       <Card>
         <CardHeader>
@@ -505,5 +505,3 @@ export default function NewPurchasePage() {
     </div>
   );
 }
-
-    

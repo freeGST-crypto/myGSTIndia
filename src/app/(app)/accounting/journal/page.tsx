@@ -150,10 +150,7 @@ export default function JournalVoucherPage() {
                 toast({ variant: "destructive", title: "Cannot Edit", description: "Reversal entries cannot be edited." });
                 return;
             }
-            const originalVoucher = allVouchers.find(v => v.id === voucher.id);
-            if (originalVoucher) {
-              setEditingVoucher(originalVoucher);
-            }
+            setEditingVoucher(voucher);
         } else {
             toast({
                 title: `${action} Voucher`,

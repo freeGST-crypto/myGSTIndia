@@ -117,7 +117,7 @@ export default function PurchasesPage() {
         id: `JV-DEL-${Date.now()}`,
         reverses: originalVoucherId,
         date: new Date().toISOString().split('T')[0],
-        narration: `Deletion of Purchase Bill #${billId}`,
+        narration: `Deletion of Purchase Bill #${originalVoucherId.replace("JV-", "")}`,
         lines: reversalLines,
         amount: originalVoucher.amount,
         vendorId: originalVoucher.vendorId,
@@ -125,7 +125,7 @@ export default function PurchasesPage() {
 
     try {
         await addJournalVoucher(deletionVoucher);
-        toast({ title: "Purchase Bill Deleted", description: `Purchase bill #${billId} has been successfully deleted.` });
+        toast({ title: "Purchase Bill Deleted", description: `Purchase bill #${originalVoucherId.replace("JV-", "")} has been successfully deleted.` });
         return true;
     } catch (e: any) {
         toast({ variant: "destructive", title: "Deletion Failed", description: e.message });
@@ -139,7 +139,7 @@ export default function PurchasesPage() {
         } else if (action === 'Delete') {
             await handleDeleteBill(purchase.id);
         } else if (action === 'Edit') {
-             toast({ title: 'Editing Purchase Bill...', description: `Cancelling ${purchase.id} and creating a new draft.` });
+             toast({ title: 'Editing Purchase Bill...', description: `Deleting ${purchase.id.replace("JV-", "")} and creating a new draft.` });
             const deleted = await handleDeleteBill(purchase.id);
             if (deleted) {
                 const queryParams = new URLSearchParams({
@@ -153,7 +153,7 @@ export default function PurchasesPage() {
         else {
             toast({
                 title: `Action: ${action}`,
-                description: `This would ${action.toLowerCase()} bill ${purchase.id}. This is a placeholder.`
+                description: `This would ${action.toLowerCase()} bill ${purchase.id.replace("JV-", "")}. This is a placeholder.`
             });
         }
     }
@@ -304,7 +304,7 @@ export default function PurchasesPage() {
         <Dialog open={!!selectedPurchase} onOpenChange={(open) => !open && setSelectedPurchase(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Purchase Bill Details: {selectedPurchase.id}</DialogTitle>
+                    <DialogTitle>Purchase Bill Details: {selectedPurchase.id.replace("JV-", "")}</DialogTitle>
                     <DialogDescription>
                         Details for the bill received from {selectedPurchase.vendor}.
                     </DialogDescription>
