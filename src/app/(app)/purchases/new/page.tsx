@@ -331,7 +331,6 @@ export default function NewPurchasePage() {
       }
     }
 
-
     try {
         await addJournalVoucher({
             id: `JV-BILL-${billNumber}`,

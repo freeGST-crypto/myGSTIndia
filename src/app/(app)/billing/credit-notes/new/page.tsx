@@ -86,7 +86,7 @@ export default function NewCreditNotePage() {
   const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
   const invoices = journalVouchersSnapshot?.docs
     .filter(doc => doc.data()?.id?.startsWith('JV-INV-'))
-    .map(doc => ({ id: doc.data().id.replace('JV-',''), customerId: doc.data().customerId })) || [];
+    .map(doc => ({ id: doc.data().id, customerId: doc.data().customerId })) || [];
 
   const filteredInvoices = invoices.filter(inv => inv.customerId === customer);
 
@@ -148,7 +148,7 @@ export default function NewCreditNotePage() {
         await addJournalVoucher({
             id: `JV-${creditNoteId}`,
             date: creditNoteDate ? format(creditNoteDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-            narration: `Credit Note ${creditNoteId} issued to ${selectedCustomer.name} against Invoice #${originalInvoice}`,
+            narration: `Credit Note ${creditNoteId} issued to ${selectedCustomer.name} against Invoice #${originalInvoice.replace('JV-', '')}`,
             lines: journalLines,
             amount: totalAmount,
             customerId: customer,
@@ -204,7 +204,7 @@ export default function NewCreditNotePage() {
                 <SelectContent>
                   {filteredInvoices.map((invoice) => (
                     <SelectItem key={invoice.id} value={invoice.id}>
-                      {invoice.id}
+                      {invoice.id.replace('JV-', '')}
                     </SelectItem>
                   ))}
                 </SelectContent>

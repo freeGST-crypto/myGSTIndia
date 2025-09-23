@@ -81,7 +81,7 @@ export default function NewDebitNotePage() {
   const [journalVouchersSnapshot] = useCollection(journalVouchersQuery);
   const purchases = journalVouchersSnapshot?.docs
     .filter(doc => doc.data()?.id?.startsWith('JV-BILL-'))
-    .map(doc => ({ id: doc.data().id.replace('JV-',''), vendorId: doc.data().vendorId })) || [];
+    .map(doc => ({ id: doc.data().id, vendorId: doc.data().vendorId })) || [];
 
   const filteredPurchases = purchases.filter(p => p.vendorId === vendor);
 
@@ -143,7 +143,7 @@ export default function NewDebitNotePage() {
         await addJournalVoucher({
             id: `JV-${debitNoteId}`,
             date: debitNoteDate ? format(debitNoteDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-            narration: `Debit Note ${debitNoteId} issued to ${selectedVendor.name} against Bill #${originalPurchase}`,
+            narration: `Debit Note ${debitNoteId} issued to ${selectedVendor.name} against Bill #${originalPurchase.replace('JV-', '')}`,
             lines: journalLines,
             amount: totalAmount,
             vendorId: vendor,
@@ -199,7 +199,7 @@ export default function NewDebitNotePage() {
                 <SelectContent>
                   {filteredPurchases.map((purchase) => (
                     <SelectItem key={purchase.id} value={purchase.id}>
-                      {purchase.id}
+                      {purchase.id.replace('JV-', '')}
                     </SelectItem>
                   ))}
                 </SelectContent>
