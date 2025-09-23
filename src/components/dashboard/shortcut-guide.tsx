@@ -6,11 +6,11 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
-  import { Keyboard, Receipt, FileText, BookOpen, Landmark, TrendingUp, Scale, BookCopy } from "lucide-react";
+  import { Keyboard, Receipt, BookCopy, Landmark, TrendingUp, Scale, ShoppingCart } from "lucide-react";
   
   const shortcuts = [
     { name: "New Invoice", keys: "Ctrl + I", icon: Receipt },
-    { name: "New Purchase", keys: "Ctrl + P", icon: FileText },
+    { name: "New Purchase", keys: "Ctrl + P", icon: ShoppingCart },
     { name: "New Journal", keys: "Ctrl + J", icon: BookCopy },
     { name: "Balance Sheet", keys: "Ctrl + B", icon: Landmark },
     { name: "Profit & Loss", keys: "Ctrl + L", icon: TrendingUp },

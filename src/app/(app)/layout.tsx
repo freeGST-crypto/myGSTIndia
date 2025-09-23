@@ -316,12 +316,21 @@ export default function AppLayout({
 
   // Define hotkeys
   useHotkeys(new Map([
+    // Vouchers
     ['ctrl+i', () => router.push('/billing/invoices/new')],
     ['ctrl+p', () => router.push('/purchases/new')],
     ['ctrl+j', () => router.push('/accounting/journal')],
+    ['ctrl+d', () => router.push('/billing/debit-notes/new')],
+    ['ctrl+n', () => router.push('/billing/credit-notes/new')],
+    ['ctrl+r', () => router.push('/accounting/vouchers')],
+    // Reports
     ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
     ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
     ['ctrl+t', () => router.push('/accounting/trial-balance')],
+    ['ctrl+g', () => router.push('/accounting/ledgers')],
+    // Masters
+    ['alt+p', () => router.push('/parties')],
+    ['alt+i', () => router.push('/items')],
   ]));
 
 

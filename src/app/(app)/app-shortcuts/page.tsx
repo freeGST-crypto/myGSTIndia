@@ -18,12 +18,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, Keyboard, Receipt, FileText, BookCopy, Landmark, TrendingUp, Scale } from "lucide-react";
+import { Search, Keyboard, Receipt, FileText, BookCopy, Landmark, TrendingUp, Scale, FilePlus, FileMinus, Wallet, Book, Users, Warehouse } from "lucide-react";
 import * as Icons from "lucide-react";
 
 type Shortcut = {
   name: string;
-  category: "Voucher" | "Report";
+  category: "Vouchers" | "Reports" | "Masters";
   shortcut: string;
   description: string;
   icon: keyof typeof Icons;
@@ -32,45 +32,87 @@ type Shortcut = {
 const appShortcuts: Shortcut[] = [
     {
         name: "New Sales Invoice",
-        category: "Voucher",
+        category: "Vouchers",
         shortcut: "Ctrl + I",
         description: "Jump to the new sales invoice creation page.",
         icon: "Receipt"
     },
     {
         name: "New Purchase Bill",
-        category: "Voucher",
+        category: "Vouchers",
         shortcut: "Ctrl + P",
         description: "Jump to the new purchase bill creation page.",
-        icon: "FileText"
+        icon: "ShoppingCart"
     },
     {
         name: "New Journal Voucher",
-        category: "Voucher",
+        category: "Vouchers",
         shortcut: "Ctrl + J",
         description: "Jump to the journal to create a new manual entry.",
         icon: "BookCopy"
     },
+     {
+        name: "New Credit Note",
+        category: "Vouchers",
+        shortcut: "Ctrl + N",
+        description: "Jump to the new credit note creation page.",
+        icon: "FilePlus"
+    },
     {
-        name: "View Balance Sheet",
-        category: "Report",
+        name: "New Debit Note",
+        category: "Vouchers",
+        shortcut: "Ctrl + D",
+        description: "Jump to the new debit note creation page.",
+        icon: "FileMinus"
+    },
+     {
+        name: "Receipt & Payment Vouchers",
+        category: "Vouchers",
+        shortcut: "Ctrl + R",
+        description: "Go to the Receipt & Payment vouchers page.",
+        icon: "Wallet"
+    },
+    {
+        name: "Balance Sheet",
+        category: "Reports",
         shortcut: "Ctrl + B",
         description: "Go directly to the Balance Sheet report.",
         icon: "Landmark"
     },
     {
-        name: "View Profit & Loss",
-        category: "Report",
+        name: "Profit & Loss",
+        category: "Reports",
         shortcut: "Ctrl + L",
         description: "Go directly to the Profit & Loss statement.",
         icon: "TrendingUp"
     },
     {
-        name: "View Trial Balance",
-        category: "Report",
+        name: "Trial Balance",
+        category: "Reports",
         shortcut: "Ctrl + T",
         description: "Go directly to the Trial Balance report.",
         icon: "Scale"
+    },
+    {
+        name: "General Ledger",
+        category: "Reports",
+        shortcut: "Ctrl + G",
+        description: "Go directly to the General Ledger page.",
+        icon: "Book"
+    },
+    {
+        name: "Parties (Customers/Vendors)",
+        category: "Masters",
+        shortcut: "Alt + P",
+        description: "Go to the Parties management page.",
+        icon: "Users"
+    },
+    {
+        name: "Items (Products/Services)",
+        category: "Masters",
+        shortcut: "Alt + I",
+        description: "Go to the Items management page.",
+        icon: "Warehouse"
     }
 ];
 
@@ -89,6 +131,17 @@ export default function AppShortcutsPage() {
         shortcut.shortcut.toLowerCase().includes(lowercasedFilter)
     );
   }, [searchTerm]);
+  
+  const groupedShortcuts = useMemo(() => {
+    return filteredShortcuts.reduce((acc, shortcut) => {
+      const { category } = shortcut;
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(shortcut);
+      return acc;
+    }, {} as Record<string, Shortcut[]>);
+  }, [filteredShortcuts]);
 
   const renderIcon = (iconName: keyof typeof Icons) => {
     const IconComponent = Icons[iconName];
@@ -122,35 +175,40 @@ export default function AppShortcutsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-8">
-            <div className="border rounded-md">
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead className="w-1/3">Action</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Shortcut</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredShortcuts.map((shortcut) => (
-                    <TableRow key={shortcut.name}>
-                        <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                            {renderIcon(shortcut.icon as keyof typeof Icons)}
-                            <span>{shortcut.name}</span>
-                        </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{shortcut.description}</TableCell>
-                        <TableCell className="text-right">
-                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                            {shortcut.shortcut}
-                        </kbd>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </div>
+            {Object.entries(groupedShortcuts).map(([category, items]) => (
+                <div key={category}>
+                    <h2 className="text-xl font-semibold mb-4">{category}</h2>
+                    <div className="border rounded-md">
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead className="w-1/3">Action</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead className="text-right">Shortcut</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {items.map((shortcut) => (
+                            <TableRow key={shortcut.name}>
+                                <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                    {renderIcon(shortcut.icon as keyof typeof Icons)}
+                                    <span>{shortcut.name}</span>
+                                </div>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">{shortcut.description}</TableCell>
+                                <TableCell className="text-right">
+                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                                    {shortcut.shortcut}
+                                </kbd>
+                                </TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                    </div>
+                </div>
+            ))}
              {filteredShortcuts.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                     <p>No shortcuts found for "{searchTerm}"</p>
