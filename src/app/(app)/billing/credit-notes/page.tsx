@@ -239,7 +239,7 @@ export default function CreditNotesPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => handleAction('View', note)}>
                           <FileText className="mr-2 h-4 w-4" />
-                          View Details
+                          View Note
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleAction('Edit', note)}>
                           <Edit className="mr-2 h-4 w-4" />
@@ -272,32 +272,14 @@ export default function CreditNotesPage() {
         <Dialog open={!!selectedNote} onOpenChange={(open) => !open && setSelectedNote(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Credit Note Details: {selectedNote.id}</DialogTitle>
-                    <DialogDescription>
-                        Details for the credit note issued to {selectedNote.customer}.
-                    </DialogDescription>
+                    <DialogTitle>Credit Note: {selectedNote.id}</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 text-sm">
-                    <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Customer:</span>
-                        <span>{selectedNote.customer}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Date:</span>
-                        <span>{format(new Date(selectedNote.date), "dd MMM, yyyy")}</span>
-                    </div>
-                    <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Original Invoice:</span>
-                        <span>{selectedNote.originalInvoice}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Status:</span>
-                        <div>{getStatusBadge(selectedNote.status)}</div>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Amount:</span>
-                        <span className="font-semibold">₹{selectedNote.amount.toFixed(2)}</span>
-                    </div>
+                <div className="p-4 border rounded-md my-4">
+                  <p><strong>Date:</strong> {format(new Date(selectedNote.date), "dd MMMM, yyyy")}</p>
+                  <p><strong>Customer:</strong> {selectedNote.customer}</p>
+                  <p><strong>Original Invoice:</strong> {selectedNote.originalInvoice}</p>
+                  <p className="text-2xl font-bold mt-4">Amount: ₹{selectedNote.amount.toFixed(2)}</p>
+                  <p className="mt-4"><strong>Reason:</strong> Sales Return / Price Adjustment</p>
                 </div>
             </DialogContent>
         </Dialog>

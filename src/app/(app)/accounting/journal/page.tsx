@@ -391,7 +391,7 @@ export default function JournalVoucherPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => handleVoucherAction("View", voucher)}>
                           <FileText className="mr-2 h-4 w-4" />
-                          View Details
+                          View Voucher
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleVoucherAction("Edit", voucher)}>
                           <Edit className="mr-2 h-4 w-4" />
@@ -415,16 +415,16 @@ export default function JournalVoucherPage() {
         <Dialog open={!!selectedVoucher} onOpenChange={(open) => !open && setSelectedVoucher(null)}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Voucher Details: {selectedVoucher.id}</DialogTitle>
+                    <DialogTitle>Journal Voucher: {selectedVoucher.id}</DialogTitle>
                     <DialogDescription>
-                        {selectedVoucher.narration}
+                        Date: {format(new Date(selectedVoucher.date), "dd MMMM, yyyy")}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="py-4 space-y-4">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Account</TableHead>
+                                <TableHead className="w-[60%]">Account</TableHead>
                                 <TableHead className="text-right">Debit</TableHead>
                                 <TableHead className="text-right">Credit</TableHead>
                             </TableRow>
@@ -432,7 +432,7 @@ export default function JournalVoucherPage() {
                         <TableBody>
                             {selectedVoucher.lines.map((line, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{allAccounts.find(a => a.code === line.account)?.name || line.account}</TableCell>
+                                    <TableCell className="font-medium">{allAccounts.find(a => a.code === line.account)?.name || line.account}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.debit) > 0 ? `₹${parseFloat(line.debit).toFixed(2)}` : '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.credit) > 0 ? `₹${parseFloat(line.credit).toFixed(2)}` : '-'}</TableCell>
                                 </TableRow>
@@ -446,6 +446,10 @@ export default function JournalVoucherPage() {
                             </TableRow>
                         </TableFooter>
                     </Table>
+                     <div>
+                        <p className="font-medium text-sm">Narration:</p>
+                        <p className="text-muted-foreground text-sm">{selectedVoucher.narration}</p>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

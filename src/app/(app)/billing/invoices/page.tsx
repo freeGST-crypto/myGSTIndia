@@ -654,7 +654,7 @@ export default function InvoicesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleAction('View', invoice)}>
-                              <FileText className="mr-2" /> View Details
+                              <FileText className="mr-2" /> View Invoice
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Share', invoice)}>
                                 <MessageSquare className="mr-2 h-4 w-4" />
@@ -686,34 +686,16 @@ export default function InvoicesPage() {
       
       {selectedInvoice && (
         <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Invoice Details: {selectedInvoice.id}</DialogTitle>
-                    <DialogDescription>
-                        Details for the invoice issued to {selectedInvoice.customer}.
-                    </DialogDescription>
+                    <DialogTitle>Invoice: {selectedInvoice.id}</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 text-sm">
-                    <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Customer:</span>
-                        <span>{selectedInvoice.customer}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Invoice Date:</span>
-                        <span>{format(new Date(selectedInvoice.date), "dd MMM, yyyy")}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Due Date:</span>
-                        <span>{format(new Date(selectedInvoice.dueDate), "dd MMM, yyyy")}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Status:</span>
-                        <div>{getStatusBadge(selectedInvoice.status)}</div>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Amount:</span>
-                        <span className="font-semibold">₹{selectedInvoice.amount.toFixed(2)}</span>
-                    </div>
+                <div className="p-4 border rounded-lg bg-muted/20 max-h-[70vh] overflow-y-auto">
+                    <iframe srcDoc={new jsPDF().autoTable({
+                        head: [['Item & Description', 'HSN', 'Qty', 'Rate', 'Amount']],
+                        body: [['Service as per narration', '9983', '1', selectedInvoice.raw.lines.find(l => l.account === '4010')?.credit || '0', selectedInvoice.raw.lines.find(l => l.account === '4010')?.credit || '0']],
+                        // A simplified table for preview
+                    }).output('datauristring')} className="w-full h-[60vh] border-0" />
                 </div>
             </DialogContent>
         </Dialog>

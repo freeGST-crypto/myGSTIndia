@@ -276,7 +276,7 @@ export default function PurchasesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onSelect={() => handleAction('View', purchase)}>
-                                  <FileText className="mr-2" /> View Details
+                                  <FileText className="mr-2" /> View Bill
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => handleAction('Edit', purchase)} disabled={purchase.status === 'Deleted'}>
                                   <Edit className="mr-2" /> Edit Bill
@@ -303,32 +303,13 @@ export default function PurchasesPage() {
         <Dialog open={!!selectedPurchase} onOpenChange={(open) => !open && setSelectedPurchase(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Purchase Bill Details: {selectedPurchase.id}</DialogTitle>
-                    <DialogDescription>
-                        Details for the bill received from {selectedPurchase.vendor}.
-                    </DialogDescription>
+                    <DialogTitle>Purchase Bill: {selectedPurchase.id}</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 text-sm">
-                    <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Vendor:</span>
-                        <span>{selectedPurchase.vendor}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Bill Date:</span>
-                        <span>{format(new Date(selectedPurchase.date), "dd MMM, yyyy")}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Due Date:</span>
-                        <span>{format(new Date(selectedPurchase.dueDate), "dd MMM, yyyy")}</span>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Status:</span>
-                        <div>{getStatusBadge(selectedPurchase.status)}</div>
-                    </div>
-                     <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Amount:</span>
-                        <span className="font-semibold">₹{selectedPurchase.amount.toFixed(2)}</span>
-                    </div>
+                 <div className="p-4 border rounded-md my-4">
+                  <p><strong>Date:</strong> {format(new Date(selectedPurchase.date), "dd MMMM, yyyy")}</p>
+                  <p><strong>Vendor:</strong> {selectedPurchase.vendor}</p>
+                  <p><strong>Due Date:</strong> {format(new Date(selectedPurchase.dueDate), "dd MMMM, yyyy")}</p>
+                  <p className="text-2xl font-bold mt-4">Amount: ₹{selectedPurchase.amount.toFixed(2)}</p>
                 </div>
             </DialogContent>
         </Dialog>
