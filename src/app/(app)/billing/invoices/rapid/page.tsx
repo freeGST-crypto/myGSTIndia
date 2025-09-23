@@ -46,7 +46,7 @@ const rapidInvoiceSchema = z.object({
   customerId: z.string().min(1, "Customer is required."),
   invoiceNumber: z.string().min(1, "Invoice number is required."),
   invoiceDate: z.string().min(1, "Date is required."),
-  description: z.string().min(3, "Description is required."),
+  itemId: z.string().min(1, "An item selection is required."),
   amount: z.coerce.number().positive("Amount must be greater than zero."),
 });
 
@@ -62,13 +62,18 @@ export default function RapidInvoiceEntryPage() {
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
 
+  const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
+  const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
+  const items = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [itemsSnapshot]);
+
+
   const form = useForm<RapidInvoiceForm>({
     resolver: zodResolver(rapidInvoiceSchema),
     defaultValues: {
       customerId: "",
       invoiceNumber: "",
       invoiceDate: format(new Date(), "yyyy-MM-dd"),
-      description: "Consultancy Services",
+      itemId: "",
       amount: 0,
     },
   });
@@ -78,8 +83,10 @@ export default function RapidInvoiceEntryPage() {
     const { addJournalVoucher } = accountingContext;
 
     const selectedCustomer = customers.find(c => c.id === values.customerId);
-    if (!selectedCustomer) {
-        toast({ variant: "destructive", title: "Customer not found." });
+    const selectedItem = items.find(i => i.id === values.itemId);
+
+    if (!selectedCustomer || !selectedItem) {
+        toast({ variant: "destructive", title: "Invalid Selection", description: "Please ensure customer and item are selected." });
         return;
     }
     
@@ -98,7 +105,7 @@ export default function RapidInvoiceEntryPage() {
         await addJournalVoucher({
             id: invoiceId,
             date: values.invoiceDate,
-            narration: `${values.description} to ${selectedCustomer.name}`,
+            narration: `Sale of ${selectedItem.name} to ${selectedCustomer.name}`,
             lines: journalLines,
             amount: totalAmount,
             customerId: values.customerId,
@@ -114,31 +121,37 @@ export default function RapidInvoiceEntryPage() {
             form.reset({
                 ...values,
                 invoiceNumber: isNaN(currentInvNumber) ? "" : String(currentInvNumber + 1),
-                description: "Consultancy Services",
+                itemId: "",
                 amount: 0,
             });
-            form.setFocus("description");
+            form.setFocus("itemId");
         }
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save invoice", description: e.message });
     }
-  }, [accountingContext, customers, form, router, toast]);
+  }, [accountingContext, customers, items, form, router, toast]);
+  
+  const handleItemChange = (itemId: string) => {
+      const selectedItem: any = items.find(i => i.id === itemId);
+      if (selectedItem) {
+          form.setValue('itemId', itemId);
+          form.setValue('amount', selectedItem.sellingPrice || 0);
+      }
+  }
 
   const onSaveAndNew = form.handleSubmit(values => handleSave(values, false));
   const onSaveAndClose = form.handleSubmit(values => handleSave(values, true));
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Link href="/billing/invoices" passHref>
+      <Link href="/billing/invoices" passHref>
           <Button variant="outline" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="text-primary"/> Rapid Invoice Entry</h1>
-            <p className="text-muted-foreground">Quickly create multiple invoices without leaving the page.</p>
-        </div>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold flex items-center justify-center gap-2"><Sparkles className="text-primary"/> Rapid Invoice Entry</h1>
+        <p className="text-muted-foreground">Quickly create multiple invoices without leaving the page.</p>
       </div>
       <Form {...form}>
         <form>
@@ -174,8 +187,19 @@ export default function RapidInvoiceEntryPage() {
                     </div>
                     <Separator/>
                     <div className="grid md:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="description" render={({ field }) => (
-                            <FormItem><FormLabel>Description</FormLabel><FormControl><Input placeholder="Description of service/product" {...field} /></FormControl><FormMessage /></FormItem>
+                       <FormField control={form.control} name="itemId" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Product / Service</FormLabel>
+                                <Select onValueChange={handleItemChange} value={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger><SelectValue placeholder={itemsLoading ? "Loading..." : "Select an item"} /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    {items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
                         )}/>
                          <FormField control={form.control} name="amount" render={({ field }) => (
                             <FormItem><FormLabel>Taxable Amount (₹)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
