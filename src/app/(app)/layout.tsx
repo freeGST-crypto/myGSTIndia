@@ -97,7 +97,6 @@ const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
 const allMenuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge, roles: ['business', 'professional', 'super_admin'] },
-  { href: "/pricing", label: "Pricing", icon: BadgeDollarSign, roles: ['business', 'professional', 'super_admin'] },
   {
     label: "Billing",
     icon: Receipt,
@@ -123,20 +122,8 @@ const allMenuItems = [
         { href: "/items/godowns", label: "Godowns / Locations", icon: Building, roles: ['business', 'professional'] },
     ]
   },
-   {
-    label: "Payroll",
-    icon: UserCog,
-    roles: ['business', 'professional'],
-    subItems: [
-      { href: "/payroll", label: "Payroll Dashboard", icon: LayoutDashboard, roles: ['business', 'professional'] },
-      { href: "/payroll/employees", label: "Employees", icon: Users, roles: ['business', 'professional'] },
-      { href: "/payroll/run-payroll", label: "Run Payroll", icon: FileText, roles: ['business', 'professional'] },
-      { href: "/payroll/reports", label: "Compliance Reports", icon: FileArchive, roles: ['business', 'professional'] },
-      { href: "/payroll/settings", label: "Settings", icon: Settings, roles: ['business', 'professional'] },
-    ],
-  },
   {
-    label: "Compliance",
+    label: "GST Compliance",
     icon: FileText,
     roles: ['business', 'professional'],
     subItems: [
@@ -145,7 +132,6 @@ const allMenuItems = [
       { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy, roles: ['business', 'professional'] },
     ],
   },
-  { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
   {
     label: "Accounting",
     icon: Calculator,
@@ -191,11 +177,24 @@ const allMenuItems = [
     icon: Shield,
     roles: ['business', 'professional']
   },
+  { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
   {
     href: "/professional-services",
     label: "Professional Services",
     icon: ConciergeBell,
     roles: ['business', 'professional', 'super_admin']
+  },
+  {
+    label: "Payroll",
+    icon: UserCog,
+    roles: ['business', 'professional'],
+    subItems: [
+      { href: "/payroll", label: "Payroll Dashboard", icon: LayoutDashboard, roles: ['business', 'professional'] },
+      { href: "/payroll/employees", label: "Employees", icon: Users, roles: ['business', 'professional'] },
+      { href: "/payroll/run-payroll", label: "Run Payroll", icon: FileText, roles: ['business', 'professional'] },
+      { href: "/payroll/reports", label: "Compliance Reports", icon: FileArchive, roles: ['business', 'professional'] },
+      { href: "/payroll/settings", label: "Settings", icon: Settings, roles: ['business', 'professional'] },
+    ],
   },
   {
     label: "Resources",
@@ -207,6 +206,17 @@ const allMenuItems = [
         { href: "/app-shortcuts", label: "App Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
         { href: "/tally-shortcuts", label: "Tally Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
         { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
+    ],
+  },
+  { href: "/pricing", label: "Pricing", icon: BadgeDollarSign, roles: ['business', 'professional', 'super_admin'] },
+  {
+    label: "Settings", 
+    icon: Settings,
+    roles: ['business', 'professional', 'super_admin'],
+    subItems: [
+      { href: "/settings/branding", label: "Company Branding", icon: Building, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/settings/users", label: "User Management", icon: Users, roles: ['business', 'professional', 'super_admin'] },
+      { href: "/settings/professional-profile", label: "Professional Profile", icon: Briefcase, roles: ['professional'] },
     ],
   },
   {
@@ -233,16 +243,6 @@ const allMenuItems = [
         { href: "/admin/certification-requests", label: "Certification Requests", icon: FileSignature, roles: ['super_admin']},
         { href: "/admin/blog", label: "Manage Blog", icon: Newspaper, roles: ['super_admin'] },
     ]
-  },
-  { 
-    label: "Settings", 
-    icon: Settings,
-    roles: ['business', 'professional', 'super_admin'],
-    subItems: [
-      { href: "/settings/branding", label: "Company Branding", icon: Building, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/settings/users", label: "User Management", icon: Users, roles: ['business', 'professional', 'super_admin'] },
-      { href: "/settings/professional-profile", label: "Professional Profile", icon: Briefcase, roles: ['professional'] },
-    ],
   },
 ];
 
