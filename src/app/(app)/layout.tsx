@@ -85,6 +85,7 @@ import { ClientOnly } from "@/components/client-only";
 import { AccountingProvider } from "@/context/accounting-context";
 import { Suspense } from "react";
 import { Marquee } from "@/components/layout/marquee";
+import { useHotkeys } from "@/hooks/use-hotkeys";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
@@ -311,6 +312,17 @@ export default function AppLayout({
   }
   
   const userRole = getRole();
+
+  // Define hotkeys
+  useHotkeys(new Map([
+    ['ctrl+i', () => router.push('/billing/invoices/new')],
+    ['ctrl+p', () => router.push('/purchases/new')],
+    ['ctrl+j', () => router.push('/accounting/journal')],
+    ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
+    ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
+    ['ctrl+t', () => router.push('/accounting/trial-balance')],
+  ]));
+
 
   React.useEffect(() => {
     if (!loading && !user) {

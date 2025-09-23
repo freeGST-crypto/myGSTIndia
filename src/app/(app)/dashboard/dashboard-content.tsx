@@ -17,6 +17,7 @@ import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { allAccounts } from "@/lib/accounts";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
+import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -156,7 +157,7 @@ export default function DashboardContent() {
             <FinancialSummaryChart />
         </div>
         <div>
-            <ComplianceCalendar />
+             <ShortcutGuide />
         </div>
       </div>
       
