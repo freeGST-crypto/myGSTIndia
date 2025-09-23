@@ -138,6 +138,7 @@ const allMenuItems = [
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional'] },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional'] },
       { href: "/accounting/bank-reconciliation", label: "Bank Reconciliation", icon: Landmark, roles: ['business', 'professional'] },
+      { href: "/accounting/cost-centres", label: "Cost Centres", icon: PieChart, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centre-summary", label: "Cost Centre Summary", icon: PieChart, roles: ['business', 'professional'] },
       {
         label: "Financial Statements",
@@ -409,4 +410,3 @@ export default function AppLayout({
     </AccountingProvider>
   );
 }
-
