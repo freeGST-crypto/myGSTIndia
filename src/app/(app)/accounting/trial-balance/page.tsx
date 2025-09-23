@@ -140,6 +140,7 @@ export default function TrialBalancePage() {
 
 
     const handleAccountClick = (code: string) => {
+        if (code === '9999') return;
         router.push(`/accounting/ledgers?account=${code}`);
     }
 
@@ -282,7 +283,7 @@ export default function TrialBalancePage() {
                             <TableRow key={item.code} className={item.code === '9999' ? 'bg-destructive/10 text-destructive' : ''}>
                                 <TableCell>{item.code}</TableCell>
                                 <TableCell 
-                                    className="font-medium hover:underline cursor-pointer"
+                                    className={cn("font-medium", item.code !== '9999' && "hover:underline cursor-pointer")}
                                     onClick={() => handleAccountClick(item.code)}
                                 >
                                     {item.account}
