@@ -55,6 +55,7 @@ import {
   PieChart,
   Boxes,
   Weight,
+  Target,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -143,6 +144,7 @@ const allMenuItems = [
       { href: "/accounting/bank-reconciliation", label: "Bank Reconciliation", icon: Landmark, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centres", label: "Cost Centres", icon: PieChart, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centre-summary", label: "Cost Centre Summary", icon: PieChart, roles: ['business', 'professional'] },
+      { href: "/accounting/budgets", label: "Budgets & Scenarios", icon: Target, roles: ['business', 'professional']},
       {
         label: "Financial Statements",
         icon: BookOpen,
