@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,8 @@ import {
   GitCompareArrows,
   Check,
   PlusCircle,
-  Loader2
+  Loader2,
+  FileText
 } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,6 +46,7 @@ import { AccountingContext } from '@/context/accounting-context';
 import { format } from "date-fns";
 import * as XLSX from 'xlsx';
 import { Badge } from '@/components/ui/badge';
+import { StatCard } from '@/components/dashboard/stat-card';
 
 
 type StatementTransaction = {
@@ -208,9 +211,9 @@ export default function BankReconciliationPage() {
       </Card>
       
        <div className="grid md:grid-cols-3 gap-4">
-            <StatCard title="Bank Statement Balance" value={`₹${statementBalance.toFixed(2)}`} />
-            <StatCard title="Book Balance" value={`₹${bookBalance.toFixed(2)}`} />
-            <StatCard title="Difference" value={`₹${difference.toFixed(2)}`} className={Math.abs(difference) > 0.01 ? "text-destructive" : ""} />
+            <StatCard title="Bank Statement Balance" value={`₹${statementBalance.toFixed(2)}`} icon={FileText}/>
+            <StatCard title="Book Balance" value={`₹${bookBalance.toFixed(2)}`} icon={FileText}/>
+            <StatCard title="Difference" value={`₹${difference.toFixed(2)}`} className={Math.abs(difference) > 0.01 ? "text-destructive" : ""} icon={FileText}/>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -317,4 +320,3 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type }: { trans
         </div>
     );
 }
-
