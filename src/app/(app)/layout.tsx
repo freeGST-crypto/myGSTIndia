@@ -51,6 +51,7 @@ import {
   Twitter,
   Linkedin,
   Instagram,
+  Keyboard,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -169,6 +170,7 @@ const allMenuItems = [
     subItems: [
         { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
         { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
+        { href: "/tally-shortcuts", label: "Tally Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
         { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
