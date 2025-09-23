@@ -56,6 +56,7 @@ import {
   Boxes,
   Weight,
   Target,
+  UserCog,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -120,6 +121,17 @@ const allMenuItems = [
         { href: "/items/units", label: "Units of Measure", icon: Weight, roles: ['business', 'professional'] },
         { href: "/items/godowns", label: "Godowns / Locations", icon: Building, roles: ['business', 'professional'] },
     ]
+  },
+   {
+    label: "Payroll",
+    icon: UserCog,
+    roles: ['business', 'professional'],
+    subItems: [
+      { href: "/payroll", label: "Payroll Dashboard", icon: LayoutDashboard, roles: ['business', 'professional'] },
+      { href: "/payroll/employees", label: "Employees", icon: Users, roles: ['business', 'professional'] },
+      { href: "/payroll/run-payroll", label: "Run Payroll", icon: FileText, roles: ['business', 'professional'] },
+      { href: "/payroll/settings", label: "Settings", icon: Settings, roles: ['business', 'professional'] },
+    ],
   },
   {
     label: "Compliance",
