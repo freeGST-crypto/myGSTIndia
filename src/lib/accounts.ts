@@ -80,9 +80,29 @@ export const allAccounts = [
   { code: "6070", name: "Bank Charges", type: "Expense" },
   { code: "6080", name: "Advertising & Marketing", type: "Expense" },
   { code: "6090", name: "Travel & Conveyance", type: "Expense" },
-  { code: "6100", name: "Depreciation Expense", type: "Depreciation" },
+  { code: "6100", name: "Depreciation Expense", type: "Expense" },
   { code: "6110", name: "Insurance Expense", type: "Expense" },
-  { code: "6120", name: "Miscellaneous Expenses", type: "Expense" }
+  { code: "6120", name: "Miscellaneous Expenses", type: "Expense" },
+  { code: "6130", name: "Repairs & Maintenance", type: "Expense" },
+  { code: "6140", name: "Electricity & Water", type: "Expense" },
+  { code: "6150", name: "Staff Welfare", type: "Expense" },
+  { code: "6160", name: "Recruitment Expenses", type: "Expense" },
+  { code: "6170", name: "Subscription & Periodicals", type: "Expense" },
+  { code: "6180", name: "Donations & Charity", type: "Expense" },
+  { code: "6190", name: "Rates & Taxes", type: "Expense" },
+  { code: "6200", name: "Postage & Courier", type: "Expense" },
+  { code: "6210", name: "Vehicle Maintenance", type: "Expense" },
+  { code: "6220", name: "IT & Software Expenses", type: "Expense" },
+  { code: "6230", name: "Training & Development", type: "Expense" },
+  { code: "6240", name: "Audit Fees", type: "Expense" },
+  { code: "6250", name: "Commission to Sales Agents", type: "Expense" },
+  { code: "6260", name: "Freight & Cartage Outward", type: "Expense" },
+  { code: "6270", name: "Bad Debts", type: "Expense" },
+  { code: "6280", name: "Loss on Sale of Assets", type: "Expense" },
+  { code: "6290", name: "Office Refreshments", type: "Expense" },
+  { code: "6300", name: "Security Expenses", type: "Expense" },
+  { code: "6310", name: "Website Expenses", type: "Expense" },
+  { code: "6320", name: "Business Promotion", type: "Expense" }
 ];
 
 export const costCentres = [
