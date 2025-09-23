@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, Loader2, Info } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -57,6 +57,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, query, where, orderBy } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 type Account = {
@@ -114,6 +115,7 @@ export default function ChartOfAccountsPage() {
         name: "",
         code: "",
         type: "",
+        openingWdv: 0.00,
     }
   });
   
@@ -234,7 +236,14 @@ export default function ChartOfAccountsPage() {
                                 <>
                                     <Separator className="my-4" />
                                     <h3 className="text-md font-semibold">Fixed Asset Details</h3>
-                                    <div className="space-y-4 p-4 border rounded-md">
+                                    <Alert variant="default" className="mt-2">
+                                        <Info className="h-4 w-4" />
+                                        <AlertTitle>Heads up!</AlertTitle>
+                                        <AlertDescription>
+                                            For Fixed Assets, all fields in this section are required for accurate depreciation calculation.
+                                        </AlertDescription>
+                                    </Alert>
+                                    <div className="space-y-4 p-4 border rounded-md mt-4">
                                         <div className="grid grid-cols-2 gap-4">
                                              <FormField control={form.control} name="purchaseDate" render={({ field }) => ( <FormItem><FormLabel>Date of Purchase</FormLabel>
                                                  <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(field.value, "PPP") : "Select date"}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover>
