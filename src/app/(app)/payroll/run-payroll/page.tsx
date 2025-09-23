@@ -29,6 +29,7 @@ import {
 import { ArrowLeft, ArrowRight, FileText, CheckCircle, FileDown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
+import { Label } from "@/components/ui/label";
 
 const initialEmployees = [
     { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200 },
