@@ -33,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search, MessageSquare, Printer } from "lucide-react";
@@ -52,6 +51,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { InvoicePreview } from "@/components/billing/invoice-preview";
 import { useReactToPrint } from 'react-to-print';
+import { DialogDescription } from "@/components/ui/dialog";
 
 
 declare module 'jspdf' {
@@ -311,10 +311,12 @@ export default function InvoicesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>
-                <Zap className="mr-2"/>
-                Quick Invoice
-            </Button>
+            <Link href="/billing/invoices/rapid" passHref>
+              <Button variant="outline">
+                  <Zap className="mr-2"/>
+                  Rapid Entry
+              </Button>
+            </Link>
             <Link href="/billing/invoices/new" passHref>
             <Button>
                 <PlusCircle className="mr-2"/>
@@ -488,5 +490,7 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+    
 
     
