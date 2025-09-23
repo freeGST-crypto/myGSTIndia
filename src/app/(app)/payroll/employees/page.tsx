@@ -102,6 +102,7 @@ export default function EmployeesPage() {
                         <div className="space-y-2"><Label>House Rent Allowance (HRA) (₹)</Label><Input type="number"/></div>
                         <div className="space-y-2"><Label>Special Allowance (₹)</Label><Input type="number"/></div>
                     </div>
+                     <Separator/>
                      <h3 className="font-semibold text-lg">Statutory & Bank Details</h3>
                      <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2"><Label>PAN</Label><Input/></div>
