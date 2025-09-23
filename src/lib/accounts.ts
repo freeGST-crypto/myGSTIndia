@@ -27,4 +27,9 @@ export const allAccounts = [
   { code: "5160", name: "Insurance Expense", type: "Expense" },
 ];
 
-    
+export const costCentres = [
+  { id: "cc-sales", name: "Sales Department" },
+  { id: "cc-marketing", name: "Marketing Department" },
+  { id: "cc-admin", name: "Administration" },
+  { id: "cc-proj-alpha", name: "Project Alpha" },
+];

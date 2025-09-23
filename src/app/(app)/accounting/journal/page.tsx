@@ -60,7 +60,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
-import { allAccounts } from "@/lib/accounts";
+import { allAccounts, costCentres } from "@/lib/accounts";
 
 export default function JournalVoucherPage() {
     const accountingContext = useContext(AccountingContext);
@@ -69,8 +69,8 @@ export default function JournalVoucherPage() {
     const [narration, setNarration] = useState("");
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [lines, setLines] = useState([
-        { account: '', debit: '0', credit: '0' },
-        { account: '', debit: '0', credit: '0' }
+        { account: '', debit: '0', credit: '0', costCentre: '' },
+        { account: '', debit: '0', credit: '0', costCentre: '' }
     ]);
     const { toast } = useToast();
     const [selectedVoucher, setSelectedVoucher] = useState<JournalVoucher | null>(null);
@@ -85,7 +85,7 @@ export default function JournalVoucherPage() {
             // Reset form when not editing
             setDate(new Date());
             setNarration("");
-            setLines([{ account: '', debit: '0', credit: '0' }, { account: '', debit: '0', credit: '0' }]);
+            setLines([{ account: '', debit: '0', credit: '0', costCentre: '' }, { account: '', debit: '0', credit: '0', costCentre: '' }]);
         }
     }, [editingVoucher]);
 
@@ -160,10 +160,10 @@ export default function JournalVoucherPage() {
     };
 
     const handleAddLine = () => {
-        setLines([...lines, { account: '', debit: '0', credit: '0' }]);
+        setLines([...lines, { account: '', debit: '0', credit: '0', costCentre: '' }]);
     };
 
-    const handleLineChange = (index: number, field: 'account' | 'debit' | 'credit', value: any) => {
+    const handleLineChange = (index: number, field: 'account' | 'debit' | 'credit' | 'costCentre', value: any) => {
         const newLines = [...lines];
         const line = newLines[index] as any;
         line[field] = value;
@@ -172,6 +172,14 @@ export default function JournalVoucherPage() {
             line['credit'] = '0';
         } else if (field === 'credit' && parseFloat(value) > 0) {
             line['debit'] = '0';
+        }
+        
+        // If account changes, check if it's no longer income/expense and clear cost centre
+        if (field === 'account') {
+            const accountDetails = allAccounts.find(acc => acc.code === value);
+            if (accountDetails && !['Revenue', 'Expense'].includes(accountDetails.type)) {
+                line['costCentre'] = '';
+            }
         }
 
         setLines(newLines);
@@ -294,38 +302,55 @@ export default function JournalVoucherPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[50%]">Account</TableHead>
+                                    <TableHead className="w-[40%]">Account</TableHead>
+                                    <TableHead className="w-[20%]">Cost Centre</TableHead>
                                     <TableHead className="text-right">Debit</TableHead>
                                     <TableHead className="text-right">Credit</TableHead>
                                     <TableHead className="w-[50px] text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {lines.map((line, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        <Select value={line.account} onValueChange={(value) => handleLineChange(index, 'account', value)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select an account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {allAccounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name} ({acc.code})</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Input type="number" className="text-right" value={line.debit} onChange={(e) => handleLineChange(index, 'debit', e.target.value)} />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Input type="number" className="text-right" value={line.credit} onChange={(e) => handleLineChange(index, 'credit', e.target.value)} />
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveLine(index)} disabled={lines.length <= 2}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                                ))}
+                                {lines.map((line, index) => {
+                                    const accountDetails = allAccounts.find(acc => acc.code === line.account);
+                                    const showCostCentre = accountDetails && ['Revenue', 'Expense'].includes(accountDetails.type);
+                                    return (
+                                        <TableRow key={index}>
+                                            <TableCell>
+                                                <Select value={line.account} onValueChange={(value) => handleLineChange(index, 'account', value)}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select an account" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {allAccounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name} ({acc.code})</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                             <TableCell>
+                                                {showCostCentre && (
+                                                    <Select value={line.costCentre} onValueChange={(value) => handleLineChange(index, 'costCentre', value)}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select cost centre" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {costCentres.map(cc => <SelectItem key={cc.id} value={cc.id}>{cc.name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input type="number" className="text-right" value={line.debit} onChange={(e) => handleLineChange(index, 'debit', e.target.value)} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input type="number" className="text-right" value={line.credit} onChange={(e) => handleLineChange(index, 'credit', e.target.value)} />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => handleRemoveLine(index)} disabled={lines.length <= 2}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                         <Button variant="outline" size="sm" className="mt-4" onClick={handleAddLine}>
@@ -424,7 +449,8 @@ export default function JournalVoucherPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[60%]">Account</TableHead>
+                                <TableHead className="w-[50%]">Account</TableHead>
+                                <TableHead className="w-[20%]">Cost Centre</TableHead>
                                 <TableHead className="text-right">Debit</TableHead>
                                 <TableHead className="text-right">Credit</TableHead>
                             </TableRow>
@@ -433,6 +459,7 @@ export default function JournalVoucherPage() {
                             {selectedVoucher.lines.map((line, index) => (
                                 <TableRow key={index}>
                                     <TableCell className="font-medium">{allAccounts.find(a => a.code === line.account)?.name || line.account}</TableCell>
+                                    <TableCell>{costCentres.find(cc => cc.id === line.costCentre)?.name || '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.debit) > 0 ? `₹${parseFloat(line.debit).toFixed(2)}` : '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.credit) > 0 ? `₹${parseFloat(line.credit).toFixed(2)}` : '-'}</TableCell>
                                 </TableRow>
@@ -440,7 +467,7 @@ export default function JournalVoucherPage() {
                         </TableBody>
                          <TableFooter>
                             <TableRow className="font-bold bg-muted/50">
-                                <TableCell>Total</TableCell>
+                                <TableCell colSpan={2}>Total</TableCell>
                                 <TableCell className="text-right font-mono">₹{selectedVoucher.amount.toFixed(2)}</TableCell>
                                 <TableCell className="text-right font-mono">₹{selectedVoucher.amount.toFixed(2)}</TableCell>
                             </TableRow>

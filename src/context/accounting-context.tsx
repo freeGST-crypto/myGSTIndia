@@ -11,6 +11,7 @@ type JournalLine = {
     account: string;
     debit: string;
     credit: string;
+    costCentre?: string;
 };
 
 export type JournalVoucher = {
