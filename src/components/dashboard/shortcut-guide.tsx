@@ -8,9 +8,10 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
-  import { Keyboard, Receipt, BookCopy, Landmark, TrendingUp, Scale, ShoppingCart, FilePlus, FileMinus, Wallet, Book, Users, Warehouse } from "lucide-react";
+  import { Keyboard, Receipt, BookCopy, Landmark, TrendingUp, Scale, ShoppingCart, FilePlus, FileMinus, Wallet, Book, Users, Warehouse, Home } from "lucide-react";
   
   const shortcuts = [
+    { name: "Go to Dashboard", keys: "Esc", icon: Home },
     { name: "New Sales Invoice", keys: "Ctrl + I", icon: Receipt },
     { name: "New Purchase Bill", keys: "Ctrl + P", icon: ShoppingCart },
     { name: "New Credit Note", keys: "Ctrl + N", icon: FilePlus },

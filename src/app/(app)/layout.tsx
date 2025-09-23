@@ -331,6 +331,8 @@ export default function AppLayout({
     // Masters
     ['alt+p', () => router.push('/parties')],
     ['alt+i', () => router.push('/items')],
+    // Navigation
+    ['escape', () => router.push('/dashboard')],
   ]), [router]);
 
   useHotkeys(hotkeyMap);
