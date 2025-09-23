@@ -268,7 +268,7 @@ export default function BankReconciliationPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Date Range</Label>
+                <Label>Reconciliation Period</Label>
                 <DateRangePicker />
               </div>
                <div className="space-y-2 self-end">
