@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -58,6 +59,15 @@ const formSchema = z.object({
   lwfEnabled: z.boolean().default(true),
   lwfRegistrationNumber: z.string().optional(),
   lwfState: z.string().optional(),
+
+  gratuityEnabled: z.boolean().default(true),
+  gratuityAccrualRate: z.coerce.number().min(0).max(100).default(4.81),
+  
+  bonusEnabled: z.boolean().default(true),
+  bonusRate: z.coerce.number().min(0).max(100).default(8.33),
+  
+  insuranceEnabled: z.boolean().default(true),
+  employerInsuranceContribution: z.coerce.number().min(0).default(500),
 });
 
 export default function PayrollSettingsPage() {
@@ -77,6 +87,12 @@ export default function PayrollSettingsPage() {
       incomeTaxEnabled: true,
       lwfEnabled: true,
       lwfState: "Maharashtra",
+      gratuityEnabled: true,
+      gratuityAccrualRate: 4.81,
+      bonusEnabled: true,
+      bonusRate: 8.33,
+      insuranceEnabled: true,
+      employerInsuranceContribution: 500,
     },
   });
   
@@ -245,6 +261,75 @@ export default function PayrollSettingsPage() {
                                         </FormItem>
                                     )}/>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Employer Contributions & Provisions</CardTitle>
+                    <CardDescription>Configure other CTC components like Gratuity, Insurance, and Bonus.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                     <div>
+                        <FormField
+                            control={form.control}
+                            name="gratuityEnabled"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Gratuity</FormLabel>
+                                    <FormDescription>Enable automatic accrual for gratuity provision.</FormDescription>
+                                </div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {form.watch("gratuityEnabled") && (
+                            <div className="space-y-4 pt-4 pl-4 border-l border-r border-b rounded-b-lg p-4">
+                                <FormField control={form.control} name="gratuityAccrualRate" render={({ field }) => (<FormItem><FormLabel>Gratuity Accrual Rate (% of Basic)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>Standard rate is ~4.81%.</FormDescription><FormMessage /></FormItem>)}/>
+                            </div>
+                        )}
+                    </div>
+                      <div>
+                        <FormField
+                            control={form.control}
+                            name="insuranceEnabled"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Group Medical/Accident Insurance</FormLabel>
+                                    <FormDescription>Set the employer's contribution towards insurance.</FormDescription>
+                                </div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {form.watch("insuranceEnabled") && (
+                            <div className="space-y-4 pt-4 pl-4 border-l border-r border-b rounded-b-lg p-4">
+                                <FormField control={form.control} name="employerInsuranceContribution" render={({ field }) => (<FormItem><FormLabel>Employer's Monthly Contribution (₹ per employee)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            </div>
+                        )}
+                    </div>
+                     <div>
+                        <FormField
+                            control={form.control}
+                            name="bonusEnabled"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">Bonus / Ex-gratia</FormLabel>
+                                    <FormDescription>Define the bonus policy for provisions.</FormDescription>
+                                </div>
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        {form.watch("bonusEnabled") && (
+                            <div className="space-y-4 pt-4 pl-4 border-l border-r border-b rounded-b-lg p-4">
+                                <FormField control={form.control} name="bonusRate" render={({ field }) => (<FormItem><FormLabel>Statutory Bonus Rate (% of Basic, up to a ceiling)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>Minimum is 8.33% as per the Payment of Bonus Act.</FormDescription><FormMessage /></FormItem>)}/>
                             </div>
                         )}
                     </div>
