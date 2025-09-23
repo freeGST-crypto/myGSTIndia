@@ -50,6 +50,7 @@ import {
   Trash2,
   Calendar as CalendarIcon,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -66,6 +67,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
+import Link from "next/link";
 
 
 export default function VouchersPage() {
@@ -211,14 +213,18 @@ export default function VouchersPage() {
                 <TabsTrigger value="payments">Payments</TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
-                 <Button onClick={() => openDialog('receipt')}>
-                    <PlusCircle className="mr-2" />
+                 <Button onClick={() => openDialog('receipt')} variant="outline">
                     New Receipt
                 </Button>
-                <Button onClick={() => openDialog('payment')}>
-                    <PlusCircle className="mr-2" />
+                <Button onClick={() => openDialog('payment')} variant="outline">
                     New Payment
                 </Button>
+                <Link href="/accounting/vouchers/rapid" passHref>
+                    <Button>
+                        <Sparkles className="mr-2"/>
+                        Rapid Entry
+                    </Button>
+                </Link>
             </div>
         </div>
         <TabsContent value="receipts" className="mt-4">
