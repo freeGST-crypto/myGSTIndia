@@ -51,6 +51,7 @@ import {
   Trash2,
   Calendar as CalendarIcon,
   Loader2,
+  Search,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -74,6 +75,7 @@ export default function JournalVoucherPage() {
     ]);
     const { toast } = useToast();
     const [selectedVoucher, setSelectedVoucher] = useState<JournalVoucher | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (editingVoucher) {
@@ -104,6 +106,16 @@ export default function JournalVoucherPage() {
 
       return allVouchers.filter(v => v && v.id && !reversedIds.has(v.id) && !v.reverses);
     }, [allVouchers]);
+    
+    const filteredJournalVouchers = useMemo(() => {
+        if (!searchTerm) {
+            return visibleJournalVouchers;
+        }
+        return visibleJournalVouchers.filter(voucher => 
+            voucher.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            voucher.narration.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [visibleJournalVouchers, searchTerm]);
 
     const handleDeleteJournalVoucher = async (voucherId: string) => {
         const originalVoucher = allVouchers.find(v => v.id === voucherId);
@@ -385,6 +397,16 @@ export default function JournalVoucherPage() {
           <CardDescription>
             A list of all manual journal entries. Reversed entries are hidden from this list.
           </CardDescription>
+           <div className="relative pt-4">
+                <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search by Voucher # or Narration..."
+                  className="pl-8 w-full md:w-1/3"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -399,7 +421,7 @@ export default function JournalVoucherPage() {
             </TableHeader>
             <TableBody>
               {loading && <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="animate-spin mx-auto"/></TableCell></TableRow>}
-              {visibleJournalVouchers.map((voucher) => (
+              {filteredJournalVouchers.map((voucher) => (
                 <TableRow key={voucher.id}>
                   <TableCell>{format(new Date(voucher.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell className="font-medium">{voucher.id}</TableCell>
@@ -485,3 +507,5 @@ export default function JournalVoucherPage() {
     </div>
   );
 }
+
+    
