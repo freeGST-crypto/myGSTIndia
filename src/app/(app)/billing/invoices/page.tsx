@@ -109,7 +109,8 @@ export default function InvoicesPage() {
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const invoices: Invoice[] = useMemo(() => {
-    const salesInvoices = journalVouchers.filter(v => v && v.narration && v.narration.includes("via Invoice #"));
+    // Filter out reversal entries from the main list of sales invoices
+    const salesInvoices = journalVouchers.filter(v => v && v.narration && v.narration.includes("via Invoice #") && !v.reverses);
     const cancelledInvoiceIds = new Set(
         journalVouchers
             .filter(v => v && v.reverses && v.reverses.startsWith("JV-INV-"))
@@ -168,6 +169,7 @@ export default function InvoicesPage() {
 
     try {
       await addJournalVoucher({
+            id: `JV-INV-${quickInvNum}`, // Construct the ID here
             date: new Date().toISOString().split('T')[0],
             narration: `Sale to ${selectedCustomer.name} via Invoice #${quickInvNum}`,
             lines: journalLines,
@@ -218,9 +220,10 @@ export default function InvoicesPage() {
         }));
 
         const cancellationVoucher = {
+            id: `JV-CANCEL-${Date.now()}`,
             reverses: originalVoucherId,
             date: new Date().toISOString().split('T')[0],
-            narration: `Cancellation of Invoice`,
+            narration: `Cancellation of Invoice #${originalVoucherId.replace('JV-', '')}`,
             lines: reversalLines,
             amount: originalVoucher.amount,
             customerId: originalVoucher.customerId,
@@ -286,7 +289,7 @@ export default function InvoicesPage() {
             await handleShare(invoice);
         } else if (action === 'Duplicate') {
             const queryParams = new URLSearchParams({
-                duplicate: invoice.id
+                duplicate: invoice.id.replace('JV-', '')
             }).toString();
             router.push(`/billing/invoices/new?${queryParams}`);
         } else if (action === 'Edit') {
@@ -294,7 +297,7 @@ export default function InvoicesPage() {
             const cancelled = await handleCancelInvoice(invoice.id);
             if (cancelled) {
                 const queryParams = new URLSearchParams({
-                    edit: invoice.id
+                    edit: invoice.id.replace('JV-', '')
                 }).toString();
                 router.push(`/billing/invoices/new?${queryParams}`);
             } else {
@@ -362,7 +365,7 @@ export default function InvoicesPage() {
     
     doc.autoTable({
         body: [
-            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id],
+            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id.replace('JV-', '')],
             [{ content: 'Invoice Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.date), "dd-MMM-yyyy")],
             [{ content: 'Due Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.dueDate), "dd-MMM-yyyy")],
         ],
@@ -388,7 +391,6 @@ export default function InvoicesPage() {
         1,
         subtotal.toFixed(2),
         subtotal.toFixed(2),
-        taxRate.toFixed(2) + '%',
         taxAmount.toFixed(2),
         invoice.amount.toFixed(2),
     ]];
@@ -472,8 +474,8 @@ export default function InvoicesPage() {
     if (silent) {
         return doc.output('blob');
     } else {
-        doc.save(`Invoice_${invoice.id}.pdf`);
-        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
+        doc.save(`Invoice_${invoice.id.replace('JV-', '')}.pdf`);
+        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id.replace('JV-', '')}.`});
         return null;
     }
   };
@@ -637,7 +639,7 @@ export default function InvoicesPage() {
                 <TableBody>
                 {filteredInvoices.map((invoice) => (
                     <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.raw.narration.split('#')[1] || invoice.id}</TableCell>
+                    <TableCell className="font-medium">{invoice.id.replace('JV-', '')}</TableCell>
                     <TableCell>{invoice.customer}</TableCell>
                     <TableCell>{format(new Date(invoice.date), "dd MMM, yyyy")}</TableCell>
                     <TableCell>{format(new Date(invoice.dueDate), "dd MMM, yyyy")}</TableCell>
@@ -662,7 +664,7 @@ export default function InvoicesPage() {
                              <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
+                            <DropdownMenuItem onSelect={() => handleDownloadPdf(invoice, false)}>
                               <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
@@ -687,7 +689,7 @@ export default function InvoicesPage() {
         <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Invoice Details: {selectedInvoice.raw.narration.split('#')[1] || selectedInvoice.id}</DialogTitle>
+                    <DialogTitle>Invoice Details: {selectedInvoice.id.replace('JV-', '')}</DialogTitle>
                     <DialogDescription>
                         Details for the invoice issued to {selectedInvoice.customer}.
                     </DialogDescription>
