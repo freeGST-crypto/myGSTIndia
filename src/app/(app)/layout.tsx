@@ -53,6 +53,7 @@ import {
   Instagram,
   Keyboard,
   PieChart,
+  Boxes,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -106,7 +107,15 @@ const allMenuItems = [
     ],
   },
   { href: "/parties", label: "Parties", icon: Users, roles: ['business', 'professional'] },
-  { href: "/items", label: "Items", icon: Warehouse, roles: ['business', 'professional'] },
+  {
+    label: "Items",
+    icon: Warehouse,
+    roles: ['business', 'professional'],
+    subItems: [
+        { href: "/items", label: "Stock Items", icon: Warehouse, roles: ['business', 'professional'] },
+        { href: "/items/stock-groups", label: "Stock Groups", icon: Boxes, roles: ['business', 'professional'] },
+    ]
+  },
   {
     label: "Compliance",
     icon: FileText,
@@ -401,4 +410,3 @@ export default function AppLayout({
   );
 }
 
-    

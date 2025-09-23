@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -111,7 +112,7 @@ export default function ItemsPage() {
             <Card>
                 <CardHeader className="flex-row items-center justify-between gap-4">
                     <div className="flex-1">
-                        <CardTitle>Your Items</CardTitle>
+                        <CardTitle>Your Stock Items</CardTitle>
                         <CardDescription>A list of all products and services you buy and sell.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
