@@ -115,15 +115,21 @@ export default function RapidVoucherEntryPage() {
 
 
     try {
-        await addJournalVoucher({
+        const newVoucher: any = {
             id: voucherId,
             date: values.voucherDate,
             narration,
             lines: journalLines,
             amount: values.amount,
-            customerId: values.type === 'receipt' ? values.partyId : undefined,
-            vendorId: values.type === 'payment' ? values.partyId : undefined,
-        });
+        };
+
+        if (values.type === 'receipt') {
+            newVoucher.customerId = values.partyId;
+        } else {
+            newVoucher.vendorId = values.partyId;
+        }
+
+        await addJournalVoucher(newVoucher);
 
         toast({ title: "Voucher Saved", description: `${voucherId} has been created.` });
 
