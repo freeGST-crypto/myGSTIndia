@@ -6,15 +6,18 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 
 const assetSchema = z.object({
@@ -43,6 +46,8 @@ export default function VisaImmigrationCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const printRef = useRef<HTMLDivElement>(null);
+  const [user] = useAuthState(auth);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -86,6 +91,36 @@ export default function VisaImmigrationCertificatePage() {
     } else {
          toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields." });
     }
+  }
+
+  const handleCertificationRequest = async () => {
+      if (!user) {
+          toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to make a request." });
+          return;
+      }
+      setIsSubmitting(true);
+      try {
+        await addDoc(collection(db, "certificationRequests"), {
+            reportType: "Visa/Immigration Certificate",
+            clientName: form.getValues("studentName"),
+            requestedBy: user.displayName || user.email,
+            userId: user.uid,
+            requestDate: new Date(),
+            status: "Pending",
+            draftUrl: "#", 
+            signedDocumentUrl: null,
+            formData: form.getValues(),
+        });
+        toast({
+            title: "Request Sent",
+            description: "Your certification request has been sent to the admin for review and signature."
+        });
+      } catch (error) {
+          console.error("Error sending request:", error);
+          toast({ variant: "destructive", title: "Request Failed", description: "Could not send the request. Please try again." });
+      } finally {
+          setIsSubmitting(false);
+      }
   }
 
   const renderStepContent = () => {
@@ -210,12 +245,18 @@ export default function VisaImmigrationCertificatePage() {
                         </div>
                     </CardContent>
                     <CardFooter className="justify-between">
-                         <Button type="button" variant="outline" onClick={() => setStep(2)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <ShareButtons
-                            contentRef={printRef}
-                            fileName={`Financial_Questionnaire_${formData.studentName}`}
-                            whatsappMessage={whatsappMessage}
-                         />
+                        <Button type="button" variant="outline" onClick={() => setStep(2)}><ArrowLeft className="mr-2"/> Back</Button>
+                        <div className="flex gap-2">
+                             <ShareButtons
+                                contentRef={printRef}
+                                fileName={`Financial_Questionnaire_${formData.studentName}`}
+                                whatsappMessage={whatsappMessage}
+                             />
+                             <Button type="button" onClick={handleCertificationRequest} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <FileSignature className="mr-2"/>}
+                                Request Certification
+                            </Button>
+                        </div>
                     </CardFooter>
                 </Card>
             )
