@@ -239,7 +239,7 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
             )}
           >
             <div className="flex items-center gap-2">
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-5 w-5" />
               <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </div>
             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
@@ -265,7 +265,7 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
               isActive={pathname === item.href}
               className="w-full"
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-5 w-5" />
               <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </SidebarMenuButton>
           </Link>
@@ -395,5 +395,3 @@ export default function AppLayout({
     </AccountingProvider>
   );
 }
-
-    
