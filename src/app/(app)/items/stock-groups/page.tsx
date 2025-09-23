@@ -18,7 +18,7 @@ import { PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Mock data for stock groups
+// Mock data for stock groups - in a real app, this would be fetched from Firestore
 const sampleStockGroups = [
   { id: "SG-001", name: "Electronics", under: "Primary", itemsCount: 15 },
   { id: "SG-002", name: "Garments", under: "Primary", itemsCount: 45 },
@@ -30,6 +30,7 @@ const sampleStockGroups = [
 
 export default function StockGroupsPage() {
   const [groups, setGroups] = useState(sampleStockGroups);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleAction = (action: string, groupId: string) => {
@@ -39,6 +40,22 @@ export default function StockGroupsPage() {
     });
   };
 
+  const handleAddGroup = () => {
+    // In a real app, you would handle form submission data
+    const newGroup = {
+        id: `SG-${Date.now()}`,
+        name: "New Group",
+        under: "Primary",
+        itemsCount: 0
+    };
+    setGroups(prev => [...prev, newGroup]);
+    toast({
+        title: "Stock Group Added",
+        description: `${newGroup.name} has been added.`
+    });
+    setIsAddDialogOpen(false);
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -46,7 +63,7 @@ export default function StockGroupsPage() {
           <h1 className="text-3xl font-bold">Stock Groups</h1>
           <p className="text-muted-foreground">Organize your stock items into hierarchical groups.</p>
         </div>
-        <Dialog>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2"/>
@@ -79,7 +96,7 @@ export default function StockGroupsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Save Group</Button>
+              <Button type="button" onClick={handleAddGroup}>Save Group</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
