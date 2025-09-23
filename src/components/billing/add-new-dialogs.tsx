@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "../ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 type Party = {
   id: string;
@@ -44,6 +45,7 @@ type Item = {
   stock?: number;
   purchasePrice?: number;
   sellingPrice?: number;
+  stockGroupId?: string;
 }
 
 const partySchema = z.object({
@@ -64,6 +66,7 @@ const itemSchema = z.object({
     stock: z.coerce.number().min(0).optional(),
     purchasePrice: z.coerce.number().min(0).optional(),
     sellingPrice: z.coerce.number().min(0).optional(),
+    stockGroupId: z.string().optional(),
 });
 
 export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor', party: Party | null }) {
@@ -146,20 +149,20 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
     );
 };
 
-export function ItemDialog({ open, onOpenChange, item }: { open: boolean, onOpenChange: (open: boolean) => void, item: Item | null }) {
+export function ItemDialog({ open, onOpenChange, item, stockGroups }: { open: boolean, onOpenChange: (open: boolean) => void, item: Item | null, stockGroups: {id: string, name: string}[] }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
     const form = useForm<z.infer<typeof itemSchema>>({
         resolver: zodResolver(itemSchema),
-        defaultValues: { name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0 },
+        defaultValues: { name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0, stockGroupId: "" },
     });
     
     useEffect(() => {
       if (item && open) {
         form.reset(item);
       } else if (!open) {
-        form.reset({ name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0 });
+        form.reset({ name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0, stockGroupId: "" });
       }
     }, [item, open, form]);
 
@@ -199,7 +202,17 @@ export function ItemDialog({ open, onOpenChange, item }: { open: boolean, onOpen
                         <div className="grid gap-4 py-4">
                             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><Label>Item Name</Label><FormControl><Input placeholder="e.g. Wireless Keyboard" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="description" render={({ field }) => ( <FormItem><Label>Description</Label><FormControl><Textarea placeholder="A short description of the item" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="hsn" render={({ field }) => ( <FormItem><Label>HSN/SAC Code</Label><FormControl><Input placeholder="e.g. 8471" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                             <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="hsn" render={({ field }) => ( <FormItem><Label>HSN/SAC Code</Label><FormControl><Input placeholder="e.g. 8471" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField control={form.control} name="stockGroupId" render={({ field }) => ( <FormItem><Label>Stock Group</Label>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select a group" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {stockGroups.map(group => <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage /></FormItem> )}/>
+                             </div>
                             <FormField control={form.control} name="stock" render={({ field }) => ( <FormItem><Label>Opening Stock</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField control={form.control} name="purchasePrice" render={({ field }) => ( <FormItem><Label>Purchase Price (₹)</Label><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>

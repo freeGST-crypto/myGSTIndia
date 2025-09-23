@@ -42,9 +42,18 @@ const itemSchema = z.object({
     stock: z.coerce.number().min(0).optional(),
     purchasePrice: z.coerce.number().min(0).optional(),
     sellingPrice: z.coerce.number().min(0).optional(),
+    stockGroupId: z.string().optional(),
 });
 
 export type Item = z.infer<typeof itemSchema> & { id: string; };
+
+// Mock data for stock groups - in a real app, this would be fetched from Firestore
+const sampleStockGroups = [
+  { id: "SG-001", name: "Electronics" },
+  { id: "SG-002", name: "Garments" },
+  { id: "SG-003", name: "Raw Materials" },
+];
+
 
 export default function ItemsPage() {
     const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -80,12 +89,8 @@ export default function ItemsPage() {
     }, [items, searchTerm]);
     
     const handleEdit = (item: Item) => {
-      // In a real app, you would open a dialog with the item's data pre-filled.
-      // For now, we'll just log it.
-      toast({
-        title: 'Editing Item (Placeholder)',
-        description: `This would open an edit form for ${item.name}.`,
-      });
+      setEditingItem(item);
+      setIsItemDialogOpen(true);
     };
     
     const handleDelete = async (item: Item) => {
@@ -142,7 +147,7 @@ export default function ItemsPage() {
                             <PlusCircle className="mr-2"/>
                             Add Item
                         </Button>
-                        <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} item={editingItem} />
+                        <ItemDialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen} item={editingItem} stockGroups={sampleStockGroups} />
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -161,8 +166,8 @@ export default function ItemsPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Item</TableHead>
+                                    <TableHead>Stock Group</TableHead>
                                     <TableHead className="text-right">Stock</TableHead>
-                                    <TableHead className="text-right">Purchase Price</TableHead>
                                     <TableHead className="text-right">Selling Price</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -178,8 +183,10 @@ export default function ItemsPage() {
                                             <div className="font-medium">{item.name}</div>
                                             <div className="text-sm text-muted-foreground">{item.hsn}</div>
                                         </TableCell>
+                                        <TableCell className="text-muted-foreground">
+                                          {sampleStockGroups.find(g => g.id === item.stockGroupId)?.name || 'N/A'}
+                                        </TableCell>
                                         <TableCell className="text-right">{item.stock > 0 ? item.stock : "-"}</TableCell>
-                                        <TableCell className="text-right">₹{item.purchasePrice?.toFixed(2)}</TableCell>
                                         <TableCell className="text-right">₹{item.sellingPrice?.toFixed(2)}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
