@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -28,7 +28,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -36,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon, Loader2, Info } from "lucide-react";
+import { PlusCircle, Loader2, Info } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -58,26 +57,30 @@ import { collection, addDoc, query, where, orderBy } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-
-type Account = {
-  code: string;
-  name: string;
-  type: string;
-  category: "assets" | "liabilities" | "equity" | "revenue" | "expenses";
-  purchaseDate?: Date;
-  putToUseDate?: Date;
-  depreciationRate?: number;
-  openingWdv?: number;
-  userId: string;
-};
+import { allAccounts } from "@/lib/accounts";
 
 const accountTypes = {
-    assets: ["Bank", "Cash", "Accounts Receivable", "Current Asset", "Fixed Asset", "Inventory"],
-    liabilities: ["Accounts Payable", "Credit Card", "Current Liability", "Long Term Liability"],
+    assets: ["Bank", "Cash", "Current Asset", "Fixed Asset", "Inventory"],
+    liabilities: ["Current Liability", "Long Term Liability"],
     equity: ["Equity"],
     revenue: ["Revenue", "Other Income"],
     expenses: ["Expense", "Cost of Goods Sold", "Depreciation"],
+};
+
+const accountCodeRanges = {
+    "Fixed Asset": { start: 1000, end: 1199 },
+    "Investment": { start: 1200, end: 1299 },
+    "Current Asset": { start: 1300, end: 1499 },
+    "Cash": { start: 1500, end: 1519 },
+    "Bank": { start: 1520, end: 1599 },
+    "Equity": { start: 2000, end: 2199 },
+    "Long Term Liability": { start: 2200, end: 2399 },
+    "Current Liability": { start: 2400, end: 2999 },
+    "Revenue": { start: 4000, end: 4499 },
+    "Other Income": { start: 4500, end: 4999 },
+    "Cost of Goods Sold": { start: 5000, end: 5499 },
+    "Expense": { start: 6000, end: 6999 },
+    "Depreciation": { start: 6100, end: 6100 }, // Special case
 };
 
 const accountSchema = z.object({
@@ -95,7 +98,7 @@ const accountSchema = z.object({
     return true;
 }, {
     message: "For Fixed Assets, all detail fields are required.",
-    path: ["purchaseDate"], // you can point to any of the fields
+    path: ["purchaseDate"],
 });
 
 export default function ChartOfAccountsPage() {
@@ -103,84 +106,91 @@ export default function ChartOfAccountsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   
-  const accountsRef = collection(db, "accounts");
-  const accountsQuery = user ? query(accountsRef, where("userId", "==", user.uid), orderBy("code")) : null;
-  const [accountsSnapshot, loading, error] = useCollection(accountsQuery);
+  // Custom accounts added by the user
+  const userAccountsRef = collection(db, "user_accounts");
+  const userAccountsQuery = user ? query(userAccountsRef, where("userId", "==", user.uid), orderBy("code")) : null;
+  const [userAccountsSnapshot, loading, error] = useCollection(userAccountsQuery);
   
-  const accounts = accountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Account)) || [];
+  const userAccounts = userAccountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
   
+  const combinedAccounts = useMemo(() => {
+    return [...allAccounts, ...userAccounts].sort((a,b) => a.code.localeCompare(b.code));
+  }, [userAccounts]);
+
   const form = useForm<z.infer<typeof accountSchema>>({
     resolver: zodResolver(accountSchema),
-    defaultValues: {
-        name: "",
-        code: "",
-        type: "",
-        openingWdv: 0.00,
-    }
+    defaultValues: { name: "", code: "", type: "", openingWdv: 0.00 }
   });
   
   const selectedAccountType = form.watch("type");
 
+  const getNextAvailableCode = (type: string) => {
+    const range = accountCodeRanges[type as keyof typeof accountCodeRanges];
+    if (!range) return "";
+    
+    const existingCodes = combinedAccounts.filter(acc => acc.type === type).map(acc => parseInt(acc.code));
+    
+    for (let i = range.start; i <= range.end; i++) {
+        if (!existingCodes.includes(i)) {
+            return String(i).padStart(4, '0');
+        }
+    }
+    return ""; // No available code in range
+  };
+  
+  const handleTypeChange = (type: string) => {
+    form.setValue("type", type);
+    const nextCode = getNextAvailableCode(type);
+    form.setValue("code", nextCode);
+  };
+
   const onSubmit = async (values: z.infer<typeof accountSchema>) => {
     if (!user) {
-        toast({ variant: "destructive", title: "Not Authenticated", description: "You must be logged in to add an account."});
+        toast({ variant: "destructive", title: "Not Authenticated" });
         return;
     }
 
-    const categoryMapping: Record<string, Account['category']> = {
-        'Bank': 'assets', 'Cash': 'assets', 'Accounts Receivable': 'assets', 'Current Asset': 'assets', 'Fixed Asset': 'assets', 'Inventory': 'assets',
-        'Accounts Payable': 'liabilities', 'Credit Card': 'liabilities', 'Current Liability': 'liabilities', 'Long Term Liability': 'liabilities',
-        'Equity': 'equity',
-        'Revenue': 'revenue', 'Other Income': 'revenue',
-        'Expense': 'expenses', 'Cost of Goods Sold': 'expenses', 'Depreciation': 'expenses'
-    };
-    
-    const newAccount: Omit<Account, 'id'> = {
-        ...values,
-        category: categoryMapping[values.type],
-        userId: user.uid,
-    };
+    const newAccount: any = { ...values, userId: user.uid };
 
     try {
-        await addDoc(accountsRef, newAccount);
-        toast({ title: "Account Added", description: `${values.name} has been added to your Chart of Accounts.` });
+        await addDoc(userAccountsRef, newAccount);
+        toast({ title: "Account Added", description: `${values.name} has been added.` });
         form.reset();
         setIsAddDialogOpen(false);
     } catch (e) {
         console.error("Error adding document: ", e);
-        toast({ variant: "destructive", title: "Error", description: "Could not save the account. Please try again."})
+        toast({ variant: "destructive", title: "Error", description: "Could not save the account."})
     }
   };
 
-  const renderAccountCategory = (title: string, category: Account['category']) => {
-    const categoryAccounts = accounts.filter(acc => acc.category === category);
-    if (loading) {
-        return <Loader2 className="animate-spin my-4"/>;
-    }
+  const renderAccountCategory = (title: string, category: string) => {
+    const categoryAccounts = combinedAccounts.filter(acc => acc.type === category);
+    if (categoryAccounts.length === 0) return null;
+    
     return (
-        <AccordionItem value={category}>
-            <AccordionTrigger className="font-semibold text-lg hover:no-underline">{title}</AccordionTrigger>
-            <AccordionContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Account Name</TableHead>
-                            <TableHead>Account Code</TableHead>
-                            <TableHead className="text-right">Account Type</TableHead>
+        <div className="mb-4">
+            <h3 className="font-semibold text-lg mb-2">{title}</h3>
+            <div className="border rounded-md">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[20%]">Code</TableHead>
+                        <TableHead className="w-[50%]">Account Name</TableHead>
+                        <TableHead className="w-[30%]">Type</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {categoryAccounts.map((account) => (
+                        <TableRow key={account.code}>
+                            <TableCell className="font-mono">{account.code}</TableCell>
+                            <TableCell className="font-medium">{account.name}</TableCell>
+                            <TableCell className="text-muted-foreground">{account.type}</TableCell>
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {categoryAccounts.map((account) => (
-                            <TableRow key={account.code}>
-                                <TableCell className="font-medium">{account.name}</TableCell>
-                                <TableCell>{account.code}</TableCell>
-                                <TableCell className="text-right">{account.type}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </AccordionContent>
-        </AccordionItem>
+                    ))}
+                </TableBody>
+            </Table>
+            </div>
+        </div>
     );
   };
 
@@ -198,24 +208,23 @@ export default function ChartOfAccountsPage() {
                 <DialogTrigger asChild>
                     <Button>
                         <PlusCircle className="mr-2"/>
-                        Add Account
+                        Add Custom Account
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-lg">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <DialogHeader>
-                        <DialogTitle>Add New Account</DialogTitle>
+                        <DialogTitle>Add New Custom Account</DialogTitle>
                         <DialogDescription>
-                            Create a new account for tracking finances.
+                            Use this for accounts not covered in the standard list.
                         </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
-                             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Account Name</FormLabel><FormControl><Input placeholder="e.g. Office Rent" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Account Name</FormLabel><FormControl><Input placeholder="e.g. Special Project Revenue" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name="code" render={({ field }) => ( <FormItem><FormLabel>Account Code</FormLabel><FormControl><Input placeholder="e.g. 5010" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField control={form.control} name="type" render={({ field }) => ( <FormItem><FormLabel>Account Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={handleTypeChange} defaultValue={field.value}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             {Object.entries(accountTypes).map(([group, types]) => (
@@ -230,35 +239,8 @@ export default function ChartOfAccountsPage() {
                                         </SelectContent>
                                     </Select>
                                 <FormMessage /></FormItem> )}/>
+                                 <FormField control={form.control} name="code" render={({ field }) => ( <FormItem><FormLabel>Account Code (Auto)</FormLabel><FormControl><Input placeholder="Auto-generated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
-
-                            {selectedAccountType === 'Fixed Asset' && (
-                                <>
-                                    <Separator className="my-4" />
-                                    <h3 className="text-md font-semibold">Fixed Asset Details</h3>
-                                    <Alert variant="default" className="mt-2">
-                                        <Info className="h-4 w-4" />
-                                        <AlertTitle>Heads up!</AlertTitle>
-                                        <AlertDescription>
-                                            For Fixed Assets, all fields in this section are required for accurate depreciation calculation.
-                                        </AlertDescription>
-                                    </Alert>
-                                    <div className="space-y-4 p-4 border rounded-md mt-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                             <FormField control={form.control} name="purchaseDate" render={({ field }) => ( <FormItem><FormLabel>Date of Purchase</FormLabel>
-                                                 <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(field.value, "PPP") : "Select date"}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover>
-                                             <FormMessage /></FormItem> )}/>
-                                             <FormField control={form.control} name="putToUseDate" render={({ field }) => ( <FormItem><FormLabel>Date Put to Use</FormLabel>
-                                                 <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn("w-full font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4"/>{field.value ? format(field.value, "PPP") : "Select date"}</Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover>
-                                             <FormMessage /></FormItem> )}/>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="depreciationRate" render={({ field }) => ( <FormItem><FormLabel>Depreciation Rate (%)</FormLabel><FormControl><Input type="number" placeholder="e.g. 15" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem> )}/>
-                                            <FormField control={form.control} name="openingWdv" render={({ field }) => ( <FormItem><FormLabel>Opening WDV (₹)</FormLabel><FormControl><Input type="number" placeholder="0.00" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} /></FormControl><FormMessage /></FormItem> )}/>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
                         </div>
                         <DialogFooter>
                             <Button type="submit">Save Account</Button>
@@ -272,16 +254,18 @@ export default function ChartOfAccountsPage() {
       <Card>
           <CardHeader>
               <CardTitle>Accounts</CardTitle>
-              <CardDescription>Browse and manage your accounts, organized by category.</CardDescription>
+              <CardDescription>Browse all accounts, organized by category.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Accordion type="multiple" defaultValue={["assets", "liabilities", "equity", "revenue", "expenses"]} className="w-full">
-                {renderAccountCategory("Assets", "assets")}
-                {renderAccountCategory("Liabilities", "liabilities")}
-                {renderAccountCategory("Equity", "equity")}
-                {renderAccountCategory("Revenue", "revenue")}
-                {renderAccountCategory("Expenses", "expenses")}
-            </Accordion>
+            {loading ? <Loader2 className="animate-spin" /> : (
+                <Accordion type="multiple" defaultValue={["assets", "liabilities", "equity", "revenue", "expenses"]} className="w-full">
+                    <AccordionItem value="assets"><AccordionTrigger className="text-xl">Assets</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start < 2000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
+                    <AccordionItem value="liabilities"><AccordionTrigger className="text-xl">Liabilities</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start >= 2200 && accountCodeRanges[k as keyof typeof accountCodeRanges].start < 3000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
+                    <AccordionItem value="equity"><AccordionTrigger className="text-xl">Equity</AccordionTrigger><AccordionContent className="pl-4">{renderAccountCategory("Equity", "Equity")}</AccordionContent></AccordionItem>
+                    <AccordionItem value="revenue"><AccordionTrigger className="text-xl">Revenue</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start >= 4000 && accountCodeRanges[k as keyof typeof accountCodeRanges].start < 5000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
+                    <AccordionItem value="expenses"><AccordionTrigger className="text-xl">Expenses</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start >= 5000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
+                </Accordion>
+            )}
           </CardContent>
       </Card>
     </div>
