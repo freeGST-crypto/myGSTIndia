@@ -39,9 +39,9 @@ import Link from "next/link";
 import * as XLSX from 'xlsx';
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455" },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566" },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677" },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455", bankIfsc: "HDFC0000123" },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566", bankIfsc: "ICIC0000456" },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677", bankIfsc: "SBIN0000789" },
 ];
 
 const getFinancialYears = () => {
@@ -183,6 +183,7 @@ export default function RunPayrollPage() {
         const dataToExport = payrollData.map(emp => ({
             'Beneficiary Name': emp.name,
             'Beneficiary Account Number': emp.bankAccount,
+            'Beneficiary Bank IFSC': emp.bankIfsc,
             'Amount': emp.netSalary.toFixed(2),
         }));
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
