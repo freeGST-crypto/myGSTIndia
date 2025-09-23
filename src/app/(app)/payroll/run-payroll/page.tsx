@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -30,11 +31,12 @@ import { ArrowLeft, ArrowRight, FileText, CheckCircle, FileDown, Loader2 } from 
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200 },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200 },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200 },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0 },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150 },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0 },
 ];
 
 const getFinancialYears = () => {
@@ -53,7 +55,7 @@ const months = [
 
 const calculateSalary = (emp: typeof initialEmployees[0]) => {
     const grossEarnings = emp.basic + emp.hra + emp.specialAllowance;
-    const totalDeductions = emp.pf + emp.professionalTax;
+    const totalDeductions = emp.pf + emp.professionalTax + emp.incomeTax + emp.lwf + emp.loan + emp.otherDeductions;
     const netSalary = grossEarnings - totalDeductions;
     return { grossEarnings, totalDeductions, netSalary };
 };
@@ -66,6 +68,19 @@ export default function RunPayrollPage() {
     const [month, setMonth] = useState(months[new Date().getMonth()]);
     
     const [payrollData, setPayrollData] = useState(initialEmployees.map(emp => ({...emp, ...calculateSalary(emp)})));
+    
+    const handleDeductionChange = (employeeId: string, field: 'incomeTax' | 'lwf' | 'loan' | 'otherDeductions', value: number) => {
+        setPayrollData(prevData => {
+            const newData = prevData.map(emp => {
+                if (emp.id === employeeId) {
+                    const updatedEmp = { ...emp, [field]: value };
+                    return { ...updatedEmp, ...calculateSalary(updatedEmp) };
+                }
+                return emp;
+            });
+            return newData;
+        });
+    };
 
     const handleProcessPayroll = () => {
         setIsLoading(true);
@@ -89,7 +104,7 @@ export default function RunPayrollPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Step 1: Review and Confirm Payroll</CardTitle>
-                            <CardDescription>Review the calculated salary for each employee for the selected period before processing.</CardDescription>
+                            <CardDescription>Review the calculated salary for each employee for the selected period. You can edit variable deductions like loans or advances before processing.</CardDescription>
                         </CardHeader>
                         <CardContent>
                              <div className="flex flex-wrap gap-4 mb-6">
@@ -112,8 +127,11 @@ export default function RunPayrollPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Employee</TableHead>
-                                        <TableHead className="text-right">Gross Earnings (₹)</TableHead>
-                                        <TableHead className="text-right">Total Deductions (₹)</TableHead>
+                                        <TableHead className="text-right">Gross (₹)</TableHead>
+                                        <TableHead className="text-right">Income Tax (₹)</TableHead>
+                                        <TableHead className="text-right">LWF (₹)</TableHead>
+                                        <TableHead className="text-right">Loan/Adv (₹)</TableHead>
+                                        <TableHead className="text-right">Others (₹)</TableHead>
                                         <TableHead className="text-right font-semibold">Net Salary (₹)</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -122,17 +140,20 @@ export default function RunPayrollPage() {
                                         <TableRow key={emp.id}>
                                             <TableCell>
                                                 <div className="font-medium">{emp.name}</div>
-                                                <div className="text-sm text-muted-foreground">{emp.id} - {emp.designation}</div>
+                                                <div className="text-sm text-muted-foreground">{emp.id}</div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono">{emp.grossEarnings.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right font-mono text-destructive">({emp.totalDeductions.toFixed(2)})</TableCell>
+                                            <TableCell><Input type="number" className="w-24 ml-auto text-right" value={emp.incomeTax} onChange={e => handleDeductionChange(emp.id, 'incomeTax', parseFloat(e.target.value) || 0)} /></TableCell>
+                                            <TableCell><Input type="number" className="w-20 ml-auto text-right" value={emp.lwf} onChange={e => handleDeductionChange(emp.id, 'lwf', parseFloat(e.target.value) || 0)}/></TableCell>
+                                            <TableCell><Input type="number" className="w-24 ml-auto text-right" value={emp.loan} onChange={e => handleDeductionChange(emp.id, 'loan', parseFloat(e.target.value) || 0)}/></TableCell>
+                                            <TableCell><Input type="number" className="w-24 ml-auto text-right" value={emp.otherDeductions} onChange={e => handleDeductionChange(emp.id, 'otherDeductions', parseFloat(e.target.value) || 0)}/></TableCell>
                                             <TableCell className="text-right font-mono font-semibold">{emp.netSalary.toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                                 <TableFooter>
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-right font-bold text-lg">Total Payout</TableCell>
+                                        <TableCell colSpan={6} className="text-right font-bold text-lg">Total Payout</TableCell>
                                         <TableCell className="text-right font-bold font-mono text-lg">₹{totalNetSalary.toFixed(2)}</TableCell>
                                     </TableRow>
                                 </TableFooter>
