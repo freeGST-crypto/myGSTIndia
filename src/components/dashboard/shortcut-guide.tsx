@@ -6,15 +6,21 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
-  import { Keyboard, Receipt, BookCopy, Landmark, TrendingUp, Scale, ShoppingCart } from "lucide-react";
+  import { Keyboard, Receipt, BookCopy, Landmark, TrendingUp, Scale, ShoppingCart, FilePlus, FileMinus, Wallet, Book, Users, Warehouse } from "lucide-react";
   
   const shortcuts = [
-    { name: "New Invoice", keys: "Ctrl + I", icon: Receipt },
-    { name: "New Purchase", keys: "Ctrl + P", icon: ShoppingCart },
-    { name: "New Journal", keys: "Ctrl + J", icon: BookCopy },
+    { name: "New Sales Invoice", keys: "Ctrl + I", icon: Receipt },
+    { name: "New Purchase Bill", keys: "Ctrl + P", icon: ShoppingCart },
+    { name: "New Credit Note", keys: "Ctrl + N", icon: FilePlus },
+    { name: "New Debit Note", keys: "Ctrl + D", icon: FileMinus },
+    { name: "Journal Vouchers", keys: "Ctrl + J", icon: BookCopy },
+    { name: "Receipt & Payment", keys: "Ctrl + R", icon: Wallet },
     { name: "Balance Sheet", keys: "Ctrl + B", icon: Landmark },
     { name: "Profit & Loss", keys: "Ctrl + L", icon: TrendingUp },
     { name: "Trial Balance", keys: "Ctrl + T", icon: Scale },
+    { name: "General Ledger", keys: "Ctrl + G", icon: Book },
+    { name: "Parties (Customers/Vendors)", keys: "Alt + P", icon: Users },
+    { name: "Items (Products/Services)", keys: "Alt + I", icon: Warehouse },
   ];
   
   export function ShortcutGuide() {
