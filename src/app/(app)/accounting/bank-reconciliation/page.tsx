@@ -14,6 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -69,13 +77,17 @@ type BookTransaction = {
 
 export default function BankReconciliationPage() {
     const { toast } = useToast();
-    const { journalVouchers, loading } = useContext(AccountingContext)!;
+    const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
     const [statementTransactions, setStatementTransactions] = useState<StatementTransaction[]>([]);
     const [selectedStatementTxs, setSelectedStatementTxs] = useState<Set<string>>(new Set());
     const [selectedBookTxs, setSelectedBookTxs] = useState<Set<string>>(new Set());
     const [bankAccount, setBankAccount] = useState<string>("1020"); // Default to HDFC Bank
 
-    const bookTransactions = useMemo(() => {
+    const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
+    const [entryToCreate, setEntryToCreate] = useState<StatementTransaction | null>(null);
+    const [contraAccount, setContraAccount] = useState<string>("");
+
+    const bookTransactions: BookTransaction[] = useMemo(() => {
         return journalVouchers
             .filter(v => v.lines.some(l => l.account === bankAccount))
             .map(v => {
@@ -162,6 +174,67 @@ export default function BankReconciliationPage() {
         setSelectedStatementTxs(new Set());
         setSelectedBookTxs(new Set());
     };
+    
+    const handleOpenAddEntryDialog = () => {
+        if (selectedStatementTxs.size !== 1) {
+            toast({ variant: "destructive", title: "Selection Error", description: "Please select exactly one unmatched bank transaction to create an entry." });
+            return;
+        }
+        const txId = Array.from(selectedStatementTxs)[0];
+        const tx = statementTransactions.find(t => t.id === txId);
+        if (tx?.matchedId) {
+             toast({ variant: "destructive", title: "Selection Error", description: "The selected transaction is already matched." });
+             return;
+        }
+        setEntryToCreate(tx || null);
+        setIsAddEntryDialogOpen(true);
+    };
+    
+    const handleCreateMissingEntry = async () => {
+        if (!entryToCreate || !contraAccount) {
+             toast({ variant: "destructive", title: "Missing Information", description: "Please select an account to categorize the transaction." });
+             return;
+        }
+        
+        const amount = (entryToCreate.deposit || 0) - (entryToCreate.withdrawal || 0);
+        const isReceipt = amount > 0;
+        
+        const lines = isReceipt
+          ? [
+              { account: bankAccount, debit: String(amount), credit: '0' },
+              { account: contraAccount, debit: '0', credit: String(amount) },
+            ]
+          : [
+              { account: contraAccount, debit: String(Math.abs(amount)), credit: '0' },
+              { account: bankAccount, debit: '0', credit: String(Math.abs(amount)) },
+            ];
+            
+        const voucherType = isReceipt ? 'RV' : 'PV';
+        const voucherId = `${voucherType}-RECON-${Date.now()}`;
+        
+        const newVoucher = {
+            id: voucherId,
+            date: format(new Date(entryToCreate.date), 'yyyy-MM-dd'),
+            narration: `Recon entry: ${entryToCreate.description}`,
+            lines,
+            amount: Math.abs(amount)
+        };
+        
+        try {
+            await addJournalVoucher(newVoucher);
+            // Mark as matched locally
+            setStatementTransactions(prev => prev.map(tx => tx.id === entryToCreate.id ? {...tx, matchedId: `created-${voucherId}`} : tx));
+            
+            toast({ title: "Entry Created", description: "The missing transaction has been recorded."});
+            setIsAddEntryDialogOpen(false);
+            setEntryToCreate(null);
+            setContraAccount("");
+            setSelectedStatementTxs(new Set());
+        } catch (error) {
+             toast({ variant: "destructive", title: "Error", description: "Could not create the accounting entry." });
+        }
+    };
+
 
     const bookBalance = useMemo(() => bookTransactions.reduce((acc, tx) => acc + (tx.type === 'Receipt' ? tx.amount : -tx.amount), 0), [bookTransactions]);
     const statementBalance = useMemo(() => statementTransactions.reduce((acc, tx) => acc + (tx.deposit || 0) - (tx.withdrawal || 0), 0), [statementTransactions]);
@@ -247,7 +320,7 @@ export default function BankReconciliationPage() {
                     <CardTitle>GSTEase Transactions</CardTitle>
                     <CardDescription>Receipts and payments from your books.</CardDescription>
                 </div>
-                 <Button size="sm" variant="outline">
+                 <Button size="sm" variant="outline" onClick={handleOpenAddEntryDialog}>
                     <PlusCircle className="mr-2" /> Add Missing Entry
                 </Button>
              </div>
@@ -276,6 +349,44 @@ export default function BankReconciliationPage() {
             </Button>
         </div>
       </div>
+      
+       <Dialog open={isAddEntryDialogOpen} onOpenChange={setIsAddEntryDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Create Missing Book Entry</DialogTitle>
+                <DialogDescription>
+                    Create a journal entry for the selected bank transaction.
+                </DialogDescription>
+            </DialogHeader>
+            {entryToCreate && (
+                <div className="space-y-4 py-4">
+                    <p><strong>Date:</strong> {format(new Date(entryToCreate.date), 'dd MMM yyyy')}</p>
+                    <p><strong>Description:</strong> {entryToCreate.description}</p>
+                    <p><strong>Amount:</strong> <span className={((entryToCreate.deposit || 0) - (entryToCreate.withdrawal || 0)) > 0 ? 'text-green-600' : 'text-red-600'}>₹{Math.abs((entryToCreate.deposit || 0) - (entryToCreate.withdrawal || 0)).toFixed(2)}</span></p>
+                    <div className="space-y-2">
+                        <Label htmlFor="contra-account">Select Contra Account</Label>
+                        <Select onValueChange={setContraAccount} value={contraAccount}>
+                            <SelectTrigger id="contra-account">
+                                <SelectValue placeholder="Select an account to categorize this..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {allAccounts.filter(acc => acc.code !== bankAccount).map(acc => (
+                                    <SelectItem key={acc.code} value={acc.code}>
+                                        {acc.name} ({acc.code})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            )}
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddEntryDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreateMissingEntry}>Create Entry</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
     </div>
   );
 }
@@ -320,3 +431,4 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type }: { trans
         </div>
     );
 }
+
