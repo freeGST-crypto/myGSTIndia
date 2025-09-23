@@ -52,6 +52,7 @@ import {
   Linkedin,
   Instagram,
   Keyboard,
+  PieChart,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -128,6 +129,7 @@ const allMenuItems = [
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional'] },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional'] },
       { href: "/accounting/bank-reconciliation", label: "Bank Reconciliation", icon: Landmark, roles: ['business', 'professional'] },
+      { href: "/accounting/cost-centre-summary", label: "Cost Centre Summary", icon: PieChart, roles: ['business', 'professional'] },
       {
         label: "Financial Statements",
         icon: BookOpen,
@@ -398,3 +400,5 @@ export default function AppLayout({
     </AccountingProvider>
   );
 }
+
+    
