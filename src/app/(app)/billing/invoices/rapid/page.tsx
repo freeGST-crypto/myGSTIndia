@@ -6,8 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Calendar as CalendarIcon,
-  PlusCircle,
   Save,
   Sparkles,
 } from "lucide-react";
@@ -77,6 +75,10 @@ export default function RapidInvoiceEntryPage() {
       amount: 0,
     },
   });
+  
+  const watchedAmount = form.watch("amount");
+  const taxAmount = watchedAmount * 0.18; // Assuming 18% GST
+  const totalAmount = watchedAmount + taxAmount;
 
   const handleSave = useCallback(async (values: RapidInvoiceForm, closeOnSave: boolean) => {
     if (!accountingContext) return;
@@ -92,13 +94,13 @@ export default function RapidInvoiceEntryPage() {
     
     const invoiceId = `INV-${values.invoiceNumber}`;
     const subtotal = values.amount;
-    const taxAmount = subtotal * 0.18; // Assuming 18% GST
-    const totalAmount = subtotal + taxAmount;
+    const currentTaxAmount = subtotal * 0.18; // Recalculate for safety
+    const currentTotalAmount = subtotal + currentTaxAmount;
 
     const journalLines = [
-        { account: values.customerId, debit: totalAmount.toFixed(2), credit: '0' },
+        { account: values.customerId, debit: currentTotalAmount.toFixed(2), credit: '0' },
         { account: '4010', debit: '0', credit: subtotal.toFixed(2) },
-        { account: '2110', debit: '0', credit: taxAmount.toFixed(2) }
+        { account: '2110', debit: '0', credit: currentTaxAmount.toFixed(2) } // GST Payable
     ];
 
     try {
@@ -107,7 +109,7 @@ export default function RapidInvoiceEntryPage() {
             date: values.invoiceDate,
             narration: `Sale of ${selectedItem.name} to ${selectedCustomer.name}`,
             lines: journalLines,
-            amount: totalAmount,
+            amount: currentTotalAmount,
             customerId: values.customerId,
         });
 
@@ -116,9 +118,8 @@ export default function RapidInvoiceEntryPage() {
         if (closeOnSave) {
             router.push("/billing/invoices");
         } else {
-            // "Save & New" - Reset the form for the next entry
             const currentInvNumber = parseInt(values.invoiceNumber.replace(/[^0-9]/g, ''), 10);
-            const nextInvNumber = isNaN(currentInvNumber) ? "" : String(currentInvNumber + 1).padStart(values.invoiceNumber.length, '0');
+            const nextInvNumber = isNaN(currentInvNumber) ? "" : String(currentInvNumber + 1).padStart(3, '0');
 
             form.reset({
                 ...values,
@@ -137,7 +138,7 @@ export default function RapidInvoiceEntryPage() {
       const selectedItem: any = items.find((i:any) => i.id === itemId);
       if (selectedItem) {
           form.setValue('itemId', itemId);
-          form.setValue('amount', selectedItem.sellingPrice || 0);
+          form.setValue('amount', selectedItem.sellingPrice || 0, { shouldValidate: true });
       }
   }
 
@@ -206,6 +207,14 @@ export default function RapidInvoiceEntryPage() {
                          <FormField control={form.control} name="amount" render={({ field }) => (
                             <FormItem><FormLabel>Taxable Amount (₹)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
+                    </div>
+                     <div className="flex justify-end">
+                        <div className="w-full max-w-sm space-y-2 border-t pt-4 mt-4">
+                            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Taxable Amount</span><span>₹{watchedAmount.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span className="text-muted-foreground">IGST @ 18%</span><span>₹{taxAmount.toFixed(2)}</span></div>
+                            <Separator/>
+                            <div className="flex justify-between font-bold text-md"><span>Total Amount</span><span>₹{totalAmount.toFixed(2)}</span></div>
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2">
