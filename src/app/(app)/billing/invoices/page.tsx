@@ -109,7 +109,7 @@ export default function InvoicesPage() {
   const items = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
 
   const invoices: Invoice[] = useMemo(() => {
-    const salesInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-INV-"));
+    const salesInvoices = journalVouchers.filter(v => v && v.narration && v.narration.includes("via Invoice #"));
     const cancelledInvoiceIds = new Set(
         journalVouchers
             .filter(v => v && v.reverses && v.reverses.startsWith("JV-INV-"))
@@ -131,7 +131,7 @@ export default function InvoicesPage() {
             }
             
             return {
-                id: v.id.replace("JV-", ""),
+                id: v.id,
                 customer: v.narration.replace("Sale to ", "").split(" via")[0],
                 date: v.date,
                 dueDate: format(dueDate, 'yyyy-MM-dd'),
@@ -168,7 +168,6 @@ export default function InvoicesPage() {
 
     try {
       await addJournalVoucher({
-            id: `JV-INV-${quickInvNum}`,
             date: new Date().toISOString().split('T')[0],
             narration: `Sale to ${selectedCustomer.name} via Invoice #${quickInvNum}`,
             lines: journalLines,
@@ -203,7 +202,7 @@ export default function InvoicesPage() {
   }
 
     const handleCancelInvoice = async (invoiceId: string) => {
-        const originalVoucherId = `JV-${invoiceId}`;
+        const originalVoucherId = invoiceId;
         const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
 
         if (!originalVoucher) {
@@ -219,10 +218,9 @@ export default function InvoicesPage() {
         }));
 
         const cancellationVoucher = {
-            id: `JV-CNL-${Date.now()}`,
             reverses: originalVoucherId,
             date: new Date().toISOString().split('T')[0],
-            narration: `Cancellation of Invoice #${invoiceId}`,
+            narration: `Cancellation of Invoice`,
             lines: reversalLines,
             amount: originalVoucher.amount,
             customerId: originalVoucher.customerId,
@@ -230,7 +228,7 @@ export default function InvoicesPage() {
 
         try {
             await addJournalVoucher(cancellationVoucher);
-            toast({ title: "Invoice Cancelled", description: `Invoice #${invoiceId} has been successfully cancelled.` });
+            toast({ title: "Invoice Cancelled", description: `Invoice has been successfully cancelled.` });
             return true;
         } catch (e: any) {
             toast({ variant: "destructive", title: "Cancellation Failed", description: e.message });
@@ -639,7 +637,7 @@ export default function InvoicesPage() {
                 <TableBody>
                 {filteredInvoices.map((invoice) => (
                     <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.id}</TableCell>
+                    <TableCell className="font-medium">{invoice.raw.narration.split('#')[1] || invoice.id}</TableCell>
                     <TableCell>{invoice.customer}</TableCell>
                     <TableCell>{format(new Date(invoice.date), "dd MMM, yyyy")}</TableCell>
                     <TableCell>{format(new Date(invoice.dueDate), "dd MMM, yyyy")}</TableCell>
@@ -689,7 +687,7 @@ export default function InvoicesPage() {
         <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Invoice Details: {selectedInvoice.id}</DialogTitle>
+                    <DialogTitle>Invoice Details: {selectedInvoice.raw.narration.split('#')[1] || selectedInvoice.id}</DialogTitle>
                     <DialogDescription>
                         Details for the invoice issued to {selectedInvoice.customer}.
                     </DialogDescription>

@@ -317,14 +317,16 @@ export default function NewInvoicePage() {
 
 
     try {
-        await addJournalVoucher({
-            id: `JV-${invoiceNumber}`,
+        const newVoucher = {
             date: invoiceDate ? format(invoiceDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
             narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceNumber}`,
             lines: journalLines,
             amount: grandTotal, // Store the gross amount in the journal
             customerId: customer,
-        });
+        };
+        
+        await addJournalVoucher(newVoucher);
+
         toast({ title: "Invoice Saved", description: `Journal entry for invoice #${invoiceNumber} has been automatically created.` });
         router.push("/billing/invoices");
     } catch (e: any) {

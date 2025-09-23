@@ -29,7 +29,7 @@ type AccountingContextType = {
     journalVouchers: JournalVoucher[];
     loading: boolean;
     error: any;
-    addJournalVoucher: (voucher: Omit<JournalVoucher, 'userId'>) => Promise<void>;
+    addJournalVoucher: (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => Promise<void>;
     updateJournalVoucher: (id: string, voucherData: Partial<Omit<JournalVoucher, 'id' | 'userId'>>) => Promise<void>;
 };
 
@@ -42,21 +42,19 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
     const journalVouchersQuery = user ? query(journalVouchersRef, where("userId", "==", user.uid)) : null;
     const [journalVouchersSnapshot, loading, error] = useCollection(journalVouchersQuery);
 
-    const journalVouchers: JournalVoucher[] = journalVouchersSnapshot?.docs.map(doc => doc.data() as JournalVoucher) || [];
+    const journalVouchers: JournalVoucher[] = journalVouchersSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data() } as JournalVoucher)) || [];
 
-    const addJournalVoucher = async (voucher: Omit<JournalVoucher, 'userId'>) => {
+    const addJournalVoucher = async (voucher: Omit<JournalVoucher, 'id' | 'userId'>) => {
         if (!user) throw new Error("User not authenticated");
         
-        // Use the provided `id` (e.g., "JV-INV-001") as the document ID in Firestore.
-        // Also, ensure the `id` is saved within the document data itself.
-        const docRef = doc(db, "journalVouchers", voucher.id);
-        await setDoc(docRef, { ...voucher, userId: user.uid, id: voucher.id });
+        const docRef = await addDoc(collection(db, "journalVouchers"), { ...voucher, userId: user.uid });
+        // After creating the document, update it with its own ID.
+        await updateDoc(docRef, { id: docRef.id });
     };
     
     const updateJournalVoucher = async (id: string, voucherData: Partial<Omit<JournalVoucher, 'id' | 'userId'>>) => {
         if (!user) throw new Error("User not authenticated");
         
-        // Directly update the document using its known ID.
         const docRef = doc(db, "journalVouchers", id);
         await updateDoc(docRef, voucherData);
     };
