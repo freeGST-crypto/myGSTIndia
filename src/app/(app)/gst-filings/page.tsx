@@ -33,6 +33,10 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { db, auth } from "@/lib/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const getFinancialYears = () => {
     const currentYear = new Date().getFullYear();
@@ -60,6 +64,11 @@ export default function GstFilingsPage() {
     
     const { toast } = useToast();
     const { journalVouchers, loading } = useContext(AccountingContext)!;
+    const [user] = useAuthState(auth);
+
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
     
     const { gstr1Summary, gstr3bSummary } = useMemo(() => {
         const [startYearStr, endYearStr] = financialYear.split('-');
@@ -91,21 +100,29 @@ export default function GstFilingsPage() {
             return v.id.startsWith("JV-DN-") && vDate >= periodStart && vDate <= periodEnd;
         });
 
-        const b2bTaxableValue = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
-        const b2bTaxAmount = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+        const b2bInvoices = salesInvoices.filter(v => {
+            const customer = customers.find(c => c.id === v.customerId);
+            return customer && customer.gstin;
+        });
+        const b2bTaxableValue = b2bInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
+        const b2bTaxAmount = b2bInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
         
+        const outwardTaxable = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
+        const outwardTax = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
+
+
         const dynamicGstr1Summary = [
-            { type: "B2B Supplies", invoices: salesInvoices.length, taxableValue: b2bTaxableValue, taxAmount: b2bTaxAmount, total: b2bTaxableValue + b2bTaxAmount },
+            { type: "B2B Supplies", invoices: b2bInvoices.length, taxableValue: b2bTaxableValue, taxAmount: b2bTaxAmount, total: b2bTaxableValue + b2bTaxAmount },
         ];
 
         const itcAvailable = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
         const itcReversed = purchaseReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
         const netItc = itcAvailable - itcReversed;
-        const taxPayable = b2bTaxAmount - netItc;
+        const taxPayable = outwardTax - netItc;
         
         const dynamicGstr3bSummary = {
-            outwardTaxable: b2bTaxableValue,
-            outwardTax: b2bTaxAmount,
+            outwardTaxable: outwardTaxable,
+            outwardTax: outwardTax,
             itcAvailable,
             itcReversed,
             netItc,
@@ -114,7 +131,7 @@ export default function GstFilingsPage() {
 
         return { gstr1Summary: dynamicGstr1Summary, gstr3bSummary: dynamicGstr3bSummary };
 
-    }, [journalVouchers, financialYear, month]);
+    }, [journalVouchers, financialYear, month, customers]);
 
 
     const handleDrillDown = (item: string) => {
@@ -255,7 +272,7 @@ export default function GstFilingsPage() {
                                     description="(Total Tax - Net ITC)"
                                     icon={FileText}
                                     className="max-w-sm w-full"
-                                    loading={loading}
+                                    loading={loading || customersLoading}
                                 />
                             </div>
                         </CardContent>
@@ -312,3 +329,5 @@ export default function GstFilingsPage() {
         </div>
     );
 }
+
+    

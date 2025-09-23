@@ -319,7 +319,7 @@ export default function NewPurchasePage() {
 
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
-        { account: '2110', debit: totalTax.toFixed(2), credit: '0' },
+        { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, // ITC Receivable
         { account: vendor, debit: '0', credit: totalAmountPayable.toFixed(2) } 
     ];
 
@@ -333,7 +333,7 @@ export default function NewPurchasePage() {
 
     try {
         await addJournalVoucher({
-            id: `JV-BILL-${billNumber}`,
+            id: `BILL-${billNumber}`,
             date: billDate ? format(billDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
             narration: `Purchase from ${selectedVendor.name} against Bill #${billNumber}`,
             lines: journalLines,
@@ -505,3 +505,5 @@ export default function NewPurchasePage() {
     </div>
   );
 }
+
+    

@@ -62,14 +62,14 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
     
     const form = useForm<z.infer<typeof partySchema>>({
         resolver: zodResolver(partySchema),
-        defaultValues: { name: '', gstin: '', email: '', phone: '' },
+        defaultValues: { name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' },
     });
     
     useEffect(() => {
       if (party && open) {
         form.reset(party);
       } else if (!open) {
-        form.reset({ name: '', gstin: '', email: '', phone: '' });
+        form.reset({ name: '', gstin: '', email: '', phone: '', address1: '', city: '', state: '', pincode: '' });
       }
     }, [party, open, form]);
 
@@ -119,6 +119,12 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
                                 <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><Label>Email</Label><FormControl><Input placeholder="contact@example.com" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><Label>Phone</Label><FormControl><Input placeholder="+91 98765 43210" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
+                             <FormField control={form.control} name="address1" render={({ field }) => ( <FormItem><Label>Address</Label><FormControl><Input placeholder="Address Line 1" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                             <div className="grid grid-cols-3 gap-4">
+                                <FormField control={form.control} name="city" render={({ field }) => ( <FormItem><Label>City</Label><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                 <FormField control={form.control} name="state" render={({ field }) => ( <FormItem><Label>State</Label><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                  <FormField control={form.control} name="pincode" render={({ field }) => ( <FormItem><Label>Pincode</Label><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                             </div>
                         </div>
                         <DialogFooter>
                             <Button type="submit">Save {type}</Button>
@@ -183,3 +189,5 @@ export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange
         </Dialog>
     );
 };
+
+    
