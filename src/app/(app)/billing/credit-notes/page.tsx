@@ -70,7 +70,7 @@ export default function CreditNotesPage() {
             const originalInvoice = v.narration.split(" against Invoice #")[1] || "N/A";
 
             return {
-                id: v.id.replace("JV-", ""),
+                id: v.id,
                 customer,
                 date: v.date,
                 originalInvoice,
@@ -92,7 +92,7 @@ export default function CreditNotesPage() {
   }, [creditNotes]);
 
   const handleVoidCreditNote = async (creditNoteId: string) => {
-    const originalVoucherId = `JV-${creditNoteId}`;
+    const originalVoucherId = creditNoteId;
     const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
 
     if (!originalVoucher) {
@@ -223,7 +223,7 @@ export default function CreditNotesPage() {
             <TableBody>
               {creditNotes.map((note) => (
                 <TableRow key={note.id}>
-                  <TableCell className="font-medium">{note.id}</TableCell>
+                  <TableCell className="font-medium">{note.id.replace("JV-","")}</TableCell>
                   <TableCell>{note.customer}</TableCell>
                   <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell>{note.originalInvoice}</TableCell>

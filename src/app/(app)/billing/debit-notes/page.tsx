@@ -70,7 +70,7 @@ export default function DebitNotesPage() {
             const originalPurchase = v.narration.split(" against Bill #")[1] || "N/A";
 
             return {
-                id: v.id.replace("JV-", ""),
+                id: v.id,
                 vendor,
                 date: v.date,
                 originalPurchase,
@@ -93,7 +93,7 @@ export default function DebitNotesPage() {
 
 
   const handleVoidDebitNote = async (debitNoteId: string) => {
-    const originalVoucherId = `JV-${debitNoteId}`;
+    const originalVoucherId = debitNoteId;
     const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
 
     if (!originalVoucher) {
@@ -224,7 +224,7 @@ export default function DebitNotesPage() {
             <TableBody>
               {debitNotes.map((note) => (
                 <TableRow key={note.id}>
-                  <TableCell className="font-medium">{note.id}</TableCell>
+                  <TableCell className="font-medium">{note.id.replace("JV-","")}</TableCell>
                   <TableCell>{note.vendor}</TableCell>
                   <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
                   <TableCell>{note.originalPurchase}</TableCell>

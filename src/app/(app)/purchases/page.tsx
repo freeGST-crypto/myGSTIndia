@@ -85,7 +85,7 @@ export default function PurchasesPage() {
             }
             
             return {
-                id: v.id.replace("JV-", ""),
+                id: v.id,
                 vendor: v.narration.replace("Purchase from ", "").split(" against")[0],
                 date: v.date,
                 dueDate: format(dueDate, 'yyyy-MM-dd'),
@@ -99,7 +99,7 @@ export default function PurchasesPage() {
   }, [journalVouchers]);
   
   const handleDeleteBill = async (billId: string): Promise<boolean> => {
-    const originalVoucherId = `JV-${billId}`;
+    const originalVoucherId = billId;
     const originalVoucher = journalVouchers.find(v => v.id === originalVoucherId);
 
     if (!originalVoucher) {
@@ -143,7 +143,7 @@ export default function PurchasesPage() {
             const deleted = await handleDeleteBill(purchase.id);
             if (deleted) {
                 const queryParams = new URLSearchParams({
-                    edit: purchase.id
+                    edit: purchase.id.replace('JV-', '')
                 }).toString();
                 router.push(`/purchases/new?${queryParams}`);
             } else {
@@ -261,7 +261,7 @@ export default function PurchasesPage() {
                     <TableBody>
                     {filteredPurchases.map((purchase) => (
                         <TableRow key={purchase.id}>
-                        <TableCell className="font-medium">{purchase.id}</TableCell>
+                        <TableCell className="font-medium">{purchase.id.replace("JV-","")}</TableCell>
                         <TableCell>{purchase.vendor}</TableCell>
                         <TableCell>{format(new Date(purchase.date), "dd MMM, yyyy")}</TableCell>
                         <TableCell>{format(new Date(purchase.dueDate), "dd MMM, yyyy")}</TableCell>
