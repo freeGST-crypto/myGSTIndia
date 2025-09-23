@@ -58,11 +58,16 @@ export default function BalanceSheetPage() {
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
     const [customersSnapshot] = useCollection(customersQuery);
     const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+    
+    const accountsQuery = user ? query(collection(db, 'accounts'), where("userId", "==", user.uid)) : null;
+    const [accountsSnapshot] = useCollection(accountsQuery);
+    const userAccounts = useMemo(() => accountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [accountsSnapshot]);
 
     const accountBalances = useMemo(() => {
         const balances: Record<string, number> = {};
         
         allAccounts.forEach(acc => { balances[acc.code] = 0; });
+        userAccounts.forEach((acc: any) => { balances[acc.code] = acc.openingWdv || 0 });
         customers.forEach(c => { balances[c.id] = 0; });
         // Add vendors here too when implemented
 
@@ -80,13 +85,13 @@ export default function BalanceSheetPage() {
         const allDynamicAccounts = [...allAccounts, ...customers.map(c => ({ code: c.id, name: c.name, type: "Asset"}))];
         Object.keys(balances).forEach(key => {
             const accDetails = allDynamicAccounts.find(a => a.code === key);
-            if (accDetails && (accDetails.type === "Liability" || accDetails.type === "Equity" || accDetails.type === "Revenue")) {
+            if (accDetails && ["Liability", "Equity", "Revenue"].includes(accDetails.type)) {
                 if(balances[key] !== 0) balances[key] = -balances[key];
             }
         });
         
         return balances;
-    }, [journalVouchers, customers]);
+    }, [journalVouchers, customers, userAccounts]);
     
     // Calculate P&L for Retained Earnings
     const netProfit = useMemo(() => {
@@ -111,29 +116,48 @@ export default function BalanceSheetPage() {
     const totalEquityAndLiabilities = capitalAccount + reservesAndSurplus + longTermLiabilities + totalCurrentLiabilities;
 
     // Aggregate Assets
-    const fixedAssetsAccounts = allAccounts.filter(a => a.name.includes('Fixed Asset') || a.name.includes('Accumulated Depreciation'));
-    const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc) => {
-        const balance = accountBalances[acc.code] || 0;
-        return sum + balance;
-    }, 0);
+    const fixedAssetsAccounts = userAccounts.filter((a: any) => a.type === 'Fixed Asset');
+    const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
     const investmentAccounts = allAccounts.filter(a => a.name.includes('Investments'));
     const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
     const totalReceivables = customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
-    const currentAssetsAccounts = allAccounts.filter(a => a.type === 'Asset' && !fixedAssetsAccounts.some(fa => fa.code === a.code) && !investmentAccounts.some(ia => ia.code === a.code) && !customers.some(c => c.id === a.code));
+    
+    const currentAssetsAccounts = allAccounts.filter(a => 
+      a.type === 'Asset' && 
+      !userAccounts.some((fa: any) => fa.code === a.code && fa.type === 'Fixed Asset') && 
+      !investmentAccounts.some(ia => ia.code === a.code) && 
+      !customers.some(c => c.id === a.code)
+    );
     const totalOtherCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
 
     const totalAssets = netFixedAssets + totalInvestments + totalReceivables + totalOtherCurrentAssets;
 
-    // Schedules - now derived from data or empty
-    const depreciationSchedule: any[] = [];
+    // Schedules
+    const depreciationSchedule = useMemo(() => {
+        return fixedAssetsAccounts.map((asset: any) => {
+            const openingWdv = asset.openingWdv || 0;
+            const additions = 0; // Simplified for now
+            const depreciationRate = asset.depreciationRate || 0;
+            const depreciation = openingWdv * (depreciationRate / 100);
+            const closingWdv = openingWdv - depreciation;
+            return {
+                asset: asset.name,
+                openingWdv,
+                additions,
+                depreciationRate,
+                depreciation,
+                closingWdv,
+            };
+        });
+    }, [fixedAssetsAccounts]);
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
 
     const capitalAccounts = useMemo(() => {
-        if (journalVouchers.length === 0) return [];
+        if (journalVouchers.length === 0 && capitalAccount === 0) return [];
         return [
-            { partner: "Owner's Equity", opening: 0, introduced: 0, drawings: 0, profitShare: netProfit, closing: capitalAccount + reservesAndSurplus },
+            { partner: "Owner's Equity", opening: 0, introduced: capitalAccount, drawings: 0, profitShare: netProfit, closing: capitalAccount + reservesAndSurplus },
         ];
     }, [journalVouchers, netProfit, capitalAccount, reservesAndSurplus]);
     
@@ -170,7 +194,7 @@ export default function BalanceSheetPage() {
         // Assets
         const assetsData = [
             ["Fixed Assets", ""],
-            ...fixedAssetsAccounts.map(acc => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
+            ...fixedAssetsAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
             ["Net Fixed Assets", formatCurrency(netFixedAssets)],
             ["Investments", formatCurrency(totalInvestments)],
             ["Current Assets", ""],
@@ -281,7 +305,7 @@ export default function BalanceSheetPage() {
                         <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
-                            {fixedAssetsAccounts.map(acc => (
+                            {fixedAssetsAccounts.map((acc: any) => (
                                 <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
                             ))}
                             <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
@@ -321,7 +345,7 @@ export default function BalanceSheetPage() {
               <CardDescription>Detailed breakdown of key Balance Sheet items.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Accordion type="multiple" className="w-full">
+            <Accordion type="multiple" defaultValue={["depreciation", "capital-accounts"]} className="w-full">
                 <AccordionItem value="depreciation">
                     <AccordionTrigger>Schedule 1: Depreciation on Fixed Assets</AccordionTrigger>
                     <AccordionContent>
@@ -338,8 +362,8 @@ export default function BalanceSheetPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {depreciationSchedule.length > 0 ? depreciationSchedule.map((item) => (
-                                        <TableRow key={item.asset}>
+                                    {depreciationSchedule.length > 0 ? depreciationSchedule.map((item, index) => (
+                                        <TableRow key={index}>
                                             <TableCell className="font-medium">{item.asset}</TableCell>
                                             <TableCell className="text-right font-mono">{formatCurrency(item.openingWdv)}</TableCell>
                                             <TableCell className="text-right font-mono">{formatCurrency(item.additions)}</TableCell>
@@ -348,7 +372,7 @@ export default function BalanceSheetPage() {
                                             <TableCell className="text-right font-mono">{formatCurrency(item.closingWdv)}</TableCell>
                                         </TableRow>
                                     )) : (
-                                        <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No depreciation data for this period.</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No fixed asset data found. Add fixed assets in the Chart of Accounts.</TableCell></TableRow>
                                     )}
                                 </TableBody>
                                 <TableFooter>
@@ -419,5 +443,7 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
+
+    
 
     
