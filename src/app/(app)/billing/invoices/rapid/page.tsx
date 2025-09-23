@@ -83,7 +83,7 @@ export default function RapidInvoiceEntryPage() {
     const { addJournalVoucher } = accountingContext;
 
     const selectedCustomer = customers.find(c => c.id === values.customerId);
-    const selectedItem = items.find(i => i.id === values.itemId);
+    const selectedItem = items.find((i:any) => i.id === values.itemId);
 
     if (!selectedCustomer || !selectedItem) {
         toast({ variant: "destructive", title: "Invalid Selection", description: "Please ensure customer and item are selected." });
@@ -117,10 +117,12 @@ export default function RapidInvoiceEntryPage() {
             router.push("/billing/invoices");
         } else {
             // "Save & New" - Reset the form for the next entry
-            const currentInvNumber = parseInt(values.invoiceNumber, 10);
+            const currentInvNumber = parseInt(values.invoiceNumber.replace(/[^0-9]/g, ''), 10);
+            const nextInvNumber = isNaN(currentInvNumber) ? "" : String(currentInvNumber + 1).padStart(values.invoiceNumber.length, '0');
+
             form.reset({
                 ...values,
-                invoiceNumber: isNaN(currentInvNumber) ? "" : String(currentInvNumber + 1),
+                invoiceNumber: nextInvNumber,
                 itemId: "",
                 amount: 0,
             });
@@ -132,7 +134,7 @@ export default function RapidInvoiceEntryPage() {
   }, [accountingContext, customers, items, form, router, toast]);
   
   const handleItemChange = (itemId: string) => {
-      const selectedItem: any = items.find(i => i.id === itemId);
+      const selectedItem: any = items.find((i:any) => i.id === itemId);
       if (selectedItem) {
           form.setValue('itemId', itemId);
           form.setValue('amount', selectedItem.sellingPrice || 0);
