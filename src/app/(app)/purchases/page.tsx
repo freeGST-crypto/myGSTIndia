@@ -35,7 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Copy, Trash2, Search } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Copy, Trash2, Search, Zap } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
 import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
@@ -193,12 +193,20 @@ export default function PurchasesPage() {
             Manage your purchase bills and payments.
           </p>
         </div>
-        <Link href="/purchases/new" passHref>
-          <Button>
-            <PlusCircle className="mr-2"/>
-            Add Purchase Bill
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+            <Link href="/purchases/rapid" passHref>
+              <Button variant="outline">
+                  <Zap className="mr-2"/>
+                  Rapid Entry
+              </Button>
+            </Link>
+            <Link href="/purchases/new" passHref>
+              <Button>
+                <PlusCircle className="mr-2"/>
+                Add Purchase Bill
+              </Button>
+            </Link>
+        </div>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
