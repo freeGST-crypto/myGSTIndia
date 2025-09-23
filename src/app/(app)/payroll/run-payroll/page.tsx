@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, FileText, CheckCircle, FileDown, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, CheckCircle, FileDown, Loader2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { Label } from "@/components/ui/label";
@@ -36,11 +36,12 @@ import { AccountingContext } from "@/context/accounting-context";
 import jsPDF from "jspdf";
 import 'jspdf-autotable';
 import Link from "next/link";
+import * as XLSX from 'xlsx';
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0 },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150 },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0 },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455" },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566" },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677" },
 ];
 
 const getFinancialYears = () => {
@@ -176,7 +177,21 @@ export default function RunPayrollPage() {
 
         doc.save(`Payslip_${emp.name.replace(' ', '_')}_${month}.pdf`);
         toast({ title: "Payslip Downloaded", description: `A sample payslip for ${emp.name} has been downloaded.` });
-    }
+    };
+
+    const handleDownloadBankTransfer = () => {
+        const dataToExport = payrollData.map(emp => ({
+            'Beneficiary Name': emp.name,
+            'Beneficiary Account Number': emp.bankAccount,
+            'Amount': emp.netSalary.toFixed(2),
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Bank Transfer");
+        XLSX.writeFile(workbook, `Bank_Transfer_${month}_${financialYear}.xlsx`);
+        toast({ title: "Export Successful", description: "Bank Transfer sheet has been downloaded." });
+    };
+
 
     const renderStep = () => {
         switch (step) {
@@ -202,6 +217,9 @@ export default function RunPayrollPage() {
                                         <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                                         <SelectContent>{months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                                     </Select>
+                                </div>
+                                <div className="space-y-2 self-end">
+                                    <Button variant="outline"><Upload className="mr-2"/>Import Attendance</Button>
                                 </div>
                             </div>
                             <Table>
@@ -254,7 +272,7 @@ export default function RunPayrollPage() {
                         <CardHeader className="items-center text-center">
                             <CheckCircle className="size-16 text-green-500" />
                             <CardTitle>Payroll for {month}, {financialYear} Completed!</CardTitle>
-                            <CardDescription>A journal voucher for the salary payment has been automatically posted.</CardDescription>
+                            <CardDescription>A journal voucher for the salary payment has been automatically posted. You can now download outputs.</CardDescription>
                         </CardHeader>
                         <CardContent>
                            <div className="p-4 bg-muted/50 rounded-lg text-center space-y-2">
@@ -263,7 +281,8 @@ export default function RunPayrollPage() {
                            </div>
                         </CardContent>
                          <CardFooter className="flex-col sm:flex-row gap-2 justify-center">
-                            <Button variant="outline" onClick={handleDownloadPayslip}><FileDown className="mr-2"/>Download Sample Payslip</Button>
+                            <Button variant="outline" onClick={handleDownloadPayslip}><FileDown className="mr-2"/>Download All Payslips</Button>
+                            <Button variant="outline" onClick={handleDownloadBankTransfer}><FileDown className="mr-2"/>Download Bank Transfer Sheet</Button>
                              <Link href="/accounting/journal" passHref>
                                 <Button variant="outline"><FileText className="mr-2"/>View Salary Journal Voucher</Button>
                              </Link>

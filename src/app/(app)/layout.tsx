@@ -57,6 +57,7 @@ import {
   Weight,
   Target,
   UserCog,
+  FileArchive,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -130,6 +131,7 @@ const allMenuItems = [
       { href: "/payroll", label: "Payroll Dashboard", icon: LayoutDashboard, roles: ['business', 'professional'] },
       { href: "/payroll/employees", label: "Employees", icon: Users, roles: ['business', 'professional'] },
       { href: "/payroll/run-payroll", label: "Run Payroll", icon: FileText, roles: ['business', 'professional'] },
+      { href: "/payroll/reports", label: "Compliance Reports", icon: FileArchive, roles: ['business', 'professional'] },
       { href: "/payroll/settings", label: "Settings", icon: Settings, roles: ['business', 'professional'] },
     ],
   },

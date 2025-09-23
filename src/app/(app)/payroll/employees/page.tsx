@@ -35,15 +35,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, netSalary: 88000 },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, netSalary: 108000 },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, netSalary: 68000 },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, netSalary: 88000, pan: "ABCDE1234F", aadhaar: "123456789012", bankAccount: "001122334455", bankIfsc: "HDFC000123" },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, netSalary: 108000, pan: "FGHIJ5678K", aadhaar: "234567890123", bankAccount: "112233445566", bankIfsc: "ICIC000456" },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, netSalary: 68000, pan: "KLMNO9876P", aadhaar: "345678901234", bankAccount: "223344556677", bankIfsc: "SBIN000789" },
 ];
 
 export default function EmployeesPage() {
@@ -63,6 +65,26 @@ export default function EmployeesPage() {
     setIsDialogOpen(false);
   }
 
+  const handleExport = () => {
+    const dataToExport = employees.map(emp => ({
+        'Employee ID': emp.id,
+        'Name': emp.name,
+        'Designation': emp.designation,
+        'PAN': emp.pan,
+        'Aadhaar': emp.aadhaar,
+        'Bank Account': emp.bankAccount,
+        'Bank IFSC': emp.bankIfsc,
+        'Basic Salary': emp.basic,
+        'HRA': emp.hra,
+        'Special Allowance': emp.specialAllowance,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+    XLSX.writeFile(workbook, `Employee_Data_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    toast({ title: "Export Successful", description: "Employee data has been exported to an Excel file." });
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -72,126 +94,145 @@ export default function EmployeesPage() {
             Add, view, and manage all your employee details.
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-                <Button><PlusCircle className="mr-2"/>Add Employee</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-3xl">
-                 <DialogHeader>
-                    <DialogTitle>Add New Employee</DialogTitle>
-                    <DialogDescription>Enter the details for the new employee.</DialogDescription>
-                </DialogHeader>
-                <div className="max-h-[70vh] overflow-y-auto p-4 space-y-6">
-                    <h3 className="font-semibold text-lg">Personal Information</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2"><Label>Employee Name</Label><Input/></div>
-                        <div className="space-y-2"><Label>Personal Email</Label><Input type="email"/></div>
-                        <div className="space-y-2"><Label>Phone Number</Label><Input/></div>
-                        <div className="space-y-2"><Label>Date of Birth</Label><Input type="date"/></div>
-                    </div>
-                     <Separator/>
-                    <h3 className="font-semibold text-lg">Employment Details</h3>
-                     <div className="grid md:grid-cols-3 gap-4">
-                        <div className="space-y-2"><Label>Employee ID</Label><Input/></div>
-                        <div className="space-y-2"><Label>Date of Joining</Label><Input type="date"/></div>
-                        <div className="space-y-2"><Label>Designation</Label><Input/></div>
-                        <div className="space-y-2"><Label>Department</Label><Input/></div>
-                        <div className="space-y-2"><Label>Work Location</Label><Input/></div>
-                    </div>
-                     <Separator/>
-                     <h3 className="font-semibold text-lg">Compensation Details</h3>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div className="space-y-2"><Label>Annual CTC (₹)</Label><Input type="number"/></div>
-                        <div className="space-y-2"><Label>Pay Frequency</Label>
-                          <Select defaultValue="monthly">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="monthly">Monthly</SelectItem>
-                              <SelectItem value="weekly">Weekly</SelectItem>
-                              <SelectItem value="daily">Daily</SelectItem>
-                            </SelectContent>
-                          </Select>
+        <div className="flex items-center gap-2">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                        Import/Export
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Import Employees
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExport}>
+                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        Export to CSV
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button><PlusCircle className="mr-2"/>Add Employee</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Add New Employee</DialogTitle>
+                        <DialogDescription>Enter the details for the new employee.</DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-[70vh] overflow-y-auto p-4 space-y-6">
+                        <h3 className="font-semibold text-lg">Personal Information</h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2"><Label>Employee Name</Label><Input/></div>
+                            <div className="space-y-2"><Label>Personal Email</Label><Input type="email"/></div>
+                            <div className="space-y-2"><Label>Phone Number</Label><Input/></div>
+                            <div className="space-y-2"><Label>Date of Birth</Label><Input type="date"/></div>
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Salary components (monthly basis):</p>
-                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="space-y-2"><Label>Basic Salary (₹)</Label><Input type="number"/></div>
-                        <div className="space-y-2"><Label>Dearness Allowance (DA) (₹)</Label><Input type="number"/></div>
-                        <div className="space-y-2"><Label>House Rent Allowance (HRA) (₹)</Label><Input type="number"/></div>
-                        <div className="space-y-2"><Label>Conveyance Allowance (₹)</Label><Input type="number"/></div>
-                        <div className="space-y-2"><Label>Medical Allowance (₹)</Label><Input type="number"/></div>
-                        <div className="space-y-2"><Label>Special Allowance (₹)</Label><Input type="number"/></div>
-                    </div>
-                     <Separator/>
-                     <h3 className="font-semibold text-lg">Attendance &amp; Leave Policy</h3>
-                     <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2"><Label>Working Days per Month</Label><Input type="number" defaultValue="22"/></div>
-                         <div className="space-y-2"><Label>Leave Policy</Label>
-                          <Select>
-                            <SelectTrigger><SelectValue placeholder="Assign a policy"/></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="standard">Standard Policy</SelectItem>
-                              <SelectItem value="senior">Senior Staff Policy</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        <Separator/>
+                        <h3 className="font-semibold text-lg">Employment Details</h3>
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <div className="space-y-2"><Label>Employee ID</Label><Input/></div>
+                            <div className="space-y-2"><Label>Date of Joining</Label><Input type="date"/></div>
+                            <div className="space-y-2"><Label>Designation</Label><Input/></div>
+                            <div className="space-y-2"><Label>Department</Label><Input/></div>
+                            <div className="space-y-2"><Label>Work Location</Label><Input/></div>
                         </div>
-                     </div>
-                     <Separator/>
-                     <h3 className="font-semibold text-lg">Statutory & Bank Details</h3>
-                     <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2"><Label>PAN</Label><Input/></div>
-                        <div className="space-y-2"><Label>Aadhaar Number</Label><Input/></div>
-                        <div className="space-y-2"><Label>Bank Account Number</Label><Input/></div>
-                        <div className="space-y-2"><Label>Bank IFSC Code</Label><Input/></div>
+                        <Separator/>
+                        <h3 className="font-semibold text-lg">Compensation Details</h3>
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <div className="space-y-2"><Label>Annual CTC (₹)</Label><Input type="number"/></div>
+                            <div className="space-y-2"><Label>Pay Frequency</Label>
+                            <Select defaultValue="monthly">
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="weekly">Weekly</SelectItem>
+                                <SelectItem value="daily">Daily</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Salary components (monthly basis):</p>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="space-y-2"><Label>Basic Salary (₹)</Label><Input type="number"/></div>
+                            <div className="space-y-2"><Label>Dearness Allowance (DA) (₹)</Label><Input type="number"/></div>
+                            <div className="space-y-2"><Label>House Rent Allowance (HRA) (₹)</Label><Input type="number"/></div>
+                            <div className="space-y-2"><Label>Conveyance Allowance (₹)</Label><Input type="number"/></div>
+                            <div className="space-y-2"><Label>Medical Allowance (₹)</Label><Input type="number"/></div>
+                            <div className="space-y-2"><Label>Special Allowance (₹)</Label><Input type="number"/></div>
+                        </div>
+                        <Separator/>
+                        <h3 className="font-semibold text-lg">Attendance &amp; Leave Policy</h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2"><Label>Working Days per Month</Label><Input type="number" defaultValue="22"/></div>
+                            <div className="space-y-2"><Label>Leave Policy</Label>
+                            <Select>
+                                <SelectTrigger><SelectValue placeholder="Assign a policy"/></SelectTrigger>
+                                <SelectContent>
+                                <SelectItem value="standard">Standard Policy</SelectItem>
+                                <SelectItem value="senior">Senior Staff Policy</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            </div>
+                        </div>
+                        <Separator/>
+                        <h3 className="font-semibold text-lg">Statutory & Bank Details</h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2"><Label>PAN</Label><Input/></div>
+                            <div className="space-y-2"><Label>Aadhaar Number</Label><Input/></div>
+                            <div className="space-y-2"><Label>Bank Account Number</Label><Input/></div>
+                            <div className="space-y-2"><Label>Bank IFSC Code</Label><Input/></div>
+                        </div>
                     </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleAddEmployee}>Save Employee</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Employee List</CardTitle>
-          <CardDescription>A list of all employees in your organization.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Designation</TableHead>
-                <TableHead className="text-right">Net Salary (₹)</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {employees.map((emp) => (
-                <TableRow key={emp.id}>
-                  <TableCell className="font-mono">{emp.id}</TableCell>
-                  <TableCell className="font-medium">{emp.name}</TableCell>
-                  <TableCell>{emp.designation}</TableCell>
-                  <TableCell className="text-right font-mono">{emp.netSalary.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => handleAction("Edit", emp.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", emp.id)}><Trash2 className="mr-2"/>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    <DialogFooter>
+                        <Button onClick={handleAddEmployee}>Save Employee</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Employee List</CardTitle>
+                <CardDescription>A list of all employees in your organization.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Employee ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Designation</TableHead>
+                            <TableHead className="text-right">Net Salary (₹)</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {employees.map((emp) => (
+                            <TableRow key={emp.id}>
+                            <TableCell className="font-mono">{emp.id}</TableCell>
+                            <TableCell className="font-medium">{emp.name}</TableCell>
+                            <TableCell>{emp.designation}</TableCell>
+                            <TableCell className="text-right font-mono">{emp.netSalary.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">
+                                <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={() => handleAction("Edit", emp.id)}><Edit className="mr-2"/>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", emp.id)}><Trash2 className="mr-2"/>Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
     </div>
   );
 }
