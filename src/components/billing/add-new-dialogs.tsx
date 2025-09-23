@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { collection, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,6 +35,16 @@ type Party = {
   state?: string;
   pincode?: string;
 };
+
+type Item = {
+  id: string;
+  name: string;
+  description?: string;
+  hsn?: string;
+  stock?: number;
+  purchasePrice?: number;
+  sellingPrice?: number;
+}
 
 const partySchema = z.object({
     name: z.string().min(2, "Name is required."),
@@ -136,7 +146,7 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
     );
 };
 
-export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export function ItemDialog({ open, onOpenChange, item }: { open: boolean, onOpenChange: (open: boolean) => void, item: Item | null }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
@@ -144,6 +154,14 @@ export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange
         resolver: zodResolver(itemSchema),
         defaultValues: { name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0 },
     });
+    
+    useEffect(() => {
+      if (item && open) {
+        form.reset(item);
+      } else if (!open) {
+        form.reset({ name: "", description: "", hsn: "", stock: 0, purchasePrice: 0, sellingPrice: 0 });
+      }
+    }, [item, open, form]);
 
     const onSubmit = async (values: z.infer<typeof itemSchema>) => {
         if (!user) {
@@ -151,15 +169,23 @@ export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange
            return;
        }
        try {
-           await addDoc(collection(db, 'items'), { ...values, userId: user.uid });
-           toast({ title: "Item Added", description: `${values.name} has been added.` });
+            if (item) {
+                const itemDocRef = doc(db, "items", item.id);
+                await updateDoc(itemDocRef, values);
+                toast({ title: "Item Updated", description: `${values.name} has been updated.` });
+            } else {
+                await addDoc(collection(db, 'items'), { ...values, userId: user.uid });
+                toast({ title: "Item Added", description: `${values.name} has been added.` });
+            }
            onOpenChange(false);
-           form.reset();
        } catch (e) {
            console.error("Error adding document: ", e);
            toast({ variant: "destructive", title: "Error", description: "Could not save the item." });
        }
     };
+    
+    const dialogTitle = item ? "Edit Item" : "Add New Item";
+    const dialogDescription = item ? `Update the details for ${item.name}` : "Add a new product or service to your inventory.";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,8 +193,8 @@ export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <DialogHeader>
-                            <DialogTitle>Add New Item</DialogTitle>
-                            <DialogDescription>Add a new product or service to your inventory.</DialogDescription>
+                            <DialogTitle>{dialogTitle}</DialogTitle>
+                            <DialogDescription>{dialogDescription}</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><Label>Item Name</Label><FormControl><Input placeholder="e.g. Wireless Keyboard" {...field} /></FormControl><FormMessage /></FormItem> )}/>
@@ -189,5 +215,3 @@ export function ItemDialog({ open, onOpenChange }: { open: boolean, onOpenChange
         </Dialog>
     );
 };
-
-    
