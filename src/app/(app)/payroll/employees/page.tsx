@@ -114,9 +114,12 @@ export default function EmployeesPage() {
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground">Salary components (monthly basis):</p>
-                      <div className="grid md:grid-cols-3 gap-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="space-y-2"><Label>Basic Salary (₹)</Label><Input type="number"/></div>
+                        <div className="space-y-2"><Label>Dearness Allowance (DA) (₹)</Label><Input type="number"/></div>
                         <div className="space-y-2"><Label>House Rent Allowance (HRA) (₹)</Label><Input type="number"/></div>
+                        <div className="space-y-2"><Label>Conveyance Allowance (₹)</Label><Input type="number"/></div>
+                        <div className="space-y-2"><Label>Medical Allowance (₹)</Label><Input type="number"/></div>
                         <div className="space-y-2"><Label>Special Allowance (₹)</Label><Input type="number"/></div>
                     </div>
                      <Separator/>
