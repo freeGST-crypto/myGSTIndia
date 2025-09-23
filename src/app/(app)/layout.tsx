@@ -54,6 +54,7 @@ import {
   Keyboard,
   PieChart,
   Boxes,
+  Weight,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -114,6 +115,8 @@ const allMenuItems = [
     subItems: [
         { href: "/items", label: "Stock Items", icon: Warehouse, roles: ['business', 'professional'] },
         { href: "/items/stock-groups", label: "Stock Groups", icon: Boxes, roles: ['business', 'professional'] },
+        { href: "/items/units", label: "Units of Measure", icon: Weight, roles: ['business', 'professional'] },
+        { href: "/items/godowns", label: "Godowns / Locations", icon: Building, roles: ['business', 'professional'] },
     ]
   },
   {
