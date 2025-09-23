@@ -118,9 +118,8 @@ export default function InvoicesPage() {
     );
     
     return allInvoices
-        .filter(v => !cancelledInvoiceIds.has(v.id))
         .map(v => {
-            if (!v) return null;
+            if (!v || !v.id) return null;
             const isCancelled = cancelledInvoiceIds.has(v.id);
             const dueDate = addDays(new Date(v.date), 30);
             const isOverdue = !isCancelled && isPast(dueDate);
@@ -142,8 +141,7 @@ export default function InvoicesPage() {
                 raw: v,
             }
         })
-        .filter((v): v is Invoice => v !== null)
-        .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime());
+        .filter((v): v is Invoice => v !== null);
   }, [journalVouchers]);
 
 

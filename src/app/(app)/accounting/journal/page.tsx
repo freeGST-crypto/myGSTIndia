@@ -120,6 +120,7 @@ export default function JournalVoucherPage() {
         }));
         
         const reversalVoucher = {
+            id: `JV-REV-${Date.now()}`,
             reverses: voucherId,
             date: new Date().toISOString().split('T')[0],
             narration: `Reversal of Voucher #${voucherId}`,
@@ -222,7 +223,8 @@ export default function JournalVoucherPage() {
                     description: "Your journal voucher has been updated successfully."
                 });
             } else {
-                await addJournalVoucher(voucherData);
+                 const newVoucherId = `JV-${Date.now()}`;
+                await addJournalVoucher({ id: newVoucherId, ...voucherData });
                 toast({
                     title: "Voucher Saved",
                     description: "Your journal voucher has been saved successfully."
