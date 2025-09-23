@@ -316,6 +316,8 @@ export default function NewPurchasePage() {
         toast({ variant: "destructive", title: "Missing Details", description: "Please select a vendor and enter a bill number."});
         return;
     }
+    
+    const billId = `BILL-${billNumber}`;
 
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
@@ -333,14 +335,14 @@ export default function NewPurchasePage() {
 
     try {
         await addJournalVoucher({
-            id: `JV-BILL-${billNumber}`,
+            id: billId,
             date: billDate ? format(billDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-            narration: `Purchase from ${selectedVendor.name} against Bill #${billNumber}`,
+            narration: `Purchase from ${selectedVendor.name} against Bill #${billId}`,
             lines: journalLines,
             amount: totalBillAmount,
             vendorId: vendor,
         });
-        toast({ title: "Purchase Bill Saved", description: `Journal entry for bill #${billNumber} has been automatically created.` });
+        toast({ title: "Purchase Bill Saved", description: `Journal entry for bill #${billId} has been automatically created.` });
         router.push("/purchases");
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save journal entry", description: e.message });

@@ -85,19 +85,25 @@ export default function GstFilingsPage() {
         const salesInvoices = journalVouchers.filter(v => {
             if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
-            return v.id.startsWith("JV-INV-") && vDate >= periodStart && vDate <= periodEnd;
+            return v.id.startsWith("INV-") && vDate >= periodStart && vDate <= periodEnd;
         });
         
         const purchaseBills = journalVouchers.filter(v => {
             if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
-            return v.id.startsWith("JV-BILL-") && vDate >= periodStart && vDate <= periodEnd;
+            return v.id.startsWith("BILL-") && vDate >= periodStart && vDate <= periodEnd;
         });
         
         const purchaseReturns = journalVouchers.filter(v => {
              if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
-            return v.id.startsWith("JV-DN-") && vDate >= periodStart && vDate <= periodEnd;
+            return v.id.startsWith("DN-") && vDate >= periodStart && vDate <= periodEnd;
+        });
+        
+        const creditNotes = journalVouchers.filter(v => {
+             if (!v || !v.id || !v.date) return false;
+            const vDate = new Date(v.date);
+            return v.id.startsWith("CN-") && vDate >= periodStart && vDate <= periodEnd;
         });
 
         const b2bInvoices = salesInvoices.filter(v => {
@@ -107,6 +113,9 @@ export default function GstFilingsPage() {
         const b2bTaxableValue = b2bInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
         const b2bTaxAmount = b2bInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
         
+        const salesReturnTaxable = creditNotes.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.debit ? parseFloat(v.lines.find(l => l.account === '4010')!.debit) : 0), 0);
+        const salesReturnTax = creditNotes.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
+
         const outwardTaxable = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
         const outwardTax = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
 
@@ -118,11 +127,11 @@ export default function GstFilingsPage() {
         const itcAvailable = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
         const itcReversed = purchaseReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
         const netItc = itcAvailable - itcReversed;
-        const taxPayable = outwardTax - netItc;
+        const taxPayable = (outwardTax - salesReturnTax) - netItc;
         
         const dynamicGstr3bSummary = {
-            outwardTaxable: outwardTaxable,
-            outwardTax: outwardTax,
+            outwardTaxable: outwardTaxable - salesReturnTaxable,
+            outwardTax: outwardTax - salesReturnTax,
             itcAvailable,
             itcReversed,
             netItc,
