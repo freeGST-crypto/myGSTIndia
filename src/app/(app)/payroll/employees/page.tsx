@@ -84,6 +84,20 @@ export default function EmployeesPage() {
     XLSX.writeFile(workbook, `Employee_Data_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     toast({ title: "Export Successful", description: "Employee data has been exported to an Excel file." });
   };
+  
+    const handleDownloadTemplate = () => {
+        const headers = "Employee ID,Name,Designation,PAN,Aadhaar,Bank Account,Bank IFSC,Basic Salary,HRA,Special Allowance";
+        const exampleData = "EMP004,New Employee,Analyst,PQRST1234U,432198765432,334455667788,AXIS0000123,30000,15000,5000";
+        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "employee_import_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Template Downloaded", description: "The employee import template has been downloaded." });
+    }
 
   return (
     <div className="space-y-8">
@@ -110,6 +124,10 @@ export default function EmployeesPage() {
                     <DropdownMenuItem onClick={handleExport}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
                         Export to CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadTemplate}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Template
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
