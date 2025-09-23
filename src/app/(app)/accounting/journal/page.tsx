@@ -120,7 +120,7 @@ export default function JournalVoucherPage() {
         }));
         
         const reversalVoucher = {
-            id: `JV-REV-${Date.now()}`,
+            id: `REV-${voucherId}-${Date.now()}`,
             reverses: voucherId,
             date: new Date().toISOString().split('T')[0],
             narration: `Reversal of Voucher #${voucherId}`,

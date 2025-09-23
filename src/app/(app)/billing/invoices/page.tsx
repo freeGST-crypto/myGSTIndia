@@ -238,15 +238,184 @@ export default function InvoicesPage() {
         }
     };
     
-    const handleShare = async (invoice: Invoice) => {
-        const pdfBlob = handleDownloadPdf(invoice, true); // Get PDF as Blob
-        if (!pdfBlob) {
-            toast({ variant: 'destructive', title: 'Failed to generate PDF' });
-            return;
-        }
+    const companyInfo = {
+        name: "GSTEase Solutions Pvt. Ltd.",
+    };
 
-        const message = `Dear ${invoice.customer},\n\nPlease find attached the invoice for your reference:\n\nInvoice No: ${invoice.id}\nAmount: ₹${invoice.amount.toFixed(2)}\nDue Date: ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}\n\nThank you,\n${companyInfo.name}`;
+    const generatePdfDoc = (invoice: Invoice): jsPDF => {
+        const doc = new jsPDF();
+        const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+        const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+        let finalY = 15;
+
+        const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId) as any;
+        const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234" }; // Mock data
+
+        // --- Header ---
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(65, 0, 135); // Dark Purple from theme
+        doc.text("TAX INVOICE", pageWidth / 2, finalY, { align: "center" });
+        doc.setTextColor(0, 0, 0); // Reset color
+        finalY += 10;
+        
+        // --- Seller/Buyer Details ---
+        doc.autoTable({
+            body: [
+                [
+                    { content: companyDetails.name, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 10 } },
+                    { content: customerDetails?.name || invoice.customer, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 10, halign: 'right' } }
+                ],
+                [
+                    { content: companyDetails.address, styles: { fontSize: 9 } },
+                    { content: customerDetails?.address1 || 'N/A', styles: { fontSize: 9, halign: 'right' } }
+                ],
+                 [
+                    { content: `GSTIN: ${companyDetails.gstin}`, styles: { fontSize: 9 } },
+                    { content: `GSTIN: ${customerDetails?.gstin || "Unregistered"}`, styles: { fontSize: 9, halign: 'right' } }
+                ],
+            ],
+            startY: finalY,
+            theme: 'plain',
+            styles: { cellPadding: 1 },
+        });
+        finalY = (doc as any).lastAutoTable.finalY + 5;
+        
+        // --- Bill To / Ship To and Invoice Meta ---
+        const billToAddress = `${customerDetails?.name || invoice.customer}\n${customerDetails?.address1 || 'N/A'}\nGSTIN: ${customerDetails?.gstin || "Unregistered"}`;
+        doc.autoTable({
+            head: [['Bill To:', 'Ship To:']],
+            body: [[billToAddress, billToAddress]],
+            startY: finalY,
+            theme: 'grid',
+            headStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },
+            styles: { fontSize: 9, cellPadding: 3, lineWidth: 0.1, lineColor: [200, 200, 200] },
+            tableWidth: 'auto',
+            margin: { right: pageWidth - 105 } // Limit width
+        });
+        
+        doc.autoTable({
+            body: [
+                [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id],
+                [{ content: 'Invoice Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.date), "dd-MMM-yyyy")],
+                [{ content: 'Due Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.dueDate), "dd-MMM-yyyy")],
+            ],
+            startY: finalY,
+            theme: 'plain',
+            tableWidth: 'auto',
+            styles: { fontSize: 9, cellPadding: 1.5, halign: 'right' },
+            margin: { left: 110 }
+        });
+        finalY = (doc as any).lastAutoTable.finalY + 8;
+        
+        // --- Items Table ---
+        const salesLine = invoice.raw.lines.find(l => l.account === '4010');
+        const taxLine = invoice.raw.lines.find(l => l.account === '2110');
+        const subtotal = parseFloat(salesLine?.credit || '0');
+        const taxAmount = parseFloat(taxLine?.credit || '0');
+        const taxRate = subtotal > 0 ? (taxAmount / subtotal) * 100 : 0;
+        
+        const tableBody = [[
+            1,
+            "Service as per narration",
+            "9983",
+            1,
+            subtotal.toFixed(2),
+            subtotal.toFixed(2),
+            taxAmount.toFixed(2),
+            invoice.amount.toFixed(2),
+        ]];
+
+        doc.autoTable({
+            head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Taxable Value', 'Tax Amt', 'Total']],
+            headStyles: { fillColor: [65, 0, 135], textColor: 255 }, // Dark purple
+            body: tableBody,
+            startY: finalY,
+            theme: 'striped',
+            columnStyles: {
+                0: { cellWidth: 8, halign: 'center' },
+                1: { cellWidth: 'auto' },
+                2: { cellWidth: 15, halign: 'center' },
+                3: { cellWidth: 10, halign: 'right' },
+                4: { cellWidth: 20, halign: 'right' },
+                5: { cellWidth: 22, halign: 'right' },
+                6: { cellWidth: 20, halign: 'right' },
+                7: { cellWidth: 22, halign: 'right' },
+            }
+        });
+        finalY = (doc as any).lastAutoTable.finalY;
+
+        // --- Totals Section ---
+        const totalsBody = [
+            ['Subtotal', subtotal.toFixed(2)],
+            [`IGST @ ${taxRate.toFixed(2)}%`, taxAmount.toFixed(2)],
+            [{ content: 'Grand Total', styles: { fontStyle: 'bold' } }, { content: `Rs. ${invoice.amount.toFixed(2)}`, styles: { fontStyle: 'bold' } }]
+        ];
+        
+        doc.autoTable({
+            body: totalsBody,
+            startY: finalY + 5,
+            margin: { left: pageWidth / 2 + 15 },
+            theme: 'plain',
+            tableWidth: 'auto',
+            styles: { fontSize: 10, cellPadding: 2, halign: 'right' },
+        });
+        finalY = (doc as any).lastAutoTable.finalY;
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Amount in words: ${numberToWords(invoice.amount)}`, 14, finalY + 10);
+        finalY += 15;
+
+        // --- Bank Details ---
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("Bank Details for Payment:", 14, finalY);
+        doc.setFont("helvetica", "normal");
+        doc.autoTable({
+            body: [
+                ["Bank Name:", companyDetails.bankName],
+                ["Account No:", companyDetails.bankAccount],
+                ["IFSC Code:", companyDetails.bankIfsc],
+            ],
+            startY: finalY + 2,
+            theme: 'plain',
+            styles: { fontSize: 9, cellPadding: 1 }
+        });
+        finalY = (doc as any).lastAutoTable.finalY + 10;
+        
+        // --- Signature section ---
+        let signatureY = pageHeight - 40; 
+        if (finalY > signatureY) {
+            signatureY = finalY;
+        }
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text(`For ${companyDetails.name}`, pageWidth - 14, signatureY, { align: 'right' });
+        doc.text("Authorised Signatory", pageWidth - 14, signatureY + 15, { align: 'right' });
+
+
+        // --- Footer section ---
+        const footerY = pageHeight - 15;
+        doc.line(14, footerY, pageWidth - 14, footerY); // Line above footer
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "italic");
+        doc.text("Generated with GSTEase. Explore our GST filing and reconciliation tools!", pageWidth / 2, footerY + 8, { align: 'center'});
+
+        return doc;
+    }
+
+    const handleDownloadPdf = (invoice: Invoice) => {
+        const doc = generatePdfDoc(invoice);
+        doc.save(`Invoice_${invoice.id}.pdf`);
+        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.` });
+    };
+
+    const handleShare = async (invoice: Invoice) => {
+        const doc = generatePdfDoc(invoice);
+        const pdfBlob = doc.output('blob');
         const pdfFile = new File([pdfBlob], `Invoice_${invoice.id}.pdf`, { type: 'application/pdf' });
+        const message = `Dear ${invoice.customer},\n\nPlease find attached the invoice for your reference:\n\nInvoice No: ${invoice.id}\nAmount: ₹${invoice.amount.toFixed(2)}\nDue Date: ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}\n\nThank you,\n${companyInfo.name}`;
 
         if (navigator.share && navigator.canShare({ files: [pdfFile] })) {
             try {
@@ -258,24 +427,19 @@ export default function InvoicesPage() {
                 toast({ title: 'Shared Successfully!' });
             } catch (error) {
                 console.error('Share failed:', error);
-                toast({ variant: 'destructive', title: 'Share Failed', description: 'Could not share the invoice. Please try downloading it instead.' });
+                toast({ variant: 'destructive', title: 'Share Failed', description: 'Could not share the invoice.' });
             }
         } else {
-            // Fallback for browsers that don't support file sharing
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
             toast({
-                title: "PDF Downloaded",
-                description: "Your PDF has been downloaded. Please attach it to your WhatsApp message manually.",
+                title: "Opening WhatsApp",
+                description: "Your PDF is being prepared. Please download and attach it to your message.",
                 duration: 8000,
             });
-            handleDownloadPdf(invoice, false); // Trigger direct download as fallback
+            handleDownloadPdf(invoice);
         }
     }
-    
-    const companyInfo = {
-        name: "GSTEase Solutions Pvt. Ltd.",
-    };
     
     const handleAction = async (action: string, invoice: Invoice) => {
         if (action === 'View') {
@@ -283,7 +447,7 @@ export default function InvoicesPage() {
         } else if (action === 'Cancel') {
             await handleCancelInvoice(invoice.id);
         } else if (action === 'Download') {
-            handleDownloadPdf(invoice, false);
+            handleDownloadPdf(invoice);
         } else if (action === 'Share') {
             await handleShare(invoice);
         } else if (action === 'Duplicate') {
@@ -309,175 +473,6 @@ export default function InvoicesPage() {
             });
         }
     }
-
-  const handleDownloadPdf = (invoice: Invoice, silent: boolean = false): Blob | null => {
-    const doc = new jsPDF();
-    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-    let finalY = 15;
-
-    const customerDetails = customers.find((c: any) => c.id === invoice.raw.customerId) as any;
-    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234" }; // Mock data
-
-    // --- Header ---
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(65, 0, 135); // Dark Purple from theme
-    doc.text("TAX INVOICE", pageWidth / 2, finalY, { align: "center" });
-    doc.setTextColor(0, 0, 0); // Reset color
-    finalY += 10;
-    
-    // --- Seller/Buyer Details ---
-    doc.autoTable({
-        body: [
-            [
-                { content: companyDetails.name, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 10 } },
-                { content: customerDetails?.name || invoice.customer, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 10, halign: 'right' } }
-            ],
-            [
-                { content: companyDetails.address, styles: { fontSize: 9 } },
-                { content: customerDetails?.address1 || 'N/A', styles: { fontSize: 9, halign: 'right' } }
-            ],
-             [
-                { content: `GSTIN: ${companyDetails.gstin}`, styles: { fontSize: 9 } },
-                { content: `GSTIN: ${customerDetails?.gstin || "Unregistered"}`, styles: { fontSize: 9, halign: 'right' } }
-            ],
-        ],
-        startY: finalY,
-        theme: 'plain',
-        styles: { cellPadding: 1 },
-    });
-    finalY = (doc as any).lastAutoTable.finalY + 5;
-    
-    // --- Bill To / Ship To and Invoice Meta ---
-    const billToAddress = `${customerDetails?.name || invoice.customer}\n${customerDetails?.address1 || 'N/A'}\nGSTIN: ${customerDetails?.gstin || "Unregistered"}`;
-    doc.autoTable({
-        head: [['Bill To:', 'Ship To:']],
-        body: [[billToAddress, billToAddress]],
-        startY: finalY,
-        theme: 'grid',
-        headStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 3, lineWidth: 0.1, lineColor: [200, 200, 200] },
-        tableWidth: 'auto',
-        margin: { right: pageWidth - 105 } // Limit width
-    });
-    
-    doc.autoTable({
-        body: [
-            [{ content: 'Invoice No:', styles: { fontStyle: 'bold' } }, invoice.id],
-            [{ content: 'Invoice Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.date), "dd-MMM-yyyy")],
-            [{ content: 'Due Date:', styles: { fontStyle: 'bold' } }, format(new Date(invoice.dueDate), "dd-MMM-yyyy")],
-        ],
-        startY: finalY,
-        theme: 'plain',
-        tableWidth: 'auto',
-        styles: { fontSize: 9, cellPadding: 1.5, halign: 'right' },
-        margin: { left: 110 }
-    });
-    finalY = (doc as any).lastAutoTable.finalY + 8;
-    
-    // --- Items Table ---
-    const salesLine = invoice.raw.lines.find(l => l.account === '4010');
-    const taxLine = invoice.raw.lines.find(l => l.account === '2110');
-    const subtotal = parseFloat(salesLine?.credit || '0');
-    const taxAmount = parseFloat(taxLine?.credit || '0');
-    const taxRate = subtotal > 0 ? (taxAmount / subtotal) * 100 : 0;
-    
-    const tableBody = [[
-        1,
-        "Service as per narration",
-        "9983",
-        1,
-        subtotal.toFixed(2),
-        subtotal.toFixed(2),
-        taxAmount.toFixed(2),
-        invoice.amount.toFixed(2),
-    ]];
-
-    doc.autoTable({
-        head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'Taxable Value', 'Tax Amt', 'Total']],
-        headStyles: { fillColor: [65, 0, 135], textColor: 255 }, // Dark purple
-        body: tableBody,
-        startY: finalY,
-        theme: 'striped',
-        columnStyles: {
-            0: { cellWidth: 8, halign: 'center' },
-            1: { cellWidth: 'auto' },
-            2: { cellWidth: 15, halign: 'center' },
-            3: { cellWidth: 10, halign: 'right' },
-            4: { cellWidth: 20, halign: 'right' },
-            5: { cellWidth: 22, halign: 'right' },
-            6: { cellWidth: 20, halign: 'right' },
-            7: { cellWidth: 22, halign: 'right' },
-        }
-    });
-    finalY = (doc as any).lastAutoTable.finalY;
-
-    // --- Totals Section ---
-    const totalsBody = [
-        ['Subtotal', subtotal.toFixed(2)],
-        [`IGST @ ${taxRate.toFixed(2)}%`, taxAmount.toFixed(2)],
-        [{ content: 'Grand Total', styles: { fontStyle: 'bold' } }, { content: `Rs. ${invoice.amount.toFixed(2)}`, styles: { fontStyle: 'bold' } }]
-    ];
-    
-    doc.autoTable({
-        body: totalsBody,
-        startY: finalY + 5,
-        margin: { left: pageWidth / 2 + 15 },
-        theme: 'plain',
-        tableWidth: 'auto',
-        styles: { fontSize: 10, cellPadding: 2, halign: 'right' },
-    });
-    finalY = (doc as any).lastAutoTable.finalY;
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Amount in words: ${numberToWords(invoice.amount)}`, 14, finalY + 10);
-    finalY += 15;
-
-    // --- Bank Details ---
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("Bank Details for Payment:", 14, finalY);
-    doc.setFont("helvetica", "normal");
-    doc.autoTable({
-        body: [
-            ["Bank Name:", companyDetails.bankName],
-            ["Account No:", companyDetails.bankAccount],
-            ["IFSC Code:", companyDetails.bankIfsc],
-        ],
-        startY: finalY + 2,
-        theme: 'plain',
-        styles: { fontSize: 9, cellPadding: 1 }
-    });
-    finalY = (doc as any).lastAutoTable.finalY + 10;
-    
-    // --- Signature section ---
-    let signatureY = pageHeight - 40; 
-    if (finalY > signatureY) {
-        signatureY = finalY;
-    }
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text(`For ${companyDetails.name}`, pageWidth - 14, signatureY, { align: 'right' });
-    doc.text("Authorised Signatory", pageWidth - 14, signatureY + 15, { align: 'right' });
-
-
-    // --- Footer section ---
-    const footerY = pageHeight - 15;
-    doc.line(14, footerY, pageWidth - 14, footerY); // Line above footer
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text("Generated with GSTEase. Explore our GST filing and reconciliation tools!", pageWidth / 2, footerY + 8, { align: 'center'});
-
-    if (silent) {
-        return doc.output('blob');
-    } else {
-        doc.save(`Invoice_${invoice.id}.pdf`);
-        toast({ title: "Download Started", description: `Downloading PDF for invoice ${invoice.id}.`});
-        return null;
-    }
-  };
 
 
   const getStatusBadge = (status: string) => {
@@ -663,7 +658,7 @@ export default function InvoicesPage() {
                              <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleDownloadPdf(invoice, false)}>
+                            <DropdownMenuItem onSelect={() => handleDownloadPdf(invoice)}>
                               <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
@@ -691,11 +686,7 @@ export default function InvoicesPage() {
                     <DialogTitle>Invoice: {selectedInvoice.id}</DialogTitle>
                 </DialogHeader>
                 <div className="p-4 border rounded-lg bg-muted/20 max-h-[70vh] overflow-y-auto">
-                    <iframe srcDoc={new jsPDF().autoTable({
-                        head: [['Item & Description', 'HSN', 'Qty', 'Rate', 'Amount']],
-                        body: [['Service as per narration', '9983', '1', selectedInvoice.raw.lines.find(l => l.account === '4010')?.credit || '0', selectedInvoice.raw.lines.find(l => l.account === '4010')?.credit || '0']],
-                        // A simplified table for preview
-                    }).output('datauristring')} className="w-full h-[60vh] border-0" />
+                    <iframe src={generatePdfDoc(selectedInvoice).output('datauristring')} className="w-full h-[60vh] border-0" />
                 </div>
             </DialogContent>
         </Dialog>
