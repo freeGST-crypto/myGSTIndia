@@ -1,4 +1,6 @@
 
+"use client";
+
 import {
     Card,
     CardContent,
@@ -19,8 +21,8 @@ import {
     { name: "Profit & Loss", keys: "Ctrl + L", icon: TrendingUp },
     { name: "Trial Balance", keys: "Ctrl + T", icon: Scale },
     { name: "General Ledger", keys: "Ctrl + G", icon: Book },
-    { name: "Parties (Customers/Vendors)", keys: "Alt + P", icon: Users },
-    { name: "Items (Products/Services)", keys: "Alt + I", icon: Warehouse },
+    { name: "Parties", keys: "Alt + P", icon: Users },
+    { name: "Items", keys: "Alt + I", icon: Warehouse },
   ];
   
   export function ShortcutGuide() {
