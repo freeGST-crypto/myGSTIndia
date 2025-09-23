@@ -33,6 +33,8 @@ import { format } from 'date-fns';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AccountingContext } from "@/context/accounting-context";
+import jsPDF from "jspdf";
+import Link from "next/link";
 
 const initialEmployees = [
     { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0 },
@@ -129,6 +131,52 @@ export default function RunPayrollPage() {
     
     const totalNetSalary = payrollData.reduce((acc, emp) => acc + emp.netSalary, 0);
 
+    const handleDownloadPayslip = () => {
+        const emp = payrollData[0]; // For demo, use first employee
+        if (!emp) return;
+
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Payslip", 105, 20, { align: "center" });
+        doc.setFontSize(12);
+        doc.text(`For the month of ${month} ${financialYear}`, 105, 28, { align: "center" });
+        
+        doc.line(14, 35, 196, 35);
+        doc.text(`Employee Name: ${emp.name}`, 14, 42);
+        doc.text(`Designation: ${emp.designation}`, 14, 48);
+        doc.text(`Employee ID: ${emp.id}`, 140, 42);
+
+        doc.line(14, 55, 196, 55);
+
+        (doc as any).autoTable({
+            startY: 60,
+            head: [['Earnings', 'Amount (₹)', 'Deductions', 'Amount (₹)']],
+            body: [
+                ['Basic Salary', emp.basic.toFixed(2), 'Provident Fund (PF)', emp.pf.toFixed(2)],
+                ['House Rent Allowance (HRA)', emp.hra.toFixed(2), 'Professional Tax (PT)', emp.professionalTax.toFixed(2)],
+                ['Special Allowance', emp.specialAllowance.toFixed(2), 'Income Tax (TDS)', emp.incomeTax.toFixed(2)],
+                ['', '', 'Labour Welfare Fund (LWF)', emp.lwf.toFixed(2)],
+                ['', '', 'Loan/Advance', emp.loan.toFixed(2)],
+                ['', '', 'Other Deductions', emp.otherDeductions.toFixed(2)],
+            ],
+            theme: 'grid',
+            foot: [
+                 [{ content: 'Gross Earnings', styles: { fontStyle: 'bold' } }, 
+                  { content: emp.grossEarnings.toFixed(2), styles: { fontStyle: 'bold' } },
+                  { content: 'Total Deductions', styles: { fontStyle: 'bold' } },
+                  { content: emp.totalDeductions.toFixed(2), styles: { fontStyle: 'bold' } }],
+            ]
+        });
+        
+        let finalY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Net Salary: ₹${emp.netSalary.toFixed(2)}`, 14, finalY);
+
+        doc.save(`Payslip_${emp.name.replace(' ', '_')}_${month}.pdf`);
+        toast({ title: "Payslip Downloaded", description: `A sample payslip for ${emp.name} has been downloaded.` });
+    }
+
     const renderStep = () => {
         switch (step) {
             case 1:
@@ -214,8 +262,10 @@ export default function RunPayrollPage() {
                            </div>
                         </CardContent>
                          <CardFooter className="flex-col sm:flex-row gap-2 justify-center">
-                            <Button variant="outline"><FileDown className="mr-2"/>Download Payslips (All)</Button>
-                            <Button variant="outline"><FileText className="mr-2"/>View Salary Journal Voucher</Button>
+                            <Button variant="outline" onClick={handleDownloadPayslip}><FileDown className="mr-2"/>Download Sample Payslip</Button>
+                             <Link href="/accounting/journal" passHref>
+                                <Button variant="outline"><FileText className="mr-2"/>View Salary Journal Voucher</Button>
+                             </Link>
                         </CardFooter>
                     </Card>
                 );
