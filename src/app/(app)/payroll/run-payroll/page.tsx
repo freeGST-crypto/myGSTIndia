@@ -34,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AccountingContext } from "@/context/accounting-context";
 import jsPDF from "jspdf";
+import 'jspdf-autotable';
 import Link from "next/link";
 
 const initialEmployees = [
