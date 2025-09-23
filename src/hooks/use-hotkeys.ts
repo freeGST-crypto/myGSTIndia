@@ -7,6 +7,9 @@ type HotkeyMap = Map<string, (event: KeyboardEvent) => void>;
 
 export function useHotkeys(hotkeys: HotkeyMap) {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (!event.key) {
+      return;
+    }
     const key = event.key.toLowerCase();
     const ctrl = event.ctrlKey || event.metaKey; // For Mac's Cmd key
     const alt = event.altKey;
@@ -35,5 +38,3 @@ export function useHotkeys(hotkeys: HotkeyMap) {
     };
   }, [handleKeyDown]);
 }
-
-    
