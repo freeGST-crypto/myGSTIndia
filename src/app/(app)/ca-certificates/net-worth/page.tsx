@@ -10,12 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -114,6 +117,8 @@ export default function NetWorthCertificatePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const printRef = useRef<HTMLDivElement>(null);
+  const [user] = useAuthState(auth);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -147,6 +152,36 @@ export default function NetWorthCertificatePage() {
     }
   }
 
+  const handleCertificationRequest = async () => {
+      if (!user) {
+          toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to make a request." });
+          return;
+      }
+      setIsSubmitting(true);
+      try {
+        await addDoc(collection(db, "certificationRequests"), {
+            reportType: "Net Worth Certificate",
+            clientName: form.getValues("clientName"),
+            requestedBy: user.displayName || user.email,
+            userId: user.uid,
+            requestDate: new Date(),
+            status: "Pending",
+            draftUrl: "#", 
+            signedDocumentUrl: null,
+            formData: form.getValues(),
+        });
+        toast({
+            title: "Request Sent",
+            description: "Your certification request has been sent to the admin for review and signature."
+        });
+      } catch (error) {
+          console.error("Error sending request:", error);
+          toast({ variant: "destructive", title: "Request Failed", description: "Could not send the request. Please try again." });
+      } finally {
+          setIsSubmitting(false);
+      }
+  }
+
   const renderStepContent = () => {
     switch(step) {
         case 1:
@@ -163,7 +198,7 @@ export default function NetWorthCertificatePage() {
                             <FormField control={form.control} name="asOnDate" render={({ field }) => (<FormItem><FormLabel>Net Worth as on Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         </div>
                     </CardContent>
-                     <CardFooter className="justify-end"><Button type="button" onClick={() => form.trigger(["clientName", "clientAddress", "clientPan", "asOnDate"]).then(isValid => isValid && setStep(2))}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+                     <CardFooter className="justify-end"><Button type="button" onClick={() => form.trigger(["clientName", "clientAddress", "clientPan", "asOnDate"]).then(isValid => isValid && setStep(2))}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
                 </Card>
             )
         case 2:
@@ -184,7 +219,7 @@ export default function NetWorthCertificatePage() {
                     </CardContent>
                     <CardFooter className="justify-between">
                         <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="mr-2"/> Back</Button>
-                        <Button type="button" onClick={() => form.trigger("assets").then(isValid => isValid && setStep(3))}>Next <ArrowRight className="ml-2"/></Button>
+                        <Button type="button" onClick={() => form.trigger("assets").then(isValid => isValid && setStep(3))}>Next <ArrowRight className="mr-2"/></Button>
                     </CardFooter>
                  </Card>
             )
@@ -220,7 +255,7 @@ export default function NetWorthCertificatePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Final Preview & Actions</CardTitle>
-                        <CardDescription>Review the generated certificate. You can now print, download, or share it.</CardDescription>
+                        <CardDescription>Review the generated certificate. You can now print, download, or send for professional certification.</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <div className="border rounded-lg">
@@ -229,11 +264,17 @@ export default function NetWorthCertificatePage() {
                     </CardContent>
                     <CardFooter className="justify-between">
                          <Button type="button" variant="outline" onClick={() => setStep(3)}><ArrowLeft className="mr-2"/> Back</Button>
-                         <ShareButtons
-                            contentRef={printRef}
-                            fileName={`Net_Worth_${formData.clientName}`}
-                            whatsappMessage={whatsappMessage}
-                         />
+                         <div className="flex gap-2">
+                             <ShareButtons
+                                contentRef={printRef}
+                                fileName={`Net_Worth_${formData.clientName}`}
+                                whatsappMessage={whatsappMessage}
+                             />
+                             <Button type="button" onClick={handleCertificationRequest} disabled={isSubmitting}>
+                                {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <FileSignature className="mr-2"/>}
+                                Request Certification
+                            </Button>
+                         </div>
                     </CardFooter>
                 </Card>
             )

@@ -8,12 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, ArrowRight } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useRef } from "react";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const formSchema = z.object({
   remitterName: z.string().min(3, "Remitter's name is required."),
@@ -34,6 +37,8 @@ export default function ForeignRemittancePage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const printRef = useRef<HTMLDivElement>(null);
+  const [user] = useAuthState(auth);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -61,11 +66,34 @@ export default function ForeignRemittancePage() {
     }
   }
   
-  const handleCertificationRequest = () => {
-      toast({
-          title: "Request Sent",
-          description: "Draft sent to admin for certification."
-      });
+  const handleCertificationRequest = async () => {
+      if (!user) {
+          toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to make a request." });
+          return;
+      }
+      setIsSubmitting(true);
+      try {
+        await addDoc(collection(db, "certificationRequests"), {
+            reportType: "Form 15CB (Foreign Remittance)",
+            clientName: form.getValues("remitterName"),
+            requestedBy: user.displayName || user.email,
+            userId: user.uid,
+            requestDate: new Date(),
+            status: "Pending",
+            draftUrl: "#",
+            signedDocumentUrl: null,
+            formData: form.getValues(),
+        });
+        toast({
+            title: "Request Sent",
+            description: "Your Form 15CB certification request has been sent to the admin for review and signature."
+        });
+      } catch (error) {
+          console.error("Error sending request:", error);
+          toast({ variant: "destructive", title: "Request Failed", description: "Could not send the request. Please try again." });
+      } finally {
+          setIsSubmitting(false);
+      }
   }
 
   const renderContent = () => {
@@ -171,8 +199,9 @@ export default function ForeignRemittancePage() {
                             fileName={`Form15CB_${formData.remitterName}`}
                             whatsappMessage={whatsappMessage}
                         />
-                        <Button type="button" onClick={handleCertificationRequest}>
-                            <FileSignature className="mr-2"/> Request Certification
+                        <Button type="button" onClick={handleCertificationRequest} disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <FileSignature className="mr-2"/>}
+                            Request Certification
                         </Button>
                      </div>
                 </CardFooter>
