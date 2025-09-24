@@ -198,11 +198,10 @@ export default function NewInvoicePage() {
 
         if (subtotal > 0) {
             const taxRate = (taxAmount / subtotal) * 100;
-            const itemFromNarration = voucherToLoad.narration.split(" for ")[1]?.split(" to ")[0];
+            const itemFromNarration = voucherToLoad.narration.split(" of ")[1]?.split(" to ")[0];
 
-            let matchedItem = items.find(i => i.name.toLowerCase() === itemFromNarration?.toLowerCase());
+            let matchedItem = items.find(i => itemFromNarration?.toLowerCase().includes(i.name.toLowerCase()));
 
-            // A more robust way to handle single-item invoice reconstruction
             setLineItems([{
                  id: `${Date.now()}-${Math.random()}`,
                  itemId: matchedItem?.id || "",
@@ -214,7 +213,7 @@ export default function NewInvoicePage() {
                  amount: subtotal,
             }]);
         } else {
-             // Handle multi-line item reconstruction if needed in the future
+             setLineItems([createNewLineItem()]);
         }
       }
     }
@@ -314,6 +313,8 @@ export default function NewInvoicePage() {
         return;
     }
 
+    const narration = `Sale of ${lineItems.map(li => li.description).join(', ')} to ${selectedCustomer.name}`;
+
     const journalLines = [
         { account: selectedCustomer.id, debit: totalAmount.toFixed(2), credit: '0' },
         { account: '4010', debit: '0', credit: subtotal.toFixed(2) },
@@ -332,7 +333,7 @@ export default function NewInvoicePage() {
         await addJournalVoucher({
             id: invoiceId,
             date: invoiceDate ? format(invoiceDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-            narration: `Sale to ${selectedCustomer.name} via Invoice #${invoiceId}`,
+            narration,
             lines: journalLines,
             amount: grandTotal, // Store the gross amount in the journal
             customerId: customer,

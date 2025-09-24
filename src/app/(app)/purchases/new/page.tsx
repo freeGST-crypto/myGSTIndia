@@ -220,9 +220,9 @@ export default function NewPurchasePage() {
 
             if (subtotal > 0) {
                 const taxRate = (taxAmount / subtotal) * 100;
-                const itemFromNarration = voucherToLoad.narration.split(" for ")[1]?.split(" from ")[0];
+                const itemFromNarration = voucherToLoad.narration.split(" of ")[1]?.split(" from ")[0];
 
-                let matchedItem = items.find(i => i.name.toLowerCase() === itemFromNarration?.toLowerCase());
+                let matchedItem = items.find(i => itemFromNarration?.toLowerCase().includes(i.name.toLowerCase()));
 
                 setLineItems([{
                     id: `${Date.now()}-${Math.random()}`,
@@ -329,6 +329,8 @@ export default function NewPurchasePage() {
         toast({ variant: "destructive", title: "Duplicate Bill Number", description: `A bill with the number ${billId} already exists.` });
         return;
     }
+    
+    const narration = `Purchase of ${lineItems.map(li => li.description).join(', ')} from ${selectedVendor.name}`;
 
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
@@ -348,7 +350,7 @@ export default function NewPurchasePage() {
         await addJournalVoucher({
             id: billId,
             date: billDate ? format(billDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
-            narration: `Purchase from ${selectedVendor.name} against Bill #${billId}`,
+            narration,
             lines: journalLines,
             amount: totalBillAmount,
             vendorId: vendor,
