@@ -660,5 +660,3 @@ export default function Gstr3bWizardPage() {
     </div>
   );
 }
-
-    
