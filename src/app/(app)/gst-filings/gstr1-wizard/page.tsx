@@ -69,7 +69,7 @@ export default function Gstr1Wizard() {
 
   const b2bInvoicesFromJournal = useMemo(() => {
     return journalVouchers
-      .filter(v => v && v.id && v.id.startsWith("JV-INV-"))
+      .filter(v => v && v.id && v.id.startsWith("INV-"))
       .map(v => {
         const customer = customers.find(c => v.customerId === c.id);
         // B2B invoices must have a GSTIN
@@ -80,7 +80,7 @@ export default function Gstr1Wizard() {
 
         return {
           gstin: customer.gstin,
-          invoiceNumber: v.id.replace("JV-INV-", ""),
+          invoiceNumber: v.id.replace("INV-", ""),
           invoiceDate: v.date,
           invoiceValue: v.amount,
           taxableValue: parseFloat(taxableValue),
@@ -938,5 +938,3 @@ export default function Gstr1Wizard() {
     </div>
   );
 }
-
-    
