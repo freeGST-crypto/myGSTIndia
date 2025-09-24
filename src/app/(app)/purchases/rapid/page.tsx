@@ -75,13 +75,13 @@ export default function RapidPurchaseEntryPage() {
     },
   });
   
-  const watchedAmount = form.watch("amount");
+  const watchedAmount = Number(form.watch("amount")) || 0;
   const taxAmount = watchedAmount * 0.18; // Assuming 18% GST
   const totalAmount = watchedAmount + taxAmount;
 
   const handleSave = useCallback(async (values: RapidPurchaseForm, closeOnSave: boolean) => {
     if (!accountingContext) return;
-    const { addJournalVoucher } = accountingContext;
+    const { addJournalVoucher, journalVouchers } = accountingContext;
 
     const selectedVendor = vendors.find(v => v.id === values.vendorId);
     const selectedItem = items.find((i:any) => i.id === values.itemId);
@@ -92,6 +92,13 @@ export default function RapidPurchaseEntryPage() {
     }
     
     const billId = `BILL-${values.billNumber}`;
+    const isDuplicate = journalVouchers.some(voucher => voucher.id === billId);
+
+    if (isDuplicate) {
+        toast({ variant: "destructive", title: "Duplicate Bill Number", description: `A bill with the number ${billId} already exists.` });
+        return;
+    }
+
     const subtotal = values.amount;
     const currentTaxAmount = subtotal * 0.18; // Recalculate for safety
     const currentTotalAmount = subtotal + currentTaxAmount;
@@ -231,3 +238,5 @@ export default function RapidPurchaseEntryPage() {
     </div>
   );
 }
+
+    

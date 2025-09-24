@@ -82,7 +82,7 @@ export default function RapidInvoiceEntryPage() {
 
   const handleSave = useCallback(async (values: RapidInvoiceForm, closeOnSave: boolean) => {
     if (!accountingContext) return;
-    const { addJournalVoucher } = accountingContext;
+    const { addJournalVoucher, journalVouchers } = accountingContext;
 
     const selectedCustomer = customers.find(c => c.id === values.customerId);
     const selectedItem = items.find((i:any) => i.id === values.itemId);
@@ -93,6 +93,13 @@ export default function RapidInvoiceEntryPage() {
     }
     
     const invoiceId = `INV-${values.invoiceNumber}`;
+    const isDuplicate = journalVouchers.some(voucher => voucher.id === invoiceId);
+
+    if (isDuplicate) {
+        toast({ variant: "destructive", title: "Duplicate Invoice", description: `An invoice with the number ${invoiceId} already exists.` });
+        return;
+    }
+
     const subtotal = values.amount;
     const currentTaxAmount = subtotal * 0.18; // Recalculate for safety
     const currentTotalAmount = subtotal + currentTaxAmount;
@@ -232,3 +239,5 @@ export default function RapidInvoiceEntryPage() {
     </div>
   );
 }
+
+    
