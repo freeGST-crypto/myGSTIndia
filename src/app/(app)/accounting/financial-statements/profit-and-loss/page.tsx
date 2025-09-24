@@ -57,11 +57,11 @@ export default function ProfitAndLossPage() {
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
                 if (balances.hasOwnProperty(line.account)) {
-                    const accountType = allAccounts.find(a => a.code === line.account)?.type;
+                    const accountDetails = allAccounts.find(a => a.code === line.account);
                     const debit = parseFloat(line.debit);
                     const credit = parseFloat(line.credit);
 
-                    if (accountType === 'Asset' || accountType === 'Expense') {
+                    if (accountDetails?.type === 'Asset' || accountDetails?.type === 'Expense' || accountDetails?.type === 'Cost of Goods Sold') {
                         balances[line.account] += debit - credit;
                     } else { // Liability, Equity, Revenue
                         balances[line.account] += credit - debit;
@@ -73,10 +73,11 @@ export default function ProfitAndLossPage() {
     }, [journalVouchers]);
     
     const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue');
+    const cogsAccounts = allAccounts.filter(a => a.type === 'Cost of Goods Sold');
     const expenseAccounts = allAccounts.filter(a => a.type === 'Expense');
 
     const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, revenueAccounts]);
-    const totalCogs = useMemo(() => (accountBalances['5050'] || 0), [accountBalances]); // Assuming 5050 is Purchases/COGS
+    const totalCogs = useMemo(() => cogsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, cogsAccounts]);
     
     const grossProfit = totalRevenue - totalCogs;
     
@@ -84,7 +85,7 @@ export default function ProfitAndLossPage() {
     const tradingCredits = totalRevenue + (grossProfit < 0 ? -grossProfit : 0);
     const tradingTotal = Math.max(tradingDebits, tradingCredits);
     
-    const operatingExpenses = expenseAccounts.filter(a => a.code !== '5050');
+    const operatingExpenses = expenseAccounts;
     const totalOperatingExpenses = operatingExpenses.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
     const grossProfitBroughtDown = grossProfit >= 0 ? grossProfit : 0;
@@ -328,5 +329,3 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
-
-    

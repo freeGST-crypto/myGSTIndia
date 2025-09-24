@@ -57,20 +57,27 @@ export default function BalanceSheetPage() {
 
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
     const [customersSnapshot] = useCollection(customersQuery);
-    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name, type: 'Customer' })) || [], [customersSnapshot]);
     
-    const accountsQuery = user ? query(collection(db, 'accounts'), where("userId", "==", user.uid)) : null;
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name, type: 'Vendor' })) || [], [vendorsSnapshot]);
+    
+    const accountsQuery = user ? query(collection(db, 'user_accounts'), where("userId", "==", user.uid)) : null;
     const [accountsSnapshot] = useCollection(accountsQuery);
     const userAccounts = useMemo(() => accountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [accountsSnapshot]);
 
     const accountBalances = useMemo(() => {
         const balances: Record<string, number> = {};
-        
-        allAccounts.forEach(acc => { balances[acc.code] = 0; });
-        userAccounts.forEach((acc: any) => { balances[acc.code] = acc.openingWdv || 0 });
-        customers.forEach(c => { balances[c.id] = 0; });
-        // Add vendors here too when implemented
+        const allDynamicAccounts = [
+            ...allAccounts,
+            ...userAccounts,
+            ...customers.map(c => ({ code: c.id, name: c.name, type: 'Asset' })),
+            ...vendors.map(v => ({ code: v.id, name: v.name, type: 'Liability' })),
+        ];
 
+        allDynamicAccounts.forEach((acc: any) => { balances[acc.code] = acc.openingWdv || 0; });
+        
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
                 if (!balances.hasOwnProperty(line.account)) {
@@ -82,16 +89,15 @@ export default function BalanceSheetPage() {
             });
         });
         
-        const allDynamicAccounts = [...allAccounts, ...customers.map(c => ({ code: c.id, name: c.name, type: "Asset"}))];
         Object.keys(balances).forEach(key => {
-            const accDetails = allDynamicAccounts.find(a => a.code === key);
+            const accDetails = allDynamicAccounts.find((a: any) => a.code === key);
             if (accDetails && ["Liability", "Equity", "Revenue"].includes(accDetails.type)) {
                 if(balances[key] !== 0) balances[key] = -balances[key];
             }
         });
         
         return balances;
-    }, [journalVouchers, customers, userAccounts]);
+    }, [journalVouchers, customers, vendors, userAccounts]);
     
     // Calculate P&L for Retained Earnings
     const netProfit = useMemo(() => {
@@ -103,32 +109,35 @@ export default function BalanceSheetPage() {
     }, [accountBalances]);
 
     // Aggregate Liabilities and Equity
-    const capitalAccount = (accountBalances['3010'] || 0);
-    const reservesAndSurplus = (accountBalances['3020'] || 0) + netProfit;
+    const capitalAccount = (accountBalances['2010'] || 0);
+    const reservesAndSurplus = (accountBalances['2020'] || 0) + netProfit;
     
     const longTermLiabilities = allAccounts
-        .filter(a => a.type === 'Liability' && a.name.includes('Long-Term'))
+        .filter(a => a.type === 'Long Term Liability')
         .reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
-    const currentLiabilitiesAccounts = allAccounts.filter(a => a.type === 'Liability' && !a.name.includes('Long-Term'));
+    const currentLiabilitiesAccounts = [
+        ...allAccounts.filter(a => a.type === 'Current Liability'),
+        ...vendors.map(v => ({code: v.id, name: v.name}))
+    ];
     const totalCurrentLiabilities = currentLiabilitiesAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
 
     const totalEquityAndLiabilities = capitalAccount + reservesAndSurplus + longTermLiabilities + totalCurrentLiabilities;
 
     // Aggregate Assets
-    const fixedAssetsAccounts = userAccounts.filter((a: any) => a.type === 'Fixed Asset');
+    const fixedAssetsAccounts = [
+        ...allAccounts.filter(a => a.type === 'Fixed Asset'),
+        ...userAccounts.filter((a: any) => a.type === 'Fixed Asset')
+    ];
     const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
-    const investmentAccounts = allAccounts.filter(a => a.name.includes('Investments'));
+    const investmentAccounts = allAccounts.filter(a => a.type === 'Investment');
     const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
     const totalReceivables = customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
     
     const currentAssetsAccounts = allAccounts.filter(a => 
-      a.type === 'Asset' && 
-      !userAccounts.some((fa: any) => fa.code === a.code && fa.type === 'Fixed Asset') && 
-      !investmentAccounts.some(ia => ia.code === a.code) && 
-      !customers.some(c => c.id === a.code)
+      ['Current Asset', 'Cash', 'Bank'].includes(a.type)
     );
     const totalOtherCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
 
@@ -136,7 +145,7 @@ export default function BalanceSheetPage() {
 
     // Schedules
     const depreciationSchedule = useMemo(() => {
-        return fixedAssetsAccounts.map((asset: any) => {
+        return userAccounts.filter((a: any) => a.type === 'Fixed Asset').map((asset: any) => {
             const openingWdv = asset.openingWdv || 0;
             const additions = 0; // Simplified for now
             const depreciationRate = asset.depreciationRate || 0;
@@ -151,7 +160,7 @@ export default function BalanceSheetPage() {
                 closingWdv,
             };
         });
-    }, [fixedAssetsAccounts]);
+    }, [userAccounts]);
     const totalDepreciation = depreciationSchedule.reduce((acc, item) => acc + item.depreciation, 0);
 
     const capitalAccounts = useMemo(() => {
