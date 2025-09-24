@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useContext, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useContext, useCallback, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -634,7 +634,3 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
         </div>
     );
 }
-
-    
-
-    
