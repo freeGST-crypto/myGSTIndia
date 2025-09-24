@@ -62,6 +62,11 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
 import { allAccounts, costCentres } from "@/lib/accounts";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { db, auth } from '@/lib/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import { useAuthState } from "react-firebase-hooks/auth";
+
 
 export default function JournalVoucherPage() {
     const accountingContext = useContext(AccountingContext);
@@ -76,6 +81,26 @@ export default function JournalVoucherPage() {
     const { toast } = useToast();
     const [selectedVoucher, setSelectedVoucher] = useState<JournalVoucher | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [user] = useAuthState(auth);
+
+    // Fetch customers and vendors to resolve names
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
+
+    // Create a combined list for display purposes
+    const displayAccountList = useMemo(() => {
+        return [
+            ...allAccounts,
+            ...customers.map(c => ({ code: c.id, name: c.name, type: "Customer" })),
+            ...vendors.map(v => ({ code: v.id, name: v.name, type: "Vendor" }))
+        ];
+    }, [customers, vendors]);
+
 
     useEffect(() => {
         if (editingVoucher) {
@@ -480,7 +505,7 @@ export default function JournalVoucherPage() {
                         <TableBody>
                             {selectedVoucher.lines.map((line, index) => (
                                 <TableRow key={index}>
-                                    <TableCell className="font-medium">{allAccounts.find(a => a.code === line.account)?.name || line.account}</TableCell>
+                                    <TableCell className="font-medium">{displayAccountList.find(a => a.code === line.account)?.name || line.account}</TableCell>
                                     <TableCell>{costCentres.find(cc => cc.id === line.costCentre)?.name || '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.debit) > 0 ? `₹${parseFloat(line.debit).toFixed(2)}` : '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.credit) > 0 ? `₹${parseFloat(line.credit).toFixed(2)}` : '-'}</TableCell>
@@ -507,5 +532,3 @@ export default function JournalVoucherPage() {
     </div>
   );
 }
-
-    
