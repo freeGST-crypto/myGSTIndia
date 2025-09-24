@@ -138,8 +138,40 @@ export default function BankReconciliationPage() {
             ...customers,
             ...vendors,
         ];
-    }, [allAccounts, customers, vendors]);
+    }, [customers, vendors]);
 
+    useEffect(() => {
+        // Load from sessionStorage on initial mount
+        try {
+            const savedStatement = sessionStorage.getItem('bankStatementTransactions');
+            if (savedStatement) {
+                setStatementTransactions(JSON.parse(savedStatement));
+            }
+            const savedMatchedPairs = sessionStorage.getItem('bankReconMatchedPairs');
+             if (savedMatchedPairs) {
+                setMatchedPairs(new Map(JSON.parse(savedMatchedPairs)));
+            }
+        } catch (error) {
+            console.error("Could not load from session storage:", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        // Persist to sessionStorage whenever statementTransactions changes
+        try {
+            sessionStorage.setItem('bankStatementTransactions', JSON.stringify(statementTransactions));
+        } catch (error) {
+            console.error("Could not save to session storage:", error);
+        }
+    }, [statementTransactions]);
+    
+    useEffect(() => {
+        try {
+            sessionStorage.setItem('bankReconMatchedPairs', JSON.stringify(Array.from(matchedPairs.entries())));
+        } catch (error) {
+            console.error("Could not save matched pairs to session storage:", error);
+        }
+    }, [matchedPairs]);
 
     useEffect(() => {
         const derivedTransactions = journalVouchers
@@ -172,7 +204,7 @@ export default function BankReconciliationPage() {
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
             
             const parsedData: StatementTransaction[] = json.slice(1).map((row, index) => {
-                const parsedDate = parseDateString(row[0]);
+                const parsedDate = parseDateString(String(row[0]));
                 return {
                     id: `stmt-${index}-${Date.now()}`,
                     date: parsedDate ? format(parsedDate, 'yyyy-MM-dd') : '1970-01-01',
@@ -501,8 +533,19 @@ export default function BankReconciliationPage() {
                                                  <Select value={line.account} onValueChange={(value) => handleJvLineChange(index, 'account', value)}>
                                                     <SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger>
                                                     <SelectContent>
-                                                        {combinedAccounts.map(account => (
-                                                            <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                                                        {Object.entries(combinedAccounts.reduce((acc, curr) => {
+                                                            const group = curr.group || "Other";
+                                                            if (!acc[group]) acc[group] = [];
+                                                            acc[group].push(curr);
+                                                            return acc;
+                                                        }, {} as Record<string, any[]>)).map(([group, accounts]) => (
+                                                            <React.Fragment key={group}>
+                                                                <p className="px-2 py-1.5 text-sm font-semibold">{group}</p>
+                                                                {accounts.map(account => (
+                                                                    <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                                                                ))}
+                                                                <Separator className="my-2"/>
+                                                            </React.Fragment>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
@@ -591,5 +634,7 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
         </div>
     );
 }
+
+    
 
     
