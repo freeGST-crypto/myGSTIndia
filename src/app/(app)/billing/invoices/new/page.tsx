@@ -298,7 +298,7 @@ export default function NewInvoicePage() {
 
   const handleSaveInvoice = async () => {
     if (!accountingContext) return;
-    const { addJournalVoucher } = accountingContext;
+    const { addJournalVoucher, journalVouchers } = accountingContext;
 
     const selectedCustomer = customers.find(c => c.id === customer);
     if (!selectedCustomer || !invoiceNumber) {
@@ -307,6 +307,12 @@ export default function NewInvoicePage() {
     }
     
     const invoiceId = `INV-${invoiceNumber}`;
+    const isDuplicate = journalVouchers.some(voucher => voucher.id === invoiceId);
+
+    if (isDuplicate) {
+        toast({ variant: "destructive", title: "Duplicate Invoice", description: `An invoice with the number ${invoiceId} already exists.` });
+        return;
+    }
 
     const journalLines = [
         { account: selectedCustomer.id, debit: totalAmount.toFixed(2), credit: '0' },

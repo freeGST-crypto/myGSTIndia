@@ -196,13 +196,13 @@ export default function NewPurchasePage() {
         const voucherIdToLoad = editId || duplicateId;
 
         if (voucherIdToLoad && journalVouchers.length > 0 && items.length > 0) {
-        const voucherToLoad = journalVouchers.find(v => v.id === `JV-${voucherIdToLoad}`);
+        const voucherToLoad = journalVouchers.find(v => v.id === voucherIdToLoad);
         if (voucherToLoad) {
             setBillDate(new Date(voucherToLoad.date));
             setVendor(voucherToLoad.vendorId || "");
             
             if (editId) {
-                setBillNumber(voucherToLoad.id.replace('JV-', ''));
+                setBillNumber(voucherToLoad.id.replace('BILL-', ''));
             } else {
                 setBillNumber(""); // Clear number for duplication
             }
@@ -314,7 +314,7 @@ export default function NewPurchasePage() {
 
   const handleSaveBill = async () => {
     if (!accountingContext) return;
-    const { addJournalVoucher } = accountingContext;
+    const { addJournalVoucher, journalVouchers } = accountingContext;
 
     const selectedVendor = vendors.find(v => v.id === vendor);
     if (!selectedVendor || !billNumber) {
@@ -323,6 +323,12 @@ export default function NewPurchasePage() {
     }
     
     const billId = `BILL-${billNumber}`;
+    const isDuplicate = journalVouchers.some(voucher => voucher.id === billId);
+
+    if (isDuplicate) {
+        toast({ variant: "destructive", title: "Duplicate Bill Number", description: `A bill with the number ${billId} already exists.` });
+        return;
+    }
 
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
