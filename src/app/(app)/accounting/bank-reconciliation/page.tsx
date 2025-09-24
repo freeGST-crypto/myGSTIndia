@@ -79,16 +79,18 @@ export default function BankReconciliationPage() {
     const { toast } = useToast();
     const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
     const [statementTransactions, setStatementTransactions] = useState<StatementTransaction[]>([]);
+    const [bookTransactions, setBookTransactions] = useState<BookTransaction[]>([]);
+    
     const [selectedStatementTxs, setSelectedStatementTxs] = useState<Set<string>>(new Set());
     const [selectedBookTxs, setSelectedBookTxs] = useState<Set<string>>(new Set());
-    const [bankAccount, setBankAccount] = useState<string>("1020"); // Default to HDFC Bank
+    const [bankAccount, setBankAccount] = useState<string>("1520"); // Default to HDFC Bank
 
     const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
     const [entryToCreate, setEntryToCreate] = useState<StatementTransaction | null>(null);
     const [contraAccount, setContraAccount] = useState<string>("");
 
-    const bookTransactions: BookTransaction[] = useMemo(() => {
-        return journalVouchers
+    useMemo(() => {
+        const derivedTransactions = journalVouchers
             .filter(v => v.lines.some(l => l.account === bankAccount))
             .map(v => {
                 const isDebit = parseFloat(v.lines.find(l => l.account === bankAccount)!.debit) > 0;
@@ -98,11 +100,13 @@ export default function BankReconciliationPage() {
                     description: v.narration,
                     type: isDebit ? 'Receipt' : 'Payment',
                     amount: v.amount,
-                    matchedId: null, // This would be populated from reconciliation data
+                    matchedId: null, // Initially null
                 };
             })
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setBookTransactions(derivedTransactions);
     }, [journalVouchers, bankAccount]);
+
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -132,13 +136,17 @@ export default function BankReconciliationPage() {
     
     const toggleSelection = (id: string, type: 'statement' | 'book') => {
         if (type === 'statement') {
-            const newSelection = new Set(selectedStatementTxs);
-            if (newSelection.has(id)) newSelection.delete(id); else newSelection.add(id);
-            setSelectedStatementTxs(newSelection);
+            setSelectedStatementTxs(prev => {
+                const newSelection = new Set(prev);
+                if (newSelection.has(id)) newSelection.delete(id); else newSelection.add(id);
+                return newSelection;
+            });
         } else {
-            const newSelection = new Set(selectedBookTxs);
-            if (newSelection.has(id)) newSelection.delete(id); else newSelection.add(id);
-            setSelectedBookTxs(newSelection);
+            setSelectedBookTxs(prev => {
+                const newSelection = new Set(prev);
+                if (newSelection.has(id)) newSelection.delete(id); else newSelection.add(id);
+                return newSelection;
+            });
         }
     };
     
@@ -166,27 +174,20 @@ export default function BankReconciliationPage() {
         const matchId = `match-${Date.now()}`;
         
         setStatementTransactions(prev => prev.map(tx => selectedStatementTxs.has(tx.id) ? { ...tx, matchedId: matchId } : tx));
+        setBookTransactions(prev => prev.map(tx => selectedBookTxs.has(tx.id) ? { ...tx, matchedId: matchId } : tx));
         
-        // This is a local update. In a real app, we would persist this.
-        // For now, we cannot update the context data directly this way.
         toast({ title: "Transactions Matched", description: `${selectedStatementTxs.size} bank transaction(s) matched with ${selectedBookTxs.size} book transaction(s).` });
 
         setSelectedStatementTxs(new Set());
         setSelectedBookTxs(new Set());
     };
     
-    const handleOpenAddEntryDialog = () => {
-        if (selectedStatementTxs.size !== 1) {
-            toast({ variant: "destructive", title: "Selection Error", description: "Please select exactly one unmatched bank transaction to create an entry." });
-            return;
-        }
-        const txId = Array.from(selectedStatementTxs)[0];
-        const tx = statementTransactions.find(t => t.id === txId);
-        if (tx?.matchedId) {
-             toast({ variant: "destructive", title: "Selection Error", description: "The selected transaction is already matched." });
+    const handleOpenAddEntryDialog = (tx: StatementTransaction) => {
+        if (tx.matchedId) {
+             toast({ variant: "destructive", title: "Already Matched", description: "This transaction has already been reconciled." });
              return;
         }
-        setEntryToCreate(tx || null);
+        setEntryToCreate(tx);
         setIsAddEntryDialogOpen(true);
     };
     
@@ -229,7 +230,6 @@ export default function BankReconciliationPage() {
             setIsAddEntryDialogOpen(false);
             setEntryToCreate(null);
             setContraAccount("");
-            setSelectedStatementTxs(new Set());
         } catch (error) {
              toast({ variant: "destructive", title: "Error", description: "Could not create the accounting entry." });
         }
@@ -304,10 +304,12 @@ export default function BankReconciliationPage() {
                     description: tx.description,
                     amount: tx.deposit !== null ? tx.deposit : tx.withdrawal !== null ? -tx.withdrawal : 0,
                     matched: !!tx.matchedId,
+                    raw: tx,
                 }))}
                 selectedTxs={selectedStatementTxs}
                 onToggle={id => toggleSelection(id, 'statement')}
                 type="statement"
+                onAddEntry={handleOpenAddEntryDialog}
             />
           </CardContent>
         </Card>
@@ -320,9 +322,6 @@ export default function BankReconciliationPage() {
                     <CardTitle>GSTEase Transactions</CardTitle>
                     <CardDescription>Receipts and payments from your books.</CardDescription>
                 </div>
-                 <Button size="sm" variant="outline" onClick={handleOpenAddEntryDialog}>
-                    <PlusCircle className="mr-2" /> Add Missing Entry
-                </Button>
              </div>
           </CardHeader>
           <CardContent>
@@ -333,6 +332,7 @@ export default function BankReconciliationPage() {
                     description: tx.description,
                     amount: tx.type === 'Receipt' ? tx.amount : -tx.amount,
                     matched: !!tx.matchedId,
+                    raw: tx
                 }))}
                 selectedTxs={selectedBookTxs}
                 onToggle={id => toggleSelection(id, 'book')}
@@ -391,7 +391,7 @@ export default function BankReconciliationPage() {
   );
 }
 
-function TransactionTable({ transactions, selectedTxs, onToggle, type }: { transactions: any[], selectedTxs: Set<string>, onToggle: (id: string) => void, type: 'statement' | 'book' }) {
+function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntry }: { transactions: any[], selectedTxs: Set<string>, onToggle: (id: string) => void, type: 'statement' | 'book', onAddEntry?: (tx: any) => void }) {
     return (
         <div className="max-h-[500px] overflow-y-auto">
             <Table>
@@ -401,11 +401,12 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type }: { trans
                         <TableHead>Date</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
+                        {type === 'statement' && <TableHead className="w-12"></TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {transactions.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                        <TableRow><TableCell colSpan={type === 'statement' ? 5 : 4} className="h-24 text-center text-muted-foreground">
                             {type === 'statement' ? 'Upload a statement to see transactions.' : 'No book transactions for this period.'}
                         </TableCell></TableRow>
                     ) : (
@@ -423,6 +424,15 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type }: { trans
                                 <TableCell className={`text-right font-mono text-xs ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     {tx.amount.toFixed(2)}
                                 </TableCell>
+                                {type === 'statement' && (
+                                    <TableCell>
+                                        {!tx.matched && onAddEntry && (
+                                            <Button variant="ghost" size="icon" onClick={() => onAddEntry(tx.raw)}>
+                                                <PlusCircle className="size-4 text-blue-500" />
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))
                     )}
@@ -431,4 +441,3 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type }: { trans
         </div>
     );
 }
-
