@@ -68,6 +68,7 @@ function DashboardContent() {
   }, [journalVouchers, customers, vendors]);
   
   const totalReceivables = useMemo(() => {
+    if (customersLoading || journalLoading) return 0;
     return customers.reduce((sum, customer) => {
         if (customer.id && accountBalances[customer.id]) {
             // Receivables are debit balances
@@ -75,9 +76,10 @@ function DashboardContent() {
         }
         return sum;
     }, 0);
-  }, [customers, accountBalances]);
+  }, [customers, accountBalances, customersLoading, journalLoading]);
 
   const totalPayables = useMemo(() => {
+    if (vendorsLoading || journalLoading) return 0;
     return vendors.reduce((sum, vendor) => {
       if (vendor.id && accountBalances[vendor.id]) {
         // Payables are credit balances, so they will be negative in our calculation
@@ -85,9 +87,9 @@ function DashboardContent() {
       }
       return sum;
     }, 0);
-  }, [vendors, accountBalances]);
+  }, [vendors, accountBalances, vendorsLoading, journalLoading]);
   
-  const gstPayable = accountBalances['2110'] ? -accountBalances['2110'] : 0; // GST Payable is a credit balance
+  const gstPayable = accountBalances['2421'] ? -accountBalances['2421'] : 0; // GST Payable is a credit balance
 
   const invoices = useMemo(() => {
     return journalVouchers
@@ -186,4 +188,5 @@ function DashboardContent() {
 }
 
 export default memo(DashboardContent);
+
 
