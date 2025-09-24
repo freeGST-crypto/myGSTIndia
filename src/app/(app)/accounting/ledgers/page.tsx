@@ -66,17 +66,17 @@ export default function LedgersPage() {
     // Fetch customers and vendors
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
     const [customersSnapshot, customersLoading] = useCollection(customersQuery);
-    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Customer)`, group: "Customers" })) || [], [customersSnapshot]);
 
     const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
     const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
-    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Vendor)`, group: "Vendors" })) || [], [vendorsSnapshot]);
 
     const combinedAccounts = useMemo(() => {
         return [
             ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts" })),
-            ...customers.map(c => ({ value: c.id, label: `${c.name} (Customer)`, group: "Customers" })),
-            ...vendors.map(v => ({ value: v.id, label: `${v.name} (Vendor)`, group: "Vendors" })),
+            ...customers,
+            ...vendors,
         ];
     }, [allAccounts, customers, vendors]);
 
@@ -113,7 +113,7 @@ export default function LedgersPage() {
                 return {
                     date: format(new Date(voucher.date), "yyyy-MM-dd"),
                     particulars: voucher.narration,
-                    type: voucher.id.startsWith('JV-INV') ? 'Invoice' : 'Journal',
+                    type: voucher.id.startsWith('INV-') ? 'Invoice' : voucher.id.startsWith('BILL-') ? 'Purchase' : 'Journal',
                     debit,
                     credit,
                     balance: runningBalance,
@@ -210,24 +210,24 @@ export default function LedgersPage() {
                 <CardDescription>Choose an account and date range to view its ledger.</CardDescription>
                 <div className="flex flex-col md:flex-row gap-4 pt-4">
                     <Select onValueChange={setSelectedAccount} value={selectedAccount}>
-                        <SelectTrigger className="w-full md:w-[300px]">
+                        <SelectTrigger className="w-full md:w-[350px]">
                             <SelectValue placeholder="Select an account" />
                         </SelectTrigger>
                         <SelectContent>
-                             <div className="font-semibold px-2 py-1.5 text-sm">Main Accounts</div>
-                            {combinedAccounts.filter(a => a.group === "Main Accounts").map(account => (
-                                <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
-                            ))}
-                            <Separator className="my-2" />
-                            <div className="font-semibold px-2 py-1.5 text-sm">Customers</div>
-                             {combinedAccounts.filter(a => a.group === "Customers").map(account => (
-                                <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
-                            ))}
-                            <Separator className="my-2" />
-                            <div className="font-semibold px-2 py-1.5 text-sm">Vendors</div>
-                             {combinedAccounts.filter(a => a.group === "Vendors").map(account => (
-                                <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
-                            ))}
+                             {Object.entries(combinedAccounts.reduce((acc, curr) => {
+                                const group = curr.group || "Other";
+                                if (!acc[group]) acc[group] = [];
+                                acc[group].push(curr);
+                                return acc;
+                            }, {} as Record<string, any[]>)).map(([group, accounts]) => (
+                                <React.Fragment key={group}>
+                                    <p className="px-2 py-1.5 text-sm font-semibold">{group}</p>
+                                    {accounts.map(account => (
+                                        <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                                    ))}
+                                    <Separator className="my-2"/>
+                                </React.Fragment>
+                             ))}
                         </SelectContent>
                     </Select>
                     <DateRangePicker className="w-full md:w-auto" />

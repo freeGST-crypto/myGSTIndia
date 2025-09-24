@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useContext, useCallback } from 'react';
+import { useState, useMemo, useContext, useCallback, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -43,18 +43,28 @@ import {
   PlusCircle,
   Loader2,
   FileText,
-  Download
+  Download,
+  Trash2,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
-import { allAccounts } from '@/lib/accounts';
+import { allAccounts, costCentres } from '@/lib/accounts';
 import { AccountingContext } from '@/context/accounting-context';
 import { format, parse } from "date-fns";
 import * as XLSX from 'xlsx';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/dashboard/stat-card';
-
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 
 type StatementTransaction = {
   id: string;
@@ -74,46 +84,25 @@ type BookTransaction = {
   matchedId?: string | null;
 };
 
-// Robust date parsing function
 const parseDateString = (dateStr: string): Date | null => {
   if (!dateStr) return null;
-
-  // List of possible formats to try
-  const formats = [
-    'dd-MM-yyyy',
-    'dd/MM/yyyy',
-    'MM-dd-yyyy',
-    'MM/dd/yyyy',
-    'yyyy-MM-dd',
-    'yyyy/MM/dd',
-    'dd MMM yyyy',
-    'dd MMMM yyyy',
-  ];
-
+  const formats = ['dd-MM-yyyy', 'dd/MM/yyyy', 'MM-dd-yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd MMM yyyy', 'dd MMMM yyyy'];
   for (const fmt of formats) {
     try {
       const parsedDate = parse(dateStr, fmt, new Date());
-      if (!isNaN(parsedDate.getTime())) {
-        return parsedDate;
-      }
-    } catch (e) {
-      // Ignore parsing errors and try next format
-    }
+      if (!isNaN(parsedDate.getTime())) return parsedDate;
+    } catch (e) {}
   }
-
-  // Final attempt with direct parsing (for ISO strings etc.)
   const directParse = new Date(dateStr);
-  if (!isNaN(directParse.getTime())) {
-      return directParse;
-  }
-
-  return null; // Return null if no format matches
+  if (!isNaN(directParse.getTime())) return directParse;
+  return null;
 };
 
 export default function BankReconciliationPage() {
     const { toast } = useToast();
     const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
-    
+    const [user] = useAuthState(auth);
+
     const [statementTransactions, setStatementTransactions] = useState<StatementTransaction[]>([]);
     const [bookTransactions, setBookTransactions] = useState<BookTransaction[]>([]);
     
@@ -122,13 +111,37 @@ export default function BankReconciliationPage() {
 
     const [matchedPairs, setMatchedPairs] = useState<Map<string, string>>(new Map());
 
-    const [bankAccount, setBankAccount] = useState<string>("1520"); // Default to HDFC Bank
+    const [bankAccount, setBankAccount] = useState<string>("1520");
 
     const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
     const [entryToCreate, setEntryToCreate] = useState<StatementTransaction | null>(null);
-    const [contraAccount, setContraAccount] = useState<string>("");
 
-    useMemo(() => {
+    // For the Journal Voucher dialog
+    const [jvNarration, setJvNarration] = useState("");
+    const [jvDate, setJvDate] = useState<Date | undefined>(new Date());
+    const [jvLines, setJvLines] = useState([
+        { account: '', debit: '0', credit: '0', costCentre: '' },
+        { account: '', debit: '0', credit: '0', costCentre: '' }
+    ]);
+    
+    const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+    const [customersSnapshot] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Customer)`, group: "Customers" })) || [], [customersSnapshot]);
+
+    const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+    const [vendorsSnapshot] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Vendor)`, group: "Vendors" })) || [], [vendorsSnapshot]);
+
+    const combinedAccounts = useMemo(() => {
+        return [
+            ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts" })),
+            ...customers,
+            ...vendors,
+        ];
+    }, [allAccounts, customers, vendors]);
+
+
+    useEffect(() => {
         const derivedTransactions = journalVouchers
             .filter(v => v.lines.some(l => l.account === bankAccount))
             .map(v => {
@@ -139,13 +152,12 @@ export default function BankReconciliationPage() {
                     description: v.narration,
                     type: isDebit ? 'Receipt' : 'Payment',
                     amount: v.amount,
-                    matchedId: null, // Initially null
+                    matchedId: null,
                 };
             })
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         setBookTransactions(derivedTransactions);
     }, [journalVouchers, bankAccount]);
-
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -165,10 +177,10 @@ export default function BankReconciliationPage() {
                     id: `stmt-${index}-${Date.now()}`,
                     date: parsedDate ? format(parsedDate, 'yyyy-MM-dd') : '1970-01-01',
                     description: row[1],
-                    withdrawal: row[2] ? parseFloat(row[2]) : null,
-                    deposit: row[3] ? parseFloat(row[3]) : null,
+                    withdrawal: row[2] ? parseFloat(String(row[2]).replace(/,/g, '')) : null,
+                    deposit: row[3] ? parseFloat(String(row[3]).replace(/,/g, '')) : null,
                 }
-            });
+            }).filter(row => row.date !== '1970-01-01' && (row.withdrawal || row.deposit));
             setStatementTransactions(parsedData);
             toast({ title: "Statement Uploaded", description: `${parsedData.length} transactions loaded.` });
         };
@@ -233,14 +245,9 @@ export default function BankReconciliationPage() {
         }
         
         const matchId = `match-${Date.now()}`;
-        
         const newMatchedPairs = new Map(matchedPairs);
-        selectedStatementTxs.forEach(stmtId => {
-            newMatchedPairs.set(stmtId, matchId);
-        });
-        selectedBookTxs.forEach(bookId => {
-            newMatchedPairs.set(bookId, matchId);
-        });
+        selectedStatementTxs.forEach(stmtId => newMatchedPairs.set(stmtId, matchId));
+        selectedBookTxs.forEach(bookId => newMatchedPairs.set(bookId, matchId));
         setMatchedPairs(newMatchedPairs);
         
         toast({ title: "Transactions Matched", description: `${selectedStatementTxs.size} bank transaction(s) matched with ${selectedBookTxs.size} book transaction(s).` });
@@ -255,37 +262,60 @@ export default function BankReconciliationPage() {
              return;
         }
         setEntryToCreate(tx);
+        setJvDate(new Date(tx.date));
+        setJvNarration(tx.description);
+        const amount = (tx.deposit || 0) - (tx.withdrawal || 0);
+        const isReceipt = amount > 0;
+        const initialLines = isReceipt 
+            ? [
+                { account: bankAccount, debit: String(Math.abs(amount)), credit: '0', costCentre: '' },
+                { account: '', debit: '0', credit: String(Math.abs(amount)), costCentre: '' }
+              ]
+            : [
+                { account: '', debit: String(Math.abs(amount)), credit: '0', costCentre: '' },
+                { account: bankAccount, debit: '0', credit: String(Math.abs(amount)), costCentre: '' }
+              ];
+        setJvLines(initialLines);
         setIsAddEntryDialogOpen(true);
     };
+
+    const handleJvLineChange = (index: number, field: keyof typeof jvLines[0], value: string) => {
+        const newLines = [...jvLines];
+        const line = newLines[index];
+        (line as any)[field] = value;
+         if (field === 'debit' && parseFloat(value) > 0) line.credit = '0';
+         if (field === 'credit' && parseFloat(value) > 0) line.debit = '0';
+        setJvLines(newLines);
+    }
+    const handleAddJvLine = () => setJvLines([...jvLines, { account: '', debit: '0', credit: '0', costCentre: '' }]);
+    const handleRemoveJvLine = (index: number) => {
+        if (jvLines.length > 2) {
+            setJvLines(jvLines.filter((_, i) => i !== index));
+        }
+    }
     
     const handleCreateMissingEntry = async () => {
-        if (!entryToCreate || !contraAccount) {
-             toast({ variant: "destructive", title: "Missing Information", description: "Please select an account to categorize the transaction." });
+        if (!entryToCreate || !jvDate) {
+             toast({ variant: "destructive", title: "Error", description: "No entry to create." });
              return;
         }
+
+        const totalDebits = jvLines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
+        const totalCredits = jvLines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
         
-        const amount = (entryToCreate.deposit || 0) - (entryToCreate.withdrawal || 0);
-        const isReceipt = amount > 0;
+        if (Math.abs(totalDebits - totalCredits) > 0.01 || totalDebits === 0) {
+            toast({ variant: "destructive", title: "Unbalanced Entry", description: "Debit and credit totals must match and be greater than zero." });
+            return;
+        }
         
-        const lines = isReceipt
-          ? [
-              { account: bankAccount, debit: String(amount), credit: '0' },
-              { account: contraAccount, debit: '0', credit: String(amount) },
-            ]
-          : [
-              { account: contraAccount, debit: String(Math.abs(amount)), credit: '0' },
-              { account: bankAccount, debit: '0', credit: String(Math.abs(amount)) },
-            ];
-            
-        const voucherType = isReceipt ? 'RV' : 'PV';
-        const voucherId = `${voucherType}-RECON-${Date.now()}`;
+        const voucherId = `JV-RECON-${Date.now()}`;
         
         const newVoucher = {
             id: voucherId,
-            date: format(new Date(entryToCreate.date), 'yyyy-MM-dd'),
-            narration: `Recon entry: ${entryToCreate.description}`,
-            lines,
-            amount: Math.abs(amount)
+            date: format(jvDate, 'yyyy-MM-dd'),
+            narration: jvNarration,
+            lines: jvLines,
+            amount: totalDebits
         };
         
         try {
@@ -297,7 +327,6 @@ export default function BankReconciliationPage() {
             toast({ title: "Entry Created", description: "The missing transaction has been recorded."});
             setIsAddEntryDialogOpen(false);
             setEntryToCreate(null);
-            setContraAccount("");
         } catch (error) {
              toast({ variant: "destructive", title: "Error", description: "Could not create the accounting entry." });
         }
@@ -359,7 +388,6 @@ export default function BankReconciliationPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Bank Statement Side */}
         <Card>
           <CardHeader>
             <CardTitle>Bank Statement Transactions</CardTitle>
@@ -383,7 +411,6 @@ export default function BankReconciliationPage() {
           </CardContent>
         </Card>
         
-        {/* GSTEase / Book Side */}
         <Card>
           <CardHeader>
              <div className="flex justify-between items-start">
@@ -420,40 +447,91 @@ export default function BankReconciliationPage() {
       </div>
       
        <Dialog open={isAddEntryDialogOpen} onOpenChange={setIsAddEntryDialogOpen}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Create Missing Book Entry</DialogTitle>
-                <DialogDescription>
-                    Create a journal entry for the selected bank transaction.
-                </DialogDescription>
-            </DialogHeader>
-            {entryToCreate && (
-                <div className="space-y-4 py-4">
-                    <p><strong>Date:</strong> {format(new Date(entryToCreate.date), 'dd MMM yyyy')}</p>
-                    <p><strong>Description:</strong> {entryToCreate.description}</p>
-                    <p><strong>Amount:</strong> <span className={((entryToCreate.deposit || 0) - (entryToCreate.withdrawal || 0)) > 0 ? 'text-green-600' : 'text-red-600'}>₹{Math.abs((entryToCreate.deposit || 0) - (entryToCreate.withdrawal || 0)).toFixed(2)}</span></p>
-                    <div className="space-y-2">
-                        <Label htmlFor="contra-account">Select Contra Account</Label>
-                        <Select onValueChange={setContraAccount} value={contraAccount}>
-                            <SelectTrigger id="contra-account">
-                                <SelectValue placeholder="Select an account to categorize this..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {allAccounts.filter(acc => acc.code !== bankAccount).map(acc => (
-                                    <SelectItem key={acc.code} value={acc.code}>
-                                        {acc.name} ({acc.code})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>Create Missing Journal Entry</DialogTitle>
+                    <DialogDescription>
+                        Create a journal entry for the selected bank transaction: "{entryToCreate?.description}".
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                             <Label>Voucher Date</Label>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn("w-full justify-start text-left font-normal", !jvDate && "text-muted-foreground")}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {jvDate ? format(jvDate, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={jvDate} onSelect={setJvDate} initialFocus /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="narration">Narration</Label>
+                            <Textarea id="narration" value={jvNarration} onChange={(e) => setJvNarration(e.target.value)} />
+                        </div>
                     </div>
+                    <Separator />
+                     <div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[40%]">Account</TableHead>
+                                    <TableHead className="w-[20%]">Cost Centre</TableHead>
+                                    <TableHead className="text-right">Debit</TableHead>
+                                    <TableHead className="text-right">Credit</TableHead>
+                                    <TableHead className="w-[50px] text-right">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {jvLines.map((line, index) => {
+                                    const accountDetails = allAccounts.find(acc => acc.code === line.account);
+                                    const showCostCentre = accountDetails && ['Revenue', 'Expense'].includes(accountDetails.type);
+                                    return (
+                                        <TableRow key={index}>
+                                            <TableCell>
+                                                 <Select value={line.account} onValueChange={(value) => handleJvLineChange(index, 'account', value)}>
+                                                    <SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {combinedAccounts.map(account => (
+                                                            <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                             <TableCell>
+                                                {showCostCentre && (
+                                                    <Select value={line.costCentre} onValueChange={(value) => handleJvLineChange(index, 'costCentre', value)}>
+                                                        <SelectTrigger><SelectValue placeholder="Select cost centre" /></SelectTrigger>
+                                                        <SelectContent>{costCentres.map(cc => <SelectItem key={cc.id} value={cc.id}>{cc.name}</SelectItem>)}</SelectContent>
+                                                    </Select>
+                                                )}
+                                            </TableCell>
+                                            <TableCell><Input type="number" className="text-right" value={line.debit} onChange={(e) => handleJvLineChange(index, 'debit', e.target.value)} /></TableCell>
+                                            <TableCell><Input type="number" className="text-right" value={line.credit} onChange={(e) => handleJvLineChange(index, 'credit', e.target.value)} /></TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => handleRemoveJvLine(index)} disabled={jvLines.length <= 2}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="mt-4" onClick={handleAddJvLine}><PlusCircle className="mr-2"/> Add Line</Button>
+                     </div>
                 </div>
-            )}
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddEntryDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreateMissingEntry}>Create Entry</Button>
-            </DialogFooter>
-        </DialogContent>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsAddEntryDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleCreateMissingEntry}>Create Journal Entry</Button>
+                </DialogFooter>
+            </DialogContent>
     </Dialog>
 
     </div>
@@ -496,7 +574,7 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
                                 {type === 'statement' && (
                                     <TableCell>
                                         {!tx.matched && onAddEntry && (
-                                            <Button variant="ghost" size="icon" onClick={() => onAddEntry(tx.raw)}>
+                                            <Button variant="ghost" size="icon" onClick={() => onAddEntry(tx.raw)} title="Create Journal Entry">
                                                 <PlusCircle className="size-4 text-blue-500" />
                                             </Button>
                                         )}
