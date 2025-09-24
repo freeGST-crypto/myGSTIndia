@@ -69,15 +69,18 @@ export default function Gstr1Wizard() {
 
   const b2bInvoicesFromJournal = useMemo(() => {
     return journalVouchers
-      .filter(v => v && v.id && v.id.startsWith("JV-INV-"))
+      .filter(v => v && v.id && v.id.startsWith("INV-"))
       .map(v => {
         const customer = customers.find(c => v.customerId === c.id);
+        // B2B invoices must have a GSTIN
+        if (!customer?.gstin) return null;
+
         const taxableValue = v.lines.find(l => l.account === '4010')?.credit || '0';
         const taxAmount = v.lines.find(l => l.account === '2110')?.credit || '0';
 
         return {
-          gstin: customer?.gstin || "N/A",
-          invoiceNumber: v.id.replace("JV-", ""),
+          gstin: customer.gstin,
+          invoiceNumber: v.id.replace("INV-", ""),
           invoiceDate: v.date,
           invoiceValue: v.amount,
           taxableValue: parseFloat(taxableValue),
@@ -87,7 +90,7 @@ export default function Gstr1Wizard() {
           sgst: 0,
           cess: 0,
         };
-      });
+      }).filter(Boolean); // remove nulls
   }, [journalVouchers, customers]);
 
   const [b2bInvoices, setB2bInvoices] = useState<any[]>([]);
@@ -100,7 +103,7 @@ export default function Gstr1Wizard() {
   const [advancesAdjusted, setAdvancesAdjusted] = useState<any[]>([]);
 
   useEffect(() => {
-    setB2bInvoices(b2bInvoicesFromJournal);
+    setB2bInvoices(b2bInvoicesFromJournal as any[]);
   }, [b2bInvoicesFromJournal]);
 
 
@@ -935,3 +938,5 @@ export default function Gstr1Wizard() {
     </div>
   );
 }
+
+    

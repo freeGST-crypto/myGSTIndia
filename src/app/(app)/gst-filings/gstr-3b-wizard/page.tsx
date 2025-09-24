@@ -50,8 +50,8 @@ export default function Gstr3bWizardPage() {
   const { journalVouchers } = useContext(AccountingContext)!;
 
   const initialStep1Data = useMemo(() => {
-    const salesInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-INV-"));
-    const salesReturns = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-CN-"));
+    const salesInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("INV-"));
+    const salesReturns = journalVouchers.filter(v => v && v.id && v.id.startsWith("CN-"));
 
     const outwardTaxableValue = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '4010')?.credit ? parseFloat(v.lines.find(l => l.account === '4010')!.credit) : 0), 0);
     const outwardTax = salesInvoices.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
@@ -104,8 +104,8 @@ export default function Gstr3bWizardPage() {
   }, [journalVouchers]);
   
   const initialStep3Data = useMemo(() => {
-    const purchaseBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-BILL-"));
-    const purchaseReturns = journalVouchers.filter(v => v && v.id && v.id.startsWith("JV-DN-"));
+    const purchaseBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("BILL-"));
+    const purchaseReturns = journalVouchers.filter(v => v && v.id && v.id.startsWith("DN-"));
 
     const itcFromPurchases = purchaseBills.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.debit ? parseFloat(v.lines.find(l => l.account === '2110')!.debit) : 0), 0);
     const itcReversedOnReturns = purchaseReturns.reduce((acc, v) => acc + (v.lines.find(l => l.account === '2110')?.credit ? parseFloat(v.lines.find(l => l.account === '2110')!.credit) : 0), 0);
@@ -660,3 +660,5 @@ export default function Gstr3bWizardPage() {
     </div>
   );
 }
+
+    
