@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useMemo } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -71,14 +71,19 @@ export default function LedgersPage() {
     const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
     const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
     const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Vendor)`, group: "Vendors" })) || [], [vendorsSnapshot]);
+    
+    const userAccountsQuery = user ? query(collection(db, 'user_accounts'), where("userId", "==", user.uid)) : null;
+    const [userAccountsSnapshot, userAccountsLoading] = useCollection(userAccountsQuery);
+    const userAccounts = useMemo(() => userAccountsSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (${doc.data().code})`, group: "Custom Accounts", ...doc.data() })) || [], [userAccountsSnapshot]);
 
     const combinedAccounts = useMemo(() => {
         return [
-            ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts" })),
+            ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts", ...acc })),
             ...customers,
             ...vendors,
+            ...userAccounts,
         ];
-    }, [allAccounts, customers, vendors]);
+    }, [allAccounts, customers, vendors, userAccounts]);
 
 
     const handleViewLedger = () => {
@@ -90,7 +95,7 @@ export default function LedgersPage() {
         const account = combinedAccounts.find(a => a.value === selectedAccount);
         if (!account) return;
 
-        const openingBalance = 0; // Simplified for this demo
+        const openingBalance = (account as any).openingWdv || 0;
         let runningBalance = openingBalance;
         let totalDebits = 0;
         let totalCredits = 0;
@@ -290,3 +295,4 @@ export default function LedgersPage() {
     </div>
   );
 }
+
