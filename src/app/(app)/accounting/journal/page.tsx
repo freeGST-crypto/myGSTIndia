@@ -85,19 +85,18 @@ export default function JournalVoucherPage() {
 
     // Fetch customers and vendors to resolve names
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
-    const [customersSnapshot, customersLoading] = useCollection(customersQuery);
-    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
+    const [customersSnapshot] = useCollection(customersQuery);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Customer)`, group: "Customers", ...doc.data() })) || [], [customersSnapshot]);
 
     const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
-    const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
-    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
+    const [vendorsSnapshot] = useCollection(vendorsQuery);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ value: doc.id, label: `${doc.data().name} (Vendor)`, group: "Vendors", ...doc.data() })) || [], [vendorsSnapshot]);
 
-    // Create a combined list for display purposes
-    const displayAccountList = useMemo(() => {
+    const combinedAccounts = useMemo(() => {
         return [
-            ...allAccounts,
-            ...customers.map(c => ({ code: c.id, name: c.name, type: "Customer" })),
-            ...vendors.map(v => ({ code: v.id, name: v.name, type: "Vendor" }))
+            ...allAccounts.map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})`, group: "Main Accounts" })),
+            ...customers,
+            ...vendors,
         ];
     }, [customers, vendors]);
 
@@ -106,7 +105,7 @@ export default function JournalVoucherPage() {
         if (editingVoucher) {
             setDate(new Date(editingVoucher.date));
             setNarration(editingVoucher.narration);
-            setLines(editingVoucher.lines);
+            setLines(editingVoucher.lines.map(l => ({...l, costCentre: l.costCentre || ''})));
             setIsAddDialogOpen(true);
         } else {
             // Reset form when not editing
@@ -167,7 +166,7 @@ export default function JournalVoucherPage() {
         };
 
         try {
-            await addJournalVoucher(reversalVoucher);
+            await addJournalVoucher(reversalVoucher as any);
             toast({ title: "Voucher Reversed", description: `A reversing entry for voucher #${voucherId} has been created.` });
         } catch (e: any) {
             toast({ variant: "destructive", title: "Reversal Failed", description: e.message });
@@ -357,7 +356,20 @@ export default function JournalVoucherPage() {
                                                         <SelectValue placeholder="Select an account" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {allAccounts.map(acc => <SelectItem key={acc.code} value={acc.code}>{acc.name} ({acc.code})</SelectItem>)}
+                                                        {Object.entries(combinedAccounts.reduce((acc, curr) => {
+                                                            const group = curr.group || "Other";
+                                                            if (!acc[group]) acc[group] = [];
+                                                            acc[group].push(curr);
+                                                            return acc;
+                                                        }, {} as Record<string, any[]>)).map(([group, accounts]) => (
+                                                            <React.Fragment key={group}>
+                                                                <p className="px-2 py-1.5 text-sm font-semibold">{group}</p>
+                                                                {accounts.map(account => (
+                                                                    <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                                                                ))}
+                                                                <Separator className="my-2"/>
+                                                            </React.Fragment>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
@@ -504,7 +516,7 @@ export default function JournalVoucherPage() {
                         <TableBody>
                             {selectedVoucher.lines.map((line, index) => (
                                 <TableRow key={index}>
-                                    <TableCell className="font-medium">{displayAccountList.find(a => a.code === line.account)?.name || line.account}</TableCell>
+                                    <TableCell className="font-medium">{combinedAccounts.find(a => a.value === line.account)?.label || line.account}</TableCell>
                                     <TableCell>{costCentres.find(cc => cc.id === line.costCentre)?.name || '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.debit) > 0 ? `₹${parseFloat(line.debit).toFixed(2)}` : '-'}</TableCell>
                                     <TableCell className="text-right font-mono">{parseFloat(line.credit) > 0 ? `₹${parseFloat(line.credit).toFixed(2)}` : '-'}</TableCell>

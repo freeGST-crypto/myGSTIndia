@@ -47,8 +47,11 @@ export const allAccounts = [
   { code: "2410", name: "Accounts Payable / Sundry Creditors", type: "Current Liability" },
   { code: "2420", name: "Duties & Taxes Payable", type: "Current Liability" },
   { code: "2421", name: "GST Payable", type: "Current Liability" },
+  { code: "2110", name: "GST Payable", type: "Current Liability" }, // Duplicate for legacy, should be 2421
   { code: "2422", name: "TDS Payable", type: "Current Liability" },
+  { code: "2130", name: "TDS Payable", type: "Current Liability" }, // Duplicate for legacy, should be 2422
   { code: "2423", name: "TCS Payable", type: "Current Liability" },
+  { code: "2120", name: "TCS Payable", type: "Current Liability" }, // Duplicate for legacy, should be 2423
   { code: "2430", name: "Expenses Payable", type: "Current Liability" },
   { code: "2440", name: "Advances from Customers", type: "Current Liability" },
 
@@ -65,13 +68,14 @@ export const allAccounts = [
 
   // EXPENSES
   // Direct Expenses / COGS (5000-5499)
-  { code: "5010", name: "Purchases", type: "Cost of Goods Sold" },
-  { code: "5020", name: "Direct Wages", type: "Cost of Goods Sold" },
+  { code: "5010", name: "Purchases - COGS", type: "Cost of Goods Sold" },
+  { code: "5020", name: "Salaries and Wages - COGS", type: "Cost of Goods Sold" },
   { code: "5030", name: "Carriage Inwards", type: "Cost of Goods Sold" },
   { code: "5040", name: "Power & Fuel", type: "Cost of Goods Sold" },
+  { code: "5050", name: "Purchases", type: "Cost of Goods Sold" }, // General Purchases
 
   // Indirect Expenses (6000-6999)
-  { code: "6010", name: "Salaries and Wages", type: "Expense" },
+  { code: "6010", name: "Salaries and Wages - Indirect", type: "Expense" },
   { code: "6020", name: "Rent Expense", type: "Expense" },
   { code: "6030", name: "Office Maintenance", type: "Expense" },
   { code: "6040", name: "Printing & Stationery", type: "Expense" },

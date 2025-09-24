@@ -96,7 +96,7 @@ export default function RapidVoucherEntryPage() {
     }
     
     const voucherId = `${voucherPrefix}-${values.voucherNumber}`;
-    const cashOrBankAc = values.mode === 'cash' ? '1010' : '1020'; // Cash or HDFC Bank
+    const cashOrBankAc = values.mode === 'cash' ? '1510' : '1520'; // Cash or HDFC Bank
     
     let journalLines, narration;
     if(values.type === 'receipt') {
