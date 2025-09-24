@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -69,9 +69,14 @@ export default function RunPayrollPage() {
     const { toast } = useToast();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
-    const [financialYear, setFinancialYear] = useState(getFinancialYears()[0]);
-    const [month, setMonth] = useState(months[new Date().getMonth()]);
+    const [financialYear, setFinancialYear] = useState('');
+    const [month, setMonth] = useState('');
     const accountingContext = useContext(AccountingContext);
+    
+    useEffect(() => {
+        setFinancialYear(getFinancialYears()[0]);
+        setMonth(months[new Date().getMonth()]);
+    }, []);
     
     const [payrollData, setPayrollData] = useState(initialEmployees.map(emp => ({...emp, ...calculateSalary(emp)})));
     

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,12 +47,21 @@ export default function AppointmentLetterPage() {
     defaultValues: {
       companyName: "GSTEase Solutions Pvt. Ltd.",
       companyAddress: "123 Business Avenue, Commerce City, Maharashtra - 400001",
-      appointmentDate: new Date().toISOString().split("T")[0],
+      // Default dates will be set in useEffect to avoid hydration issues
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      appointmentDate: new Date().toISOString().split("T")[0],
+    });
+  }, [form]);
+
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
+    documentTitle: `Appointment_Letter_${form.getValues("employeeName")}`,
+    onAfterPrint: () => toast({ title: "Print Complete" }),
   });
 
   const processStep = async () => {

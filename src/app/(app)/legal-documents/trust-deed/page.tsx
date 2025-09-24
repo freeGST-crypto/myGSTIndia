@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -61,7 +61,7 @@ export default function TrustDeedPage() {
     defaultValues: {
       trustName: "",
       trustAddress: "",
-      deedDate: new Date().toISOString().split("T")[0],
+      deedDate: "",
       settlorName: "",
       settlorParentage: "",
       settlorAddress: "",
@@ -70,6 +70,13 @@ export default function TrustDeedPage() {
       aimsAndObjects: "To promote education for underprivileged children.\nTo provide medical relief to the poor and needy.\nTo work for environmental protection and awareness.",
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      deedDate: new Date().toISOString().split("T")[0],
+    });
+  }, [form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -181,7 +188,7 @@ export default function TrustDeedPage() {
       case 4:
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-        const deedDate = new Date(formData.deedDate).toLocaleDateString('en-GB', dateOptions);
+        const deedDate = formData.deedDate ? new Date(formData.deedDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
 
         return (
              <Card>
@@ -280,14 +287,10 @@ export default function TrustDeedPage() {
         <p className="text-muted-foreground">Follow the steps to create a deed for a charitable or private trust.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>
     </div>
   );
 }
-
-    
-
-    

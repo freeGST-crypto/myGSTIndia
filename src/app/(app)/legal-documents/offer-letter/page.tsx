@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileDown, Printer } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from "react-to-print";
@@ -41,10 +41,19 @@ export default function OfferLetterPage() {
     defaultValues: {
       companyName: "GSTEase Solutions Pvt. Ltd.",
       companyAddress: "123 Business Avenue, Commerce City, Maharashtra - 400001",
-      offerDate: new Date().toISOString().split("T")[0],
-      acceptanceDeadline: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split("T")[0],
+      offerDate: "",
+      acceptanceDeadline: "",
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      offerDate: new Date().toISOString().split("T")[0],
+      acceptanceDeadline: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split("T")[0],
+    });
+  }, [form]);
+
 
   const formData = form.watch();
 
@@ -76,8 +85,8 @@ export default function OfferLetterPage() {
           <CardContent>
             <Form {...form}>
               <form className="space-y-4">
-                 <FormField control={form.control} name="candidateName" render={({ field }) => (<FormItem><FormLabel>Candidate Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                 <FormField control={form.control} name="candidateAddress" render={({ field }) => (<FormItem><FormLabel>Candidate Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                 <FormField control={form.control} name="candidateName" render={({ field }) => (<FormItem><FormLabel>Candidate Name</FormLabel><FormControl><Input placeholder="e.g., Rohan Sharma" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                 <FormField control={form.control} name="candidateAddress" render={({ field }) => (<FormItem><FormLabel>Candidate Address</FormLabel><FormControl><Input placeholder="e.g., Mumbai, India" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                  <FormField control={form.control} name="jobTitle" render={({ field }) => (<FormItem><FormLabel>Job Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                  <FormField control={form.control} name="annualCtc" render={({ field }) => (<FormItem><FormLabel>Annual CTC (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                  <div className="grid sm:grid-cols-2 gap-4">

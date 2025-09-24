@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,12 +58,19 @@ export default function VendorAgreementPage() {
       buyerAddress: "",
       vendorName: "",
       vendorAddress: "",
-      agreementDate: new Date().toISOString().split("T")[0],
+      agreementDate: "",
       goodsServicesDescription: "",
       paymentTerms: "Net 30 days from receipt of a valid invoice.",
       jurisdictionCity: "Mumbai",
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      agreementDate: new Date().toISOString().split("T")[0],
+    });
+  }, [form]);
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -154,7 +161,7 @@ export default function VendorAgreementPage() {
       case 4:
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-        const agreementDate = new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions);
+        const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
 
         return (
              <Card>

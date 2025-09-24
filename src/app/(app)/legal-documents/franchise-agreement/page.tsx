@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -61,7 +61,7 @@ export default function FranchiseAgreementPage() {
       franchisorAddress: "",
       franchiseeName: "",
       franchiseeAddress: "",
-      agreementDate: new Date().toISOString().split("T")[0],
+      agreementDate: "",
       territory: "The city of Mumbai, Maharashtra",
       initialFee: 500000,
       royaltyFee: 5,
@@ -69,6 +69,13 @@ export default function FranchiseAgreementPage() {
       jurisdictionCity: "Mumbai",
     },
   });
+  
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      agreementDate: new Date().toISOString().split("T")[0],
+    });
+  }, [form]);
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -163,7 +170,7 @@ export default function FranchiseAgreementPage() {
       case 4:
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-        const agreementDate = new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions);
+        const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
 
         return (
              <Card>

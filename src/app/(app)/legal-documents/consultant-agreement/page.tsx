@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -59,13 +59,20 @@ export default function ConsultantAgreementPage() {
       clientAddress: "",
       consultantName: "",
       consultantAddress: "",
-      agreementDate: new Date().toISOString().split("T")[0],
+      agreementDate: "",
       servicesDescription: "",
       paymentAmount: 50000,
       paymentTerms: "Net 30 days after invoice",
       jurisdictionCity: "Mumbai",
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      agreementDate: new Date().toISOString().split("T")[0],
+    });
+  }, [form]);
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -159,7 +166,7 @@ export default function ConsultantAgreementPage() {
       case 4:
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-        const agreementDate = new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions);
+        const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
 
         return (
              <Card>
@@ -235,7 +242,7 @@ export default function ConsultantAgreementPage() {
         <p className="text-muted-foreground">Follow the steps to create a professional agreement for engaging independent contractors.</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => processStep())} className="space-y-8">
+        <form className="space-y-8">
           {renderStep()}
         </form>
       </Form>
