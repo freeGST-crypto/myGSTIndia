@@ -59,9 +59,9 @@ export function FinancialSummaryChart() {
             const yearMonth = format(voucherDate, 'yyyy-MM');
             
             if (data[yearMonth]) {
-                if (voucher.id.startsWith("JV-INV-")) {
+                if (voucher.id.startsWith("INV-")) {
                     data[yearMonth].sales += voucher.amount;
-                } else if (voucher.id.startsWith("JV-BILL-")) {
+                } else if (voucher.id.startsWith("BILL-")) {
                     data[yearMonth].purchases += voucher.amount;
                 }
             }
