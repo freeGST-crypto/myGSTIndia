@@ -76,7 +76,7 @@ export default function RapidInvoiceEntryPage() {
     },
   });
   
-  const watchedAmount = form.watch("amount");
+  const watchedAmount = Number(form.watch("amount")) || 0;
   const taxAmount = watchedAmount * 0.18; // Assuming 18% GST
   const totalAmount = watchedAmount + taxAmount;
 
