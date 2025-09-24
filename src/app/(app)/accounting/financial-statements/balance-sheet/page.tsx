@@ -57,26 +57,30 @@ export default function BalanceSheetPage() {
 
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
     const [customersSnapshot] = useCollection(customersQuery);
-    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name, type: 'Customer' })) || [], [customersSnapshot]);
+    const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name, type: 'Asset' })) || [], [customersSnapshot]);
     
     const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
     const [vendorsSnapshot] = useCollection(vendorsQuery);
-    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name, type: 'Vendor' })) || [], [vendorsSnapshot]);
+    const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name, type: 'Liability' })) || [], [vendorsSnapshot]);
     
     const accountsQuery = user ? query(collection(db, 'user_accounts'), where("userId", "==", user.uid)) : null;
     const [accountsSnapshot] = useCollection(accountsQuery);
     const userAccounts = useMemo(() => accountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [accountsSnapshot]);
 
-    const accountBalances = useMemo(() => {
-        const balances: Record<string, number> = {};
-        const allDynamicAccounts = [
+    const combinedAccounts = useMemo(() => {
+        return [
             ...allAccounts,
             ...userAccounts,
-            ...customers.map(c => ({ code: c.id, name: c.name, type: 'Asset' })),
-            ...vendors.map(v => ({ code: v.id, name: v.name, type: 'Liability' })),
+            ...customers.map(c => ({ code: c.id, name: c.name, type: c.type })),
+            ...vendors.map(v => ({ code: v.id, name: v.name, type: v.type })),
         ];
+    }, [userAccounts, customers, vendors]);
 
-        allDynamicAccounts.forEach((acc: any) => { balances[acc.code] = acc.openingWdv || 0; });
+
+    const accountBalances = useMemo(() => {
+        const balances: Record<string, number> = {};
+
+        combinedAccounts.forEach((acc: any) => { balances[acc.code] = acc.openingWdv || 0; });
         
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
@@ -90,58 +94,53 @@ export default function BalanceSheetPage() {
         });
         
         Object.keys(balances).forEach(key => {
-            const accDetails = allDynamicAccounts.find((a: any) => a.code === key);
-            if (accDetails && ["Liability", "Equity", "Revenue"].includes(accDetails.type)) {
+            const accDetails = combinedAccounts.find((a: any) => a.code === key);
+            if (accDetails && ["Liability", "Equity", "Revenue", "Other Income"].includes(accDetails.type)) {
                 if(balances[key] !== 0) balances[key] = -balances[key];
             }
         });
         
         return balances;
-    }, [journalVouchers, customers, vendors, userAccounts]);
+    }, [journalVouchers, combinedAccounts]);
     
     // Calculate P&L for Retained Earnings
     const netProfit = useMemo(() => {
-        const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue');
-        const expenseAccounts = allAccounts.filter(a => a.type === 'Expense');
-        const totalRevenue = revenueAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
-        const totalExpenses = expenseAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+        const revenueAccounts = combinedAccounts.filter((a: any) => ['Revenue', 'Other Income'].includes(a.type));
+        const expenseAccounts = combinedAccounts.filter((a: any) => ['Expense', 'Cost of Goods Sold'].includes(a.type));
+        
+        const totalRevenue = revenueAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
+        const totalExpenses = expenseAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
+        
         return totalRevenue - totalExpenses;
-    }, [accountBalances]);
+    }, [accountBalances, combinedAccounts]);
 
     // Aggregate Liabilities and Equity
     const capitalAccount = (accountBalances['2010'] || 0);
-    const reservesAndSurplus = (accountBalances['2020'] || 0) + netProfit;
+    const reservesAndSurplus = (accountBalances['2020'] || 0) + (accountBalances['2030'] || 0) + netProfit;
     
-    const longTermLiabilities = allAccounts
-        .filter(a => a.type === 'Long Term Liability')
-        .reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
-    
-    const currentLiabilitiesAccounts = [
-        ...allAccounts.filter(a => a.type === 'Current Liability'),
-        ...vendors.map(v => ({code: v.id, name: v.name}))
-    ];
-    const totalCurrentLiabilities = currentLiabilitiesAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+    const longTermLiabilitiesAccounts = combinedAccounts.filter((a: any) => a.type === 'Long Term Liability');
+    const longTermLiabilities = longTermLiabilitiesAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
+
+    const currentLiabilitiesAccounts = combinedAccounts.filter((a: any) => a.type === 'Current Liability' || a.type === 'Vendor');
+    const totalCurrentLiabilities = currentLiabilitiesAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
 
     const totalEquityAndLiabilities = capitalAccount + reservesAndSurplus + longTermLiabilities + totalCurrentLiabilities;
 
     // Aggregate Assets
-    const fixedAssetsAccounts = [
-        ...allAccounts.filter(a => a.type === 'Fixed Asset'),
-        ...userAccounts.filter((a: any) => a.type === 'Fixed Asset')
-    ];
+    const fixedAssetsAccounts = combinedAccounts.filter((a: any) => a.type === 'Fixed Asset');
     const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
-    const investmentAccounts = allAccounts.filter(a => a.type === 'Investment');
+    const investmentAccounts = combinedAccounts.filter((a: any) => a.type === 'Investment');
     const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
     
-    const totalReceivables = customers.reduce((sum, customer) => sum + (accountBalances[customer.id] || 0), 0);
+    const receivableAccounts = combinedAccounts.filter((a: any) => a.type === 'Customer' || a.code === '1320');
+    const totalReceivables = receivableAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
-    const currentAssetsAccounts = allAccounts.filter(a => 
-      ['Current Asset', 'Cash', 'Bank'].includes(a.type)
-    );
-    const totalOtherCurrentAssets = currentAssetsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
-
+    const currentAssetsAccounts = combinedAccounts.filter((a: any) => ['Current Asset', 'Cash', 'Bank'].includes(a.type) && a.code !== '1320');
+    const totalOtherCurrentAssets = currentAssetsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
+    
     const totalAssets = netFixedAssets + totalInvestments + totalReceivables + totalOtherCurrentAssets;
+
 
     // Schedules
     const depreciationSchedule = useMemo(() => {
@@ -183,9 +182,9 @@ export default function BalanceSheetPage() {
             ["  Capital Account", formatCurrency(capitalAccount)],
             ["  Reserves & Surplus (incl. P&L)", formatCurrency(reservesAndSurplus)],
             ["Long-Term Liabilities", ""],
-            ["  Long-Term Loans", formatCurrency(longTermLiabilities)],
+            ...longTermLiabilitiesAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
             ["Current Liabilities", ""],
-            ...currentLiabilitiesAccounts.map(acc => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
+            ...currentLiabilitiesAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
         ];
         (doc as any).autoTable({
             head: [['Liabilities & Equity', 'Amount (₹)']],
@@ -208,7 +207,7 @@ export default function BalanceSheetPage() {
             ["Investments", formatCurrency(totalInvestments)],
             ["Current Assets", ""],
             ["  Accounts Receivable", formatCurrency(totalReceivables)],
-            ...currentAssetsAccounts.map(acc => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
+            ...currentAssetsAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
         ];
          (doc as any).autoTable({
             head: [['Assets', 'Amount (₹)']],
@@ -292,10 +291,12 @@ export default function BalanceSheetPage() {
                             <ReportRow label="Reserves & Surplus (incl. P&L)" value={reservesAndSurplus} isSub />
                             
                             <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Long-Term Loans" value={longTermLiabilities} isSub />
+                            {longTermLiabilitiesAccounts.map((acc: any) => (
+                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                            ))}
 
                             <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
-                             {currentLiabilitiesAccounts.map(acc => (
+                             {currentLiabilitiesAccounts.map((acc: any) => (
                                 <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
                             ))}
                         </TableBody>
@@ -323,7 +324,7 @@ export default function BalanceSheetPage() {
 
                             <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
                             <ReportRow label="Accounts Receivable" value={totalReceivables} isSub />
-                            {currentAssetsAccounts.map(acc => (
+                            {currentAssetsAccounts.map((acc: any) => (
                                 <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
                             ))}
                         </TableBody>
@@ -452,3 +453,5 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
+
+  

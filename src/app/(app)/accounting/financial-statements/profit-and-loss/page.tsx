@@ -30,6 +30,11 @@ import { allAccounts } from "@/lib/accounts";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from "date-fns";
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+
 
 declare module 'jspdf' {
     interface jsPDF {
@@ -46,38 +51,48 @@ const formatCurrency = (value: number) => {
 export default function ProfitAndLossPage() {
     const { toast } = useToast();
     const { journalVouchers, loading } = useContext(AccountingContext)!;
+    const [user] = useAuthState(auth);
+
+    // Fetch custom accounts to include them in calculations
+    const accountsQuery = user ? query(collection(db, 'user_accounts'), where("userId", "==", user.uid)) : null;
+    const [accountsSnapshot] = useCollection(accountsQuery);
+    const userAccounts = useMemo(() => accountsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [accountsSnapshot]);
+
+    const combinedAccounts = useMemo(() => {
+        return [...allAccounts, ...userAccounts];
+    }, [userAccounts]);
     
     const accountBalances = useMemo(() => {
         const balances: Record<string, number> = {};
 
-        allAccounts.forEach(acc => {
+        combinedAccounts.forEach((acc: any) => {
             balances[acc.code] = 0;
         });
 
         journalVouchers.forEach(voucher => {
             voucher.lines.forEach(line => {
                 if (balances.hasOwnProperty(line.account)) {
-                    const accountDetails = allAccounts.find(a => a.code === line.account);
+                    const accountDetails = combinedAccounts.find((a: any) => a.code === line.account);
                     const debit = parseFloat(line.debit);
                     const credit = parseFloat(line.credit);
 
-                    if (accountDetails?.type === 'Asset' || accountDetails?.type === 'Expense' || accountDetails?.type === 'Cost of Goods Sold') {
+                    if (accountDetails && ['Asset', 'Expense', 'Cost of Goods Sold'].includes(accountDetails.type)) {
                         balances[line.account] += debit - credit;
-                    } else { // Liability, Equity, Revenue
+                    } else { // Liability, Equity, Revenue, Other Income
                         balances[line.account] += credit - debit;
                     }
                 }
             });
         });
         return balances;
-    }, [journalVouchers]);
+    }, [journalVouchers, combinedAccounts]);
     
-    const revenueAccounts = allAccounts.filter(a => a.type === 'Revenue');
-    const cogsAccounts = allAccounts.filter(a => a.type === 'Cost of Goods Sold');
-    const expenseAccounts = allAccounts.filter(a => a.type === 'Expense');
+    const revenueAccounts = combinedAccounts.filter((a: any) => a.type === 'Revenue' || a.type === 'Other Income');
+    const cogsAccounts = combinedAccounts.filter((a: any) => a.type === 'Cost of Goods Sold');
+    const expenseAccounts = combinedAccounts.filter((a: any) => a.type === 'Expense');
 
-    const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, revenueAccounts]);
-    const totalCogs = useMemo(() => cogsAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, cogsAccounts]);
+    const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, revenueAccounts]);
+    const totalCogs = useMemo(() => cogsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, cogsAccounts]);
     
     const grossProfit = totalRevenue - totalCogs;
     
@@ -86,12 +101,13 @@ export default function ProfitAndLossPage() {
     const tradingTotal = Math.max(tradingDebits, tradingCredits);
     
     const operatingExpenses = expenseAccounts;
-    const totalOperatingExpenses = operatingExpenses.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+    const totalOperatingExpenses = operatingExpenses.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
     const grossProfitBroughtDown = grossProfit >= 0 ? grossProfit : 0;
     const grossLossBroughtDown = grossProfit < 0 ? -grossProfit : 0;
     
-    const plCreditSideTotal = grossProfitBroughtDown; // + other incomes if any
+    // Assuming 'Other Income' is part of totalRevenue now
+    const plCreditSideTotal = grossProfitBroughtDown;
     const plDebitSideTotal = totalOperatingExpenses + grossLossBroughtDown;
     
     const netProfit = plCreditSideTotal - plDebitSideTotal;
@@ -161,7 +177,7 @@ export default function ProfitAndLossPage() {
         if (grossProfit < 0) {
             plBodyDebit.push(["To Gross Loss b/d", { content: formatCurrency(-grossProfit), styles: { halign: 'right' }}]);
         }
-        plBodyDebit.push(...operatingExpenses.map(acc => ([`To ${acc.name}`, { content: formatCurrency(accountBalances[acc.code] || 0), styles: { halign: 'right' }}])));
+        plBodyDebit.push(...operatingExpenses.map((acc: any) => ([`To ${acc.name}`, { content: formatCurrency(accountBalances[acc.code] || 0), styles: { halign: 'right' }}])));
         if (netProfit >= 0) {
             plBodyDebit.push(["To Net Profit", { content: formatCurrency(netProfit), styles: { halign: 'right' }}]);
         }
@@ -170,7 +186,6 @@ export default function ProfitAndLossPage() {
         if (grossProfit >= 0) {
             plBodyCredit.push(["By Gross Profit b/d", { content: formatCurrency(grossProfit), styles: { halign: 'right' }}]);
         }
-         plBodyCredit.push(["By Other Income", { content: formatCurrency(0), styles: { halign: 'right' }}]);
         if (netProfit < 0) {
             plBodyCredit.push(["By Net Loss", { content: formatCurrency(-netProfit), styles: { halign: 'right' }}]);
         }
@@ -266,7 +281,7 @@ export default function ProfitAndLossPage() {
                     <Table>
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
-                            <ReportRow label="By Sales Revenue" value={totalRevenue} />
+                            <ReportRow label="By Sales & Other Income" value={totalRevenue} />
                             {grossProfit < 0 && <ReportRow label="By Gross Loss c/d" value={-grossProfit} />}
                         </TableBody>
                          <TableFooter>
@@ -290,7 +305,7 @@ export default function ProfitAndLossPage() {
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                              {grossProfit < 0 && <ReportRow label="To Gross Loss b/d" value={-grossProfit} />}
-                             {operatingExpenses.map(acc => (
+                             {operatingExpenses.map((acc: any) => (
                                 <ReportRow key={acc.code} label={`To ${acc.name}`} value={accountBalances[acc.code] || 0} />
                              ))}
                              {netProfit >= 0 && <ReportRow label="To Net Profit" value={netProfit} />}
@@ -307,8 +322,6 @@ export default function ProfitAndLossPage() {
                         <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {grossProfit >= 0 && <ReportRow label="By Gross Profit b/d" value={grossProfit} />}
-                            {/* Placeholder for other income */}
-                             <ReportRow label="By Other Income" value={0} />
                             {netProfit < 0 && <ReportRow label="By Net Loss" value={-netProfit} />}
                         </TableBody>
                          <TableFooter>
@@ -329,3 +342,5 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
+
+  
