@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useContext } from 'react';
+import { useState, useMemo, useContext, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -37,9 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowLeft,
   FileUp,
-  RefreshCw,
   GitCompareArrows,
   Check,
   PlusCircle,
@@ -78,11 +76,15 @@ type BookTransaction = {
 export default function BankReconciliationPage() {
     const { toast } = useToast();
     const { journalVouchers, addJournalVoucher, loading } = useContext(AccountingContext)!;
+    
     const [statementTransactions, setStatementTransactions] = useState<StatementTransaction[]>([]);
     const [bookTransactions, setBookTransactions] = useState<BookTransaction[]>([]);
     
     const [selectedStatementTxs, setSelectedStatementTxs] = useState<Set<string>>(new Set());
     const [selectedBookTxs, setSelectedBookTxs] = useState<Set<string>>(new Set());
+
+    const [matchedPairs, setMatchedPairs] = useState<Map<string, string>>(new Map());
+
     const [bankAccount, setBankAccount] = useState<string>("1520"); // Default to HDFC Bank
 
     const [isAddEntryDialogOpen, setIsAddEntryDialogOpen] = useState(false);
@@ -120,9 +122,8 @@ export default function BankReconciliationPage() {
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
             
-            // Assuming CSV format: Date, Description, Withdrawal, Deposit
             const parsedData: StatementTransaction[] = json.slice(1).map((row, index) => ({
-                id: `stmt-${index}`,
+                id: `stmt-${index}-${Date.now()}`,
                 date: row[0],
                 description: row[1],
                 withdrawal: row[2] ? parseFloat(row[2]) : null,
@@ -134,21 +135,23 @@ export default function BankReconciliationPage() {
         reader.readAsArrayBuffer(file);
     };
     
-    const toggleSelection = (id: string, type: 'statement' | 'book') => {
+    const toggleSelection = useCallback((id: string, type: 'statement' | 'book') => {
         if (type === 'statement') {
             setSelectedStatementTxs(prev => {
                 const newSelection = new Set(prev);
-                if (newSelection.has(id)) newSelection.delete(id); else newSelection.add(id);
+                if (newSelection.has(id)) newSelection.delete(id);
+                else newSelection.add(id);
                 return newSelection;
             });
         } else {
-            setSelectedBookTxs(prev => {
+             setSelectedBookTxs(prev => {
                 const newSelection = new Set(prev);
-                if (newSelection.has(id)) newSelection.delete(id); else newSelection.add(id);
+                if (newSelection.has(id)) newSelection.delete(id);
+                else newSelection.add(id);
                 return newSelection;
             });
         }
-    };
+    }, []);
     
     const handleMatch = () => {
         if (selectedStatementTxs.size === 0 || selectedBookTxs.size === 0) {
@@ -163,7 +166,8 @@ export default function BankReconciliationPage() {
 
         const totalBook = Array.from(selectedBookTxs).reduce((acc, id) => {
             const tx = bookTransactions.find(t => t.id === id);
-            return acc + (tx?.type === 'Receipt' ? tx.amount : -tx.amount);
+            const amount = tx ? (tx.type === 'Receipt' ? tx.amount : -tx.amount) : 0;
+            return acc + amount;
         }, 0);
         
         if (Math.abs(totalStatement - totalBook) > 0.01) {
@@ -173,8 +177,14 @@ export default function BankReconciliationPage() {
         
         const matchId = `match-${Date.now()}`;
         
-        setStatementTransactions(prev => prev.map(tx => selectedStatementTxs.has(tx.id) ? { ...tx, matchedId: matchId } : tx));
-        setBookTransactions(prev => prev.map(tx => selectedBookTxs.has(tx.id) ? { ...tx, matchedId: matchId } : tx));
+        const newMatchedPairs = new Map(matchedPairs);
+        selectedStatementTxs.forEach(stmtId => {
+            newMatchedPairs.set(stmtId, matchId);
+        });
+        selectedBookTxs.forEach(bookId => {
+            newMatchedPairs.set(bookId, matchId);
+        });
+        setMatchedPairs(newMatchedPairs);
         
         toast({ title: "Transactions Matched", description: `${selectedStatementTxs.size} bank transaction(s) matched with ${selectedBookTxs.size} book transaction(s).` });
 
@@ -183,7 +193,7 @@ export default function BankReconciliationPage() {
     };
     
     const handleOpenAddEntryDialog = (tx: StatementTransaction) => {
-        if (tx.matchedId) {
+        if (matchedPairs.has(tx.id)) {
              toast({ variant: "destructive", title: "Already Matched", description: "This transaction has already been reconciled." });
              return;
         }
@@ -222,9 +232,10 @@ export default function BankReconciliationPage() {
         };
         
         try {
-            await addJournalVoucher(newVoucher);
-            // Mark as matched locally
-            setStatementTransactions(prev => prev.map(tx => tx.id === entryToCreate.id ? {...tx, matchedId: `created-${voucherId}`} : tx));
+            await addJournalVoucher(newVoucher as any);
+            const newMatchedPairs = new Map(matchedPairs);
+            newMatchedPairs.set(entryToCreate.id, `created-${voucherId}`);
+            setMatchedPairs(newMatchedPairs);
             
             toast({ title: "Entry Created", description: "The missing transaction has been recorded."});
             setIsAddEntryDialogOpen(false);
@@ -303,7 +314,7 @@ export default function BankReconciliationPage() {
                     date: tx.date,
                     description: tx.description,
                     amount: tx.deposit !== null ? tx.deposit : tx.withdrawal !== null ? -tx.withdrawal : 0,
-                    matched: !!tx.matchedId,
+                    matched: matchedPairs.has(tx.id),
                     raw: tx,
                 }))}
                 selectedTxs={selectedStatementTxs}
@@ -331,7 +342,7 @@ export default function BankReconciliationPage() {
                     date: tx.date,
                     description: tx.description,
                     amount: tx.type === 'Receipt' ? tx.amount : -tx.amount,
-                    matched: !!tx.matchedId,
+                    matched: matchedPairs.has(tx.id),
                     raw: tx
                 }))}
                 selectedTxs={selectedBookTxs}
@@ -410,8 +421,8 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
                             {type === 'statement' ? 'Upload a statement to see transactions.' : 'No book transactions for this period.'}
                         </TableCell></TableRow>
                     ) : (
-                        transactions.map((tx, index) => (
-                            <TableRow key={`${tx.id}-${index}`} data-state={selectedTxs.has(tx.id) ? "selected" : ""}>
+                        transactions.map((tx) => (
+                            <TableRow key={tx.id} data-state={selectedTxs.has(tx.id) ? "selected" : ""}>
                                 <TableCell>
                                     {tx.matched ? (
                                         <Badge variant="secondary" className="flex items-center justify-center h-6 w-6 p-0"><Check className="size-4 text-green-600"/></Badge>
