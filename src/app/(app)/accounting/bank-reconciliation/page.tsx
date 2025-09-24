@@ -634,3 +634,4 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
         </div>
     );
 }
+
