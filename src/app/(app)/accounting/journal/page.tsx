@@ -154,6 +154,7 @@ export default function JournalVoucherPage() {
             account: line.account,
             debit: line.credit, // Swap debit and credit
             credit: line.debit,
+            costCentre: line.costCentre || '',
         }));
         
         const reversalVoucher = {
@@ -211,7 +212,6 @@ export default function JournalVoucherPage() {
             line['debit'] = '0';
         }
         
-        // If account changes, check if it's no longer income/expense and clear cost centre
         if (field === 'account') {
             const accountDetails = allAccounts.find(acc => acc.code === value);
             if (accountDetails && !['Revenue', 'Expense'].includes(accountDetails.type)) {
@@ -230,7 +230,7 @@ export default function JournalVoucherPage() {
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
-            setEditingVoucher(null); // Reset editing mode on close
+            setEditingVoucher(null); 
         }
         setIsAddDialogOpen(open);
     }
@@ -243,9 +243,8 @@ export default function JournalVoucherPage() {
 
         const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0);
         const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0);
-        const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01 && totalDebits > 0;
         
-        if (!isBalanced) {
+        if (Math.abs(totalDebits - totalCredits) > 0.01 || totalDebits === 0) {
             toast({ variant: "destructive", title: "Unbalanced Entry", description: "Debit and credit totals must match and be greater than zero." });
             return;
         }
@@ -273,7 +272,7 @@ export default function JournalVoucherPage() {
                 });
             }
 
-            handleDialogClose(false); // Close dialog and reset state
+            handleDialogClose(false);
 
         } catch (e: any) {
             toast({ variant: "destructive", title: "Save failed", description: e.message });
