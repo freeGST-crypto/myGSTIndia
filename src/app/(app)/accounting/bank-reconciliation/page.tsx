@@ -223,17 +223,20 @@ export default function BankReconciliationPage() {
     }, []);
     
     const handleMatch = () => {
-        if (selectedStatementTxs.size === 0 || selectedBookTxs.size === 0) {
-            toast({ variant: "destructive", title: "Selection Error", description: "You must select at least one transaction from each side to match." });
+        const currentlySelectedStatementTxs = Array.from(selectedStatementTxs).filter(id => !matchedPairs.has(id));
+        const currentlySelectedBookTxs = Array.from(selectedBookTxs).filter(id => !matchedPairs.has(id));
+
+        if (currentlySelectedStatementTxs.length === 0 || currentlySelectedBookTxs.length === 0) {
+            toast({ variant: "destructive", title: "Selection Error", description: "You must select at least one new transaction from each side to match." });
             return;
         }
 
-        const totalStatement = Array.from(selectedStatementTxs).reduce((acc, id) => {
+        const totalStatement = currentlySelectedStatementTxs.reduce((acc, id) => {
             const tx = statementTransactions.find(t => t.id === id);
             return acc + (tx?.deposit || 0) - (tx?.withdrawal || 0);
         }, 0);
 
-        const totalBook = Array.from(selectedBookTxs).reduce((acc, id) => {
+        const totalBook = currentlySelectedBookTxs.reduce((acc, id) => {
             const tx = bookTransactions.find(t => t.id === id);
             const amount = tx ? (tx.type === 'Receipt' ? tx.amount : -tx.amount) : 0;
             return acc + amount;
@@ -246,11 +249,11 @@ export default function BankReconciliationPage() {
         
         const matchId = `match-${Date.now()}`;
         const newMatchedPairs = new Map(matchedPairs);
-        selectedStatementTxs.forEach(stmtId => newMatchedPairs.set(stmtId, matchId));
-        selectedBookTxs.forEach(bookId => newMatchedPairs.set(bookId, matchId));
+        currentlySelectedStatementTxs.forEach(stmtId => newMatchedPairs.set(stmtId, matchId));
+        currentlySelectedBookTxs.forEach(bookId => newMatchedPairs.set(bookId, matchId));
         setMatchedPairs(newMatchedPairs);
         
-        toast({ title: "Transactions Matched", description: `${selectedStatementTxs.size} bank transaction(s) matched with ${selectedBookTxs.size} book transaction(s).` });
+        toast({ title: "Transactions Matched", description: `${currentlySelectedStatementTxs.length} bank transaction(s) matched with ${currentlySelectedBookTxs.length} book transaction(s).` });
 
         setSelectedStatementTxs(new Set());
         setSelectedBookTxs(new Set());
@@ -588,3 +591,5 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
         </div>
     );
 }
+
+    
