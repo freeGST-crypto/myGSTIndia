@@ -518,5 +518,3 @@ export default function NewPurchasePage() {
     </div>
   );
 }
-
-    
