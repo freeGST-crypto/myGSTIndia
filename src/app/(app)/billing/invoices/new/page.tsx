@@ -169,15 +169,20 @@ export default function NewInvoicePage() {
   const items: Item[] = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [], [itemsSnapshot]);
 
   useEffect(() => {
-    const editId = searchParams.get('edit') || searchParams.get('duplicate');
-    if (editId && journalVouchers.length > 0 && items.length > 0) {
-      const voucherToLoad = journalVouchers.find(v => v.id === editId);
+    const editId = searchParams.get('edit');
+    const duplicateId = searchParams.get('duplicate');
+    const voucherIdToLoad = editId || duplicateId;
+
+    if (voucherIdToLoad && journalVouchers.length > 0 && items.length > 0) {
+      const voucherToLoad = journalVouchers.find(v => v.id === voucherIdToLoad);
       if (voucherToLoad) {
         setInvoiceDate(new Date(voucherToLoad.date));
         setCustomer(voucherToLoad.customerId || "");
         
-        if (searchParams.get('edit')) {
+        if (editId) {
             setInvoiceNumber(voucherToLoad.id.replace('INV-', ''));
+        } else {
+            setInvoiceNumber(""); // Clear number for duplication
         }
 
         const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
