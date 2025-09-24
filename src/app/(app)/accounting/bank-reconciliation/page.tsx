@@ -42,14 +42,15 @@ import {
   Check,
   PlusCircle,
   Loader2,
-  FileText
+  FileText,
+  Download
 } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
 import { allAccounts } from '@/lib/accounts';
 import { AccountingContext } from '@/context/accounting-context';
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import * as XLSX from 'xlsx';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -71,6 +72,42 @@ type BookTransaction = {
   type: 'Receipt' | 'Payment';
   amount: number;
   matchedId?: string | null;
+};
+
+// Robust date parsing function
+const parseDateString = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+
+  // List of possible formats to try
+  const formats = [
+    'dd-MM-yyyy',
+    'dd/MM/yyyy',
+    'MM-dd-yyyy',
+    'MM/dd/yyyy',
+    'yyyy-MM-dd',
+    'yyyy/MM/dd',
+    'dd MMM yyyy',
+    'dd MMMM yyyy',
+  ];
+
+  for (const fmt of formats) {
+    try {
+      const parsedDate = parse(dateStr, fmt, new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+    } catch (e) {
+      // Ignore parsing errors and try next format
+    }
+  }
+
+  // Final attempt with direct parsing (for ISO strings etc.)
+  const directParse = new Date(dateStr);
+  if (!isNaN(directParse.getTime())) {
+      return directParse;
+  }
+
+  return null; // Return null if no format matches
 };
 
 export default function BankReconciliationPage() {
@@ -120,21 +157,41 @@ export default function BankReconciliationPage() {
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as any[][];
             
-            const parsedData: StatementTransaction[] = json.slice(1).map((row, index) => ({
-                id: `stmt-${index}-${Date.now()}`,
-                date: row[0],
-                description: row[1],
-                withdrawal: row[2] ? parseFloat(row[2]) : null,
-                deposit: row[3] ? parseFloat(row[3]) : null,
-            }));
+            const parsedData: StatementTransaction[] = json.slice(1).map((row, index) => {
+                const parsedDate = parseDateString(row[0]);
+                return {
+                    id: `stmt-${index}-${Date.now()}`,
+                    date: parsedDate ? format(parsedDate, 'yyyy-MM-dd') : '1970-01-01',
+                    description: row[1],
+                    withdrawal: row[2] ? parseFloat(row[2]) : null,
+                    deposit: row[3] ? parseFloat(row[3]) : null,
+                }
+            });
             setStatementTransactions(parsedData);
             toast({ title: "Statement Uploaded", description: `${parsedData.length} transactions loaded.` });
         };
         reader.readAsArrayBuffer(file);
     };
     
+    const handleDownloadTemplate = () => {
+        const headers = "Date,Description,Withdrawal,Deposit";
+        const exampleData = [
+            `"${format(new Date(), 'yyyy-MM-dd')}","Sample Deposit from Client",,"50000.00"`,
+            `"${format(new Date(), 'yyyy-MM-dd')}","Sample Withdrawal for Rent","15000.00",`,
+        ].join("\n");
+        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "bank_statement_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Template Downloaded", description: "A sample CSV template has been downloaded." });
+    };
+
     const toggleSelection = useCallback((id: string, type: 'statement' | 'book') => {
         if (type === 'statement') {
             setSelectedStatementTxs(prev => {
@@ -282,12 +339,13 @@ export default function BankReconciliationPage() {
                 <Label>Reconciliation Period</Label>
                 <DateRangePicker />
               </div>
-               <div className="space-y-2 self-end">
-                 <Input id="statement-upload" type="file" className="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onChange={handleFileUpload} />
-                 <Button asChild variant="outline">
-                    <label htmlFor="statement-upload" className="cursor-pointer">
-                        <FileUp className="mr-2"/> Upload Bank Statement
-                    </label>
+               <div className="flex gap-2 items-end">
+                 <div className="space-y-2">
+                    <Label htmlFor="statement-upload">Bank Statement File</Label>
+                    <Input id="statement-upload" type="file" className="w-full max-w-xs" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onChange={handleFileUpload} />
+                 </div>
+                 <Button variant="outline" size="icon" onClick={handleDownloadTemplate} title="Download Template">
+                    <Download className="h-4 w-4" />
                  </Button>
             </div>
           </div>
