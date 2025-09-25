@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search, MessageSquare, Printer } from "lucide-react";
@@ -51,8 +52,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { InvoicePreview } from "@/components/billing/invoice-preview";
 import { useReactToPrint } from 'react-to-print';
-import { DialogDescription } from "@/components/ui/dialog";
-
 
 declare module 'jspdf' {
     interface jsPDF {
@@ -70,27 +69,16 @@ type Invoice = {
   raw: JournalVoucher;
 }
 
-export default function InvoicesPage() {
-  const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
-  const [user] = useAuthState(auth);
-  const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
+export function QuickInvoiceDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { toast } = useToast();
+  const [user] = useAuthState(auth);
+  const accountingContext = useContext(AccountingContext);
 
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-
-  // State for the quick invoice form
-  const [isQuickInvoiceOpen, setIsQuickInvoiceOpen] = useState(false);
   const [quickInvNum, setQuickInvNum] = useState("");
   const [quickCustomer, setQuickCustomer] = useState("");
   const [quickItem, setQuickItem] = useState<{ id: string, name: string, sellingPrice: number} | null>(null);
   const [quickQty, setQuickQty] = useState(1);
   const [quickRate, setQuickRate] = useState(0);
-
-  const invoicePreviewRef = useRef(null);
-  const handlePrint = useReactToPrint({
-      content: () => invoicePreviewRef.current,
-  });
 
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
@@ -100,42 +88,8 @@ export default function InvoicesPage() {
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
   const items = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [itemsSnapshot]);
 
-  const invoices: Invoice[] = useMemo(() => {
-    const allInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("INV-") && !v.reverses);
-    
-    const cancelledInvoiceIds = new Set(
-        journalVouchers
-            .filter(v => v && v.reverses && v.reverses.startsWith("INV-"))
-            .map(v => v.reverses)
-    );
-    
-    return allInvoices
-        .map(v => {
-            if (!v || !v.id) return null;
-            const isCancelled = cancelledInvoiceIds.has(v.id);
-            const dueDate = addDays(new Date(v.date), 30);
-            const isOverdue = !isCancelled && isPast(dueDate);
-            
-            let status = "Pending";
-            if (isCancelled) {
-                status = "Cancelled";
-            } else if (isOverdue) {
-                status = "Overdue";
-            }
-            
-            return {
-                id: v.id,
-                customer: v.narration.replace("Sale to ", "").split(" via")[0],
-                date: v.date,
-                dueDate: format(dueDate, 'yyyy-MM-dd'),
-                amount: v.amount,
-                status: status,
-                raw: v,
-            }
-        })
-        .filter((v): v is Invoice => v !== null);
-  }, [journalVouchers]);
-
+  if (!accountingContext) return null;
+  const { addJournalVoucher } = accountingContext;
 
   const handleQuickInvoiceCreate = async () => {
     const selectedCustomer = customers.find((c: any) => c.id === quickCustomer);
@@ -180,7 +134,7 @@ export default function InvoicesPage() {
         setQuickItem(null);
         setQuickQty(1);
         setQuickRate(0);
-        setIsQuickInvoiceOpen(false);
+        onOpenChange(false);
 
     } catch (e: any) {
         toast({ variant: "destructive", title: "Failed to save invoice", description: e.message });
@@ -195,7 +149,107 @@ export default function InvoicesPage() {
     }
   }
 
-    const handleCancelInvoice = async (invoiceId: string) => {
+  return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Quick Invoice</DialogTitle>
+                    <DialogDescription>Create a simple invoice with just the essentials.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="quick-inv-num">Invoice #</Label>
+                        <Input id="quick-inv-num" placeholder="005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="quick-customer">Customer</Label>
+                        <Select value={quickCustomer} onValueChange={setQuickCustomer} disabled={customersLoading}>
+                            <SelectTrigger id="quick-customer"><SelectValue placeholder={customersLoading ? "Loading..." : "Select customer"} /></SelectTrigger>
+                            <SelectContent>{customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="quick-item">Item</Label>
+                        <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange} disabled={itemsLoading}>
+                            <SelectTrigger id="quick-item"><SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} /></SelectTrigger>
+                            <SelectContent>{items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="quick-qty">Qty</Label>
+                            <Input id="quick-qty" type="number" placeholder="1" value={quickQty} onChange={e => setQuickQty(parseInt(e.target.value) || 1)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="quick-rate">Rate (₹)</Label>
+                            <Input id="quick-rate" type="number" placeholder="0.00" value={quickRate} onChange={e => setQuickRate(parseFloat(e.target.value) || 0)} />
+                        </div>
+                     </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleQuickInvoiceCreate}>Create Quick Invoice</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+  )
+}
+
+export default function InvoicesPage() {
+  const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
+  const [user] = useAuthState(auth);
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const invoicePreviewRef = useRef(null);
+  const handlePrint = useReactToPrint({
+      content: () => invoicePreviewRef.current,
+  });
+
+  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+  const [customersSnapshot, customersLoading] = useCollection(customersQuery);
+  const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
+
+  const invoices: Invoice[] = useMemo(() => {
+    const allInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("INV-") && !v.reverses);
+    
+    const cancelledInvoiceIds = new Set(
+        journalVouchers
+            .filter(v => v && v.reverses && v.reverses.startsWith("INV-"))
+            .map(v => v.reverses)
+    );
+    
+    return allInvoices
+        .map(v => {
+            if (!v || !v.id) return null;
+            const isCancelled = cancelledInvoiceIds.has(v.id);
+            const dueDate = addDays(new Date(v.date), 30);
+            const isOverdue = !isCancelled && isPast(dueDate);
+            
+            let status = "Pending";
+            if (isCancelled) {
+                status = "Cancelled";
+            } else if (isOverdue) {
+                status = "Overdue";
+            }
+            
+            return {
+                id: v.id,
+                customer: v.narration.replace("Sale to ", "").split(" via")[0],
+                date: v.date,
+                dueDate: format(dueDate, 'yyyy-MM-dd'),
+                amount: v.amount,
+                status: status,
+                raw: v,
+            }
+        })
+        .filter((v): v is Invoice => v !== null);
+  }, [journalVouchers]);
+
+
+    const handleCancelInvoice = async (invoiceId: string): Promise<boolean> => {
         const originalVoucher = journalVouchers.find(v => v.id === invoiceId);
 
         if (!originalVoucher) {
@@ -259,7 +313,7 @@ export default function InvoicesPage() {
                  toast({ variant: 'destructive', title: 'Edit Failed', description: `Could not cancel the original invoice.` });
             }
         } else if (action === 'Remind') {
-            const customer = customers.find(c => c.id === invoice.raw.customerId);
+            const customer: any = customers.find(c => c.id === invoice.raw.customerId);
             if (customer && customer.phone) {
                 const message = encodeURIComponent(
                     `Hi ${customer.name}, this is a friendly reminder for invoice ${invoice.id} amounting to ₹${invoice.amount.toFixed(2)}, which was due on ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}. Please make the payment at your earliest convenience. Thank you, ${companyInfo.name}.`
@@ -361,48 +415,6 @@ export default function InvoicesPage() {
           loading={journalLoading}
         />
       </div>
-
-       <Dialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Quick Invoice</DialogTitle>
-                    <DialogDescription>Create a simple invoice with just the essentials.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="quick-inv-num">Invoice #</Label>
-                        <Input id="quick-inv-num" placeholder="005" value={quickInvNum} onChange={e => setQuickInvNum(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="quick-customer">Customer</Label>
-                        <Select value={quickCustomer} onValueChange={setQuickCustomer} disabled={customersLoading}>
-                            <SelectTrigger id="quick-customer"><SelectValue placeholder={customersLoading ? "Loading..." : "Select customer"} /></SelectTrigger>
-                            <SelectContent>{customers.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="quick-item">Item</Label>
-                        <Select value={quickItem?.id || ""} onValueChange={handleQuickItemChange} disabled={itemsLoading}>
-                            <SelectTrigger id="quick-item"><SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} /></SelectTrigger>
-                            <SelectContent>{items.map((i: any) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent>
-                        </Select>
-                    </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="quick-qty">Qty</Label>
-                            <Input id="quick-qty" type="number" placeholder="1" value={quickQty} onChange={e => setQuickQty(parseInt(e.target.value) || 1)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="quick-rate">Rate (₹)</Label>
-                            <Input id="quick-rate" type="number" placeholder="0.00" value={quickRate} onChange={e => setQuickRate(parseFloat(e.target.value) || 0)} />
-                        </div>
-                     </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleQuickInvoiceCreate}>Create Quick Invoice</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
 
       <Card>
         <CardHeader>

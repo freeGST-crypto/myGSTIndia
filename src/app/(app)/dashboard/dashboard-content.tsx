@@ -3,10 +3,9 @@
 
 import { useState, useMemo, useContext, memo } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { DollarSign, IndianRupee, CreditCard, Users, Search } from "lucide-react";
+import { DollarSign, IndianRupee, CreditCard, Users, Search, Zap } from "lucide-react";
 import { FinancialSummaryChart } from "@/components/dashboard/financial-summary-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { allAccounts } from "@/lib/accounts";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
+import { Button } from "@/components/ui/button";
+import { QuickInvoiceDialog } from "../billing/invoices/page";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -28,6 +29,7 @@ function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const accountingContext = useContext(AccountingContext);
   const [user] = useAuthState(auth);
+  const [isQuickInvoiceOpen, setIsQuickInvoiceOpen] = useState(false);
   
   if (!accountingContext) {
     // This can happen briefly on initial load or if context is not provided
@@ -158,8 +160,23 @@ function DashboardContent() {
         <div className="lg:col-span-2">
             <FinancialSummaryChart />
         </div>
-        <div>
-             <ShortcutGuide />
+        <div className="space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Zap className="size-5 text-primary"/>
+                        Rapid Actions
+                    </CardTitle>
+                    <CardDescription>Quickly record common transactions.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                     <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>Quick Invoice</Button>
+                     <Link href="/purchases/rapid" passHref><Button variant="outline">Quick Purchase</Button></Link>
+                     <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Receipt</Button></Link>
+                     <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Payment</Button></Link>
+                </CardContent>
+            </Card>
+            <ShortcutGuide />
         </div>
       </div>
       
@@ -183,10 +200,9 @@ function DashboardContent() {
         </CardContent>
       </Card>
 
+      <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />
     </div>
   );
 }
 
 export default memo(DashboardContent);
-
-
