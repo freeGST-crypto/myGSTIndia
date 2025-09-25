@@ -8,7 +8,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, IndianRupee, Landmark, Percent } from "lucide-react";
@@ -21,9 +20,9 @@ import { format } from 'date-fns';
 
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455", bankIfsc: "HDFC0000123", uan: "101234567890", esi: "" },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566", bankIfsc: "ICIC0000456", uan: "109876543210", esi: "" },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677", bankIfsc: "SBIN0000789", uan: "102345678901", esi: "1234567" },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455", bankIfsc: "HDFC0000123", uan: "101234567890", esi: "", pan: "ABCDE1234F" },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566", bankIfsc: "ICIC0000456", uan: "109876543210", esi: "", pan: "FGHIJ5678K" },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677", bankIfsc: "SBIN0000789", uan: "102345678901", esi: "1234567", pan: "KLMNO9876P" },
 ];
 
 const calculateSalary = (emp: any) => {
@@ -59,76 +58,65 @@ export default function PayrollReportsPage() {
 
 
   const handleGenerateReport = (reportId: string, reportTitle: string) => {
-    let headers: string[];
-    let data: (string | number)[][];
-    let fileType: 'csv' | 'txt' = 'csv';
+    let worksheet: XLSX.WorkSheet;
+    let fileType: 'txt' | 'xlsx' = 'xlsx';
     
     switch (reportId) {
       case "pf_ecr":
-        headers = ["UAN", "Member Name", "Gross Wages", "EPF Wages", "EPS Wages", "EDLI Wages", "EPF Contribution", "EPS Contribution", "EDLI Contribution"];
-        data = payrollData.map(emp => [
-            emp.uan,
-            emp.name,
-            emp.grossEarnings,
-            emp.basic <= 15000 ? emp.basic : 15000,
-            emp.basic <= 15000 ? emp.basic : 15000,
-            emp.basic <= 15000 ? emp.basic : 15000,
-            emp.pf, // Employee share
-            1250,   // EPS share (capped)
-            0       // EDLI share (employer side)
-        ]);
-        fileType = 'txt';
-        break;
+        const pf_data = payrollData.map(emp => [
+            emp.uan, emp.name, emp.grossEarnings, emp.basic <= 15000 ? emp.basic : 15000, emp.basic <= 15000 ? emp.basic : 15000, emp.basic <= 15000 ? emp.basic : 15000, emp.pf, 1250, 0
+        ].join('#')).join('\n');
+        const ecrContent = `UAN#Member Name#Gross Wages#EPF Wages#EPS Wages#EDLI Wages#EPF Contribution#EPS Contribution#EDLI Contribution\n${pf_data}`;
+        const ecrBlob = new Blob([ecrContent], { type: 'text/plain' });
+        const ecrUrl = URL.createObjectURL(ecrBlob);
+        const ecrLink = document.createElement('a');
+        ecrLink.href = ecrUrl;
+        ecrLink.download = `PF_ECR_${month}_${year}.txt`;
+        document.body.appendChild(ecrLink);
+        ecrLink.click();
+        document.body.removeChild(ecrLink);
+        URL.revokeObjectURL(ecrUrl);
+        toast({ title: "PF ECR Generated", description: `A .txt file for ${reportMonth} has been downloaded.` });
+        return;
+
       case "esi_return":
-         headers = ["IP Number", "IP Name", "No of Days", "Total Wages", "IP Contribution"];
-         data = payrollData.filter(e => e.esi).map(emp => [
-            emp.esi,
-            emp.name,
-            30, // Assuming 30 days for simplicity
-            emp.grossEarnings,
-            emp.grossEarnings * 0.0075 // Employee ESI contribution
-         ]);
+        worksheet = XLSX.utils.json_to_sheet(payrollData.filter(e => e.esi).map(emp => ({
+            "IP Number": emp.esi,
+            "IP Name": emp.name,
+            "No of Days": 30, // Assuming 30 days
+            "Total Wages": emp.grossEarnings,
+            "IP Contribution": emp.grossEarnings * 0.0075
+        })));
         break;
       case "pt_report":
-        headers = ["Employee Name", "Gross Salary", "PT Amount"];
-        data = payrollData.map(emp => [
-            emp.name,
-            emp.grossEarnings,
-            emp.professionalTax
-        ]);
+        worksheet = XLSX.utils.json_to_sheet(payrollData.map(emp => ({
+            "Employee ID": emp.id,
+            "PAN": emp.pan,
+            "Employee Name": emp.name,
+            "Gross Salary": emp.grossEarnings,
+            "PT Amount": emp.professionalTax
+        })));
         break;
       case "form_24q":
-        headers = ["PAN", "Employee Name", "TDS Amount", "Date of Deduction"];
-        data = payrollData.map(emp => [
-            emp.pan,
-            emp.name,
-            emp.incomeTax,
-            format(new Date(parseInt(year), parseInt(month)-1, 28), 'yyyy-MM-dd')
-        ]);
+        worksheet = XLSX.utils.json_to_sheet(payrollData.map(emp => ({
+            "PAN": emp.pan,
+            "Employee Name": emp.name,
+            "TDS Amount": emp.incomeTax,
+            "Date of Deduction": format(new Date(parseInt(year), parseInt(month)-1, 28), 'yyyy-MM-dd')
+        })));
         break;
       default:
         toast({ variant: "destructive", title: "Invalid Report Type" });
         return;
     }
 
-    let fileContent = headers.join(fileType === 'txt' ? '#' : ',') + '\n';
-    data.forEach(row => {
-        fileContent += row.join(fileType === 'txt' ? '#' : ',') + '\n';
-    });
-
-    const blob = new Blob([fileContent], { type: `text/${fileType}` });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${reportId}_${month}_${year}.${fileType}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, reportTitle);
+    XLSX.writeFile(workbook, `${reportId}_${month}_${year}.xlsx`);
     
     toast({
       title: "Report Generated",
-      description: `A ${reportTitle} file for ${reportMonth} has been downloaded.`,
+      description: `${reportTitle} for ${reportMonth} has been downloaded.`,
     });
   };
 
