@@ -247,11 +247,11 @@ const allMenuItems = [
 ];
 
 const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }) => {
+  const { setOpenMobile } = useSidebar();
+
   const [isOpen, setIsOpen] = React.useState(
     item.subItems?.some((subItem: any) => pathname.startsWith(subItem.href)) || false
   );
-  const { setOpenMobile } = useSidebar();
-
 
   React.useEffect(() => {
     const checkActive = (subItems: any[]): boolean => {
@@ -266,7 +266,6 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   const handleLinkClick = () => {
     setOpenMobile(false);
   };
-
 
   return (
     <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
@@ -305,7 +304,7 @@ const NavMenu = ({ items, pathname, onLinkClick }: { items: any[], pathname: str
               className="w-full"
               size="lg"
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="size-6" />
               <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </SidebarMenuButton>
           </Link>
@@ -333,6 +332,16 @@ function filterMenuByRole(items: any[], role: string): any[] {
   }, []);
 }
 
+const SidebarNavManager = () => {
+    const pathname = usePathname();
+    const { setOpenMobile } = useSidebar();
+    
+    React.useEffect(() => {
+        setOpenMobile(false);
+    }, [pathname, setOpenMobile]);
+
+    return null; // This component doesn't render anything
+};
 
 export default function AppLayout({
   children,
@@ -343,7 +352,6 @@ export default function AppLayout({
   const segment = useSelectedLayoutSegment();
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
-  const { setOpenMobile } = useSidebar();
   
   const userDocRef = user ? doc(db, 'users', user.uid) : null;
   const [userData, userLoading] = useDocumentData(userDocRef);
@@ -435,6 +443,7 @@ export default function AppLayout({
   return (
     <AccountingProvider>
       <SidebarProvider>
+        <SidebarNavManager />
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2">
@@ -446,7 +455,7 @@ export default function AppLayout({
           </SidebarHeader>
           <Separator />
           <SidebarContent>
-              <NavMenu items={menuItems} pathname={pathname} onLinkClick={() => setOpenMobile(false)}/>
+              <NavMenu items={menuItems} pathname={pathname} onLinkClick={() => { /* Removed logic from here */ }}/>
           </SidebarContent>
           <SidebarFooter>
              <div className="flex items-center justify-center gap-4 p-4 group-data-[collapsible=icon]:hidden">
