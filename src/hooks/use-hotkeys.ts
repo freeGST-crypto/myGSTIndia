@@ -7,6 +7,9 @@ type HotkeyMap = Map<string, (event: KeyboardEvent) => void>;
 
 export function useHotkeys(hotkeys: HotkeyMap) {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (!event.key) {
+      return;
+    }
     const key = event.key.toLowerCase();
     
     // Ignore standalone modifier keys or if an input is focused
