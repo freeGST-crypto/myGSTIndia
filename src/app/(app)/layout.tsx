@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -120,6 +119,8 @@ const allMenuItems = [
     roles: ['business', 'professional'],
     subItems: [
         { href: "/reports/cma-report", label: "CMA Report Generator", icon: Presentation, roles: ['business', 'professional'] },
+        { href: "/reports/sales-analysis", label: "Sales Analysis", icon: TrendingUp, roles: ['business', 'professional'] },
+        { href: "/reports/purchase-analysis", label: "Purchase Analysis", icon: ShoppingCart, roles: ['business', 'professional'] },
     ],
   },
    { 

@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Presentation, Construction } from "lucide-react";
+import { ArrowRight, Presentation, TrendingUp, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
 export default function ReportsPage() {
@@ -35,27 +35,31 @@ export default function ReportsPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                           <Construction className="text-primary"/> Sales Analysis
+                           <TrendingUp className="text-primary"/> Sales Analysis
                         </CardTitle>
                         <CardDescription>
                             Deep dive into your sales data with custom filters and visualizations.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Button disabled variant="outline">Coming Soon</Button>
+                         <Link href="/reports/sales-analysis" passHref>
+                            <Button disabled variant="outline">Coming Soon</Button>
+                        </Link>
                     </CardContent>
                 </Card>
                  <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                           <Construction className="text-primary"/> Purchase Analysis
+                           <ShoppingCart className="text-primary"/> Purchase Analysis
                         </CardTitle>
                         <CardDescription>
                             Analyze your purchasing patterns and vendor performance.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Button disabled variant="outline">Coming Soon</Button>
+                        <Link href="/reports/purchase-analysis" passHref>
+                            <Button disabled variant="outline">Coming Soon</Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>
