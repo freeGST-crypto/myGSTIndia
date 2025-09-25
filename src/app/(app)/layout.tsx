@@ -48,7 +48,6 @@ import { Suspense, useEffect } from "react";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Fab } from "@/components/layout/fab";
-import { Marquee } from "@/components/layout/marquee";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
@@ -399,7 +398,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         </Sidebar>
         <SidebarInset>
           <div className="w-full">
-            <Marquee />
             <Header />
             <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8 md:pb-6 pb-24">
                <div className="mx-auto max-w-7xl">
@@ -418,5 +416,3 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 export default AppLayout;
-
-  
