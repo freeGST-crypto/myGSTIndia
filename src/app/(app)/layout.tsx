@@ -218,6 +218,30 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
     setIsOpen(checkActive(item.subItems));
   }, [pathname, item.subItems]);
   
+  const content = (
+      <SidebarMenuSub>
+          {item.subItems.map((subItem: any, index: number) => (
+              <SidebarMenuSubItem key={index}>
+              {subItem.subItems ? (
+                  <CollapsibleMenuItem item={subItem} pathname={pathname} />
+              ) : (
+                  <Link href={subItem.href} passHref>
+                      <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(subItem.href)}
+                          className="w-full"
+                      >
+                          <span className="flex w-full items-center gap-2">
+                              {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                              <span>{subItem.label}</span>
+                          </span>
+                      </SidebarMenuSubButton>
+                  </Link>
+              )}
+              </SidebarMenuSubItem>
+          ))}
+      </SidebarMenuSub>
+  );
 
   return (
     <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
@@ -234,28 +258,7 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <SidebarMenuSub>
-            {item.subItems.map((subItem: any, index: number) => (
-              <SidebarMenuSubItem key={index}>
-                {subItem.subItems ? (
-                   <CollapsibleMenuItem item={subItem} pathname={pathname} />
-                ) : (
-                  <Link href={subItem.href} passHref>
-                    <SidebarMenuSubButton
-                      asChild
-                      isActive={pathname.startsWith(subItem.href)}
-                      className="w-full"
-                    >
-                      <span className="flex w-full items-center gap-2">
-                        <subItem.icon className="h-6 w-6" />
-                        <span>{subItem.label}</span>
-                      </span>
-                    </SidebarMenuSubButton>
-                  </Link>
-                )}
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
+            {content}
         </CollapsibleContent>
     </Collapsible>
   )
@@ -334,7 +337,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
     ['ctrl+i', () => router.push('/billing/invoices/new')],
     ['ctrl+p', () => router.push('/purchases/new')],
     ['ctrl+j', () => router.push('/accounting/journal')],
-    ['ctrl+r', () => router.push('/accounting/vouchers')],
+    ['ctrl+r', () => router.push('/accounting/vouchers/rapid')],
     ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
     ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
     ['ctrl+g', () => router.push('/accounting/ledgers')],
@@ -416,3 +419,5 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 export default AppLayout;
+
+    
