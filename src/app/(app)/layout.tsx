@@ -75,6 +75,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
+  SidebarInset,
 } from "@/components/ui/sidebar";
 
 import { cn } from "@/lib/utils";
@@ -290,11 +291,6 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
 
 
 const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
-  const { setOpenMobile } = useSidebar();
-  
-  const handleLinkClick = () => {
-    setOpenMobile(false);
-  };
 
   return (
     <SidebarMenu>
@@ -303,7 +299,7 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
           {item.subItems ? (
             <CollapsibleMenuItem item={item} pathname={pathname} />
           ) : (
-            <Link href={item.href} onClick={handleLinkClick}>
+            <Link href={item.href}>
               <SidebarMenuButton
                 isActive={pathname === item.href}
                 className="w-full"
@@ -319,24 +315,6 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
     </SidebarMenu>
   );
 };
-
-function filterMenuByRole(items: any[], role: string): any[] {
-  return items.reduce((acc: any[], item: any) => {
-    if (!item.roles || !item.roles.includes(role)) {
-      return acc;
-    }
-
-    if (item.subItems) {
-      const accessibleSubItems = filterMenuByRole(item.subItems, role);
-      if (accessibleSubItems.length > 0) {
-        acc.push({ ...item, subItems: accessibleSubItems });
-      }
-    } else {
-      acc.push(item);
-    }
-    return acc;
-  }, []);
-}
 
 function SidebarNavManager() {
     const { setOpenMobile } = useSidebar();
@@ -482,3 +460,23 @@ export default function AppLayout({
     </AccountingProvider>
   );
 }
+
+function filterMenuByRole(items: any[], role: string): any[] {
+  return items.reduce((acc: any[], item: any) => {
+    if (!item.roles || !item.roles.includes(role)) {
+      return acc;
+    }
+
+    if (item.subItems) {
+      const accessibleSubItems = filterMenuByRole(item.subItems, role);
+      if (accessibleSubItems.length > 0) {
+        acc.push({ ...item, subItems: accessibleSubItems });
+      }
+    } else {
+      acc.push(item);
+    }
+    return acc;
+  }, []);
+}
+
+    
