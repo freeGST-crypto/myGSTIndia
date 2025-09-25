@@ -1,64 +1,9 @@
 
+
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  Book,
-  FileText,
-  Gauge,
-  Landmark,
-  Receipt,
-  Settings,
-  Users,
-  Warehouse,
-  ChevronDown,
-  Calculator,
-  FilePlus,
-  FileMinus,
-  Library,
-  Scale,
-  BookOpen,
-  Shield,
-  Presentation,
-  CalendarClock,
-  UserSquare,
-  BadgeDollarSign,
-  Briefcase,
-  BadgePercent,
-  Wallet,
-  ShieldCheck,
-  Award,
-  CreditCard,
-  Heart,
-  BookCopy,
-  ShoppingCart,
-  ShoppingBag,
-  Loader2,
-  GitCompareArrows,
-  FileSpreadsheet,
-  Building,
-  TrendingUp,
-  AreaChart,
-  ConciergeBell,
-  LayoutDashboard,
-  MailWarning,
-  FileSignature,
-  Newspaper,
-  Info,
-  Contact,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Instagram,
-  Keyboard,
-  PieChart,
-  Boxes,
-  Weight,
-  Target,
-  UserCog,
-  FileArchive,
-} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Collapsible,
@@ -82,7 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { cn } from "@/lib/utils";
-import { GstEaseLogo } from "@/components/icons";
+import { GstEaseLogo, Book, FileText, Gauge, Landmark, Receipt, Settings, Users, Warehouse, ChevronDown, Calculator, FilePlus, FileMinus, Library, Scale, BookOpen, Shield, Presentation, CalendarClock, UserSquare, BadgeDollarSign, Briefcase, BadgePercent, Wallet, ShieldCheck, Award, CreditCard, Heart, BookCopy, ShoppingCart, ShoppingBag, Loader2, GitCompareArrows, FileSpreadsheet, Building, TrendingUp, AreaChart, ConciergeBell, LayoutDashboard, MailWarning, FileSignature, Newspaper, Info, Contact, Keyboard, PieChart, Boxes, Weight, Target, UserCog, FileArchive } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
@@ -285,13 +230,16 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
                 {subItem.subItems ? (
                    <CollapsibleMenuItem item={subItem} pathname={pathname} />
                 ) : (
-                  <Link href={subItem.href}>
+                  <Link href={subItem.href} passHref>
                      <SidebarMenuSubButton
+                      asChild
                       isActive={pathname.startsWith(subItem.href)}
                       className="w-full"
                     >
-                      <subItem.icon className="h-6 w-6" />
-                      <span>{subItem.label}</span>
+                      <a>
+                        <subItem.icon className="h-6 w-6" />
+                        <span>{subItem.label}</span>
+                      </a>
                     </SidebarMenuSubButton>
                   </Link>
                 )}
