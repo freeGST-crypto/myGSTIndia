@@ -5,7 +5,7 @@ import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Bot, Loader2, Sparkles } from "lucide-react";
 import { askFinancialAnalyst } from '@/ai/flows/financial-analyst-flow';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
