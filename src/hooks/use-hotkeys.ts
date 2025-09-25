@@ -10,7 +10,14 @@ export function useHotkeys(hotkeys: HotkeyMap) {
     if (!event.key) {
       return;
     }
+    
     const key = event.key.toLowerCase();
+    
+    // Ignore standalone modifier keys
+    if (["control", "alt", "shift", "meta"].includes(key)) {
+      return;
+    }
+
     const ctrl = event.ctrlKey || event.metaKey; // For Mac's Cmd key
     const alt = event.altKey;
     const shift = event.shiftKey;
@@ -27,14 +34,15 @@ export function useHotkeys(hotkeys: HotkeyMap) {
 
     if (callback) {
       event.preventDefault();
+      event.stopPropagation();
       callback(event);
     }
   }, [hotkeys]);
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
 }
