@@ -60,6 +60,15 @@ export default function UserManagementPage() {
             setSelectedUser(null);
         }
     };
+
+    const handleDeleteUser = (email: string) => {
+        setUsers(prevUsers => prevUsers.filter(user => user.email !== email));
+        toast({
+            variant: "destructive",
+            title: "User Removed",
+            description: `The user with email ${email} has been removed.`,
+        });
+    };
     
     return (
         <div className="space-y-8">
@@ -158,7 +167,7 @@ export default function UserManagementPage() {
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     <span>Edit Role</span>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive">
+                                                <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteUser(user.email)}>
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Remove User</span>
                                                 </DropdownMenuItem>
