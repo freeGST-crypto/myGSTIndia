@@ -342,7 +342,7 @@ export default function AppLayout({
   const getRole = () => {
     if (!user) return null;
     if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
-    return userData?.userType || 'business';
+    return userData?.userType || 'business'; 
   }
   
   const userRole = getRole();

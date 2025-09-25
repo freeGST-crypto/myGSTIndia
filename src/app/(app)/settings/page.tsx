@@ -10,6 +10,8 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { auth, db } from "@/lib/firebase";
 import { doc } from "firebase/firestore";
 
+const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
+
 export default function SettingsPage() {
     const [user] = useAuthState(auth);
     const userDocRef = user ? doc(db, 'users', user.uid) : null;
@@ -23,7 +25,7 @@ export default function SettingsPage() {
         );
     }
     
-    const userRole = userData?.userType;
+    const userRole = user?.uid === SUPER_ADMIN_UID ? 'super_admin' : userData?.userType;
 
     return (
         <div className="space-y-8">
