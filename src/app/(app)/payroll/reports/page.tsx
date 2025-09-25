@@ -38,7 +38,7 @@ const months = [
     { value: "01", label: "January" }, { value: "02", label: "February" }, { value: "03", label: "March" },
     { value: "04", label: "April" }, { value: "05", label: "May" }, { value: "06", label: "June" },
     { value: "07", label: "July" }, { value: "08", label: "August" }, { value: "09", label: "September" },
-    { value: "10", label: "October" }, { value: "11", label: "November" }, { value: "12", label: "December" }
+    { value: "10", label: "October" }, { value: "11", label: "November" }, { value: "12", "December" }
 ];
 
 
@@ -63,21 +63,32 @@ export default function PayrollReportsPage() {
     switch (reportId) {
       case "pf_ecr":
         // ECR format requires a specific text file format with #~# as delimiter
-        const ecrData = payrollData.map(emp => [
-            emp.uan,
-            emp.name,
-            emp.grossEarnings,
-            emp.basic <= 15000 ? emp.basic : 15000, // EPF Wages
-            emp.basic <= 15000 ? emp.basic : 15000, // EPS Wages
-            0, // EDLI Wages (often 0)
-            0, // EPF Contribution (remitted by employer, not part of this field)
-            0, // EPS Contribution (remitted by employer)
-            0, // EDLI Contribution (remitted by employer)
-            0, // NCP Days
-            0, // Refund of Advances
-        ].join('#~#')).join('\n');
+        const ecrHeader = "UAN#~#Member Name#~#Gross Wages#~#EPF Wages#~#EPS Wages#~#EDLI Wages#~#EPF Contribution remitted#~#EPS Contribution remitted#~#EPF and EPS Diff remitted#~#NCP Days#~#Refund of Advances\n";
+        const ecrData = payrollData.map(emp => {
+            const epfWages = Math.min(emp.basic, 15000);
+            const employeeContribution = epfWages * 0.12;
+            const employerPensionContribution = Math.min(epfWages * 0.0833, 1250);
+            const employerPfContribution = employeeContribution - employerPensionContribution;
+            const totalPfContribution = employeeContribution + employerPfContribution;
+            const edliContribution = Math.min(epfWages * 0.005, 75);
+            
+            return [
+                emp.uan,
+                emp.name,
+                emp.grossEarnings,
+                epfWages, // EPF Wages
+                epfWages, // EPS Wages
+                epfWages, // EDLI Wages
+                totalPfContribution.toFixed(2), // EPF Contribution (Employee + Employer PF portion)
+                employerPensionContribution.toFixed(2), // EPS Contribution
+                0, // EPF-EPS Difference (usually 0, handled by EPFO)
+                0, // NCP Days
+                0, // Refund of Advances
+            ].join('#~#')
+        }).join('\n');
         
-        const ecrBlob = new Blob([ecrData], { type: 'text/plain;charset=utf-8' });
+        const ecrContent = ecrData;
+        const ecrBlob = new Blob([ecrContent], { type: 'text/plain;charset=utf-8' });
         const ecrUrl = URL.createObjectURL(ecrBlob);
         const ecrLink = document.createElement('a');
         ecrLink.href = ecrUrl;
