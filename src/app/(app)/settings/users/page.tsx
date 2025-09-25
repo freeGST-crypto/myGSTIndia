@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,8 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserPlus, MoreHorizontal, Trash2, Edit } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
-const users = [
+const initialUsers = [
     {
         name: "Aarav Sharma",
         email: "aarav.sharma@example.com",
@@ -33,8 +35,32 @@ const users = [
     }
 ];
 
+type User = typeof initialUsers[0];
 
 export default function UserManagementPage() {
+    const [users, setUsers] = useState(initialUsers);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const { toast } = useToast();
+    
+    const handleEditClick = (user: User) => {
+        setSelectedUser(user);
+        setIsEditDialogOpen(true);
+    };
+
+    const handleRoleChange = () => {
+        if(selectedUser) {
+            // In a real app, this would update the user's role in the database.
+            toast({
+                title: "Role Updated",
+                description: `The role for ${selectedUser.name} has been updated.`,
+            });
+            setIsEditDialogOpen(false);
+            setSelectedUser(null);
+        }
+    };
+    
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -44,7 +70,7 @@ export default function UserManagementPage() {
                         Invite and manage your team members and their roles.
                     </p>
                 </div>
-                <Dialog>
+                <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
                             <UserPlus className="mr-2" />
@@ -128,7 +154,7 @@ export default function UserManagementPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => handleEditClick(user)}>
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     <span>Edit Role</span>
                                                 </DropdownMenuItem>
@@ -145,6 +171,45 @@ export default function UserManagementPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Edit Role</DialogTitle>
+                        <DialogDescription>
+                            Change the role for {selectedUser?.name}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-email" className="text-right">
+                                Email
+                            </Label>
+                            <Input id="edit-email" value={selectedUser?.email} readOnly className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-role" className="text-right">
+                                Role
+                            </Label>
+                             <Select defaultValue={selectedUser?.role}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Admin">Admin</SelectItem>
+                                    <SelectItem value="Accountant">Accountant</SelectItem>
+                                    <SelectItem value="Sales">Sales</SelectItem>
+                                    <SelectItem value="Viewer">Viewer</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" onClick={handleRoleChange}>Save changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }
