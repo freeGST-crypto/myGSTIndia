@@ -111,15 +111,15 @@ export default function RunPayrollPage() {
             date: format(new Date(), 'yyyy-MM-dd'),
             narration: `Salary for the month of ${month} ${financialYear}`,
             lines: [
-                { account: '5020', debit: String(totalGross), credit: '0' }, // Debit Salaries and Wages
-                { account: '2010', debit: '0', credit: String(totalNet) },    // Credit Accounts Payable (as Salary Payable)
-                { account: '2130', debit: '0', credit: String(totalPf + totalTds + totalLwf + totalPt) }, // Credit TDS/Statutory Payable
+                { account: '6010', debit: String(totalGross), credit: '0' }, // Salaries and Wages - Indirect
+                { account: '2430', debit: '0', credit: String(totalNet) },    // Expenses Payable (Salary)
+                { account: '2422', debit: '0', credit: String(totalTds + totalPf + totalPt + totalLwf) }, // TDS/Statutory Payable
             ],
             amount: totalGross,
         };
         
         try {
-            await addJournalVoucher(salaryPayableVoucher);
+            await addJournalVoucher(salaryPayableVoucher as any);
             setIsLoading(false);
             setStep(2);
             toast({
