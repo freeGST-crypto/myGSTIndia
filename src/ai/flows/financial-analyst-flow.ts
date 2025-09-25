@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z, stream } from 'genkit';
+import { z } from 'genkit';
 
 // In a real app, these would come from the database based on the authenticated user.
 // For this demo, we'll use some sample data.
@@ -66,21 +66,25 @@ const financialAnalystPrompt = ai.definePrompt({
 
 
 export async function askFinancialAnalyst(question: string) {
-    return stream(async function*() {
-        const { stream, response } = await financialAnalystPrompt.generate({
-            history: [
-                { role: 'user', content: [{ text: question }] },
-            ],
-            stream: true,
-        });
-
-        for await (const chunk of stream) {
-            yield chunk.text;
-        }
-
-        const final = await response;
-        if (final.finishReason !== 'stop') {
-            yield '\n\nAI processing was interrupted.';
+    const { stream, response } = await financialAnalystPrompt.generate({
+        history: [
+            { role: 'user', content: [{ text: question }] },
+        ],
+        stream: true,
+    });
+    
+    return new ReadableStream({
+        async start(controller) {
+            for await (const chunk of stream) {
+                controller.enqueue(chunk.text);
+            }
+            
+            const final = await response;
+            if (final.finishReason !== 'stop') {
+                 controller.enqueue('\n\nAI processing was interrupted.');
+            }
+            
+            controller.close();
         }
     });
 }
