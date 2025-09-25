@@ -19,7 +19,6 @@ import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "../billing/invoices/page";
-import { FinancialChatbot } from "@/components/dashboard/financial-chatbot";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -201,7 +200,6 @@ function DashboardContent() {
         </CardContent>
       </Card>
       
-      <FinancialChatbot />
       <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />
     </div>
   );
