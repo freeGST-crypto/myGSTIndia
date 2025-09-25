@@ -245,10 +245,10 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
                       isActive={pathname.startsWith(subItem.href)}
                       className="w-full"
                     >
-                      <>
+                      <span className="flex w-full items-center gap-2">
                         <subItem.icon className="h-6 w-6" />
                         <span>{subItem.label}</span>
-                      </>
+                      </span>
                     </SidebarMenuSubButton>
                   </Link>
                 )}
