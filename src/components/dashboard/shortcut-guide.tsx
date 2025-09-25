@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
-  import { Keyboard, Receipt, BookCopy, Home, Zap, ShoppingCart, Wallet, IndianRupee, Landmark, TrendingUp, Scale, Book, Users, Warehouse } from "lucide-react";
+  import { Keyboard, Receipt, BookCopy, Home, Zap, ShoppingCart, Wallet, IndianRupee, Landmark, TrendingUp, Scale, Book, Users, Warehouse, FilePlus, FileMinus } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { Separator } from "../ui/separator";
@@ -16,6 +16,8 @@ import { Separator } from "../ui/separator";
   const voucherShortcuts = [
     { name: "New Invoice", keys: "Ctrl + I", href: "/billing/invoices/new", icon: Receipt },
     { name: "New Purchase", keys: "Ctrl + P", href: "/purchases/new", icon: ShoppingCart },
+    { name: "New Credit Note", keys: "Alt + N", href: "/billing/credit-notes/new", icon: FilePlus },
+    { name: "New Debit Note", keys: "Ctrl + D", href: "/billing/debit-notes/new", icon: FileMinus },
     { name: "Journal Voucher", keys: "Ctrl + J", href: "/accounting/journal", icon: BookCopy },
     { name: "Receipt Voucher", keys: "Ctrl + R", href: "/accounting/vouchers/rapid", icon: Wallet },
     { name: "Payment Voucher", keys: "F5", href: "/accounting/vouchers/rapid", icon: IndianRupee },
@@ -79,3 +81,4 @@ import { Separator } from "../ui/separator";
       </Card>
     );
   }
+
