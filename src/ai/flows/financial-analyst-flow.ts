@@ -66,29 +66,11 @@ const financialAnalystPrompt = ai.definePrompt({
 
 
 export async function askFinancialAnalyst(question: string) {
-    const { stream, response } = await ai.generate({
+    const response = await ai.generate({
         model: 'googleai/gemini-2.5-flash',
-        tools: [getFinancialData],
-        messages: [
-            { role: 'system', content: [{ text: financialAnalystPrompt.system! }] },
-            { role: 'user', content: [{ text: question }] }
-        ],
-        stream: true,
+        prompt: financialAnalystPrompt,
+        messages: [{ role: 'user', content: [{ text: question }] }],
     });
     
-    return new ReadableStream({
-        async start(controller) {
-            for await (const chunk of stream) {
-                controller.enqueue(chunk.text);
-            }
-            
-            const final = await response;
-            if (final.finishReason !== 'stop') {
-                 controller.enqueue('\n\nAI processing was interrupted.');
-            }
-            
-            controller.close();
-        }
-    });
+    return response.output;
 }
-
