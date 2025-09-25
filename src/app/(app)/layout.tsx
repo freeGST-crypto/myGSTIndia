@@ -398,11 +398,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         </Sidebar>
         <SidebarInset>
           <Header />
-          {/* Add pb-24 for bottom nav and fab */}
           <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8 md:pb-6 pb-24">
-             <Suspense fallback={<Loader2 className="animate-spin" />}>
-                {modifiedChildren}
-            </Suspense>
+             <div className="mx-auto max-w-7xl">
+                <Suspense fallback={<Loader2 className="animate-spin" />}>
+                    {modifiedChildren}
+                </Suspense>
+             </div>
           </main>
           <Fab />
           <BottomNav />

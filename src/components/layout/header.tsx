@@ -22,10 +22,6 @@ export function Header() {
          <p className="text-sm text-muted-foreground font-mono hidden lg:block">{companyInfo.gstin}</p>
       </div>
       <div className="ml-auto flex items-center gap-4">
-        <div className="hidden items-center gap-1 text-sm font-medium text-muted-foreground md:flex">
-          <span>Made in India with Love</span>
-          <Heart className="size-4 text-red-500 fill-red-500" />
-        </div>
         <UserNav />
       </div>
     </header>
