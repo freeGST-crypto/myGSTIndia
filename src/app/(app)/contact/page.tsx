@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required."),
@@ -72,6 +72,20 @@ export default function ContactPage() {
                   <p className="text-muted-foreground">+91 98765 43210</p>
                 </div>
               </div>
+               <div className="flex items-center gap-4 pt-4">
+                    <Button variant="ghost" size="icon" asChild>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5 text-muted-foreground hover:text-primary"/></a>
+                    </Button>
+                     <Button variant="ghost" size="icon" asChild>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5 text-muted-foreground hover:text-primary"/></a>
+                    </Button>
+                     <Button variant="ghost" size="icon" asChild>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><Facebook className="h-5 w-5 text-muted-foreground hover:text-primary"/></a>
+                    </Button>
+                     <Button variant="ghost" size="icon" asChild>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><Instagram className="h-5 w-5 text-muted-foreground hover:text-primary"/></a>
+                    </Button>
+                </div>
             </CardContent>
           </Card>
         </div>

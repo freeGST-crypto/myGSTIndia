@@ -391,10 +391,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             <Separator />
              <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton className="justify-start w-full" size="lg">
-                    <Heart className="size-5" />
-                    <span className="group-data-[collapsible=icon]:hidden">Feedback</span>
-                  </SidebarMenuButton>
+                    <a href="mailto:support@gstease.com" className="w-full">
+                        <SidebarMenuButton className="justify-start w-full" size="lg">
+                            <Heart className="size-5" />
+                            <span className="group-data-[collapsible=icon]:hidden">Feedback</span>
+                        </SidebarMenuButton>
+                    </a>
                 </SidebarMenuItem>
              </SidebarMenu>
           </SidebarFooter>
@@ -419,5 +421,3 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 export default AppLayout;
-
-    

@@ -3,7 +3,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Linkedin, Twitter, Facebook, MessageSquare } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface SocialShareButtonsProps {
   url: string;

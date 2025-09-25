@@ -33,7 +33,7 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
   });
   
   const handleShare = (platform: "linkedin" | "twitter" | "facebook" | "whatsapp") => {
-    const fullUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const fullUrl = typeof window !== 'undefined' ? window.location.href : '';
     const title = document.title;
     let shareUrl = "";
     

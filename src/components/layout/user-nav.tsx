@@ -1,4 +1,5 @@
 
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -50,21 +51,21 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/settings">
-            <DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
               Profile
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/pricing">
-            <DropdownMenuItem>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/pricing">
               Billing
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/settings">
-            <DropdownMenuItem>
+            </Link>
+          </DropdownMenuItem>
+           <DropdownMenuItem asChild>
+            <Link href="/settings">
               Settings
-            </DropdownMenuItem>
-          </Link>
+            </Link>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>

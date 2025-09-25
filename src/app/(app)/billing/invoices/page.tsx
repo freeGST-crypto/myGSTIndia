@@ -295,7 +295,10 @@ export default function InvoicesPage() {
             await handleCancelInvoice(invoice.id);
         } else if (action === 'Download') {
             await setSelectedInvoice(invoice);
-            handlePrint();
+            // We need a slight delay for the dialog to render the content before printing
+            setTimeout(() => {
+                handlePrint();
+            }, 100);
         } else if (action === 'Duplicate') {
             const queryParams = new URLSearchParams({
                 duplicate: invoice.id
@@ -495,23 +498,29 @@ export default function InvoicesPage() {
         </CardContent>
       </Card>
       
-      {selectedInvoice && (
-        <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
-            <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                    <DialogTitle>Invoice Preview: {selectedInvoice.id}</DialogTitle>
-                </DialogHeader>
-                <div className="p-4 border rounded-lg bg-muted/20 max-h-[70vh] overflow-y-auto">
-                   <InvoicePreview invoice={selectedInvoice} customers={customers} ref={invoicePreviewRef} />
-                </div>
-                 <DialogFooter>
-                    <Button variant="outline" onClick={handlePrint}>
-                       <Printer className="mr-2" /> Print / Save as PDF
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Invoice Preview: {selectedInvoice?.id}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto">
+            {selectedInvoice && (
+              <InvoicePreview
+                invoice={selectedInvoice}
+                customers={customers}
+                ref={invoicePreviewRef}
+              />
+            )}
+          </div>
+          <DialogFooter>
+             <ShareButtons
+                contentRef={invoicePreviewRef}
+                fileName={`Invoice_${selectedInvoice?.id}`}
+                whatsappMessage={`Please review invoice ${selectedInvoice?.id}.`}
+            />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

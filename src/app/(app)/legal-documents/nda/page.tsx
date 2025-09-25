@@ -23,6 +23,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
+
 
 const formSchema = z.object({
   disclosingPartyName: z.string().min(3, "Disclosing party name is required."),
@@ -145,6 +147,8 @@ export default function NdaPage() {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
         const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
+        const whatsappMessage = `Please review the Non-Disclosure Agreement between ${formData.disclosingPartyName} and ${formData.receivingPartyName}.`;
+
 
         return (
              <Card>
@@ -210,7 +214,11 @@ export default function NdaPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                  <ShareButtons
+                    contentRef={printRef}
+                    fileName={`NDA_${formData.disclosingPartyName}_${formData.receivingPartyName}`}
+                    whatsappMessage={whatsappMessage}
+                  />
                 </CardFooter>
             </Card>
         );
