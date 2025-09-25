@@ -15,10 +15,10 @@ import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { allAccounts } from "@/lib/accounts";
-import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "../billing/invoices/page";
+import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -165,22 +165,8 @@ function DashboardContent() {
         </Card>
       </div>
       <div className="space-y-8 lg:col-span-1">
-          <Card>
-              <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                      <Zap className="size-5 text-primary"/>
-                      Quick Actions
-                  </CardTitle>
-                  <CardDescription>Record common transactions.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>Quick Invoice</Button>
-                    <Link href="/purchases/rapid" passHref><Button variant="outline">Quick Purchase</Button></Link>
-                    <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Receipt</Button></Link>
-                    <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Payment</Button></Link>
-              </CardContent>
-          </Card>
           <ShortcutGuide />
+          <ComplianceCalendar />
       </div>
       <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />
     </div>
