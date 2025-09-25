@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
 
   const getRole = () => {
     if (!user) return null;
-    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    if (user.uid === 'CUxyL5ioNjcQbVNszXhWGAFKS2y2') return 'super_admin';
     return userData?.userType || 'business'; 
   }
   
