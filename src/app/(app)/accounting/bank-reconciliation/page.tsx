@@ -57,7 +57,7 @@ import * as XLSX from 'xlsx';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { useCollection } from "react-firebase-hooks/firestore";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, getFirestore } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -635,3 +635,4 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
     );
 }
 
+    
