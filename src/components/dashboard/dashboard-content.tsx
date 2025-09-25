@@ -15,7 +15,6 @@ import { collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { allAccounts } from "@/lib/accounts";
-import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "../billing/invoices/page";
@@ -166,7 +165,7 @@ function DashboardContent() {
         </Card>
       </div>
       <div className="space-y-8 lg:col-span-1">
-          <ShortcutGuide onQuickInvoiceClick={() => setIsQuickInvoiceOpen(true)} />
+          <ShortcutGuide />
           <ComplianceCalendar />
       </div>
       <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />

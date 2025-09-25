@@ -8,72 +8,73 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
-  import { Keyboard, Receipt, BookCopy, Home, Zap, ShoppingCart, Wallet, IndianRupee } from "lucide-react";
+  import { Keyboard, Receipt, BookCopy, Home, Zap, ShoppingCart, Wallet, IndianRupee, Landmark, TrendingUp, Scale, Book, Users, Warehouse } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { Separator } from "../ui/separator";
   
-  const shortcuts = [
-    { name: "Go to Dashboard", keys: "Esc", href: "/dashboard" },
-    { name: "New Sales Invoice", keys: "Ctrl + I", href: "/billing/invoices/new" },
-    { name: "New Purchase Bill", keys: "Ctrl + P", href: "/purchases/new" },
-    { name: "Journal Vouchers", keys: "Ctrl + J", href: "/accounting/journal" },
+  const voucherShortcuts = [
+    { name: "New Invoice", keys: "Ctrl + I", href: "/billing/invoices/new", icon: Receipt },
+    { name: "New Purchase", keys: "Ctrl + P", href: "/purchases/new", icon: ShoppingCart },
+    { name: "Journal Voucher", keys: "Ctrl + J", href: "/accounting/journal", icon: BookCopy },
+    { name: "Receipt Voucher", keys: "Ctrl + R", href: "/accounting/vouchers/rapid", icon: Wallet },
+    { name: "Payment Voucher", keys: "F5", href: "/accounting/vouchers/rapid", icon: IndianRupee },
   ];
   
-  export function ShortcutGuide({ onQuickInvoiceClick }: { onQuickInvoiceClick: () => void; }) {
+  const reportShortcuts = [
+      { name: "Balance Sheet", keys: "Ctrl + B", href: "/accounting/financial-statements/balance-sheet", icon: Landmark },
+      { name: "Profit & Loss", keys: "Ctrl + L", href: "/accounting/financial-statements/profit-and-loss", icon: TrendingUp },
+      { name: "Trial Balance", keys: "Alt + T", href: "/accounting/trial-balance", icon: Scale },
+      { name: "General Ledger", keys: "Ctrl + G", href: "/accounting/ledgers", icon: Book },
+  ];
+  
+  const masterShortcuts = [
+      { name: "Parties", keys: "Alt + P", href: "/parties", icon: Users },
+      { name: "Items", keys: "Alt + I", href: "/items", icon: Warehouse },
+  ];
+
+  const QuickAccessItem = ({ href, icon: Icon, name, keys }: { href: string; icon: React.ElementType; name: string; keys: string; }) => (
+     <Link href={href} passHref>
+        <Button variant="outline" className="w-full justify-start">
+            <Icon className="mr-2" />
+            {name}
+            <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                {keys}
+            </kbd>
+        </Button>
+      </Link>
+  );
+  
+  export function ShortcutGuide() {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="size-5" /> Quick Actions
+            <Keyboard className="size-5" /> Quick Access & Shortcuts
           </CardTitle>
-          <CardDescription>Create entries and navigate faster.</CardDescription>
+          <CardDescription>Use these shortcuts to navigate faster.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" onClick={onQuickInvoiceClick}>
-                <Receipt className="mr-2" />
-                Quick Invoice
-                <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                    Ctrl + I
-                </kbd>
-              </Button>
-              <Link href="/purchases/rapid" passHref>
-                <Button variant="outline" className="w-full justify-start">
-                    <ShoppingCart className="mr-2" />
-                    Quick Purchase
-                     <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                        Ctrl + P
-                    </kbd>
-                </Button>
-              </Link>
-               <Link href="/accounting/vouchers/rapid" passHref>
-                <Button variant="outline" className="w-full justify-start">
-                    <Wallet className="mr-2" />
-                    Receipt
-                     <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                        Ctrl + R
-                    </kbd>
-                </Button>
-              </Link>
-                <Link href="/accounting/vouchers/rapid" passHref>
-                    <Button variant="outline" className="w-full justify-start">
-                        <IndianRupee className="mr-2" />
-                        Payment
-                        <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                            F5
-                        </kbd>
-                    </Button>
-                </Link>
-                <Link href="/accounting/journal" passHref>
-                    <Button variant="outline" className="w-full justify-start">
-                        <BookCopy className="mr-2" />
-                        Journal
-                        <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                            Ctrl + J
-                        </kbd>
-                    </Button>
-                </Link>
-          </div>
+        <CardContent className="space-y-4">
+            <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Vouchers</h4>
+                <div className="space-y-2">
+                    {voucherShortcuts.map(sc => <QuickAccessItem key={sc.name} {...sc} />)}
+                </div>
+            </div>
+            <Separator />
+            <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Reports</h4>
+                 <div className="space-y-2">
+                    {reportShortcuts.map(sc => <QuickAccessItem key={sc.name} {...sc} />)}
+                </div>
+            </div>
+            <Separator />
+             <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Masters</h4>
+                 <div className="space-y-2">
+                    {masterShortcuts.map(sc => <QuickAccessItem key={sc.name} {...sc} />)}
+                </div>
+            </div>
         </CardContent>
       </Card>
     );
