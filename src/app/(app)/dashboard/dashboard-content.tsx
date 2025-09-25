@@ -115,94 +115,79 @@ function DashboardContent() {
   }, [invoices, searchTerm]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <MarketingCarousel />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Link href="/accounting/ledgers">
-          <StatCard 
-            title="Total Receivables"
-            value={formatCurrency(totalReceivables)}
-            icon={IndianRupee}
-            description="Balance in Accounts Receivable"
-            loading={journalLoading || customersLoading}
-          />
-        </Link>
-        <Link href="/accounting/ledgers">
-          <StatCard 
-            title="Total Payables"
-            value={formatCurrency(totalPayables)}
-            icon={CreditCard}
-            description="Balance in Accounts Payable"
-             loading={journalLoading || vendorsLoading}
-          />
-        </Link>
-        <Link href="/accounting/ledgers">
-          <StatCard 
-            title="Net Tax Liability"
-            value={formatCurrency(gstPayable)}
-            icon={DollarSign}
-            description="Balance in GST Payable"
-             loading={journalLoading}
-          />
-        </Link>
-        <Link href="/parties">
-          <StatCard 
-            title="Active Customers"
-            value={String(customers.length)}
-            icon={Users}
-            description={`${customers.length} total customers`}
-             loading={customersLoading}
-          />
-        </Link>
-      </div>
-      
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-            <FinancialSummaryChart />
-        </div>
-        <div className="space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Zap className="size-5 text-primary"/>
-                        Rapid Actions
-                    </CardTitle>
-                    <CardDescription>Quickly record common transactions.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                     <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>Quick Invoice</Button>
-                     <Link href="/purchases/rapid" passHref><Button variant="outline">Quick Purchase</Button></Link>
-                     <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Receipt</Button></Link>
-                     <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Payment</Button></Link>
-                </CardContent>
-            </Card>
-            <ShortcutGuide />
-        </div>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Dashboard Search &amp; Recent Activity</CardTitle>
-          <CardDescription>Quickly find recent invoices or see an overview of the latest activity.</CardDescription>
-          <div className="relative pt-4">
-            <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search recent invoices..."
-              className="pl-8 w-full md:w-1/3"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+    <div className="grid gap-8 lg:grid-cols-3 items-start">
+      <div className="lg:col-span-2 space-y-8">
+        <MarketingCarousel />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Link href="/accounting/ledgers">
+            <StatCard 
+              title="Receivables"
+              value={formatCurrency(totalReceivables)}
+              icon={IndianRupee}
+              loading={journalLoading || customersLoading}
             />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
-        </CardContent>
-      </Card>
-      
+          </Link>
+          <Link href="/accounting/ledgers">
+            <StatCard 
+              title="Payables"
+              value={formatCurrency(totalPayables)}
+              icon={CreditCard}
+              loading={journalLoading || vendorsLoading}
+            />
+          </Link>
+          <Link href="/accounting/ledgers">
+            <StatCard 
+              title="GST Payable"
+              value={formatCurrency(gstPayable)}
+              icon={DollarSign}
+              loading={journalLoading}
+            />
+          </Link>
+        </div>
+        <FinancialSummaryChart />
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Quickly find recent invoices.</CardDescription>
+            <div className="relative pt-4">
+              <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search recent invoices..."
+                className="pl-8 w-full md:w-1/2"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
+          </CardContent>
+        </Card>
+      </div>
+      <div className="space-y-8 lg:col-span-1">
+          <Card>
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                      <Zap className="size-5 text-primary"/>
+                      Quick Actions
+                  </CardTitle>
+                  <CardDescription>Record common transactions.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4">
+                    <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>Quick Invoice</Button>
+                    <Link href="/purchases/rapid" passHref><Button variant="outline">Quick Purchase</Button></Link>
+                    <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Receipt</Button></Link>
+                    <Link href="/accounting/vouchers/rapid" passHref><Button variant="outline">Payment</Button></Link>
+              </CardContent>
+          </Card>
+          <ShortcutGuide />
+      </div>
       <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />
     </div>
   );
 }
 
 export default memo(DashboardContent);
+
+  
