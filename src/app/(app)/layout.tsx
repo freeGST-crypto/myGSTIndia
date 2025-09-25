@@ -353,13 +353,11 @@ export default function AppLayout({
     ['ctrl+i', () => router.push('/billing/invoices/new')],
     ['ctrl+p', () => router.push('/purchases/new')],
     ['ctrl+j', () => router.push('/accounting/journal')],
-    ['ctrl+d', () => router.push('/billing/debit-notes/new')],
-    ['ctrl+n', () => router.push('/billing/credit-notes/new')],
     ['ctrl+r', () => router.push('/accounting/vouchers')],
     // Reports
     ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
     ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
-    ['ctrl+t', () => router.push('/accounting/trial-balance')],
+    //['ctrl+t', () => router.push('/accounting/trial-balance')],
     ['ctrl+g', () => router.push('/accounting/ledgers')],
     // Masters
     ['alt+p', () => router.push('/parties')],
@@ -369,6 +367,25 @@ export default function AppLayout({
   ]), [router]);
 
   useHotkeys(hotkeyMap);
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key.toLowerCase() === 'n') {
+          event.preventDefault();
+          router.push('/billing/credit-notes/new');
+        }
+        if (event.key.toLowerCase() === 't') {
+          event.preventDefault();
+          router.push('/accounting/trial-balance');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [router]);
 
 
   React.useEffect(() => {

@@ -7,14 +7,10 @@ type HotkeyMap = Map<string, (event: KeyboardEvent) => void>;
 
 export function useHotkeys(hotkeys: HotkeyMap) {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (!event.key) {
-      return;
-    }
-    
     const key = event.key.toLowerCase();
     
-    // Ignore standalone modifier keys
-    if (["control", "alt", "shift", "meta"].includes(key)) {
+    // Ignore standalone modifier keys or if an input is focused
+    if (["control", "alt", "shift", "meta"].includes(key) || (event.target as HTMLElement).closest('input, textarea, select')) {
       return;
     }
 
