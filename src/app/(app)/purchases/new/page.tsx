@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useCallback, useMemo, memo, useEffect } from "react";
+import { useState, useContext, useCallback, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -9,7 +9,6 @@ import {
   Calendar as CalendarIcon,
   PlusCircle,
   Save,
-  Trash2,
   Upload,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -25,14 +24,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
@@ -56,100 +47,7 @@ import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-type LineItem = {
-    id: string; // Unique ID for key prop
-    itemId: string;
-    description: string;
-    hsn: string;
-    qty: number;
-    rate: number;
-    taxRate: number;
-    amount: number;
-};
-
-type Item = {
-  id: string;
-  name: string;
-  hsn: string;
-  purchasePrice?: number;
-  [key: string]: any;
-};
-
-const PurchaseItemRow = memo(({
-    item,
-    index,
-    onRemove,
-    handleItemChange,
-    handleSelectChange,
-    items,
-    itemsLoading,
-}: {
-    item: LineItem;
-    index: number;
-    onRemove: (index: number) => void;
-    handleItemChange: (index: number, field: keyof LineItem, value: any) => void;
-    handleSelectChange: (index: number, itemId: string) => void;
-    items: Item[];
-    itemsLoading: boolean;
-}) => {
-    
-    const taxableAmount = item.qty * item.rate;
-
-    return (
-        <TableRow>
-            <TableCell>
-                <Select onValueChange={(value) => handleSelectChange(index, value)} value={item.itemId} disabled={itemsLoading}>
-                    <SelectTrigger>
-                        <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {items.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
-                         <Separator />
-                        <SelectItem value="add-new" className="text-primary focus:text-primary">
-                           <div className="flex items-center gap-2">
-                            <PlusCircle className="h-4 w-4" /> Add New Item
-                           </div>
-                        </SelectItem>
-                    </SelectContent>
-                </Select>
-            </TableCell>
-            <TableCell>
-                <Input
-                value={item.hsn}
-                onChange={(e) => handleItemChange(index, "hsn", e.target.value)}
-                placeholder="HSN/SAC"
-                />
-            </TableCell>
-            <TableCell>
-                <Input
-                type="number"
-                value={item.qty}
-                onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value) || 0)}
-                className="text-right"
-                />
-            </TableCell>
-            <TableCell>
-                <Input
-                type="number"
-                value={item.rate}
-                onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value) || 0)}
-                className="text-right"
-                />
-            </TableCell>
-            <TableCell className="text-right font-medium">
-                ₹{taxableAmount.toFixed(2)}
-            </TableCell>
-            <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-            </TableCell>
-        </TableRow>
-    );
-});
-PurchaseItemRow.displayName = 'PurchaseItemRow';
+import { ItemTable, type LineItem, type Item } from "@/components/billing/item-table";
 
 const createNewLineItem = (): LineItem => ({
   id: `${Date.now()}-${Math.random()}`,
@@ -175,7 +73,6 @@ export default function NewPurchasePage() {
   const [billDate, setBillDate] = useState<Date | undefined>(new Date());
   const [vendor, setVendor] = useState("");
   const [billNumber, setBillNumber] = useState("");
-  const [taxType, setTaxType] = useState<'none' | 'tds' | 'tcs'>('none');
   
   const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -209,14 +106,9 @@ export default function NewPurchasePage() {
 
             const purchaseLine = voucherToLoad.lines.find(l => l.account === '5050');
             const taxLine = voucherToLoad.lines.find(l => l.account === '2110');
-            const tdsLine = voucherToLoad.lines.find(l => l.account === '2130');
-            const tcsLine = voucherToLoad.lines.find(l => l.account === '1470');
 
             const subtotal = parseFloat(purchaseLine?.debit || '0');
             const taxAmount = parseFloat(taxLine?.debit || '0');
-
-            if (tdsLine) setTaxType('tds');
-            if (tcsLine) setTaxType('tcs');
 
             if (subtotal > 0) {
                 const taxRate = (taxAmount / subtotal) * 100;
@@ -239,58 +131,6 @@ export default function NewPurchasePage() {
         }
   }, [searchParams, journalVouchers, items]);
 
-  const openItemDialog = useCallback(() => {
-    setIsItemDialogOpen(true);
-  }, []);
-
-  const handleAddItem = useCallback(() => {
-    setLineItems(prev => [...prev, createNewLineItem()]);
-  }, []);
-
-  const handleRemoveItem = useCallback((index: number) => {
-    setLineItems(prev => prev.filter((_, i) => i !== index));
-  }, []);
-  
-  const handleItemChange = useCallback((index: number, field: keyof LineItem, value: any) => {
-    setLineItems(prev =>
-      prev.map((item, i) => {
-        if (i === index) {
-          const updatedItem = { ...item, [field]: value };
-          if (field === 'qty' || field === 'rate' || field === 'taxRate') {
-            updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
-          }
-          return updatedItem;
-        }
-        return item;
-      })
-    );
-  }, []);
-  
-  const handleSelectChange = useCallback((index: number, itemId: string) => {
-    if (itemId === 'add-new') {
-        openItemDialog();
-        return;
-    }
-    const selectedItem = items.find(i => i.id === itemId);
-    if (selectedItem) {
-      setLineItems(prev =>
-        prev.map((item, i) => {
-          if (i === index) {
-            return {
-              ...item,
-              itemId: itemId,
-              description: selectedItem.name,
-              rate: selectedItem.purchasePrice || 0,
-              hsn: selectedItem.hsn || "",
-              amount: (item.qty || 0) * (selectedItem.purchasePrice || 0)
-            };
-          }
-          return item;
-        })
-      );
-    }
-  }, [items, openItemDialog]);
-
   const handleVendorChange = useCallback((value: string) => {
     if (value === 'add-new') {
         setIsVendorDialogOpen(true);
@@ -302,15 +142,6 @@ export default function NewPurchasePage() {
   const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.qty * item.rate * item.taxRate / 100), 0);
   const totalBillAmount = subtotal + totalTax;
-
-  const taxOnSourceAmount = (subtotal * 0.1) / 100;
-  let totalAmountPayable = totalBillAmount;
-  if (taxType === 'tds') {
-    totalAmountPayable -= taxOnSourceAmount;
-  } else if (taxType === 'tcs') {
-    totalAmountPayable += taxOnSourceAmount;
-  }
-
 
   const handleSaveBill = async () => {
     if (!accountingContext) return;
@@ -335,16 +166,8 @@ export default function NewPurchasePage() {
     const journalLines = [
         { account: '5050', debit: subtotal.toFixed(2), credit: '0' },
         { account: '2110', debit: totalTax.toFixed(2), credit: '0' }, // ITC Receivable
-        { account: vendor, debit: '0', credit: totalAmountPayable.toFixed(2) } 
+        { account: vendor, debit: '0', credit: totalBillAmount.toFixed(2) } 
     ];
-
-    if (taxOnSourceAmount > 0) {
-      if (taxType === 'tds') {
-        journalLines.push({ account: '2130', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TDS Payable
-      } else if (taxType === 'tcs') {
-        journalLines.push({ account: '1470', debit: taxOnSourceAmount.toFixed(2), credit: '0'}); // TCS Receivable
-      }
-    }
 
     try {
         await addJournalVoucher({
@@ -442,38 +265,14 @@ export default function NewPurchasePage() {
 
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Items</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[30%]">Item</TableHead>
-                  <TableHead>HSN</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lineItems.map((item, index) => (
-                    <PurchaseItemRow 
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        onRemove={handleRemoveItem}
-                        handleItemChange={handleItemChange}
-                        handleSelectChange={handleSelectChange}
-                        items={items}
-                        itemsLoading={itemsLoading}
-                    />
-                ))}
-              </TableBody>
-            </Table>
-            <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleAddItem}>
-                <PlusCircle className="mr-2" />
-                Add Row
-                </Button>
-            </div>
+            <ItemTable
+                lineItems={lineItems}
+                setLineItems={setLineItems}
+                items={items}
+                itemsLoading={itemsLoading}
+                isPurchase={true}
+                openItemDialog={() => setIsItemDialogOpen(true)}
+            />
           </div>
 
           <div className="flex justify-end">
@@ -489,7 +288,7 @@ export default function NewPurchasePage() {
               <Separator/>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total Amount Payable</span>
-                <span>₹{totalAmountPayable.toFixed(2)}</span>
+                <span>₹{totalBillAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>

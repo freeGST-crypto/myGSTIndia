@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useEffect, useCallback, useMemo, memo } from "react";
+import { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -9,7 +9,6 @@ import {
   Calendar as CalendarIcon,
   PlusCircle,
   Save,
-  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -23,14 +22,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
@@ -47,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
+import { AccountingContext } from "@/context/accounting-context";
 import { useToast } from "@/hooks/use-toast";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
@@ -56,84 +47,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type LineItem = {
-    id: string; // Unique ID for key prop
-    itemId: string;
-    description: string;
-    hsn: string;
-    qty: number;
-    rate: number;
-    taxRate: number;
-    amount: number;
-};
-
-type Item = {
-  id: string;
-  name: string;
-  hsn: string;
-  sellingPrice: number;
-  [key: string]: any;
-};
-
-// Memoized Invoice Item Row to prevent re-renders
-const InvoiceItemRow = memo(({
-    item,
-    index,
-    onRemove,
-    handleItemChange,
-    handleSelectChange,
-    items,
-    itemsLoading,
-}: {
-    item: LineItem;
-    index: number;
-    onRemove: (index: number) => void;
-    handleItemChange: (index: number, field: keyof LineItem, value: any) => void;
-    handleSelectChange: (index: number, itemId: string) => void;
-    items: Item[];
-    itemsLoading: boolean;
-}) => {
-    
-    const taxableAmount = item.qty * item.rate;
-    const igst = taxableAmount * (item.taxRate / 100);
-    const cgst = 0; // Assuming IGST for now
-    const sgst = 0;
-
-    return (
-        <TableRow>
-            <TableCell>
-                <Select onValueChange={(value) => handleSelectChange(index, value)} value={item.itemId} disabled={itemsLoading}>
-                    <SelectTrigger>
-                        <SelectValue placeholder={itemsLoading ? "Loading..." : "Select item"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {items.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
-                        <Separator />
-                        <SelectItem value="add-new" className="text-primary focus:text-primary">
-                           <div className="flex items-center gap-2">
-                            <PlusCircle className="h-4 w-4" /> Add New Item
-                           </div>
-                        </SelectItem>
-                    </SelectContent>
-                </Select>
-            </TableCell>
-            <TableCell><Input type="number" value={item.qty} onChange={(e) => handleItemChange(index, "qty", parseInt(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
-            <TableCell><Input type="number" value={item.rate} onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value) || 0)} className="w-24 text-right" /></TableCell>
-            <TableCell className="text-right font-medium">₹{taxableAmount.toFixed(2)}</TableCell>
-            <TableCell><Input type="number" value={item.taxRate} onChange={(e) => handleItemChange(index, "taxRate", parseFloat(e.target.value) || 0)} className="w-16 text-right" /></TableCell>
-            <TableCell className="text-right font-mono">₹{igst.toFixed(2)}</TableCell>
-            <TableCell className="text-right font-mono">₹{cgst.toFixed(2)}</TableCell>
-            <TableCell className="text-right font-mono">₹{sgst.toFixed(2)}</TableCell>
-            <TableCell className="text-right">
-               <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-            </TableCell>
-        </TableRow>
-    );
-});
-InvoiceItemRow.displayName = 'InvoiceItemRow';
+import { ItemTable, type LineItem, type Item } from "@/components/billing/item-table";
 
 const createNewLineItem = (): LineItem => ({
   id: `${Date.now()}-${Math.random()}`,
@@ -218,58 +132,6 @@ export default function NewInvoicePage() {
       }
     }
   }, [searchParams, journalVouchers, items]);
-
-  const openItemDialog = useCallback(() => {
-    setIsItemDialogOpen(true);
-  }, []);
-
-  const handleAddItem = useCallback(() => {
-    setLineItems(prev => [...prev, createNewLineItem()]);
-  }, []);
-
-  const handleRemoveItem = useCallback((index: number) => {
-    setLineItems(prev => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const handleItemChange = useCallback((index: number, field: keyof LineItem, value: any) => {
-    setLineItems(prev =>
-      prev.map((item, i) => {
-        if (i === index) {
-          const updatedItem = { ...item, [field]: value };
-          if (field === 'qty' || field === 'rate' || field === 'taxRate') {
-            updatedItem.amount = (updatedItem.qty || 0) * (updatedItem.rate || 0);
-          }
-          return updatedItem;
-        }
-        return item;
-      })
-    );
-  }, []);
-
-  const handleSelectChange = useCallback((index: number, itemId: string) => {
-    if (itemId === 'add-new') {
-        openItemDialog();
-        return;
-    }
-    const selectedItem = items.find(i => i.id === itemId);
-    if(selectedItem) {
-        setLineItems(prev =>
-            prev.map((item, i) => {
-                if (i === index) {
-                    return {
-                        ...item,
-                        itemId: itemId,
-                        description: selectedItem.name,
-                        rate: selectedItem.sellingPrice || 0,
-                        hsn: selectedItem.hsn || "",
-                        amount: (item.qty || 0) * (selectedItem.sellingPrice || 0)
-                    };
-                }
-                return item;
-            })
-        );
-    }
-  }, [items, openItemDialog]);
   
   const handleCustomerChange = useCallback((value: string) => {
     if (value === 'add-new') {
@@ -435,43 +297,14 @@ export default function NewInvoicePage() {
 
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Items</h3>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[25%] min-w-[200px]">Item</TableHead>
-                    <TableHead>Qty</TableHead>
-                    <TableHead>Rate</TableHead>
-                    <TableHead>Taxable Amt</TableHead>
-                    <TableHead>Tax Rate</TableHead>
-                    <TableHead>IGST</TableHead>
-                    <TableHead>CGST</TableHead>
-                    <TableHead>SGST</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {lineItems.map((item, index) => (
-                    <InvoiceItemRow
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        onRemove={handleRemoveItem}
-                        handleItemChange={handleItemChange}
-                        handleSelectChange={handleSelectChange}
-                        items={items}
-                        itemsLoading={itemsLoading}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-             <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleAddItem}>
-                <PlusCircle className="mr-2" />
-                Add Row
-                </Button>
-            </div>
+            <ItemTable 
+              lineItems={lineItems}
+              setLineItems={setLineItems}
+              items={items}
+              itemsLoading={itemsLoading}
+              isPurchase={false}
+              openItemDialog={() => setIsItemDialogOpen(true)}
+            />
           </div>
 
           <div className="flex justify-end">
