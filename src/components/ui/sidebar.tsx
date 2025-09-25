@@ -182,6 +182,7 @@ const Sidebar = React.forwardRef<
     if (collapsible === "none") {
       return (
         <div
+          role="navigation"
           className={cn(
             "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
             className
@@ -208,7 +209,7 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div role="navigation" className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
       )
@@ -217,6 +218,7 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
+        role="navigation"
         className="group peer hidden md:block text-sidebar-foreground"
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
@@ -492,6 +494,7 @@ const SidebarMenu = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ul
     ref={ref}
+    role="menu"
     data-sidebar="menu"
     className={cn("flex w-full min-w-0 flex-col gap-1", className)}
     {...props}
