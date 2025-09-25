@@ -59,15 +59,25 @@ export default function PayrollReportsPage() {
 
   const handleGenerateReport = (reportId: string, reportTitle: string) => {
     let worksheet: XLSX.WorkSheet;
-    let fileType: 'txt' | 'xlsx' = 'xlsx';
     
     switch (reportId) {
       case "pf_ecr":
-        const pf_data = payrollData.map(emp => [
-            emp.uan, emp.name, emp.grossEarnings, emp.basic <= 15000 ? emp.basic : 15000, emp.basic <= 15000 ? emp.basic : 15000, emp.basic <= 15000 ? emp.basic : 15000, emp.pf, 1250, 0
-        ].join('#')).join('\n');
-        const ecrContent = `UAN#Member Name#Gross Wages#EPF Wages#EPS Wages#EDLI Wages#EPF Contribution#EPS Contribution#EDLI Contribution\n${pf_data}`;
-        const ecrBlob = new Blob([ecrContent], { type: 'text/plain' });
+        // ECR format requires a specific text file format with #~# as delimiter
+        const ecrData = payrollData.map(emp => [
+            emp.uan,
+            emp.name,
+            emp.grossEarnings,
+            emp.basic <= 15000 ? emp.basic : 15000, // EPF Wages
+            emp.basic <= 15000 ? emp.basic : 15000, // EPS Wages
+            0, // EDLI Wages (often 0)
+            0, // EPF Contribution (remitted by employer, not part of this field)
+            0, // EPS Contribution (remitted by employer)
+            0, // EDLI Contribution (remitted by employer)
+            0, // NCP Days
+            0, // Refund of Advances
+        ].join('#~#')).join('\n');
+        
+        const ecrBlob = new Blob([ecrData], { type: 'text/plain;charset=utf-8' });
         const ecrUrl = URL.createObjectURL(ecrBlob);
         const ecrLink = document.createElement('a');
         ecrLink.href = ecrUrl;
