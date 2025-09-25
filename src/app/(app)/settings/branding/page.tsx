@@ -55,6 +55,7 @@ const formSchema = z.object({
   bankName: z.string().optional(),
   bankAccount: z.string().optional(),
   bankIfsc: z.string().optional(),
+  upiId: z.string().regex(/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/, { message: "Invalid UPI ID format." }).optional().or(z.literal("")),
   defaultPaymentTerms: z.string().optional(),
   terms: z.string().optional(),
   professionals: z.array(professionalSchema).optional(),
@@ -91,6 +92,7 @@ export default function BrandingPage() {
             bankName: "HDFC Bank",
             bankAccount: "1234567890",
             bankIfsc: "HDFC0001234",
+            upiId: "",
         },
     });
 
@@ -388,6 +390,15 @@ export default function BrandingPage() {
                                         </FormItem>
                                     )}/>
                                  </div>
+                                  <div className="mt-4">
+                                    <FormField control={form.control} name="upiId" render={({ field }) => (
+                                        <FormItem className='max-w-sm'>
+                                            <FormLabel>UPI ID</FormLabel>
+                                            <FormControl><Input placeholder="yourbusiness@okhdfcbank" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                </div>
                              </div>
                             <Separator/>
                             <FormField

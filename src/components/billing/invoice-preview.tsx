@@ -3,6 +3,8 @@
 
 import * as React from "react";
 import { format } from 'date-fns';
+import QRCode from 'qrcode';
+import Image from 'next/image';
 
 const numberToWords = (num: number): string => {
     const a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
@@ -45,8 +47,10 @@ interface InvoicePreviewProps {
 
 export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewProps>(
   ({ invoice, customers }, ref) => {
+    const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState('');
+
     const customerDetails = customers.find(c => c.id === invoice.raw.customerId);
-    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234" };
+    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234", upiId: "gstease@okhdfcbank" };
 
     const salesLine = invoice.raw.lines.find((l: any) => l.account === '4010');
     const taxLine = invoice.raw.lines.find((l: any) => l.account === '2110');
@@ -64,6 +68,20 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
         taxAmount: taxAmount,
         total: invoice.amount
     }];
+
+    React.useEffect(() => {
+        if (companyDetails.upiId) {
+            const upiString = `upi://pay?pa=${companyDetails.upiId}&pn=${encodeURIComponent(companyDetails.name)}&am=${invoice.amount.toFixed(2)}&cu=INR&tn=${invoice.id}`;
+            QRCode.toDataURL(upiString, (err, url) => {
+                if (err) {
+                    console.error("Could not generate QR code", err);
+                    return;
+                }
+                setQrCodeDataUrl(url);
+            });
+        }
+    }, [companyDetails.upiId, companyDetails.name, invoice.amount, invoice.id]);
+
 
     return (
       <div ref={ref} className="bg-white p-8 text-black font-sans text-xs">
@@ -128,6 +146,12 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
                     <p>A/c No: {companyDetails.bankAccount}</p>
                     <p>IFSC: {companyDetails.bankIfsc}</p>
                 </div>
+                 {qrCodeDataUrl && (
+                    <div className="pt-4">
+                        <p className="font-bold">Scan QR Code to Pay:</p>
+                        <Image src={qrCodeDataUrl} alt="UPI QR Code" width={100} height={100} />
+                    </div>
+                )}
             </div>
             <div className="text-right">
                 <table className="w-full max-w-xs ml-auto">
