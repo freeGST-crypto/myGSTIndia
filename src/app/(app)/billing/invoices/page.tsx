@@ -258,7 +258,18 @@ export default function InvoicesPage() {
             } else {
                  toast({ variant: 'destructive', title: 'Edit Failed', description: `Could not cancel the original invoice.` });
             }
-        } else {
+        } else if (action === 'Remind') {
+            const customer = customers.find(c => c.id === invoice.raw.customerId);
+            if (customer && customer.phone) {
+                const message = encodeURIComponent(
+                    `Hi ${customer.name}, this is a friendly reminder for invoice ${invoice.id} amounting to ₹${invoice.amount.toFixed(2)}, which was due on ${format(new Date(invoice.dueDate), "dd MMM, yyyy")}. Please make the payment at your earliest convenience. Thank you, ${companyInfo.name}.`
+                );
+                window.open(`https://wa.me/${customer.phone}?text=${message}`, '_blank');
+            } else {
+                 toast({ variant: "destructive", title: "Cannot Send Reminder", description: "Customer phone number is not available." });
+            }
+        }
+        else {
             toast({
                 title: `Action: ${action}`,
                 description: `This would ${action.toLowerCase()} invoice ${invoice.id}. This is a placeholder.`
@@ -448,6 +459,9 @@ export default function InvoicesPage() {
                             <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAction('Remind', invoice)} disabled={invoice.status === 'Cancelled' || invoice.status === 'Paid'}>
+                                <MessageSquare className="mr-2" /> Send Reminder
+                            </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
                               <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
@@ -490,7 +504,3 @@ export default function InvoicesPage() {
     </div>
   );
 }
-
-    
-
-    
