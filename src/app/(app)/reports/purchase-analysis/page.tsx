@@ -53,6 +53,7 @@ export default function PurchaseAnalysisPage() {
     const filteredPurchases = useMemo(() => {
         if (!dateRange?.from || !dateRange?.to) return [];
         return journalVouchers.filter(v => {
+            if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
             return v.id.startsWith("BILL-") && !v.reverses && vDate >= dateRange.from! && vDate <= dateRange.to!;
         });

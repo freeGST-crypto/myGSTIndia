@@ -53,6 +53,7 @@ export default function SalesAnalysisPage() {
     const filteredInvoices = useMemo(() => {
         if (!dateRange?.from || !dateRange?.to) return [];
         return journalVouchers.filter(v => {
+            if (!v || !v.id || !v.date) return false;
             const vDate = new Date(v.date);
             return v.id.startsWith("INV-") && !v.reverses && vDate >= dateRange.from! && vDate <= dateRange.to!;
         });
