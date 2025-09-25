@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
@@ -56,11 +57,6 @@ export default function OfferLetterPage() {
 
 
   const formData = form.watch();
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Offer_Letter_${formData.candidateName}`,
-  });
 
   const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
 
@@ -148,7 +144,11 @@ export default function OfferLetterPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                    <ShareButtons 
+                        contentRef={printRef}
+                        fileName={`Offer_Letter_${formData.candidateName}`}
+                        whatsappMessage={`Hi ${formData.candidateName}, please find attached your offer letter from ${formData.companyName}.`}
+                    />
                 </CardFooter>
             </Card>
         </div>

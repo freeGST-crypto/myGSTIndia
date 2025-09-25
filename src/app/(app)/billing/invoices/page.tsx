@@ -52,6 +52,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { InvoicePreview } from "@/components/billing/invoice-preview";
 import { useReactToPrint } from 'react-to-print';
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 declare module 'jspdf' {
     interface jsPDF {
@@ -204,9 +205,6 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const invoicePreviewRef = useRef(null);
-  const handlePrint = useReactToPrint({
-      content: () => invoicePreviewRef.current,
-  });
 
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
@@ -237,7 +235,7 @@ export default function InvoicesPage() {
             
             return {
                 id: v.id,
-                customer: v.narration.replace("Sale to ", "").split(" via")[0],
+                customer: v.narration.replace("Sale of ", "").split(" to ")[1] || "N/A",
                 date: v.date,
                 dueDate: format(dueDate, 'yyyy-MM-dd'),
                 amount: v.amount,
@@ -293,12 +291,6 @@ export default function InvoicesPage() {
             setSelectedInvoice(invoice);
         } else if (action === 'Cancel') {
             await handleCancelInvoice(invoice.id);
-        } else if (action === 'Download') {
-            await setSelectedInvoice(invoice);
-            // We need a slight delay for the dialog to render the content before printing
-            setTimeout(() => {
-                handlePrint();
-            }, 100);
         } else if (action === 'Duplicate') {
             const queryParams = new URLSearchParams({
                 duplicate: invoice.id
@@ -477,7 +469,10 @@ export default function InvoicesPage() {
                             <DropdownMenuItem onSelect={() => handleAction('Remind', invoice)} disabled={invoice.status === 'Cancelled' || invoice.status === 'Paid'}>
                                 <MessageSquare className="mr-2" /> Send Reminder
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAction('Download', invoice)}>
+                            <DropdownMenuItem onSelect={() => {
+                                setSelectedInvoice(invoice);
+                                // The ShareButtons component inside the dialog will handle the actual download
+                            }}>
                               <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
@@ -513,11 +508,11 @@ export default function InvoicesPage() {
             )}
           </div>
           <DialogFooter>
-             <ShareButtons
+             {selectedInvoice && <ShareButtons
                 contentRef={invoicePreviewRef}
-                fileName={`Invoice_${selectedInvoice?.id}`}
-                whatsappMessage={`Please review invoice ${selectedInvoice?.id}.`}
-            />
+                fileName={`Invoice_${selectedInvoice.id}`}
+                whatsappMessage={`Hi ${selectedInvoice.customer}, please find attached invoice ${selectedInvoice.id} for ₹${selectedInvoice.amount.toFixed(2)}. Thank you.`}
+            />}
           </DialogFooter>
         </DialogContent>
       </Dialog>

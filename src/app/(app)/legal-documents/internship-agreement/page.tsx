@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
@@ -55,10 +56,6 @@ export default function InternshipAgreementPage() {
       signerName: "",
       signerTitle: "",
     },
-  });
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -131,6 +128,8 @@ export default function InternshipAgreementPage() {
         );
       case 3:
         const formData = form.getValues();
+        const whatsappMessage = `Hi ${formData.internName}, please find the attached Internship Agreement from ${formData.companyName}.`;
+
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Internship Agreement.</CardDescription></CardHeader>
@@ -182,7 +181,11 @@ export default function InternshipAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                  <ShareButtons 
+                    contentRef={printRef}
+                    fileName={`Internship_Agreement_${formData.internName}`}
+                    whatsappMessage={whatsappMessage}
+                  />
                 </CardFooter>
             </Card>
         );
