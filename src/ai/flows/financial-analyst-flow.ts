@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 // In a real app, these would come from the database based on the authenticated user.
 // For this demo, we'll use some sample data.
@@ -66,7 +66,8 @@ const financialAnalystPrompt = ai.definePrompt({
 
 
 export async function askFinancialAnalyst(question: string) {
-    const { stream, response } = await financialAnalystPrompt.generate({
+    const { stream, response } = await ai.generate({
+        prompt: financialAnalystPrompt,
         history: [
             { role: 'user', content: [{ text: question }] },
         ],
