@@ -70,7 +70,7 @@ export async function askFinancialAnalyst(question: string) {
         model: 'googleai/gemini-2.5-flash',
         tools: [getFinancialData],
         messages: [
-            { role: 'system', content: [{text: financialAnalystPrompt.system!}] },
+            { role: 'system', content: [{ text: financialAnalystPrompt.system! }] },
             { role: 'user', content: [{ text: question }] }
         ],
         stream: true,
@@ -91,3 +91,4 @@ export async function askFinancialAnalyst(question: string) {
         }
     });
 }
+
