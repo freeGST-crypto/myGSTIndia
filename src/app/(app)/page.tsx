@@ -1,10 +1,10 @@
 
 "use client";
 
-import DashboardPage from './dashboard/page';
+import DashboardContent from './dashboard/dashboard-content';
 
 export default function Page() {
     return (
-        <DashboardPage />
+        <DashboardContent />
     );
 }

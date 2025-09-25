@@ -1,4 +1,18 @@
 import { type SVGProps } from "react"
+export { 
+    Book, FileText, Gauge, Landmark, Receipt, Settings, Users, Warehouse, ChevronDown, 
+    Calculator, FilePlus, FileMinus, Library, Scale, BookOpen, Shield, Presentation, 
+    CalendarClock, UserSquare, BadgeDollarSign, Briefcase, BadgePercent, Wallet, 
+    ShieldCheck, Award, CreditCard, Heart, BookCopy, ShoppingCart, ShoppingBag, 
+    Loader2, GitCompareArrows, FileSpreadsheet, Building, TrendingUp, AreaChart, 
+    ConciergeBell, LayoutDashboard, MailWarning, FileSignature, Newspaper, Info, 
+    Contact, Facebook, Twitter, Linkedin, Instagram, Keyboard, PieChart, Boxes, 
+    Weight, Target, UserCog, FileArchive, ArrowLeft, ArrowRight, PlusCircle, Trash2, 
+    Upload, Download, Search, Check, X, Star, ChevronLeft, ChevronRight, Menu, 
+    Wand2, UserCheck, Banknote, Handshake, FileKey, MessageSquare, Printer, Zap,
+    AlertCircle, CheckCircle, Edit, Copy, SlidersHorizontal, Settings2, BarChart3,
+    ArrowRightLeft, Calendar as CalendarIcon, Eraser
+} from "lucide-react";
 
 export function GstEaseLogo(props: SVGProps<SVGSVGElement>) {
   return (

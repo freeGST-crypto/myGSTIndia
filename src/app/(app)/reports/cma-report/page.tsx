@@ -42,6 +42,7 @@ import {
   FileSpreadsheet,
   AlertTriangle,
   FileSignature,
+  ArrowLeft,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion } from "@/components/ui/accordion";
@@ -70,6 +71,7 @@ import {
 import { exportToPdf, exportToExcel } from "@/lib/cma-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import Link from "next/link";
 
 const initialAssets: FixedAsset[] = [
   { id: 1, name: "Plant & Machinery", cost: 1000000, depreciationRate: 15, additionYear: 0 },
@@ -183,6 +185,10 @@ export default function CmaReportGeneratorPage() {
 
   return (
     <div className="space-y-8">
+      <Link href="/reports" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-4" />
+        Back to Reports
+      </Link>
       <div className="text-center">
         <h1 className="text-3xl font-bold">CMA Report Generator</h1>
         <p className="mt-2 max-w-4xl mx-auto text-muted-foreground">
