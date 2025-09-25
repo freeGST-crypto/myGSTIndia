@@ -8,8 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { stream } from 'genkit/stream';
+import { z, stream } from 'genkit';
 
 // In a real app, these would come from the database based on the authenticated user.
 // For this demo, we'll use some sample data.
