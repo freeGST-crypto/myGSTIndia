@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, CalendarClock, UserSquare, BadgeDollarSign, Loader2 } from "lucide-react";
+import { ArrowRight, Users, CalendarClock, UserSquare, BadgeDollarSign, Loader2, ShieldCheck, UserCog } from "lucide-react";
 import Link from "next/link";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
@@ -23,6 +23,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc } from "firebase/firestore";
 import { useDocumentData } from "react-firebase-hooks/firestore";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
@@ -55,6 +56,26 @@ export default function AdminDashboardPage() {
         </Card>
     );
   }
+
+  const roleInfo = {
+    super_admin: {
+        icon: ShieldCheck,
+        title: "Super Admin Role",
+        description: "You have full platform access. The 'Admin' menu in the sidebar is visible, allowing you to manage users, subscribers, pricing, and all platform settings."
+    },
+    professional: {
+        icon: UserCog,
+        title: "Professional Role",
+        description: "You have access to all business features plus the 'Client Workspace' menu to manage your clients. You do not see the 'Admin' panel."
+    },
+    business: {
+        icon: Users,
+        title: "Business Role",
+        description: "You have access to all features for managing a single business, such as Billing and Accounting. You do not see 'Admin' or 'Client Workspace' menus."
+    }
+  }
+
+  const CurrentRoleInfo = roleInfo[userRole as keyof typeof roleInfo];
 
   const renderSuperAdminDashboard = () => {
     const proSubscribers = sampleSubscribers.filter(s => s.plan === 'Professional').length;
@@ -134,17 +155,10 @@ export default function AdminDashboardPage() {
   
   const renderBusinessDashboard = () => (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Business Overview</CardTitle>
-          <CardDescription>
-            Your subscriptions, appointments, and invoices.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Welcome, Business Owner! Here you’ll see only your business-related data.</p>
-        </CardContent>
-      </Card>
+      <p>This page is primarily for 'professional' and 'super_admin' roles. As a 'business' user, your main dashboard is your homepage.</p>
+        <Link href="/dashboard" passHref>
+            <Button>Go to Main Dashboard</Button>
+        </Link>
     </div>
   );
 
@@ -182,6 +196,14 @@ export default function AdminDashboardPage() {
         </div>
       </div>
       
+       {CurrentRoleInfo && (
+        <Alert>
+          <CurrentRoleInfo.icon className="h-4 w-4" />
+          <AlertTitle>You are logged in as: {CurrentRoleInfo.title}</AlertTitle>
+          <AlertDescription>{CurrentRoleInfo.description}</AlertDescription>
+        </Alert>
+      )}
+
       {renderDashboard()}
 
     </div>
