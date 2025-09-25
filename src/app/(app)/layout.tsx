@@ -76,6 +76,9 @@ import {
   SidebarFooter,
   useSidebar,
   SidebarInset,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 
 import { cn } from "@/lib/utils";
@@ -88,7 +91,7 @@ import { doc } from "firebase/firestore";
 import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
 import { AccountingProvider } from "@/context/accounting-context";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Fab } from "@/components/layout/fab";
@@ -105,7 +108,7 @@ const allMenuItems = [
       { href: "/billing/invoices", label: "Invoices", icon: Receipt, roles: ['business', 'professional'] },
       { href: "/billing/sales-orders", label: "Sales Orders", icon: ShoppingBag, roles: ['business', 'professional'] },
       { href: "/purchases", label: "Purchases", icon: ShoppingCart, roles: ['business', 'professional'] },
-      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingBag, roles: ['business', 'professional'] },
+      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingCart, roles: ['business', 'professional'] },
       { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus, roles: ['business', 'professional'] },
       { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus, roles: ['business', 'professional'] },
     ],
@@ -246,8 +249,6 @@ const allMenuItems = [
 ];
 
 const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }) => {
-  const { setOpenMobile } = useSidebar();
-
   const [isOpen, setIsOpen] = React.useState(
     item.subItems?.some((subItem: any) => pathname.startsWith(subItem.href)) || false
   );
@@ -262,50 +263,84 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
     setIsOpen(checkActive(item.subItems));
   }, [pathname, item.subItems]);
   
-  const handleLinkClick = () => {
-    setOpenMobile(false);
-  };
 
   return (
     <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <div
-            className={cn(
-              "flex items-center justify-between w-full rounded-md p-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              "group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2"
-            )}
+          <SidebarMenuButton
+            size="lg"
+            className="w-full justify-between"
           >
             <div className="flex items-center gap-2">
               <item.icon className="h-5 w-5" />
               <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </div>
             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
-          </div>
+          </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <NavMenu items={item.subItems} pathname={pathname} />
+          <SidebarMenuSub>
+            {item.subItems.map((subItem: any, index: number) => (
+              <SidebarMenuSubItem key={index}>
+                {subItem.subItems ? (
+                   <CollapsibleMenuItem item={subItem} pathname={pathname} />
+                ) : (
+                  <Link href={subItem.href}>
+                     <SidebarMenuSubButton
+                      isActive={pathname.startsWith(subItem.href)}
+                      className="w-full"
+                    >
+                      <subItem.icon className="h-6 w-6" />
+                      <span>{subItem.label}</span>
+                    </SidebarMenuSubButton>
+                  </Link>
+                )}
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
         </CollapsibleContent>
     </Collapsible>
-  );
-};
+  )
+}
 
 
-const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
+function NavMenu({ role }: { role: string }) {
+  const pathname = usePathname();
+
+  const filteredMenu = React.useMemo(() => {
+    const filterItems = (items: any[]): any[] => {
+      return items
+        .filter(item => item.roles.includes(role))
+        .map(item => {
+          if (item.subItems) {
+            const filteredSubItems = filterItems(item.subItems);
+            if (filteredSubItems.length > 0) {
+              return { ...item, subItems: filteredSubItems };
+            }
+            // If a menu item has no visible sub-items, don't show it, unless it also has a direct href
+            return item.href ? { ...item, subItems: [] } : null;
+          }
+          return item;
+        })
+        .filter(Boolean);
+    };
+    return filterItems(allMenuItems);
+  }, [role]);
 
   return (
     <SidebarMenu>
-      {items.map((item, index) => (
+      {filteredMenu.map((item, index) => (
         <SidebarMenuItem key={index}>
-          {item.subItems ? (
+          {item.subItems && item.subItems.length > 0 ? (
             <CollapsibleMenuItem item={item} pathname={pathname} />
           ) : (
             <Link href={item.href}>
               <SidebarMenuButton
-                isActive={pathname === item.href}
-                className="w-full"
                 size="lg"
+                isActive={pathname.startsWith(item.href)}
+                className="w-full justify-start"
               >
-                <item.icon className="size-6" />
+                <item.icon className="h-5 w-5" />
                 <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
               </SidebarMenuButton>
             </Link>
@@ -314,46 +349,30 @@ const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => {
       ))}
     </SidebarMenu>
   );
-};
-
-function SidebarNavManager() {
-    const { setOpenMobile } = useSidebar();
-    const pathname = usePathname();
-
-    React.useEffect(() => {
-        setOpenMobile(false);
-    }, [pathname, setOpenMobile]);
-
-    return null;
 }
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// This new component will contain the logic that needs the sidebar context
+function SidebarNavManager() {
+  const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const router = useRouter();
-  const [user, loading] = useAuthState(auth);
-  
+
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
+
+  return null; // This component doesn't render anything
+}
+
+
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const [user, loadingAuth] = useAuthState(auth);
   const userDocRef = user ? doc(db, 'users', user.uid) : null;
-  const [userData, userLoading] = useDocumentData(userDocRef);
-
-  const getRole = () => {
-    if (!user) return 'business'; // Default for viewing purposes if not logged in
-    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
-    return userData?.userType || 'business'; 
-  }
+  const [userData, loadingUser] = useDocumentData(userDocRef);
+  const [simulatedRole, setSimulatedRole] = React.useState<string | null>(null);
   
-  const defaultUserRole = getRole();
-  const [simulatedRole, setSimulatedRole] = React.useState(defaultUserRole);
+  const router = useRouter();
 
-  React.useEffect(() => {
-    setSimulatedRole(defaultUserRole);
-  }, [defaultUserRole]);
-
-  // Define hotkeys
-  const hotkeyMap = React.useMemo(() => new Map([
+  const hotkeys = new Map([
     ['ctrl+i', () => router.push('/billing/invoices/new')],
     ['ctrl+p', () => router.push('/purchases/new')],
     ['ctrl+j', () => router.push('/accounting/journal')],
@@ -361,56 +380,25 @@ export default function AppLayout({
     ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
     ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
     ['ctrl+g', () => router.push('/accounting/ledgers')],
+    ['alt+t', () => router.push('/accounting/trial-balance')],
+    ['alt+n', () => router.push('/billing/credit-notes/new')],
+    ['ctrl+d', () => router.push('/billing/debit-notes/new')],
     ['alt+p', () => router.push('/parties')],
     ['alt+i', () => router.push('/items')],
     ['escape', () => router.push('/dashboard')],
-  ]), [router]);
+  ]);
+  useHotkeys(hotkeys);
 
-  useHotkeys(hotkeyMap);
-
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey && !event.ctrlKey && !event.metaKey) {
-        if (event.key.toLowerCase() === 'n') {
-          event.preventDefault();
-          event.stopPropagation();
-          router.push('/billing/credit-notes/new');
-        }
-        if (event.key.toLowerCase() === 't') {
-          event.preventDefault();
-          event.stopPropagation();
-          router.push('/accounting/trial-balance');
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [router]);
-
-
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-  
-  if (loading || userLoading) {
-      return (
-          <div className="flex items-center justify-center h-screen">
-              <Loader2 className="h-16 w-16 animate-spin text-primary" />
-          </div>
-      );
-  }
-
-  if (!user) {
-    return null;
+  const getRole = () => {
+    if (simulatedRole) return simulatedRole;
+    if (!user) return 'business';
+    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    return userData?.userType || 'business';
   }
   
-  const menuItems = filterMenuByRole(allMenuItems, simulatedRole);
-  const childrenWithProps = React.Children.map(children, child => {
-    // A bit of a hacky way to pass props to a server component child
+  const userRole = getRole();
+  
+  const modifiedChildren = React.Children.map(children, child => {
     if (React.isValidElement(child) && (child.type as any).name === 'AdminDashboardPage') {
       return React.cloneElement(child, { setSimulatedRole } as any);
     }
@@ -420,63 +408,50 @@ export default function AppLayout({
   return (
     <AccountingProvider>
       <SidebarProvider>
-        <SidebarNavManager />
-        <Sidebar>
+        <SidebarNavManager /> 
+        <Sidebar
+          collapsible="icon"
+          className="border-sidebar-border"
+        >
           <SidebarHeader>
-            <div className="flex items-center gap-2 p-2">
-              <GstEaseLogo className="size-8 shrink-0" />
-              <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-                GSTEase
-              </span>
-            </div>
+            <GstEaseLogo className="h-9 w-auto group-data-[collapsible=icon]:h-8" />
           </SidebarHeader>
           <Separator />
           <SidebarContent>
-              <NavMenu items={menuItems} pathname={pathname} />
+            {loadingAuth || loadingUser ? (
+              <div className="p-2 space-y-2">
+                {Array.from({length: 8}).map((_, i) => <Loader2 key={i} className="animate-spin text-sidebar-foreground/50"/>)}
+              </div>
+            ) : (
+              <NavMenu role={userRole} />
+            )}
           </SidebarContent>
           <SidebarFooter>
-             <div className="flex items-center justify-center gap-4 p-4 group-data-[collapsible=icon]:hidden">
-                <Link href="#" target="_blank"><Facebook className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
-                <Link href="#" target="_blank"><Twitter className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
-                <Link href="#" target="_blank"><Linkedin className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
-                 <Link href="#" target="_blank"><Instagram className="size-4 text-sidebar-foreground/60 hover:text-sidebar-foreground" /></Link>
-             </div>
+            <Separator />
+             <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton className="justify-start w-full" size="lg">
+                    <Heart className="size-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">Feedback</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <Header />
           {/* Add pb-24 for bottom nav and fab */}
           <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8 md:pb-6 pb-24">
-            <ClientOnly>
-                <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>}>
-                  {childrenWithProps}
-                </Suspense>
-            </ClientOnly>
+             <Suspense fallback={<Loader2 className="animate-spin" />}>
+                {modifiedChildren}
+            </Suspense>
           </main>
-           <Fab />
-           <BottomNav />
+          <Fab />
+          <BottomNav />
         </SidebarInset>
       </SidebarProvider>
     </AccountingProvider>
   );
 }
 
-function filterMenuByRole(items: any[], role: string): any[] {
-  return items.reduce((acc: any[], item: any) => {
-    if (!item.roles || !item.roles.includes(role)) {
-      return acc;
-    }
-
-    if (item.subItems) {
-      const accessibleSubItems = filterMenuByRole(item.subItems, role);
-      if (accessibleSubItems.length > 0) {
-        acc.push({ ...item, subItems: accessibleSubItems });
-      }
-    } else {
-      acc.push(item);
-    }
-    return acc;
-  }, []);
-}
-
-    
+export default AppLayout;
