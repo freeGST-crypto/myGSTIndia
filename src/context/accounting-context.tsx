@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, ReactNode, useContext } from 'react';
 import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch, setDoc } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -35,6 +35,14 @@ type AccountingContextType = {
 };
 
 export const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
+
+export const useAccountingContext = () => {
+    const context = useContext(AccountingContext);
+    if (!context) {
+        throw new Error("useAccountingContext must be used within an AccountingProvider");
+    }
+    return context;
+};
 
 export const AccountingProvider = ({ children }: { children: ReactNode }) => {
     const [user] = useAuthState(auth);
