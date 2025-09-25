@@ -24,13 +24,20 @@ import { ShoppingCart, IndianRupee, Hash, Users, Package } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
 
 import { useAccountingContext } from "@/context/accounting-context";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
+
+const chartConfig = {
+  purchases: {
+    label: "Purchases",
+    color: "hsl(var(--chart-1))",
+  },
+} satisfies ChartConfig;
 
 
 export default function PurchaseAnalysisPage() {
@@ -77,9 +84,9 @@ export default function PurchaseAnalysisPage() {
         return Object.entries(vendorPurchases)
             .map(([vendorId, total]) => ({
                 name: vendors.find(v => v.id === vendorId)?.name || 'Unknown',
-                total,
+                purchases: total,
             }))
-            .sort((a, b) => b.total - a.total)
+            .sort((a, b) => b.purchases - a.purchases)
             .slice(0, 5); // Top 5
     }, [filteredPurchases, vendors]);
     
@@ -96,7 +103,8 @@ export default function PurchaseAnalysisPage() {
             }
         }
          return Object.values(itemPurchases)
-            .sort((a, b) => b.total - a.total)
+            .map(item => ({ name: item.name, purchases: item.total }))
+            .sort((a, b) => b.purchases - a.purchases)
             .slice(0, 5); // Top 5
     }, [filteredPurchases]);
 
@@ -128,15 +136,15 @@ export default function PurchaseAnalysisPage() {
                         <CardTitle className="flex items-center gap-2"><Users className="text-primary"/> Top Vendors</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={purchasesByVendor} layout="vertical">
+                         <ChartContainer config={chartConfig} className="w-full h-[300px]">
+                            <BarChart data={purchasesByVendor} layout="vertical" margin={{ left: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={120} />
-                                <Tooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="total" name="Purchases" fill="var(--color-sales)" radius={[0, 4, 4, 0]} />
+                                <YAxis dataKey="name" type="category" width={120} tickLine={false} axisLine={false} />
+                                <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                <Bar dataKey="purchases" name="Purchases" fill="var(--color-purchases)" radius={[0, 4, 4, 0]} />
                             </BarChart>
-                        </ResponsiveContainer>
+                        </ChartContainer>
                     </CardContent>
                 </Card>
                  <Card>
@@ -144,15 +152,15 @@ export default function PurchaseAnalysisPage() {
                         <CardTitle className="flex items-center gap-2"><Package className="text-primary"/> Top Purchased Items</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={purchasesByItem} layout="vertical">
+                         <ChartContainer config={chartConfig} className="w-full h-[300px]">
+                            <BarChart data={purchasesByItem} layout="vertical" margin={{ left: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={120} />
-                                <Tooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="total" name="Purchases" fill="var(--color-purchases)" radius={[0, 4, 4, 0]} />
+                                <YAxis dataKey="name" type="category" width={120} tickLine={false} axisLine={false} />
+                                <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                <Bar dataKey="purchases" name="Purchases" fill="var(--color-purchases)" radius={[0, 4, 4, 0]} />
                             </BarChart>
-                        </ResponsiveContainer>
+                        </ChartContainer>
                     </CardContent>
                 </Card>
             </div>
