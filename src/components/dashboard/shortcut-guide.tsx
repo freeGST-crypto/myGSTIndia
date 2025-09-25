@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card";
-  import { Keyboard, Receipt, BookCopy, Home, Zap, ShoppingCart, Wallet } from "lucide-react";
+  import { Keyboard, Receipt, BookCopy, Home, Zap, ShoppingCart, Wallet, IndianRupee } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
   
