@@ -24,37 +24,32 @@ import { auth, db } from "@/lib/firebase";
 import { doc } from "firebase/firestore";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage({ setSimulatedRole }: { setSimulatedRole: (role: string) => void }) {
   const [user, loadingAuth] = useAuthState(auth);
   const userDocRef = user ? doc(db, 'users', user.uid) : null;
   const [userData, loadingUser] = useDocumentData(userDocRef);
 
   const getRole = () => {
-    if (!user) return null;
-    if (user.uid === 'CUxyL5ioNjcQbVNszXhWGAFKS2y2') return 'super_admin';
+    if (!user) return 'business'; // Default to business if not logged in for viewing purposes
+    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
     return userData?.userType || 'business'; 
   }
   
   const userRole = getRole();
+  const [selectedRole, setSelectedRole] = useState(userRole);
+
+  const handleRoleChange = (role: string) => {
+    setSelectedRole(role);
+    setSimulatedRole(role);
+  }
 
   if (loadingAuth || loadingUser) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
-  }
-
-  if (!userRole) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Access Denied</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>You do not have permission to view this page.</p>
-            </CardContent>
-        </Card>
-    );
   }
 
   const roleInfo = {
@@ -75,7 +70,7 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const CurrentRoleInfo = roleInfo[userRole as keyof typeof roleInfo];
+  const CurrentRoleInfo = roleInfo[selectedRole as keyof typeof roleInfo];
 
   const renderSuperAdminDashboard = () => {
     const proSubscribers = sampleSubscribers.filter(s => s.plan === 'Professional').length;
@@ -164,7 +159,7 @@ export default function AdminDashboardPage() {
 
 
   const renderDashboard = () => {
-    switch (userRole) {
+    switch (selectedRole) {
         case 'super_admin':
             return renderSuperAdminDashboard();
         case 'professional':
@@ -181,14 +176,14 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">
-            {userRole === 'super_admin' && 'Admin Dashboard'}
-            {userRole === 'professional' && 'Client Workspace'}
-            {userRole === 'business' && 'Business Dashboard'}
+            {selectedRole === 'super_admin' && 'Admin Dashboard'}
+            {selectedRole === 'professional' && 'Client Workspace'}
+            {selectedRole === 'business' && 'Business Dashboard'}
           </h1>
           <p className="text-muted-foreground">
-            {userRole === 'professional'
+            {selectedRole === 'professional'
               ? "Manage your client portfolio."
-              : userRole === 'super_admin'
+              : selectedRole === 'super_admin'
               ? "Platform-wide overview and metrics."
               : "Your business at a glance."
             }
@@ -196,10 +191,30 @@ export default function AdminDashboardPage() {
         </div>
       </div>
       
+       <Card>
+          <CardHeader>
+              <CardTitle>View As Role (Simulator)</CardTitle>
+              <CardDescription>Select a role to see how the application sidebar and dashboard changes. Your actual permissions are based on your logged-in account ({userRole}).</CardDescription>
+          </CardHeader>
+          <CardContent>
+              <div className="max-w-xs space-y-2">
+                <Label htmlFor="role-simulator">Simulate Role</Label>
+                <Select value={selectedRole} onValueChange={handleRoleChange}>
+                    <SelectTrigger id="role-simulator"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="business">Business</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
+          </CardContent>
+       </Card>
+
        {CurrentRoleInfo && (
         <Alert>
           <CurrentRoleInfo.icon className="h-4 w-4" />
-          <AlertTitle>You are logged in as: {CurrentRoleInfo.title}</AlertTitle>
+          <AlertTitle>You are viewing as: {CurrentRoleInfo.title}</AlertTitle>
           <AlertDescription>{CurrentRoleInfo.description}</AlertDescription>
         </Alert>
       )}

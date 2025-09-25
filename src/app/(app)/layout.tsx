@@ -59,7 +59,7 @@ import {
   UserCog,
   FileArchive,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSelectedLayoutSegment } from "next/navigation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -333,6 +333,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const segment = useSelectedLayoutSegment();
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
   
@@ -340,12 +341,17 @@ export default function AppLayout({
   const [userData, userLoading] = useDocumentData(userDocRef);
 
   const getRole = () => {
-    if (!user) return null;
+    if (!user) return 'business'; // Default for viewing purposes if not logged in
     if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
     return userData?.userType || 'business'; 
   }
   
-  const userRole = getRole();
+  const defaultUserRole = getRole();
+  const [simulatedRole, setSimulatedRole] = React.useState(defaultUserRole);
+
+  React.useEffect(() => {
+    setSimulatedRole(defaultUserRole);
+  }, [defaultUserRole]);
 
   // Define hotkeys
   const hotkeyMap = React.useMemo(() => new Map([
@@ -405,11 +411,18 @@ export default function AppLayout({
       );
   }
 
-  if (!user || !userRole) {
+  if (!user) {
     return null;
   }
   
-  const menuItems = filterMenuByRole(allMenuItems, userRole);
+  const menuItems = filterMenuByRole(allMenuItems, simulatedRole);
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child) && segment === 'admin') {
+      // @ts-ignore
+      return React.cloneElement(child, { setSimulatedRole });
+    }
+    return child;
+  });
 
   return (
     <AccountingProvider>
@@ -441,7 +454,7 @@ export default function AppLayout({
           <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8">
             <ClientOnly>
                 <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary"/></div>}>
-                  {children}
+                  {childrenWithProps}
                 </Suspense>
             </ClientOnly>
           </main>
