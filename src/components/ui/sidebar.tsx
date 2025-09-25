@@ -523,7 +523,7 @@ const sidebarMenuButtonVariants = cva(
       size: {
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+        lg: "h-12 text-base group-data-[collapsible=icon]:!p-0 [&_[data-sidebar=menu-button-icon]]:size-6",
       },
     },
     defaultVariants: {
@@ -549,11 +549,20 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
+      children,
       ...props
     },
     ref
   ) => {
     const { isMobile, state } = useSidebar()
+    
+    // Add data attribute to children that are icons
+    const childrenWithIcon = React.Children.map(children, child => {
+        if (React.isValidElement(child) && child.type && (child.type as any).displayName?.includes('Icon')) {
+            return React.cloneElement(child as React.ReactElement, { "data-sidebar": "menu-button-icon" })
+        }
+        return child;
+    });
 
     const button = (
       <Comp
@@ -563,7 +572,9 @@ const SidebarMenuButton = React.forwardRef<
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
-      />
+      >
+        {childrenWithIcon}
+      </Comp>
     )
 
     if (!tooltip) {

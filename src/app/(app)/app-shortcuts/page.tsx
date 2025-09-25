@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, Keyboard, Receipt, FileText, BookCopy, Landmark, TrendingUp, Scale, FilePlus, FileMinus, Wallet, Book, Users, Warehouse } from "lucide-react";
+import { Search, Keyboard } from "lucide-react";
 import * as Icons from "lucide-react";
 
 type Shortcut = {
@@ -54,7 +54,7 @@ const appShortcuts: Shortcut[] = [
      {
         name: "New Credit Note",
         category: "Vouchers",
-        shortcut: "Ctrl + N",
+        shortcut: "Alt + N",
         description: "Jump to the new credit note creation page.",
         icon: "FilePlus"
     },
@@ -89,7 +89,7 @@ const appShortcuts: Shortcut[] = [
     {
         name: "Trial Balance",
         category: "Reports",
-        shortcut: "Ctrl + T",
+        shortcut: "Alt + T",
         description: "Go directly to the Trial Balance report.",
         icon: "Scale"
     },
@@ -178,7 +178,7 @@ export default function AppShortcutsPage() {
             {Object.entries(groupedShortcuts).map(([category, items]) => (
                 <div key={category}>
                     <h2 className="text-xl font-semibold mb-4">{category}</h2>
-                    <div className="border rounded-md">
+                    <div className="border rounded-md overflow-x-auto">
                         <Table>
                         <TableHeader>
                             <TableRow>
@@ -198,7 +198,7 @@ export default function AppShortcutsPage() {
                                 </TableCell>
                                 <TableCell className="text-muted-foreground">{shortcut.description}</TableCell>
                                 <TableCell className="text-right">
-                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 whitespace-nowrap">
                                     {shortcut.shortcut}
                                 </kbd>
                                 </TableCell>

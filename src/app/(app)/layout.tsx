@@ -76,6 +76,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import { cn } from "@/lib/utils";
@@ -204,7 +205,6 @@ const allMenuItems = [
         { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
         { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
         { href: "/app-shortcuts", label: "App Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
-        { href: "/tally-shortcuts", label: "Tally Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
         { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
@@ -250,6 +250,8 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   const [isOpen, setIsOpen] = React.useState(
     item.subItems?.some((subItem: any) => pathname.startsWith(subItem.href)) || false
   );
+  const { setOpenMobile } = useSidebar();
+
 
   React.useEffect(() => {
     const checkActive = (subItems: any[]): boolean => {
@@ -260,6 +262,10 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
     };
     setIsOpen(checkActive(item.subItems));
   }, [pathname, item.subItems]);
+  
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
 
 
   return (
@@ -279,24 +285,25 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <NavMenu items={item.subItems} pathname={pathname}/>
+          <NavMenu items={item.subItems} pathname={pathname} onLinkClick={handleLinkClick} />
         </CollapsibleContent>
     </Collapsible>
   );
 };
 
 
-const NavMenu = ({ items, pathname }: { items: any[], pathname: string }) => (
+const NavMenu = ({ items, pathname, onLinkClick }: { items: any[], pathname: string, onLinkClick: () => void }) => (
   <SidebarMenu>
     {items.map((item, index) => (
       <SidebarMenuItem key={index}>
         {item.subItems ? (
           <CollapsibleMenuItem item={item} pathname={pathname} />
         ) : (
-          <Link href={item.href}>
+          <Link href={item.href} onClick={onLinkClick}>
             <SidebarMenuButton
               isActive={pathname === item.href}
               className="w-full"
+              size="lg"
             >
               <item.icon className="h-5 w-5" />
               <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
@@ -336,6 +343,7 @@ export default function AppLayout({
   const segment = useSelectedLayoutSegment();
   const router = useRouter();
   const [user, loading] = useAuthState(auth);
+  const { setOpenMobile } = useSidebar();
   
   const userDocRef = user ? doc(db, 'users', user.uid) : null;
   const [userData, userLoading] = useDocumentData(userDocRef);
@@ -438,7 +446,7 @@ export default function AppLayout({
           </SidebarHeader>
           <Separator />
           <SidebarContent>
-              <NavMenu items={menuItems} pathname={pathname} />
+              <NavMenu items={menuItems} pathname={pathname} onLinkClick={() => setOpenMobile(false)}/>
           </SidebarContent>
           <SidebarFooter>
              <div className="flex items-center justify-center gap-4 p-4 group-data-[collapsible=icon]:hidden">
