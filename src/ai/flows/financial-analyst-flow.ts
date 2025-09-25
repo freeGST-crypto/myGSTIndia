@@ -67,8 +67,9 @@ const financialAnalystPrompt = ai.definePrompt({
 
 export async function askFinancialAnalyst(question: string) {
     const { stream, response } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash',
         prompt: financialAnalystPrompt,
-        history: [
+        messages: [
             { role: 'user', content: [{ text: question }] },
         ],
         stream: true,
