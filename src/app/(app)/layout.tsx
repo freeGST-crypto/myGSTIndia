@@ -240,7 +240,7 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
                    <CollapsibleMenuItem item={subItem} pathname={pathname} />
                 ) : (
                   <Link href={subItem.href} passHref>
-                     <SidebarMenuSubButton
+                    <SidebarMenuSubButton
                       asChild
                       isActive={pathname.startsWith(subItem.href)}
                       className="w-full"
