@@ -38,7 +38,7 @@ const months = [
     { value: "01", label: "January" }, { value: "02", label: "February" }, { value: "03", label: "March" },
     { value: "04", label: "April" }, { value: "05", label: "May" }, { value: "06", label: "June" },
     { value: "07", label: "July" }, { value: "08", label: "August" }, { value: "09", label: "September" },
-    { value: "10", label: "October" }, { value: "11", label: "November" }, { value: "12", "December" }
+    { value: "10", label: "October" }, { value: "11", label: "November" }, { value: "12", label: "December" }
 ];
 
 
@@ -62,16 +62,12 @@ export default function PayrollReportsPage() {
     
     switch (reportId) {
       case "pf_ecr":
-        // ECR format requires a specific text file format with #~# as delimiter
-        const ecrHeader = "UAN#~#Member Name#~#Gross Wages#~#EPF Wages#~#EPS Wages#~#EDLI Wages#~#EPF Contribution remitted#~#EPS Contribution remitted#~#EPF and EPS Diff remitted#~#NCP Days#~#Refund of Advances\n";
         const ecrData = payrollData.map(emp => {
             const epfWages = Math.min(emp.basic, 15000);
             const employeeContribution = epfWages * 0.12;
             const employerPensionContribution = Math.min(epfWages * 0.0833, 1250);
-            const employerPfContribution = employeeContribution - employerPensionContribution;
-            const totalPfContribution = employeeContribution + employerPfContribution;
-            const edliContribution = Math.min(epfWages * 0.005, 75);
-            
+            const employerPfContribution = (epfWages * 0.12) - employerPensionContribution;
+
             return [
                 emp.uan,
                 emp.name,
@@ -79,9 +75,9 @@ export default function PayrollReportsPage() {
                 epfWages, // EPF Wages
                 epfWages, // EPS Wages
                 epfWages, // EDLI Wages
-                totalPfContribution.toFixed(2), // EPF Contribution (Employee + Employer PF portion)
+                (employeeContribution + employerPfContribution).toFixed(2), // EPF Contribution
                 employerPensionContribution.toFixed(2), // EPS Contribution
-                0, // EPF-EPS Difference (usually 0, handled by EPFO)
+                0, // EPF-EPS Difference
                 0, // NCP Days
                 0, // Refund of Advances
             ].join('#~#')
