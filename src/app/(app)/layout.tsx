@@ -370,13 +370,16 @@ export default function AppLayout({
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.metaKey) {
+      // Use Alt key for less common shortcuts to avoid browser conflicts
+      if (event.altKey && !event.ctrlKey && !event.metaKey) {
         if (event.key.toLowerCase() === 'n') {
           event.preventDefault();
+          event.stopPropagation();
           router.push('/billing/credit-notes/new');
         }
         if (event.key.toLowerCase() === 't') {
           event.preventDefault();
+          event.stopPropagation();
           router.push('/accounting/trial-balance');
         }
       }
