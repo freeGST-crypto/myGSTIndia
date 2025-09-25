@@ -1,3 +1,4 @@
+
 import { type SVGProps } from "react"
 export { 
     Book, FileText, Gauge, Landmark, Receipt, Settings, Users, Warehouse, ChevronDown, 
@@ -11,7 +12,7 @@ export {
     Upload, Download, Search, Check, X, Star, ChevronLeft, ChevronRight, Menu, 
     Wand2, UserCheck, Banknote, Handshake, FileKey, MessageSquare, Printer, Zap,
     AlertCircle, CheckCircle, Edit, Copy, SlidersHorizontal, Settings2, BarChart3,
-    ArrowRightLeft, Calendar as CalendarIcon, Eraser
+    ArrowRightLeft, Calendar as CalendarIcon, Eraser, IndianRupee, Construction, Bell, CalendarDays
 } from "lucide-react";
 
 export function GstEaseLogo(props: SVGProps<SVGSVGElement>) {
