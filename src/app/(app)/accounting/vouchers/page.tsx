@@ -167,7 +167,7 @@ export default function VouchersPage() {
         };
 
         try {
-            await addJournalVoucher(reversalVoucher);
+            await addJournalVoucher(reversalVoucher as any);
             toast({ title: "Voucher Reversed", description: `Voucher #${voucherId} has been successfully reversed.` });
         } catch (e: any) {
             toast({ variant: "destructive", title: "Reversal Failed", description: e.message });
@@ -438,5 +438,3 @@ export default function VouchersPage() {
     </div>
   );
 }
-
-    
