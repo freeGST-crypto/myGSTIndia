@@ -117,7 +117,6 @@ function DashboardContent() {
   return (
     <div className="grid gap-8 lg:grid-cols-3 items-start">
       <div className="lg:col-span-2 space-y-8">
-        <MarketingCarousel />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Link href="/accounting/ledgers">
             <StatCard 
@@ -189,5 +188,3 @@ function DashboardContent() {
 }
 
 export default memo(DashboardContent);
-
-  
