@@ -56,8 +56,6 @@ export default function TdsReturnsPage() {
   const { journalVouchers, loading } = useContext(AccountingContext)!;
 
   const tdsTransactions = useMemo(() => {
-    // This is a simplified simulation. A real implementation would parse TDS details
-    // from purchase and payment vouchers within the selected quarter.
     const purchaseTds = journalVouchers
         .filter(v => v && v.id && v.id.startsWith("BILL-") && v.narration?.toLowerCase().includes("tds"))
         .map(v => ({
@@ -81,21 +79,40 @@ export default function TdsReturnsPage() {
         }));
     
     return [...purchaseTds, ...paymentTds];
-
   }, [journalVouchers, financialYear, quarter]);
+
+  const tcsTransactions = useMemo(() => {
+     return journalVouchers
+        .filter(v => v && v.id && v.id.startsWith("INV-") && v.lines.some(l => l.account === '2423'))
+        .map(v => {
+            const tcsLine = v.lines.find(l => l.account === '2423');
+            return {
+                id: v.id,
+                date: v.date,
+                party: v.narration.split(" to ")[1] || "N/A",
+                amount: v.amount,
+                tcs: parseFloat(tcsLine?.credit || '0'),
+                section: "206C(1H)"
+            };
+        });
+  }, [journalVouchers, financialYear, quarter]);
+
   
   const totalTdsPayable = useMemo(() => tdsTransactions.reduce((acc, t) => acc + t.tds, 0), [tdsTransactions]);
+  const totalTcsPayable = useMemo(() => tcsTransactions.reduce((acc, t) => acc + t.tcs, 0), [tcsTransactions]);
 
-  const handlePayNow = () => {
+
+  const handlePayNow = (type: 'TDS' | 'TCS') => {
+    const challan = type === 'TDS' ? '281' : '281'; // TCS also uses 281 for corporate/non-corporate deductees
     window.open("https://eportal.incometax.gov.in/iec/foservices/#/e-pay-tax-prelogin/user-details", "_blank");
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">TDS Returns</h1>
+        <h1 className="text-3xl font-bold">TDS & TCS Reports</h1>
         <p className="text-muted-foreground">
-          Prepare and manage your TDS returns for salary and non-salary payments.
+          Prepare and manage your TDS/TCS returns.
         </p>
       </div>
       
@@ -120,26 +137,32 @@ export default function TdsReturnsPage() {
                 </div>
             </CardContent>
         </Card>
+        
+         <div className="grid md:grid-cols-2 gap-4">
+            <StatCard 
+                title="Total TDS Payable for the Quarter"
+                value={`₹${totalTdsPayable.toLocaleString('en-IN')}`}
+                icon={IndianRupee}
+                loading={loading}
+            />
+             <StatCard 
+                title="Total TCS Payable for the Quarter"
+                value={`₹${totalTcsPayable.toLocaleString('en-IN')}`}
+                icon={IndianRupee}
+                loading={loading}
+            />
+        </div>
 
-        <StatCard 
-            title="Total TDS Payable for the Quarter"
-            value={`₹${totalTdsPayable.toLocaleString('en-IN')}`}
-            icon={IndianRupee}
-            description="Consolidated from salary, vendor payments, and purchase bills."
-            loading={loading}
-        />
-
-        <Tabs defaultValue="26q">
-            <TabsList className="grid w-full grid-cols-3 max-w-lg">
-                <TabsTrigger value="24q">Form 24Q (Salary)</TabsTrigger>
-                <TabsTrigger value="26q">Form 26Q (Non-Salary)</TabsTrigger>
-                <TabsTrigger value="27q">Form 27Q (Non-Resident)</TabsTrigger>
+        <Tabs defaultValue="tds">
+            <TabsList className="grid w-full grid-cols-2 max-w-lg">
+                <TabsTrigger value="tds">TDS Returns (24Q, 26Q, 27Q)</TabsTrigger>
+                <TabsTrigger value="tcs">TCS Return (27EQ)</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="26q">
+            
+            <TabsContent value="tds" className="space-y-4">
                  <Card>
                     <CardHeader>
-                        <CardTitle>Form 26Q Details</CardTitle>
+                        <CardTitle>Form 26Q Details (Non-Salary)</CardTitle>
                         <CardDescription>TDS deducted on payments to resident vendors and suppliers.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -174,18 +197,63 @@ export default function TdsReturnsPage() {
                             </TableFooter>
                         </Table>
                     </CardContent>
-                    <CardFooter className="justify-end gap-2">
-                        <Button onClick={handlePayNow}><IndianRupee className="mr-2"/>Pay TDS (Challan 281)</Button>
+                 </Card>
+                 <Card>
+                    <CardHeader><CardTitle>Other TDS Forms</CardTitle></CardHeader>
+                    <CardContent className="text-center text-muted-foreground p-10">
+                        <p>Form 24Q (Salary TDS) will be populated from the Payroll module.</p>
+                        <p>Form 27Q (Non-Resident TDS) will be populated from payments to non-resident vendors.</p>
+                    </CardContent>
+                     <CardFooter className="justify-end gap-2">
+                        <Button onClick={() => handlePayNow('TDS')}><IndianRupee className="mr-2"/>Pay TDS (Challan 281)</Button>
                         <Button variant="outline"><FileJson className="mr-2"/>Generate FVU File</Button>
                     </CardFooter>
                  </Card>
             </TabsContent>
-            {/* Other tabs can be implemented similarly */}
-            <TabsContent value="24q">
-                 <Card><CardContent className="p-10 text-center text-muted-foreground">Form 24Q (Salary TDS) will be populated from the Payroll module.</CardContent></Card>
-            </TabsContent>
-            <TabsContent value="27q">
-                 <Card><CardContent className="p-10 text-center text-muted-foreground">Form 27Q (Non-Resident TDS) details will appear here.</CardContent></Card>
+            
+            <TabsContent value="tcs">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Form 27EQ Details</CardTitle>
+                        <CardDescription>TCS collected on sale of goods.</CardDescription>
+                    </CardHeader>
+                     <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Party Name</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Section</TableHead>
+                                    <TableHead className="text-right">Transaction Amount</TableHead>
+                                    <TableHead className="text-right">TCS Amount</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {tcsTransactions.length > 0 ? tcsTransactions.map((tx) => (
+                                    <TableRow key={tx.id}>
+                                        <TableCell>{tx.party}</TableCell>
+                                        <TableCell>{format(new Date(tx.date), "dd-MM-yyyy")}</TableCell>
+                                        <TableCell>{tx.section}</TableCell>
+                                        <TableCell className="text-right">₹{tx.amount.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right">₹{tx.tcs.toLocaleString()}</TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow><TableCell colSpan={5} className="h-24 text-center">No TCS transactions found for this period.</TableCell></TableRow>
+                                )}
+                            </TableBody>
+                             <TableFooter>
+                                <TableRow className="font-bold bg-muted/50">
+                                    <TableCell colSpan={4} className="text-right">Total TCS for 27EQ</TableCell>
+                                    <TableCell className="text-right">₹{totalTcsPayable.toLocaleString()}</TableCell>
+                                </TableRow>
+                            </TableFooter>
+                        </Table>
+                    </CardContent>
+                    <CardFooter className="justify-end gap-2">
+                        <Button onClick={() => handlePayNow('TCS')}><IndianRupee className="mr-2"/>Pay TCS (Challan 281)</Button>
+                        <Button variant="outline"><FileJson className="mr-2"/>Generate FVU File</Button>
+                    </CardFooter>
+                 </Card>
             </TabsContent>
         </Tabs>
     </div>

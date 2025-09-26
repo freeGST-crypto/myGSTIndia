@@ -187,7 +187,7 @@ export default function NewInvoicePage() {
       if (taxType === 'tds') {
         journalLines.push({ account: '1460', debit: taxOnSourceAmount.toFixed(2), credit: '0'}); // TDS Receivable
       } else if (taxType === 'tcs') {
-        journalLines.push({ account: '2120', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TCS Payable
+        journalLines.push({ account: '2423', debit: '0', credit: taxOnSourceAmount.toFixed(2)}); // TCS Payable
       }
     }
 

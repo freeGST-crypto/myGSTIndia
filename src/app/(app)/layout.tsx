@@ -99,7 +99,7 @@ const allMenuItems = [
     icon: IndianRupee,
     roles: ['business', 'professional'],
     subItems: [
-      { href: "/income-tax/tds-returns", label: "TDS Returns", icon: FileText, roles: ['business', 'professional'] },
+      { href: "/income-tax/tds-tcs-reports", label: "TDS & TCS Reports", icon: FileText, roles: ['business', 'professional'] },
       { href: "/income-tax/advance-tax", label: "Advance Tax", icon: Calculator, roles: ['business', 'professional'] },
       { href: "/income-tax/form-16", label: "Form 16", icon: FileSignature, roles: ['business', 'professional'] },
     ],
@@ -374,7 +374,7 @@ function MainLayout({
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
-            <ZenithBooksLogo className="size-8 text-primary-foreground" />
+            <ZenithBooksLogo className="size-8 text-primary" />
             <div className="flex flex-col">
               <h2 className="text-xl font-bold">
                 <span className="font-bold">Zenith</span><span className="font-bold">Books</span>
