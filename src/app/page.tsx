@@ -55,7 +55,7 @@ export default function SplashScreen() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 overflow-hidden">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-primary text-primary-foreground p-4 overflow-hidden">
       <motion.div
         className="flex flex-col items-center gap-4 text-center"
         variants={containerVariants}
@@ -63,15 +63,15 @@ export default function SplashScreen() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <GstEaseLogo className="h-24 w-24 text-primary" />
+          <GstEaseLogo className="h-24 w-24 text-primary-foreground" />
         </motion.div>
         
         <motion.div variants={itemVariants} className="text-center">
             <h1 className="text-4xl font-bold tracking-tight">GSTEase</h1>
-            <p className="text-lg text-muted-foreground">Your All-in-One Compliance Partner</p>
+            <p className="text-lg text-primary-foreground/80">Your All-in-One Compliance Partner</p>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="mt-8 h-8 text-xl font-medium text-primary">
+        <motion.div variants={itemVariants} className="mt-8 h-8 text-xl font-medium text-primary-foreground/90">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={features[index]}
@@ -86,10 +86,10 @@ export default function SplashScreen() {
         </motion.div>
 
          <motion.div variants={itemVariants} className="mt-12 flex flex-col sm:flex-row gap-4 w-full max-w-xs">
-            <Button asChild size="lg" className="w-full">
+            <Button asChild size="lg" className="w-full" variant="secondary">
                 <Link href="/login">Login</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="w-full">
+            <Button asChild size="lg" variant="outline" className="w-full bg-primary/20 border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10">
                 <Link href="/signup">Sign Up</Link>
             </Button>
         </motion.div>
