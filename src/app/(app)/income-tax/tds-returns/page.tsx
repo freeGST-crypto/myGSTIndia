@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useContext } from "react";
@@ -50,12 +51,13 @@ const quarters = [
     { value: "q4", label: "Q4 (Jan-Mar)" },
 ];
 
-export default function TdsReturnsPage() {
+export default function TdsTcsReportsPage() {
   const [financialYear, setFinancialYear] = useState(getFinancialYears()[0]);
   const [quarter, setQuarter] = useState("q1");
   const { journalVouchers, loading } = useContext(AccountingContext)!;
 
   const tdsTransactions = useMemo(() => {
+    // from purchase and payment vouchers within the selected quarter.
     const purchaseTds = journalVouchers
         .filter(v => v && v.id && v.id.startsWith("BILL-") && v.narration?.toLowerCase().includes("tds"))
         .map(v => ({
