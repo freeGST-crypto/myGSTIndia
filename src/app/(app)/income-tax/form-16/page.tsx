@@ -29,6 +29,7 @@ import { FileSignature, Download, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { Label } from "@/components/ui/label";
 
 const getFinancialYears = () => {
     const currentYear = new Date().getFullYear();
