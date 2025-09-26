@@ -37,11 +37,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const employeeSchema = z.object({
   id: z.string(),
