@@ -171,8 +171,8 @@ export default function ShareholdersAgreementPage() {
                     <table className="w-full my-4 border-collapse border border-black">
                         <thead><tr className="bg-muted/50"><th className="border border-black p-1">Name</th><th className="border border-black p-1">Address</th><th className="border border-black p-1">No. of Shares</th><th className="border border-black p-1">Class</th></tr></thead>
                         <tbody>
-                            {formData.shareholders.map(s => (
-                                <tr key={s.name}><td className="border border-black p-1">{s.name}</td><td className="border border-black p-1">{s.address}</td><td className="border border-black p-1">{s.shares}</td><td className="border border-black p-1">{s.class}</td></tr>
+                            {formData.shareholders.map((s, index) => (
+                                <tr key={index}><td className="border border-black p-1">{s.name}</td><td className="border border-black p-1">{s.address}</td><td className="border border-black p-1">{s.shares}</td><td className="border border-black p-1">{s.class}</td></tr>
                             ))}
                         </tbody>
                     </table>
