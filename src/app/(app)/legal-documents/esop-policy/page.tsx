@@ -30,11 +30,11 @@ import {
   ArrowRight,
   PlusCircle,
   Trash2,
-  FileDown,
-  Printer,
+  FileSpreadsheet,
   Check,
   Loader2,
   Wand2,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -42,9 +42,9 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
+  TableHead,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
@@ -234,8 +234,7 @@ export default function EsopGrantWizardPage() {
     onAfterPrint: () =>
       toast({
         title: "Documents Generated",
-        description:
-          "Grant letters have been sent to your printer or saved as PDF.",
+        description: "Grant letters have been downloaded as PDF.",
       }),
   });
 
@@ -663,16 +662,12 @@ export default function EsopGrantWizardPage() {
             </CardHeader>
             <CardFooter className="justify-center gap-4">
               <Button onClick={handlePrint}>
-                <FileDown className="mr-2" /> Download Grant Letters (PDF)
+                <Download className="mr-2" /> Download Grant Letters (PDF)
               </Button>
               <Button variant="outline" onClick={handleExportCsv}>
-                <FileDown className="mr-2" /> Export Vesting Schedule (CSV)
+                <FileSpreadsheet className="mr-2" /> Export Vesting Schedule (CSV)
               </Button>
             </CardFooter>
-            {/* This div is only for the print job, it's not visible on screen */}
-            <div className="hidden">
-              <PrintableGrantLetters ref={printRef} formData={form.getValues()} />
-            </div>
           </Card>
         );
       default:
@@ -695,6 +690,11 @@ export default function EsopGrantWizardPage() {
           Follow the steps to grant stock options to your employees.
         </p>
       </div>
+
+      <div className="hidden">
+        <PrintableGrantLetters ref={printRef} formData={form.getValues()} />
+      </div>
+
       <Form {...form}>
         <form className="space-y-8">{renderStep()}</form>
       </Form>
