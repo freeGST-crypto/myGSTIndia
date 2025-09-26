@@ -50,7 +50,7 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { Fab } from "@/components/layout/fab";
 import { RoleSimulatorProvider, useRoleSimulator } from "@/context/role-simulator-context";
 
-const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
+const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
 const allMenuItems = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge, roles: ['business', 'professional', 'super_admin'] },
@@ -276,7 +276,7 @@ function NavMenu() {
   const getRole = () => {
     if (simulatedRole) return simulatedRole;
     if (!user) return 'business';
-    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    if (user.email === SUPER_ADMIN_EMAIL) return 'super_admin';
     return userData?.userType || 'business';
   }
 

@@ -25,10 +25,9 @@ import { doc } from "firebase/firestore";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { useRoleSimulator } from "@/context/role-simulator-context";
 
-const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
+const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
 export default function AdminDashboardPage() {
   const [user, loadingAuth] = useAuthState(auth);
@@ -38,7 +37,7 @@ export default function AdminDashboardPage() {
 
   const getRole = () => {
     if (!user) return 'business'; // Default to business if not logged in for viewing purposes
-    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    if (user.email === SUPER_ADMIN_EMAIL) return 'super_admin';
     return userData?.userType || 'business'; 
   }
   
