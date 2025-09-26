@@ -1,10 +1,9 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen } from "lucide-react";
 import Link from "next/link";
-import { allMenuItems } from "@/app/(app)/layout"; // Assuming menu items are exported from layout
 
 // A simplified representation of your menu structure for documentation
 const featurePanels = [
