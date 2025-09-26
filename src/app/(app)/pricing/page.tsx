@@ -120,7 +120,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
       <div className="text-center">
         <h1 className="text-3xl font-bold">{isSuperAdmin ? 'Manage Subscription Plans' : 'Pricing Plans'}</h1>
         <p className="text-muted-foreground max-w-xl mx-auto">

@@ -36,7 +36,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
       <div className="text-center">
         <h1 className="text-4xl font-bold">Contact Us</h1>
         <p className="mt-2 text-lg text-muted-foreground">

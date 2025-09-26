@@ -10,7 +10,7 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { auth, db } from "@/lib/firebase";
 import { doc } from "firebase/firestore";
 
-const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
+const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
 export default function SettingsPage() {
     const [user] = useAuthState(auth);
@@ -25,10 +25,10 @@ export default function SettingsPage() {
         );
     }
     
-    const userRole = user?.uid === SUPER_ADMIN_UID ? 'super_admin' : userData?.userType;
+    const userRole = user?.email === SUPER_ADMIN_EMAIL ? 'super_admin' : userData?.userType;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-7xl mx-auto">
             <div className="text-center">
                 <h1 className="text-3xl font-bold">Settings</h1>
                 <p className="text-muted-foreground">Manage your application and company settings.</p>

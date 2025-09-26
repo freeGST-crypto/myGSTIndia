@@ -157,7 +157,7 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="grid lg:grid-cols-3 gap-8 items-start">
+    <div className="grid lg:grid-cols-3 gap-8 items-start max-w-7xl mx-auto">
       <div className="lg:col-span-2 space-y-8">
          <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">User & Client Management</h1>

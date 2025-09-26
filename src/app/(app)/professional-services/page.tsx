@@ -228,7 +228,7 @@ export default function ProfessionalServicesPage() {
 
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-7xl mx-auto">
             <div className="text-center">
                 <h1 className="text-3xl font-bold">Find a Professional</h1>
                 <p className="text-muted-foreground max-w-2xl mx-auto">Search our network of verified professionals to find the right expert for your business needs.</p>

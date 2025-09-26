@@ -22,8 +22,8 @@ export const samplePosts = [
             "To claim ITC, a registered person must meet several conditions. These include being in possession of a tax invoice or debit note, having received the goods or services, the tax charged having been actually paid to the government, and having filed the necessary GST returns. It's crucial for businesses to meticulously document and verify these conditions for every claim.",
             "Common pitfalls include clerical errors in invoices, mismatches between GSTR-1 and GSTR-2B, and non-payment of tax by the supplier. Regular reconciliation is the key to maximizing your ITC claim and avoiding notices from the tax department. Use tools like GSTEase to automate this process and ensure compliance."
         ],
-        imageUrl: "https://picsum.photos/seed/blog1/600/400",
-        imageHint: "tax documents calculator",
+        imageUrl: "https://images.unsplash.com/photo-1512167976388-41fe84d0e691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx0YXglMjBkb2N1bWVudHN8ZW58MHx8fHwxNzU4ODgwOTc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageHint: "tax documents",
         shareUrl: "/blog/1"
     },
     {
@@ -38,8 +38,8 @@ export const samplePosts = [
             "Clean financial records are non-negotiable when it comes to fundraising. Investors will conduct due diligence, and organized books demonstrate professionalism, transparency, and a solid understanding of your business's financial position. It builds trust and significantly increases your chances of securing investment.",
             "Beyond fundraising, proper accounting is essential for tax compliance, budgeting, and identifying areas for cost-saving. Implementing a robust system from day one, even with simple tools, saves immense headaches down the line and sets your startup on a path to sustainable growth."
         ],
-        imageUrl: "https://picsum.photos/seed/blog2/600/400",
-        imageHint: "ledger books desk",
+        imageUrl: "https://images.unsplash.com/photo-1588859959931-39983ccaff7a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhY2NvdW50aW5nJTIwY2hhcnRzfGVufDB8fHx8MTc1ODg4MDk3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+        imageHint: "accounting charts",
         shareUrl: "/blog/2"
     },
     {
@@ -62,7 +62,7 @@ export const samplePosts = [
 
 export default function BlogPage() {
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-7xl mx-auto">
             <div className="text-center">
                 <h1 className="text-4xl font-bold">GSTEase Blog</h1>
                 <p className="mt-2 text-lg text-muted-foreground">Insights on Taxation, Finance, and International Trade from our experts.</p>

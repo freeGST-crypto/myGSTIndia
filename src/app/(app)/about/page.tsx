@@ -7,7 +7,7 @@ import Image from 'next/image';
 
 export default function AboutPage() {
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-7xl mx-auto">
             <div className="relative h-64 w-full rounded-lg overflow-hidden">
                 <Image 
                     src="https://picsum.photos/seed/about/1200/400" 

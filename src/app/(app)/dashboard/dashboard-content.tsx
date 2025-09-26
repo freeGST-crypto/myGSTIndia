@@ -116,7 +116,7 @@ function DashboardContent() {
   }, [invoices, searchTerm]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
       <MarketingCarousel />
       <div className="grid gap-8 lg:grid-cols-3 items-start">
         <div className="lg:col-span-2 space-y-8">
