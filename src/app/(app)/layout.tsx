@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -38,7 +37,8 @@ import {
     Target, UserCog, FileArchive, Ticket, Edit, Save,
     ArrowRightLeft, Calendar as CalendarIcon, Eraser, IndianRupee, Construction, Bell, CalendarDays,
     Menu, Wand2, UserCheck, Banknote, Handshake, FileKey, MessageSquare, Printer, Zap,
-    AlertCircle, CheckCircle, Copy, SlidersHorizontal, Settings2, BarChart3
+    AlertCircle, CheckCircle, Copy, SlidersHorizontal, Settings2, BarChart3,
+    ArrowRight
 } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -197,13 +197,13 @@ const allMenuItems = [
     subItems: [
         { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin']},
         {
-          label: "Pricing &amp; Plans",
+          label: "Pricing & Plans",
           icon: BadgeDollarSign,
           roles: ['super_admin'],
           subItems: [
             { href: "/pricing", label: "Subscription Plans", icon: BadgeDollarSign, roles: ['super_admin']},
             { href: "/admin/service-pricing", label: "On-Demand Services", icon: CreditCard, roles: ['super_admin']},
-            { href: "/admin/coupons", label: "Coupons &amp; Discounts", icon: Ticket, roles: ['super_admin']},
+            { href: "/admin/coupons", label: "Coupons & Discounts", icon: Ticket, roles: ['super_admin']},
           ],
         },
         { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign, roles: ['super_admin']},
@@ -232,43 +232,41 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
     setIsOpen(checkActive(item.subItems));
   }, [pathname, item.subItems]);
   
-  const content = (
-    <SidebarMenuSub>
-      {item.subItems.map((subItem: any, index: number) => (
-        <SidebarMenuSubItem key={index}>
-          {subItem.subItems ? (
-            <CollapsibleMenuItem item={subItem} pathname={pathname} />
-          ) : (
-            <Link href={subItem.href} passHref>
-              <SidebarMenuSubButton
-                asChild
-                isActive={pathname.startsWith(subItem.href)}
-                className="w-full"
-              >
-                <span className="flex w-full items-center gap-2">
-                  {subItem.icon && <subItem.icon className="h-4 w-4" />}
-                  <span>{subItem.label}</span>
-                </span>
-              </SidebarMenuSubButton>
-            </Link>
-          )}
-        </SidebarMenuSubItem>
-      ))}
-    </SidebarMenuSub>
-  );
-
   return (
     <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <SidebarMenuButton size="lg" className="w-full justify-between">
-          <div className="flex items-center gap-2">
-            <item.icon className="h-5 w-5" />
-            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-          </div>
-          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
-        </SidebarMenuButton>
-      </CollapsibleTrigger>
-      <CollapsibleContent>{content}</CollapsibleContent>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton size="lg" className="w-full justify-between">
+            <div className="flex items-center gap-2">
+              <item.icon className="h-5 w-5" />
+              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+            </div>
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+            <SidebarMenuSub>
+              {item.subItems.map((subItem: any, index: number) => (
+                <SidebarMenuSubItem key={index}>
+                  {subItem.subItems ? (
+                    <CollapsibleMenuItem item={subItem} pathname={pathname} />
+                  ) : (
+                    <Link href={subItem.href} passHref>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith(subItem.href)}
+                        className="w-full"
+                      >
+                        <span className="flex w-full items-center gap-2">
+                          {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                          <span>{subItem.label}</span>
+                        </span>
+                      </SidebarMenuSubButton>
+                    </Link>
+                  )}
+                </SidebarMenuSubItem>
+              ))}
+            </SidebarMenuSub>
+        </CollapsibleContent>
     </Collapsible>
   );
 };

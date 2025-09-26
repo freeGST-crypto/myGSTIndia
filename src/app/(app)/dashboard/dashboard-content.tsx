@@ -92,7 +92,7 @@ function DashboardContent() {
     }, 0);
   }, [vendors, accountBalances, vendorsLoading, journalLoading]);
   
-  const gstPayable = accountBalances['2421'] ? -accountBalances['2421'] : 0; // GST Payable is a credit balance
+  const gstPayable = accountBalances['2110'] ? -accountBalances['2110'] : 0; // GST Payable is a credit balance
 
   const invoices = useMemo(() => {
     return journalVouchers
@@ -100,7 +100,7 @@ function DashboardContent() {
         .slice(0, 5)
         .map(v => ({
             invoice: v.id,
-            customer: v.narration.replace("Sale of ", "").split(" to ")[0],
+            customer: v.narration.split(" to ")[1]?.split(" via")[0] || "N/A",
             amount: formatCurrency(v.amount),
             status: "Pending",
         }));
