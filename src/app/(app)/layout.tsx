@@ -27,7 +27,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { 
-    GstEaseLogo, Book, FileText, Gauge, Landmark, Receipt, Settings, Users, 
+    ZenithBooksLogo, Book, FileText, Gauge, Landmark, Receipt, Settings, Users, 
     Warehouse, ChevronDown, Calculator, FilePlus, FileMinus, Library, Scale, 
     BookOpen, Shield, Presentation, CalendarClock, UserSquare, BadgeDollarSign, 
     Briefcase, BadgePercent, Wallet, ShieldCheck, Award, CreditCard, Heart, 
@@ -365,8 +365,8 @@ function MainLayout({
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
-            <GstEaseLogo />
-            <h2 className="text-xl font-semibold">GSTEase</h2>
+            <ZenithBooksLogo />
+            <h2 className="text-xl font-semibold">ZenithBooks</h2>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>

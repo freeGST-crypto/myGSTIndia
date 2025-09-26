@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useEffect } from "react";
-import { GstEaseLogo } from "@/components/icons";
+import { ZenithBooksLogo } from "@/components/icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -63,12 +63,12 @@ export default function SplashScreen() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <GstEaseLogo className="h-24 w-24 text-primary-foreground" />
+          <ZenithBooksLogo className="h-24 w-24 text-primary-foreground" />
         </motion.div>
         
         <motion.div variants={itemVariants} className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight">GSTEase</h1>
-            <p className="text-lg text-primary-foreground/80">Your All-in-One Compliance Partner</p>
+            <h1 className="text-4xl font-bold tracking-tight">ZenithBooks</h1>
+            <p className="text-lg text-primary-foreground/80">Your Business at its Peak.</p>
         </motion.div>
 
         <motion.div variants={itemVariants} className="mt-8 h-8 text-xl font-medium text-primary-foreground/90">

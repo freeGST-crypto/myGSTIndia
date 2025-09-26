@@ -8,7 +8,7 @@ import { Heart } from "lucide-react";
 export function Header() {
   // In a real app, this data would come from a user context or API call
   const companyInfo = {
-    name: "GSTEase Solutions Pvt. Ltd.",
+    name: "ZenithBooks Solutions",
     gstin: "27ABCDE1234F1Z5",
   };
 

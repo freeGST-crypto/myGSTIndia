@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { GstEaseLogo } from "../icons"
+import { ZenithBooksLogo } from "../icons"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
@@ -103,7 +103,7 @@ export function SignupForm() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="mx-auto w-full max-w-sm">
         <CardHeader className="text-center">
-            <GstEaseLogo className="mx-auto h-12 w-12" />
+            <ZenithBooksLogo className="mx-auto h-12 w-12" />
           <CardTitle className="text-2xl">Create an Account</CardTitle>
           <CardDescription>
             Enter your information to create an account
