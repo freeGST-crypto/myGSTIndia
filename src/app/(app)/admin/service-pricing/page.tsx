@@ -136,7 +136,7 @@ export default function ServicePricingPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Service Price List</CardTitle>
+          <CardTitle>Manage On-Demand Service Prices</CardTitle>
           <CardDescription>
             Update the prices that will be shown to users when they access these on-demand features.
           </CardDescription>
@@ -154,10 +154,10 @@ export default function ServicePricingPage() {
         <CardContent className="space-y-6">
             {renderServiceCategory("Management Reports", "reports")}
             {renderServiceCategory("CA Certificates", "ca_certs")}
-            {renderServiceCategory("Notice Handling & Resolution", "notice_handling")}
+            {renderServiceCategory("Notice Handling &amp; Resolution", "notice_handling")}
             <Separator />
             {renderServiceCategory("Registration Deeds", "registration_deeds")}
-            {renderServiceCategory("Founder & Startup Docs", "founder_startup")}
+            {renderServiceCategory("Founder &amp; Startup Docs", "founder_startup")}
             {renderServiceCategory("General Agreements", "agreements")}
             <Separator />
             {renderServiceCategory("HR Documents", "hr_documents")}

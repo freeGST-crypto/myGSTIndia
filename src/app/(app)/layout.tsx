@@ -35,7 +35,10 @@ import {
     BookCopy, ShoppingCart, ShoppingBag, Loader2, GitCompareArrows, FileSpreadsheet, 
     Building, TrendingUp, AreaChart, ConciergeBell, LayoutDashboard, MailWarning, 
     FileSignature, Newspaper, Info, Contact, Keyboard, PieChart, Boxes, Weight, 
-    Target, UserCog, FileArchive, Ticket
+    Target, UserCog, FileArchive, Ticket, Edit, Save,
+    ArrowRightLeft, Calendar as CalendarIcon, Eraser, IndianRupee, Construction, Bell, CalendarDays,
+    Menu, Wand2, UserCheck, Banknote, Handshake, FileKey, MessageSquare, Printer, Zap,
+    AlertCircle, CheckCircle, Copy, SlidersHorizontal, Settings2, BarChart3
 } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -97,20 +100,20 @@ const allMenuItems = [
     roles: ['business', 'professional'],
     subItems: [
       { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library, roles: ['business', 'professional'] },
-      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet, roles: ['business', 'professional'] },
+      { href: "/accounting/vouchers", label: "Receipt &amp; Payment Vouchers", icon: Wallet, roles: ['business', 'professional'] },
       { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy, roles: ['business', 'professional'] },
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional'] },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional'] },
       { href: "/accounting/bank-reconciliation", label: "Bank Reconciliation", icon: Landmark, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centres", label: "Cost Centres", icon: PieChart, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centre-summary", label: "Cost Centre Summary", icon: PieChart, roles: ['business', 'professional'] },
-      { href: "/accounting/budgets", label: "Budgets & Scenarios", icon: Target, roles: ['business', 'professional']},
+      { href: "/accounting/budgets", label: "Budgets &amp; Scenarios", icon: Target, roles: ['business', 'professional']},
       {
         label: "Financial Statements",
         icon: BookOpen,
         roles: ['business', 'professional'],
         subItems: [
-          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp, roles: ['business', 'professional'] },
+          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit &amp; Loss", icon: TrendingUp, roles: ['business', 'professional'] },
           { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark, roles: ['business', 'professional'] },
         ],
       },
@@ -168,7 +171,6 @@ const allMenuItems = [
         { href: "/contact", label: "Contact Us", icon: Contact, roles: ['business', 'professional', 'super_admin'] },
     ],
   },
-  { href: "/pricing", label: "Pricing", icon: BadgeDollarSign, roles: ['business', 'professional', 'super_admin'] },
   {
     label: "Settings", 
     icon: Settings,
@@ -185,7 +187,7 @@ const allMenuItems = [
     roles: ['professional'],
     subItems: [
         { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['professional']},
-        { href: "/admin/users", label: "User & Client Management", icon: Users, roles: ['professional']},
+        { href: "/admin/users", label: "User &amp; Client Management", icon: Users, roles: ['professional']},
     ]
   },
   {
@@ -194,15 +196,23 @@ const allMenuItems = [
     roles: ['super_admin'],
     subItems: [
         { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, roles: ['super_admin']},
+        {
+          label: "Pricing &amp; Plans",
+          icon: BadgeDollarSign,
+          roles: ['super_admin'],
+          subItems: [
+            { href: "/pricing", label: "Subscription Plans", icon: BadgeDollarSign, roles: ['super_admin']},
+            { href: "/admin/service-pricing", label: "On-Demand Services", icon: CreditCard, roles: ['super_admin']},
+            { href: "/admin/coupons", label: "Coupons &amp; Discounts", icon: Ticket, roles: ['super_admin']},
+          ],
+        },
         { href: "/admin/subscribers", label: "Subscribers", icon: BadgeDollarSign, roles: ['super_admin']},
         { href: "/admin/users", label: "All Users", icon: Users, roles: ['super_admin']},
         { href: "/admin/professionals", label: "Professionals", icon: UserSquare, roles: ['super_admin']},
         { href: "/admin/appointments", label: "Appointments", icon: CalendarClock, roles: ['super_admin']},
         { href: "/admin/notices", label: "Submitted Notices", icon: MailWarning, roles: ['super_admin']},
-        { href: "/admin/service-pricing", label: "On-Demand Pricing", icon: CreditCard, roles: ['super_admin']},
         { href: "/admin/certification-requests", label: "Certification Requests", icon: FileSignature, roles: ['super_admin']},
         { href: "/admin/blog", label: "Manage Blog", icon: Newspaper, roles: ['super_admin'] },
-        { href: "/admin/coupons", label: "Coupons & Discounts", icon: Ticket, roles: ['super_admin'] },
     ]
   },
 ];

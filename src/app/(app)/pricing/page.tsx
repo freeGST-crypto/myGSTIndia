@@ -10,8 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Check, X, Edit, Save, IndianRupee, Ticket } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Check, X, Edit, Save, IndianRupee } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -29,10 +29,10 @@ const initialTiers = [
     description: "For individuals and small businesses just getting started with billing.",
     features: [
       { text: "Up to 20 Invoices/Purchases per month", included: true },
-      { text: "Customer & Vendor Management", included: true },
+      { text: "Customer &amp; Vendor Management", included: true },
       { text: "Basic Billing Reports", included: true },
       { text: "Financial Statements", included: false },
-      { text: "GST & TDS Compliance Tools", included: false },
+      { text: "GST &amp; TDS Compliance Tools", included: false },
       { text: "Admin Panel / Client Management", included: false },
     ],
     cta: "Start for Free",
@@ -62,8 +62,8 @@ const initialTiers = [
     description: "For CAs, tax consultants, and firms managing multiple clients.",
     features: [
       { text: "All Business Features", included: true },
-      { text: "Full GST Filing & Reconciliation Suite", included: true },
-      { text: "Legal & CA Certificate Generators", included: true },
+      { text: "Full GST Filing &amp; Reconciliation Suite", included: true },
+      { text: "Legal &amp; CA Certificate Generators", included: true },
       { text: "CMA Report Generator", included: true },
       { text: "Admin Panel with Client Management", included: true },
       { text: "Priority Support", included: true },
@@ -104,9 +104,9 @@ export default function PricingPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold">Pricing Plans</h1>
+        <h1 className="text-3xl font-bold">{isSuperAdmin ? 'Manage Subscription Plans' : 'Pricing Plans'}</h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Choose the plan that's right for you. From simple billing to comprehensive professional tools.
+          {isSuperAdmin ? 'Edit the pricing and features for each subscription tier.' : 'Choose the plan that\'s right for you. From simple billing to comprehensive professional tools.'}
         </p>
          <div className="flex items-center justify-center space-x-2 mt-6">
           <Label htmlFor="billing-cycle">Monthly</Label>
@@ -134,7 +134,7 @@ export default function PricingPage() {
             className={cn("flex flex-col transition-all", isEditing && "ring-2 ring-primary")}
           >
             <CardHeader className="relative">
-              {tier.isPopular && (
+              {tier.isPopular && !isEditing && (
                 <div className="absolute top-0 right-4 -mt-3">
                   <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
                     Most Popular
@@ -179,9 +179,7 @@ export default function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-              <Button className="w-full">
-                {tier.cta}
-              </Button>
+              {!isSuperAdmin && <Button className="w-full">{tier.cta}</Button>}
                {isSuperAdmin && !isEditing && (
                  <Button variant="outline" className="w-full" onClick={() => handleEdit(tier.id)}>
                     <Edit className="mr-2"/> Edit Plan
