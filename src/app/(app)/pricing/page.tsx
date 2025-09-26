@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRoleSimulator } from "@/context/role-simulator-context";
+import { Badge } from "@/components/ui/badge";
 
 const initialTiers = [
   {
@@ -192,4 +192,10 @@ export default function PricingPage() {
                     <Save className="mr-2"/> Save Changes
                 </Button>
                )}
-            </
+            </CardFooter>
+          </Card>
+        )})}
+      </div>
+    </div>
+  );
+}
