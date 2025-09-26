@@ -188,7 +188,7 @@ const allMenuItems = [
     roles: ['professional'],
     subItems: [
         { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['professional']},
-        { href: "/admin/users", label: "User &amp; Client Management", icon: Users, roles: ['professional']},
+        { href: "/admin/users", label: "User & Client Management", icon: Users, roles: ['professional']},
     ]
   },
   {

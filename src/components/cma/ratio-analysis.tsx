@@ -1,4 +1,3 @@
-
 import {
   AccordionContent,
   AccordionItem,
@@ -27,33 +26,35 @@ export const RatioAnalysis = ({ report }: RatioAnalysisProps) => {
     <AccordionItem value="ratio-analysis">
       <AccordionTrigger>Part IV: Ratio Analysis</AccordionTrigger>
       <AccordionContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {report.ratioAnalysis.headers.map((header) => (
-                <TableHead key={header}>{header}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report.ratioAnalysis.body.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <TableCell
-                    key={cellIndex}
-                    className={
-                      cellIndex === 0
-                        ? "font-medium"
-                        : "text-right font-mono"
-                    }
-                  >
-                    {cell}
-                  </TableCell>
+        <div className="overflow-x-auto">
+            <Table>
+            <TableHeader>
+                <TableRow>
+                {report.ratioAnalysis.headers.map((header) => (
+                    <TableHead key={header}>{header}</TableHead>
                 ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {report.ratioAnalysis.body.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                    {row.map((cell, cellIndex) => (
+                    <TableCell
+                        key={cellIndex}
+                        className={
+                        cellIndex === 0
+                            ? "font-medium"
+                            : "text-right font-mono"
+                        }
+                    >
+                        {cell}
+                    </TableCell>
+                    ))}
+                </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </div>
       </AccordionContent>
     </AccordionItem>
   );

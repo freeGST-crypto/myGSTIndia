@@ -27,33 +27,35 @@ export const CashFlowStatement = ({ report }: CashFlowStatementProps) => {
     <AccordionItem value="cash-flow">
       <AccordionTrigger>Part III: Cash Flow Statement</AccordionTrigger>
       <AccordionContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {report.cashFlow.headers.map((header) => (
-                <TableHead key={header}>{header}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report.cashFlow.body.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <TableCell
-                    key={cellIndex}
-                    className={
-                      cellIndex === 0
-                        ? "font-medium"
-                        : "text-right font-mono"
-                    }
-                  >
-                    {cell}
-                  </TableCell>
+        <div className="overflow-x-auto">
+            <Table>
+            <TableHeader>
+                <TableRow>
+                {report.cashFlow.headers.map((header) => (
+                    <TableHead key={header}>{header}</TableHead>
                 ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {report.cashFlow.body.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                    {row.map((cell, cellIndex) => (
+                    <TableCell
+                        key={cellIndex}
+                        className={
+                        cellIndex === 0
+                            ? "font-medium"
+                            : "text-right font-mono"
+                        }
+                    >
+                        {cell}
+                    </TableCell>
+                    ))}
+                </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </div>
       </AccordionContent>
     </AccordionItem>
   );

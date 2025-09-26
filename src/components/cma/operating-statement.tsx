@@ -27,33 +27,35 @@ export const OperatingStatement = ({ report }: OperatingStatementProps) => {
     <AccordionItem value="operating-statement">
       <AccordionTrigger>Part I: Operating Statement</AccordionTrigger>
       <AccordionContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {report.operatingStatement.headers.map((header) => (
-                <TableHead key={header}>{header}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report.operatingStatement.body.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <TableCell
-                    key={cellIndex}
-                    className={
-                      cellIndex === 0
-                        ? "font-medium"
-                        : "text-right font-mono"
-                    }
-                  >
-                    {cell}
-                  </TableCell>
+        <div className="overflow-x-auto">
+            <Table>
+            <TableHeader>
+                <TableRow>
+                {report.operatingStatement.headers.map((header) => (
+                    <TableHead key={header}>{header}</TableHead>
                 ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {report.operatingStatement.body.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                    {row.map((cell, cellIndex) => (
+                    <TableCell
+                        key={cellIndex}
+                        className={
+                        cellIndex === 0
+                            ? "font-medium"
+                            : "text-right font-mono"
+                        }
+                    >
+                        {cell}
+                    </TableCell>
+                    ))}
+                </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </div>
       </AccordionContent>
     </AccordionItem>
   );

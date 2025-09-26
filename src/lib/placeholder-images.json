@@ -3,19 +3,19 @@
     {
       "id": "carousel-1",
       "description": "Streamline Your Finances with Advanced Accounting",
-      "imageUrl": "https://picsum.photos/seed/finance/1200/500",
+      "imageUrl": "https://images.unsplash.com/photo-1588859959931-39983ccaff7a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhY2NvdW50aW5nJTIwY2hhcnRzfGVufDB8fHx8MTc1ODg4MDk3OXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "accounting charts"
     },
     {
       "id": "carousel-2",
       "description": "Effortless GST Compliance and Filing",
-      "imageUrl": "https://picsum.photos/seed/tax/1200/500",
+      "imageUrl": "https://images.unsplash.com/photo-1512167976388-41fe84d0e691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx0YXglMjBkb2N1bWVudHN8ZW58MHx8fHwxNzU4ODgwOTc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "tax documents"
     },
     {
       "id": "carousel-3",
       "description": "Generate CMA Reports with AI-Powered Insights",
-      "imageUrl": "https://picsum.photos/seed/reports/1200/500",
+      "imageUrl": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MHx8fHwxNzU4Nzk0NjYwfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "business meeting"
     }
   ]
