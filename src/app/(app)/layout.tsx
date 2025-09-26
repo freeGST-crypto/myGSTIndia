@@ -47,7 +47,7 @@ import { auth, db } from '@/lib/firebase';
 import { doc } from "firebase/firestore";
 import { Header } from "@/components/layout/header";
 import { ClientOnly } from "@/components/client-only";
-import { AccountingProvider } from "@/context/accounting-context";
+import { AccountingProvider, useAccountingContext } from "@/context/accounting-context";
 import { Suspense, useEffect } from "react";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -165,6 +165,7 @@ const allMenuItems = [
     icon: Info,
     roles: ['business', 'professional', 'super_admin'],
     subItems: [
+        { href: "/resources/knowledge-base", label: "Knowledge Base", icon: BookOpen, roles: ['business', 'professional', 'super_admin'] },
         { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
         { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
         { href: "/app-shortcuts", label: "App Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
@@ -293,7 +294,6 @@ function MainLayout({
   const userRole = getRole();
   const displayRole = simulatedRole || userRole;
   
-  // Define hotkeys
   const hotkeys = new Map<string, (event: KeyboardEvent) => void>([
       ['ctrl+i', () => router.push('/billing/invoices/new')],
       ['ctrl+p', () => router.push('/purchases/new')],
@@ -324,7 +324,31 @@ function MainLayout({
     );
   }
   
-  const filteredMenuItems = allMenuItems.filter(item => item.roles.includes(displayRole));
+  const filteredMenuItems = allMenuItems
+    .map(item => {
+        if (!item.roles.includes(displayRole)) {
+            return null;
+        }
+        if (item.subItems) {
+            const filteredSubItems = item.subItems
+                .map(subItem => {
+                    if (!subItem.roles.includes(displayRole)) {
+                        return null;
+                    }
+                    if (subItem.subItems) {
+                         const filteredNestedSubItems = subItem.subItems.filter(nested => nested.roles.includes(displayRole));
+                         if (filteredNestedSubItems.length === 0) return null;
+                         return {...subItem, subItems: filteredNestedSubItems};
+                    }
+                    return subItem;
+                })
+                .filter(Boolean);
+            if (filteredSubItems.length === 0) return null;
+            return { ...item, subItems: filteredSubItems };
+        }
+        return item;
+    })
+    .filter(Boolean);
 
 
   return (
