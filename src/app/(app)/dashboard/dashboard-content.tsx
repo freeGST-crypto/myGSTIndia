@@ -19,6 +19,7 @@ import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "../billing/invoices/page";
 import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
+import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -115,58 +116,61 @@ function DashboardContent() {
   }, [invoices, searchTerm]);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3 items-start">
-      <div className="lg:col-span-2 space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/accounting/ledgers">
-            <StatCard 
-              title="Receivables"
-              value={formatCurrency(totalReceivables)}
-              icon={IndianRupee}
-              loading={journalLoading || customersLoading}
-            />
-          </Link>
-          <Link href="/accounting/ledgers">
-            <StatCard 
-              title="Payables"
-              value={formatCurrency(totalPayables)}
-              icon={CreditCard}
-              loading={journalLoading || vendorsLoading}
-            />
-          </Link>
-          <Link href="/accounting/ledgers">
-            <StatCard 
-              title="GST Payable"
-              value={formatCurrency(gstPayable)}
-              icon={DollarSign}
-              loading={journalLoading}
-            />
-          </Link>
-        </div>
-        <FinancialSummaryChart />
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Quickly find recent invoices.</CardDescription>
-            <div className="relative pt-4">
-              <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search recent invoices..."
-                className="pl-8 w-full md:w-1/2"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+    <div className="space-y-8">
+      <MarketingCarousel />
+      <div className="grid gap-8 lg:grid-cols-3 items-start">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Link href="/accounting/ledgers">
+              <StatCard 
+                title="Receivables"
+                value={formatCurrency(totalReceivables)}
+                icon={IndianRupee}
+                loading={journalLoading || customersLoading}
               />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
-          </CardContent>
-        </Card>
-      </div>
-      <div className="space-y-8 lg:col-span-1">
-          <ShortcutGuide />
-          <ComplianceCalendar />
+            </Link>
+            <Link href="/accounting/ledgers">
+              <StatCard 
+                title="Payables"
+                value={formatCurrency(totalPayables)}
+                icon={CreditCard}
+                loading={journalLoading || vendorsLoading}
+              />
+            </Link>
+            <Link href="/accounting/ledgers">
+              <StatCard 
+                title="GST Payable"
+                value={formatCurrency(gstPayable)}
+                icon={DollarSign}
+                loading={journalLoading}
+              />
+            </Link>
+          </div>
+          <FinancialSummaryChart />
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Quickly find recent invoices.</CardDescription>
+              <div className="relative pt-4">
+                <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search recent invoices..."
+                  className="pl-8 w-full md:w-1/2"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="space-y-8 lg:col-span-1">
+            <ShortcutGuide />
+            <ComplianceCalendar />
+        </div>
       </div>
       <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />
     </div>
