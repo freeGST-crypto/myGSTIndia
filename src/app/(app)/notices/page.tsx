@@ -96,7 +96,7 @@ export default function NoticesPage() {
         <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 mb-4 mx-auto">
             <MailWarning className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold">Handle Notices</h1>
+        <h1 className="text-3xl font-bold">Handle Notice</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Received a notice from a government department? Upload it here for expert analysis and resolution by our professional team.
         </p>

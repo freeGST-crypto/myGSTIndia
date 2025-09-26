@@ -324,7 +324,7 @@ export default function TrialBalancePage() {
                    The following entry has been created in a temporary Suspense Account to balance the Trial Balance difference of ₹{Math.abs(difference).toFixed(2)}.
                 </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
+            <div className="py-4 overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
