@@ -101,20 +101,20 @@ const allMenuItems = [
     roles: ['business', 'professional'],
     subItems: [
       { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library, roles: ['business', 'professional'] },
-      { href: "/accounting/vouchers", label: "Receipt &amp; Payment Vouchers", icon: Wallet, roles: ['business', 'professional'] },
+      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet, roles: ['business', 'professional'] },
       { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy, roles: ['business', 'professional'] },
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional'] },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional'] },
       { href: "/accounting/bank-reconciliation", label: "Bank Reconciliation", icon: Landmark, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centres", label: "Cost Centres", icon: PieChart, roles: ['business', 'professional'] },
       { href: "/accounting/cost-centre-summary", label: "Cost Centre Summary", icon: PieChart, roles: ['business', 'professional'] },
-      { href: "/accounting/budgets", label: "Budgets &amp; Scenarios", icon: Target, roles: ['business', 'professional']},
+      { href: "/accounting/budgets", label: "Budgets & Scenarios", icon: Target, roles: ['business', 'professional']},
       {
         label: "Financial Statements",
         icon: BookOpen,
         roles: ['business', 'professional'],
         subItems: [
-          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit &amp; Loss", icon: TrendingUp, roles: ['business', 'professional'] },
+          { href: "/accounting/financial-statements/profit-and-loss", label: "Profit & Loss", icon: TrendingUp, roles: ['business', 'professional'] },
           { href: "/accounting/financial-statements/balance-sheet", label: "Balance Sheet", icon: Landmark, roles: ['business', 'professional'] },
         ],
       },
@@ -368,9 +368,9 @@ function MainLayout({
             <ZenithBooksLogo className="size-8 text-primary" />
             <div className="flex flex-col">
               <h2 className="text-xl font-bold">
-                ZenithBooks
+                <span className="font-bold">Zenith</span><span className="font-bold">Books</span>
               </h2>
-              <span className="text-xs text-sidebar-foreground/50 font-mono">Version 1.0 Pro</span>
+              <span className="text-xs text-sidebar-foreground/50 font-mono">Version 0.9 Pro</span>
             </div>
           </SidebarHeader>
           <SidebarContent>

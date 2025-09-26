@@ -244,7 +244,6 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 2: Partner Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
-              <FormField control={form.control} name="totalCapital" render={({ field }) => (<FormItem><FormLabel>Total Capital Contribution of LLP (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               {form.formState.errors.totalCapital && <p className="text-sm font-medium text-destructive">{form.formState.errors.totalCapital.message}</p>}
               <Separator />
               {fields.map((field, index) => (
@@ -434,10 +433,7 @@ export default function PartnershipDeedPage() {
 
         return (
              <Card>
-                <CardHeader>
-                    <CardTitle>Final Step: Preview & Download</CardTitle>
-                    <CardDescription>Review the generated Partnership Deed. This is a detailed preview based on your inputs. Download for the fully formatted document.</CardDescription>
-                </CardHeader>
+                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed. This is a detailed preview based on your inputs. Download for the fully formatted document.</CardDescription></CardHeader>
                 <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     
                     {/* Form No. 1 */}

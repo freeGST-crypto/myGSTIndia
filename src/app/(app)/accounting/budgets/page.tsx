@@ -90,7 +90,7 @@ export default function BudgetsPage() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                <h1 className="text-3xl font-bold">Budgets &amp; Scenarios</h1>
+                <h1 className="text-3xl font-bold">Budgets & Scenarios</h1>
                 <p className="text-muted-foreground">
                     Set financial budgets for income and expense accounts.
                 </p>

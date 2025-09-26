@@ -136,9 +136,12 @@ export function LoginForm() {
     <>
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="mx-auto w-full max-w-sm">
-          <CardHeader className="text-center">
-              <ZenithBooksLogo className="mx-auto h-12 w-12" />
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <CardHeader className="text-center space-y-4">
+            <ZenithBooksLogo className="mx-auto h-12 w-12 text-primary" />
+             <div className="text-center">
+                <h1 className="text-2xl font-bold tracking-tight">ZenithBooks</h1>
+            </div>
+            <CardTitle className="text-2xl !mt-2">Welcome Back</CardTitle>
             <CardDescription>
               Enter your email below to login to your account
             </CardDescription>
