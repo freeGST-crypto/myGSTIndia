@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -26,13 +26,15 @@ import { useDocumentData } from "react-firebase-hooks/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useRoleSimulator } from "@/context/role-simulator-context";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
-export default function AdminDashboardPage({ setSimulatedRole }: { setSimulatedRole: (role: string) => void }) {
+export default function AdminDashboardPage() {
   const [user, loadingAuth] = useAuthState(auth);
   const userDocRef = user ? doc(db, 'users', user.uid) : null;
   const [userData, loadingUser] = useDocumentData(userDocRef);
+  const { simulatedRole, setSimulatedRole } = useRoleSimulator();
 
   const getRole = () => {
     if (!user) return 'business'; // Default to business if not logged in for viewing purposes
@@ -41,10 +43,10 @@ export default function AdminDashboardPage({ setSimulatedRole }: { setSimulatedR
   }
   
   const userRole = getRole();
-  const [selectedRole, setSelectedRole] = useState(userRole);
+  // The selectedRole state now comes from the context
+  const selectedRole = simulatedRole || userRole;
 
   const handleRoleChange = (role: string) => {
-    setSelectedRole(role);
     setSimulatedRole(role);
   }
 

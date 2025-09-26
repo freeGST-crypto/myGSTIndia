@@ -48,6 +48,7 @@ import { Suspense, useEffect } from "react";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Fab } from "@/components/layout/fab";
+import { RoleSimulatorProvider, useRoleSimulator } from "@/context/role-simulator-context";
 
 const SUPER_ADMIN_UID = 'CUxyL5ioNjcQbVNszXhWGAFKS2y2';
 
@@ -265,20 +266,32 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
 }
 
 
-function NavMenu({ role }: { role: string }) {
+function NavMenu() {
   const pathname = usePathname();
+  const [user, loadingAuth] = useAuthState(auth);
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, loadingUser] = useDocumentData(userDocRef);
+  const { simulatedRole } = useRoleSimulator();
+
+  const getRole = () => {
+    if (simulatedRole) return simulatedRole;
+    if (!user) return 'business';
+    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
+    return userData?.userType || 'business';
+  }
+
+  const userRole = getRole();
 
   const filteredMenu = React.useMemo(() => {
     const filterItems = (items: any[]): any[] => {
       return items
-        .filter(item => item.roles.includes(role))
+        .filter(item => item.roles.includes(userRole))
         .map(item => {
           if (item.subItems) {
             const filteredSubItems = filterItems(item.subItems);
             if (filteredSubItems.length > 0) {
               return { ...item, subItems: filteredSubItems };
             }
-            // If a menu item has no visible sub-items, don't show it, unless it also has a direct href
             return item.href ? { ...item, subItems: [] } : null;
           }
           return item;
@@ -286,7 +299,15 @@ function NavMenu({ role }: { role: string }) {
         .filter(Boolean);
     };
     return filterItems(allMenuItems);
-  }, [role]);
+  }, [userRole]);
+
+  if (loadingAuth || loadingUser) {
+    return (
+        <div className="p-2 space-y-2">
+            {Array.from({length: 8}).map((_, i) => <Loader2 key={i} className="animate-spin text-sidebar-foreground/50"/>)}
+        </div>
+    );
+  }
 
   return (
     <SidebarMenu>
@@ -326,11 +347,6 @@ function SidebarNavManager() {
 
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const [user, loadingAuth] = useAuthState(auth);
-  const userDocRef = user ? doc(db, 'users', user.uid) : null;
-  const [userData, loadingUser] = useDocumentData(userDocRef);
-  const [simulatedRole, setSimulatedRole] = React.useState<string | null>(null);
-  
   const router = useRouter();
 
   const hotkeys = new Map([
@@ -350,72 +366,52 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   ]);
   useHotkeys(hotkeys);
 
-  const getRole = () => {
-    if (simulatedRole) return simulatedRole;
-    if (!user) return 'business';
-    if (user.uid === SUPER_ADMIN_UID) return 'super_admin';
-    return userData?.userType || 'business';
-  }
-  
-  const userRole = getRole();
-  
-  const modifiedChildren = React.Children.map(children, child => {
-    if (React.isValidElement(child) && (child.type as any).name === 'AdminDashboardPage') {
-      return React.cloneElement(child, { setSimulatedRole } as any);
-    }
-    return child;
-  });
-
   return (
     <AccountingProvider>
-      <SidebarProvider>
-        <SidebarNavManager /> 
-        <Sidebar
-          collapsible="icon"
-          className="border-sidebar-border"
-        >
-          <SidebarHeader>
-            <GstEaseLogo className="h-9 w-auto group-data-[collapsible=icon]:h-8" />
-          </SidebarHeader>
-          <Separator />
-          <SidebarContent>
-            {loadingAuth || loadingUser ? (
-              <div className="p-2 space-y-2">
-                {Array.from({length: 8}).map((_, i) => <Loader2 key={i} className="animate-spin text-sidebar-foreground/50"/>)}
-              </div>
-            ) : (
-              <NavMenu role={userRole} />
-            )}
-          </SidebarContent>
-          <SidebarFooter>
+      <RoleSimulatorProvider>
+        <SidebarProvider>
+          <SidebarNavManager /> 
+          <Sidebar
+            collapsible="icon"
+            className="border-sidebar-border"
+          >
+            <SidebarHeader>
+              <GstEaseLogo className="h-9 w-auto group-data-[collapsible=icon]:h-8" />
+            </SidebarHeader>
             <Separator />
-             <SidebarMenu>
-                <SidebarMenuItem>
-                    <a href="mailto:support@gstease.com" className="w-full">
-                        <SidebarMenuButton className="justify-start w-full" size="lg">
-                            <Heart className="size-5" />
-                            <span className="group-data-[collapsible=icon]:hidden">Feedback</span>
-                        </SidebarMenuButton>
-                    </a>
-                </SidebarMenuItem>
-             </SidebarMenu>
-          </SidebarFooter>
-        </Sidebar>
-        <SidebarInset>
-          <div className="w-full">
-            <Header />
-            <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8 md:pb-6 pb-24">
-               <div className="mx-auto max-w-7xl">
-                  <Suspense fallback={<Loader2 className="animate-spin" />}>
-                      {modifiedChildren}
-                  </Suspense>
-               </div>
-            </main>
-          </div>
-          <Fab />
-          <BottomNav />
-        </SidebarInset>
-      </SidebarProvider>
+            <SidebarContent>
+                <NavMenu />
+            </SidebarContent>
+            <SidebarFooter>
+              <Separator />
+               <SidebarMenu>
+                  <SidebarMenuItem>
+                      <a href="mailto:support@gstease.com" className="w-full">
+                          <SidebarMenuButton className="justify-start w-full" size="lg">
+                              <Heart className="size-5" />
+                              <span className="group-data-[collapsible=icon]:hidden">Feedback</span>
+                          </SidebarMenuButton>
+                      </a>
+                  </SidebarMenuItem>
+               </SidebarMenu>
+            </SidebarFooter>
+          </Sidebar>
+          <SidebarInset>
+            <div className="w-full">
+              <Header />
+              <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8 md:pb-6 pb-24">
+                 <div className="mx-auto max-w-7xl">
+                    <Suspense fallback={<Loader2 className="animate-spin" />}>
+                        {children}
+                    </Suspense>
+                 </div>
+              </main>
+            </div>
+            <Fab />
+            <BottomNav />
+          </SidebarInset>
+        </SidebarProvider>
+      </RoleSimulatorProvider>
     </AccountingProvider>
   );
 }
