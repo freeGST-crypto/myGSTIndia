@@ -55,4 +55,6 @@ export const servicePricing = {
       { id: "GST_NOTICE", name: "GST Department Notice Reply", price: 5000 },
       { id: "IT_NOTICE", name: "Income Tax Department Notice Reply", price: 4000 },
       { id: "ROC_NOTICE", name: "Registrar of Companies (ROC) Notice Reply", price: 6000 },
-      { id: "OTHER_NOTICE", name: "Other
+      { id: "OTHER_NOTICE", name: "Other Department Notice Reply", price: 7500 },
+  ],
+};
