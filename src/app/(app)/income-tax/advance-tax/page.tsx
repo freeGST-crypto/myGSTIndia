@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useContext } from "react";
+import { useState, useMemo, useContext, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -18,8 +18,9 @@ import { IndianRupee, Calculator, FileText, TrendingUp, Info } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const taxSlabs = [
+const individualTaxSlabs = [
   { limit: 300000, rate: 0, description: "Up to ₹3,00,000" },
   { limit: 600000, rate: 0.05, description: "₹3,00,001 to ₹6,00,000" },
   { limit: 900000, rate: 0.10, description: "₹6,00,001 to ₹9,00,000" },
@@ -28,11 +29,17 @@ const taxSlabs = [
   { limit: Infinity, rate: 0.30, description: "Above ₹15,00,000" },
 ];
 
+type EntityType = "individual" | "firm" | "domestic-company";
+
 export default function AdvanceTaxCalculatorPage() {
   const { toast } = useToast();
   const { journalVouchers, loading } = useContext(AccountingContext)!;
   
+  const [entityType, setEntityType] = useState<EntityType>("individual");
+  const [companyTaxRate, setCompanyTaxRate] = useState<string>("30");
+
   const currentPbt = useMemo(() => {
+    if (loading) return 0;
     const balances: Record<string, number> = {};
     allAccounts.forEach(acc => { balances[acc.code] = 0; });
     journalVouchers.forEach(v => v.lines.forEach(l => {
@@ -44,7 +51,7 @@ export default function AdvanceTaxCalculatorPage() {
     const expenses = allAccounts.filter(a => a.type === 'Expense' || a.type === 'Cost of Goods Sold').reduce((sum, acc) => sum + balances[acc.code], 0);
     
     return revenue - expenses;
-  }, [journalVouchers]);
+  }, [journalVouchers, loading]);
 
   const [estimatedProfit, setEstimatedProfit] = useState(0);
   const [adjustments, setAdjustments] = useState(0);
@@ -57,11 +64,13 @@ export default function AdvanceTaxCalculatorPage() {
       { date: "March 15", amount: 0, percentage: 100 },
     ],
   });
+
+  useEffect(() => {
+    if (!loading && currentPbt > 0) {
+      setEstimatedProfit(currentPbt);
+    }
+  }, [currentPbt, loading]);
   
-  // Effect to update estimated profit when current PBT from books changes
-  useState(() => {
-    setEstimatedProfit(currentPbt > 0 ? currentPbt : 0);
-  });
 
   const calculateTax = () => {
     const taxableIncome = estimatedProfit + adjustments;
@@ -72,21 +81,37 @@ export default function AdvanceTaxCalculatorPage() {
     }
 
     let tax = 0;
-    let remainingIncome = taxableIncome;
-    let lastLimit = 0;
+    let surcharge = 0;
 
-    for (const slab of taxSlabs) {
-      if (remainingIncome > 0 && slab.limit > lastLimit) {
-        const taxableInSlab = Math.min(remainingIncome, slab.limit - lastLimit);
-        tax += taxableInSlab * slab.rate;
-        remainingIncome -= taxableInSlab;
-        lastLimit = slab.limit;
-      }
+    switch (entityType) {
+        case "individual":
+            let remainingIncome = taxableIncome;
+            let lastLimit = 0;
+            for (const slab of individualTaxSlabs) {
+                if (remainingIncome > 0 && slab.limit > lastLimit) {
+                    const taxableInSlab = Math.min(remainingIncome, slab.limit - lastLimit);
+                    tax += taxableInSlab * slab.rate;
+                    remainingIncome -= taxableInSlab;
+                    lastLimit = slab.limit;
+                }
+            }
+             if (taxableIncome > 5000000 && taxableIncome <= 10000000) surcharge = tax * 0.10;
+             else if (taxableIncome > 10000000) surcharge = tax * 0.15;
+            break;
+        case "firm":
+            tax = taxableIncome * 0.30;
+            if (taxableIncome > 10000000) surcharge = tax * 0.12;
+            break;
+        case "domestic-company":
+            tax = taxableIncome * (parseFloat(companyTaxRate) / 100);
+             if (taxableIncome > 10000000 && taxableIncome <= 100000000) surcharge = tax * 0.07;
+             else if (taxableIncome > 100000000) surcharge = tax * 0.12;
+            break;
     }
     
-    // Add health and education cess
-    const healthAndEducationCess = tax * 0.04;
-    const totalTax = tax + healthAndEducationCess;
+    const taxAndSurcharge = tax + surcharge;
+    const healthAndEducationCess = taxAndSurcharge * 0.04;
+    const totalTax = taxAndSurcharge + healthAndEducationCess;
 
     setAdvanceTax({
       total: totalTax,
@@ -106,6 +131,24 @@ export default function AdvanceTaxCalculatorPage() {
     window.open("https://eportal.incometax.gov.in/iec/foservices/#/e-pay-tax-prelogin/user-details", "_blank");
   };
 
+  const renderTaxLogic = () => {
+      switch(entityType) {
+          case 'individual':
+              return (
+                 <ul className="list-disc pl-5 mt-2">
+                    {individualTaxSlabs.map(slab => <li key={slab.description}>{slab.description}: {slab.rate * 100}%</li>)}
+                     <li>Surcharge & 4% Cess as applicable.</li>
+                </ul>
+              );
+          case 'firm':
+               return <p className="mt-2">Flat 30% tax rate + Surcharge (if applicable) + 4% Health & Education Cess.</p>;
+          case 'domestic-company':
+                 return <p className="mt-2">Tax at {companyTaxRate}% + Surcharge (if applicable) + 4% Health & Education Cess.</p>;
+          default:
+              return null;
+      }
+  }
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="text-center">
@@ -118,16 +161,40 @@ export default function AdvanceTaxCalculatorPage() {
       <Card>
         <CardHeader>
           <CardTitle>Income Estimation</CardTitle>
-          <CardDescription>Profit from your books is pre-filled. Adjust it to project for the full year.</CardDescription>
+          <CardDescription>Select your entity type and project your income for the full year.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-           <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground flex items-center gap-2"><TrendingUp/> Current Profit from Books</p>
-                <p className="text-2xl font-bold">{currentPbt.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</p>
-              </div>
+        <CardContent className="space-y-6">
+           <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label>Entity Type</Label>
+                    <Select value={entityType} onValueChange={(value) => setEntityType(value as EntityType)}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="individual">Individual / HUF (New Regime)</SelectItem>
+                            <SelectItem value="firm">Partnership Firm / LLP</SelectItem>
+                            <SelectItem value="domestic-company">Domestic Company</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                {entityType === 'domestic-company' && (
+                     <div className="space-y-2">
+                        <Label>Company Tax Rate</Label>
+                        <Select value={companyTaxRate} onValueChange={setCompanyTaxRate}>
+                            <SelectTrigger><SelectValue/></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="22">22% (u/s 115BAA)</SelectItem>
+                                <SelectItem value="25">25% (Turnover &lt; 400cr)</SelectItem>
+                                <SelectItem value="30">30% (Default Rate)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+           </div>
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground flex items-center gap-2"><TrendingUp/> Current Profit from Books</p>
+            <p className="text-2xl font-bold">{currentPbt.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="profit">Estimated Annual Profit Before Tax (₹)</Label>
               <Input
@@ -135,11 +202,10 @@ export default function AdvanceTaxCalculatorPage() {
                 type="number"
                 value={estimatedProfit}
                 onChange={(e) => setEstimatedProfit(Number(e.target.value))}
-                placeholder="Projected profit for the full year"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="adjustments">Adjustments (₹)</Label>
+              <Label htmlFor="adjustments">Adjustments (+/-) (₹)</Label>
               <Input
                 id="adjustments"
                 type="number"
@@ -189,12 +255,9 @@ export default function AdvanceTaxCalculatorPage() {
           </Alert>
            <Alert variant="default" className="mt-4">
             <Info className="h-4 w-4" />
-            <AlertTitle>Calculation Logic Used</AlertTitle>
+            <AlertTitle>Calculation Logic Used ({entityType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())})</AlertTitle>
             <AlertDescription>
-              The calculation is based on the New Tax Regime slabs and includes a 4% Health & Education Cess. The slabs are:
-              <ul className="list-disc pl-5 mt-2">
-                {taxSlabs.map(slab => <li key={slab.description}>{slab.description}: {slab.rate * 100}%</li>)}
-              </ul>
+              {renderTaxLogic()}
             </AlertDescription>
           </Alert>
         </CardContent>
