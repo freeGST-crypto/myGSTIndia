@@ -174,7 +174,7 @@ export default function BalanceSheetPage() {
         doc.setFontSize(18);
         doc.text("Balance Sheet", 14, 22);
         doc.setFontSize(11);
-        doc.text(`As on ${date ? format(date, "PPP") : 'selected date'}`, 14, 29);
+        doc.text(`As on ${date ? format(date, "dd MMM, yyyy") : 'selected date'}`, 14, 29);
 
         // Liabilities and Equity
         const liabilitiesData = [
@@ -258,7 +258,7 @@ export default function BalanceSheetPage() {
                             )}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                            {date ? format(date, "dd MMM, yyyy") : <span>Pick a date</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -277,7 +277,7 @@ export default function BalanceSheetPage() {
       <Card>
           <CardHeader>
               <CardTitle>Balance Sheet</CardTitle>
-              <CardDescription>As on {date ? format(date, "PPP") : 'selected date'}</CardDescription>
+              <CardDescription>As on {date ? format(date, "dd MMM, yyyy") : 'selected date'}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">

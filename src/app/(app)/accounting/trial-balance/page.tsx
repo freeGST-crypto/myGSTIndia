@@ -240,7 +240,7 @@ export default function TrialBalancePage() {
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                 <div>
-                    <CardTitle>Trial Balance as on {date ? format(date, "PPP") : 'selected date'}</CardTitle>
+                    <CardTitle>Trial Balance as on {date ? format(date, "dd MMM, yyyy") : 'selected date'}</CardTitle>
                     <CardDescription>This report is dynamically generated from your journal entries.</CardDescription>
                 </div>
                 <Popover>
@@ -253,7 +253,7 @@ export default function TrialBalancePage() {
                         )}
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        {date ? format(date, "dd MMM, yyyy") : <span>Pick a date</span>}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">

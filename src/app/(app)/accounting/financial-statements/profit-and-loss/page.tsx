@@ -247,7 +247,7 @@ export default function ProfitAndLossPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <CalendarDays className="text-muted-foreground"/>
-                        <DateRangePicker className="w-full md:w-auto" />
+                        <DateRangePicker onDateChange={() => {}} />
                     </div>
                 </div>
             </CardHeader>
@@ -342,5 +342,4 @@ export default function ProfitAndLossPage() {
     </div>
   );
 }
-
   

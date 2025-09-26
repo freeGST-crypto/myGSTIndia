@@ -112,7 +112,7 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
     };
 
     const dialogTitle = party ? `Edit ${type}` : `Add New ${type}`;
-    const dialogDescription = party ? `Update the details for ${party.name}.` : `Enter the details for your new ${type.toLowerCase()}.`;
+    const dialogDescription = party ? `Update the details for ${party.name}.` : `Enter the details for your new ${type.toLowerCase()}. Use this to add parties to your master list.`;
 
 
     return (
@@ -188,7 +188,7 @@ export function ItemDialog({ open, onOpenChange, item, stockGroups }: { open: bo
     };
     
     const dialogTitle = item ? "Edit Item" : "Add New Item";
-    const dialogDescription = item ? `Update the details for ${item.name}` : "Add a new product or service to your inventory.";
+    const dialogDescription = item ? `Update the details for ${item.name}` : "Add a new product or service to your master list. This will make it available for selection in invoices and purchase bills.";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

@@ -401,7 +401,7 @@ export default function BankReconciliationPage() {
               </div>
               <div className="space-y-2">
                 <Label>Reconciliation Period</Label>
-                <DateRangePicker />
+                <DateRangePicker onDateChange={() => {}} />
               </div>
                <div className="flex gap-2 items-end">
                  <div className="space-y-2">
@@ -500,7 +500,7 @@ export default function BankReconciliationPage() {
                                     className={cn("w-full justify-start text-left font-normal", !jvDate && "text-muted-foreground")}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {jvDate ? format(jvDate, "PPP") : <span>Pick a date</span>}
+                                    {jvDate ? format(jvDate, "dd MMM, yyyy") : <span>Pick a date</span>}
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={jvDate} onSelect={setJvDate} initialFocus /></PopoverContent>
@@ -612,7 +612,7 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
                                         <Checkbox checked={selectedTxs.has(tx.id)} onCheckedChange={() => onToggle(tx.id)} />
                                     )}
                                 </TableCell>
-                                <TableCell className="text-xs whitespace-nowrap">{format(new Date(tx.date), "dd-MMM-yy")}</TableCell>
+                                <TableCell className="text-xs whitespace-nowrap">{format(new Date(tx.date), "dd MMM, yyyy")}</TableCell>
                                 <TableCell className="text-xs">{tx.description}</TableCell>
                                 <TableCell className={`text-right font-mono text-xs ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     {tx.amount.toFixed(2)}
