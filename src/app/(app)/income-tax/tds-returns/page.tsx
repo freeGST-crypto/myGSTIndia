@@ -25,6 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileJson, IndianRupee } from "lucide-react";
@@ -58,7 +59,7 @@ export default function TdsReturnsPage() {
     // This is a simplified simulation. A real implementation would parse TDS details
     // from purchase and payment vouchers within the selected quarter.
     const purchaseTds = journalVouchers
-        .filter(v => v.id.startsWith("BILL-") && v.narration.toLowerCase().includes("tds"))
+        .filter(v => v && v.id && v.id.startsWith("BILL-") && v.narration?.toLowerCase().includes("tds"))
         .map(v => ({
             id: v.id,
             date: v.date,
@@ -69,7 +70,7 @@ export default function TdsReturnsPage() {
         }));
 
     const paymentTds = journalVouchers
-        .filter(v => v.id.startsWith("PV-") && v.narration.toLowerCase().includes("tds"))
+        .filter(v => v && v.id && v.id.startsWith("PV-") && v.narration?.toLowerCase().includes("tds"))
          .map(v => ({
             id: v.id,
             date: v.date,
