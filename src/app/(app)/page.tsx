@@ -1,10 +1,14 @@
-
 "use client";
 
-import DashboardContent from './dashboard/dashboard-content';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
-    return (
-        <DashboardContent />
-    );
+    const router = useRouter();
+
+    useEffect(() => {
+        router.replace('/dashboard');
+    }, [router]);
+
+    return null; // or a loading spinner
 }

@@ -84,7 +84,7 @@ export function SignupForm() {
       });
 
       // 3. Redirect to dashboard
-      router.push("/");
+      router.push("/dashboard");
 
     } catch (error: any) {
       console.error("Signup Error:", error);

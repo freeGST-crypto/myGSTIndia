@@ -58,7 +58,7 @@ export function LoginForm() {
         if (result) {
           // User has successfully signed in via redirect.
           toast({ title: "Login Successful", description: "Welcome!" });
-          router.push("/");
+          router.push("/dashboard");
         } else {
             // No redirect result, probably a direct page load
             setIsLoading(false);
@@ -82,7 +82,7 @@ export function LoginForm() {
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({ title: "Login Successful", description: "Welcome back!" });
-      router.push("/");
+      router.push("/dashboard");
     } catch (error: any) {
       console.error("Login Error: ", error);
       toast({
