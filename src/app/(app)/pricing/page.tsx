@@ -41,7 +41,7 @@ const initialTiers = [
     id: "business",
     name: "Business",
     priceMonthly: 199,
-    priceAnnual: 1999,
+    priceAnnual: 1910, // Approx 20% discount from 199*12=2388
     description: "For businesses needing comprehensive accounting, financial reporting, and tax compliance.",
     features: [
       { text: "Unlimited Invoices & Purchases", included: true },
@@ -58,7 +58,7 @@ const initialTiers = [
     id: "professional",
     name: "Professional",
     priceMonthly: 499,
-    priceAnnual: 4999,
+    priceAnnual: 4790, // Approx 20% discount from 499*12=5988
     description: "For CAs, tax consultants, and firms managing multiple clients.",
     features: [
       { text: "All Business Features", included: true },
@@ -72,9 +72,16 @@ const initialTiers = [
   },
 ];
 
+type TierWithDiscount = typeof initialTiers[0] & { annualDiscount: number };
+
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
-  const [tiers, setTiers] = useState(initialTiers);
+  const [tiers, setTiers] = useState<TierWithDiscount[]>(() => 
+    initialTiers.map(tier => ({
+      ...tier,
+      annualDiscount: tier.priceMonthly > 0 ? Math.round(100 - (tier.priceAnnual / (tier.priceMonthly * 12)) * 100) : 0,
+    }))
+  );
   const [editingTier, setEditingTier] = useState<string | null>(null);
   const { toast } = useToast();
   const { simulatedRole } = useRoleSimulator();
@@ -92,10 +99,10 @@ export default function PricingPage() {
   const handlePriceChange = (tierId: string, cycle: 'monthly' | 'annually', value: number) => {
       setTiers(prev => prev.map(tier => {
           if (tier.id === tierId) {
-              return {
-                  ...tier,
-                  [cycle === 'monthly' ? 'priceMonthly' : 'priceAnnual']: value
-              }
+            const updatedTier = { ...tier, [cycle === 'monthly' ? 'priceMonthly' : 'priceAnnual']: value };
+            // Recalculate discount if a price changes
+            const discount = updatedTier.priceMonthly > 0 ? Math.round(100 - (updatedTier.priceAnnual / (updatedTier.priceMonthly * 12)) * 100) : 0;
+            return { ...updatedTier, annualDiscount: discount };
           }
           return tier;
       }))
@@ -105,8 +112,8 @@ export default function PricingPage() {
      setTiers(prev => prev.map(tier => {
           if (tier.id === tierId) {
               const fullAnnualPrice = tier.priceMonthly * 12;
-              const newAnnualPrice = Math.round(fullAnnualPrice * (1 - discount / 100));
-              return { ...tier, priceAnnual: newAnnualPrice };
+              const newAnnualPrice = Math.round(fullAnnualPrice * (1 - (discount / 100)));
+              return { ...tier, priceAnnual: newAnnualPrice, annualDiscount: discount };
           }
           return tier;
       }));
@@ -138,10 +145,7 @@ export default function PricingPage() {
           const isEditing = editingTier === tier.id;
           const price = billingCycle === 'monthly' ? tier.priceMonthly : tier.priceAnnual;
           const priceSuffix = tier.priceMonthly > 0 ? `/${billingCycle === 'monthly' ? 'month' : 'year'}` : '';
-
-          const annualDiscount = tier.priceMonthly > 0
-            ? Math.round(100 - (tier.priceAnnual / (tier.priceMonthly * 12)) * 100)
-            : 0;
+          const annualDiscount = tier.annualDiscount;
 
           return (
           <Card
@@ -158,7 +162,7 @@ export default function PricingPage() {
               )}
               <CardTitle>{tier.name}</CardTitle>
                 <div className="flex items-baseline h-10">
-                    {isEditing ? (
+                    {isEditing && tier.id !== 'freemium' ? (
                         <div className="flex items-center gap-1">
                             <IndianRupee className="size-5" />
                              <Input 
@@ -166,7 +170,6 @@ export default function PricingPage() {
                                 value={price} 
                                 onChange={(e) => handlePriceChange(tier.id, billingCycle, Number(e.target.value))}
                                 className="text-4xl font-bold w-48 border-2"
-                                disabled={tier.id === 'freemium'}
                             />
                         </div>
                     ) : (
