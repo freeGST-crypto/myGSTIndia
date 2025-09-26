@@ -62,17 +62,15 @@ export function FinancialSummaryChart() {
             if (data[yearMonth]) {
                 const salesLine = voucher.lines.find(l => l.account === '4010');
                 const purchaseLine = voucher.lines.find(l => l.account === '5050');
-                const creditNoteLine = voucher.lines.find(l => l.account === '4010');
-                const debitNoteLine = voucher.lines.find(l => l.account === '5050');
 
                 if (voucher.id.startsWith("INV-") && salesLine) {
                     data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
                 } else if (voucher.id.startsWith("BILL-") && purchaseLine) {
                     data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
-                } else if (voucher.id.startsWith("CN-") && creditNoteLine) {
-                    data[yearMonth].sales -= parseFloat(creditNoteLine.debit) || 0;
-                } else if (voucher.id.startsWith("DN-") && debitNoteLine) {
-                    data[yearMonth].purchases -= parseFloat(debitNoteLine.credit) || 0;
+                } else if (voucher.id.startsWith("CN-") && salesLine) { // Credit Note (Sales Return)
+                    data[yearMonth].sales -= parseFloat(salesLine.debit) || 0;
+                } else if (voucher.id.startsWith("DN-") && purchaseLine) { // Debit Note (Purchase Return)
+                    data[yearMonth].purchases -= parseFloat(purchaseLine.credit) || 0;
                 }
             }
         }
