@@ -368,10 +368,9 @@ function MainLayout({
             <ZenithBooksLogo className="size-8 text-primary" />
             <div className="flex flex-col">
               <h2 className="text-xl font-bold">
-                <span className="font-bold">Zenith</span>
-                <span className="font-light">Books</span>
+                ZenithBooks
               </h2>
-              <span className="text-xs text-sidebar-foreground/50 font-mono">1.0 Pro</span>
+              <span className="text-xs text-sidebar-foreground/50 font-mono">Version 1.0 Pro</span>
             </div>
           </SidebarHeader>
           <SidebarContent>
