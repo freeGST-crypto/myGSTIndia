@@ -12,6 +12,10 @@ import {
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { Separator } from "../ui/separator";
+
+  const generalShortcuts = [
+    { name: "Go to Dashboard", keys: "Esc", href: "/dashboard", icon: Home },
+  ];
   
   const voucherShortcuts = [
     { name: "New Invoice", keys: "Ctrl + I", href: "/billing/invoices/new", icon: Receipt },
@@ -57,6 +61,13 @@ import { Separator } from "../ui/separator";
           <CardDescription>Use these shortcuts to navigate faster.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+            <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Navigation</h4>
+                <div className="space-y-2">
+                    {generalShortcuts.map(sc => <QuickAccessItem key={sc.name} {...sc} />)}
+                </div>
+            </div>
+            <Separator />
             <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Vouchers</h4>
                 <div className="space-y-2">
