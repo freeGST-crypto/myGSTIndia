@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ArrowLeft, Award, FileSignature } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 export default function CaCertificatesGuidePage() {
@@ -39,14 +38,6 @@ export default function CaCertificatesGuidePage() {
             clients for banking, visa, or other regulatory purposes. This tool
             streamlines the drafting process, ensuring consistency and accuracy.
           </p>
-
-          <Image
-            src="https://placehold.co/800x400/e2e8f0/64748b?text=Certificate+Generation+Wizard"
-            alt="Certificate generation screen"
-            width={800}
-            height={400}
-            className="rounded-lg border"
-          />
 
           <h4>How It Works:</h4>
           <ol>

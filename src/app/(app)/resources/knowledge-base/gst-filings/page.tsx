@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ArrowLeft, FileSpreadsheet, GitCompareArrows } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 export default function GstFilingsGuidePage() {
@@ -27,7 +26,6 @@ export default function GstFilingsGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The main GST Filings page provides a summary of your GSTR-1 (outward supplies) and GSTR-3B (summary return) for a selected month. This data is automatically compiled from your sales invoices, purchase bills, credit notes, and debit notes.</p>
-           <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=GST+Filing+Dashboard+Screenshot" alt="GST Filing Dashboard" width={800} height={400} className="rounded-lg border" data-ai-hint="tax form document" />
           <h4>Key Features:</h4>
           <ul>
             <li><strong>Period Selection:</strong> Choose the financial year and month to view the relevant data.</li>

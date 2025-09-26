@@ -1,9 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ArrowLeft, Receipt, ShoppingCart, FilePlus, FileMinus } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 export default function BillingGuidePage() {
@@ -27,8 +26,6 @@ export default function BillingGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The Invoices section is where you create and manage all your sales invoices. This is the primary way to bill your customers for goods or services.</p>
-          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Invoice+Creation+Screenshot" alt="Invoice creation screen" width={800} height={400} className="rounded-lg border" data-ai-hint="invoice form screenshot" />
-          
           <h4>Key Features:</h4>
           <ul>
             <li><strong>Create New Invoices:</strong> Use the "Create Full Invoice" or "Rapid Entry" options to generate new sales invoices.</li>
@@ -45,8 +42,6 @@ export default function BillingGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The Purchases section allows you to record all the bills you receive from your vendors. Keeping accurate purchase records is crucial for tracking expenses and claiming Input Tax Credit (ITC).</p>
-          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Purchase+Bill+Screenshot" alt="Purchase bill entry screen" width={800} height={400} className="rounded-lg border" data-ai-hint="purchase bill document" />
-          
           <h4>Key Features:</h4>
           <ul>
             <li><strong>Record Bills:</strong> Enter details from your vendor bills to keep your accounts payable updated.</li>

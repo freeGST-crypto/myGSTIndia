@@ -1,9 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, IndianRupee, CreditCard, Gauge, BarChart3, CalendarDays, Keyboard } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, IndianRupee, Gauge, BarChart3, CalendarDays, Keyboard } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function DashboardGuidePage() {
   return (
@@ -26,7 +25,6 @@ export default function DashboardGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The Dashboard is the first page you see after logging in. It provides a high-level overview of your business's financial health and recent activities at a glance. It's designed to give you quick insights without having to dig through reports.</p>
-          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Dashboard+Screenshot" alt="Dashboard Screenshot" width={800} height={400} className="rounded-lg border" data-ai-hint="dashboard analytics" />
         </CardContent>
       </Card>
       
