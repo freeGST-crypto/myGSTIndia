@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useContext, memo } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { DollarSign, IndianRupee, CreditCard, Users, Search, Zap } from "lucide-react";
+import { IndianRupee, CreditCard, Search, Zap } from "lucide-react";
 import { FinancialSummaryChart } from "@/components/dashboard/financial-summary-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import Link from "next/link";
@@ -18,7 +18,8 @@ import { allAccounts } from "@/lib/accounts";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "../billing/invoices/page";
-import { ComplianceCalendar } from "./compliance-calendar";
+import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
+import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -91,7 +92,7 @@ function DashboardContent() {
     }, 0);
   }, [vendors, accountBalances, vendorsLoading, journalLoading]);
   
-  const gstPayable = accountBalances['2421'] ? -accountBalances['2421'] : 0; // GST Payable is a credit balance
+  const gstPayable = accountBalances['2110'] ? -accountBalances['2110'] : 0; // GST Payable is a credit balance
 
   const invoices = useMemo(() => {
     return journalVouchers
@@ -99,7 +100,7 @@ function DashboardContent() {
         .slice(0, 5)
         .map(v => ({
             invoice: v.id,
-            customer: v.narration.replace("Sale to ", "").split(" via")[0],
+            customer: v.narration.split(" to ")[1]?.split(" via")[0] || "N/A",
             amount: formatCurrency(v.amount),
             status: "Pending",
         }));
@@ -115,58 +116,61 @@ function DashboardContent() {
   }, [invoices, searchTerm]);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3 items-start">
-      <div className="lg:col-span-2 space-y-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/accounting/ledgers">
-            <StatCard 
-              title="Receivables"
-              value={formatCurrency(totalReceivables)}
-              icon={IndianRupee}
-              loading={journalLoading || customersLoading}
-            />
-          </Link>
-          <Link href="/accounting/ledgers">
-            <StatCard 
-              title="Payables"
-              value={formatCurrency(totalPayables)}
-              icon={CreditCard}
-              loading={journalLoading || vendorsLoading}
-            />
-          </Link>
-          <Link href="/accounting/ledgers">
-            <StatCard 
-              title="GST Payable"
-              value={formatCurrency(gstPayable)}
-              icon={DollarSign}
-              loading={journalLoading}
-            />
-          </Link>
-        </div>
-        <FinancialSummaryChart />
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Quickly find recent invoices.</CardDescription>
-            <div className="relative pt-4">
-              <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search recent invoices..."
-                className="pl-8 w-full md:w-1/2"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+    <div className="space-y-8">
+      <MarketingCarousel />
+      <div className="grid gap-8 lg:grid-cols-3 items-start">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Link href="/accounting/ledgers">
+              <StatCard 
+                title="Receivables"
+                value={formatCurrency(totalReceivables)}
+                icon={IndianRupee}
+                loading={journalLoading || customersLoading}
               />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
-          </CardContent>
-        </Card>
-      </div>
-      <div className="space-y-8 lg:col-span-1">
-          <ShortcutGuide />
-          <ComplianceCalendar />
+            </Link>
+            <Link href="/accounting/ledgers">
+              <StatCard 
+                title="Payables"
+                value={formatCurrency(totalPayables)}
+                icon={CreditCard}
+                loading={journalLoading || vendorsLoading}
+              />
+            </Link>
+            <Link href="/accounting/ledgers">
+              <StatCard 
+                title="GST Payable"
+                value={formatCurrency(gstPayable)}
+                icon={IndianRupee}
+                loading={journalLoading}
+              />
+            </Link>
+          </div>
+          <FinancialSummaryChart />
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Quickly find recent invoices.</CardDescription>
+              <div className="relative pt-4">
+                <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search recent invoices..."
+                  className="pl-8 w-full md:w-1/2"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <RecentActivity invoices={filteredInvoices} loading={journalLoading} />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="space-y-8 lg:col-span-1">
+            <ShortcutGuide />
+            <ComplianceCalendar />
+        </div>
       </div>
       <QuickInvoiceDialog open={isQuickInvoiceOpen} onOpenChange={setIsQuickInvoiceOpen} />
     </div>

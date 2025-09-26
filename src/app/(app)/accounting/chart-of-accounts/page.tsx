@@ -60,7 +60,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { allAccounts } from "@/lib/accounts";
 
 const accountTypes = {
-    assets: ["Bank", "Cash", "Current Asset", "Fixed Asset", "Inventory"],
+    assets: ["Bank", "Cash", "Current Asset", "Fixed Asset", "Inventory", "Investment"],
     liabilities: ["Current Liability", "Long Term Liability"],
     equity: ["Equity"],
     revenue: ["Revenue", "Other Income"],
@@ -163,13 +163,13 @@ export default function ChartOfAccountsPage() {
     }
   };
 
-  const renderAccountCategory = (title: string, category: string) => {
-    const categoryAccounts = combinedAccounts.filter(acc => acc.type === category);
+  const renderAccountCategory = (title: string, types: string[]) => {
+    const categoryAccounts = combinedAccounts.filter(acc => types.includes(acc.type));
     if (categoryAccounts.length === 0) return null;
     
     return (
-        <div key={category} className="mb-4">
-            <h3 className="font-semibold text-lg mb-2">{title}</h3>
+        <div key={title} className="mb-4">
+            <h3 className="font-semibold text-xl mb-2">{title}</h3>
             <div className="border rounded-md">
             <Table>
                 <TableHeader>
@@ -258,13 +258,13 @@ export default function ChartOfAccountsPage() {
           </CardHeader>
           <CardContent>
             {loading ? <Loader2 className="animate-spin" /> : (
-                <Accordion type="multiple" defaultValue={["assets", "liabilities", "equity", "revenue", "expenses"]} className="w-full">
-                    <AccordionItem value="assets"><AccordionTrigger className="text-xl">Assets</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start < 2000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
-                    <AccordionItem value="liabilities"><AccordionTrigger className="text-xl">Liabilities</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start >= 2200 && accountCodeRanges[k as keyof typeof accountCodeRanges].start < 3000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
-                    <AccordionItem value="equity"><AccordionTrigger className="text-xl">Equity</AccordionTrigger><AccordionContent className="pl-4">{renderAccountCategory("Equity", "Equity")}</AccordionContent></AccordionItem>
-                    <AccordionItem value="revenue"><AccordionTrigger className="text-xl">Revenue</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start >= 4000 && accountCodeRanges[k as keyof typeof accountCodeRanges].start < 5000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
-                    <AccordionItem value="expenses"><AccordionTrigger className="text-xl">Expenses</AccordionTrigger><AccordionContent className="pl-4">{Object.keys(accountCodeRanges).filter(k => accountCodeRanges[k as keyof typeof accountCodeRanges].start >= 5000).map(type => renderAccountCategory(type, type))}</AccordionContent></AccordionItem>
-                </Accordion>
+                <div className="space-y-8">
+                  {renderAccountCategory("Assets", accountTypes.assets)}
+                  {renderAccountCategory("Liabilities", accountTypes.liabilities)}
+                  {renderAccountCategory("Equity", accountTypes.equity)}
+                  {renderAccountCategory("Revenue", accountTypes.revenue)}
+                  {renderAccountCategory("Expenses", accountTypes.expenses)}
+                </div>
             )}
           </CardContent>
       </Card>

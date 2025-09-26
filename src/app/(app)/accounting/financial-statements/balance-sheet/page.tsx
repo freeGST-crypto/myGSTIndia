@@ -106,7 +106,7 @@ export default function BalanceSheetPage() {
     // Calculate P&L for Retained Earnings
     const netProfit = useMemo(() => {
         const revenueAccounts = combinedAccounts.filter((a: any) => ['Revenue', 'Other Income'].includes(a.type));
-        const expenseAccounts = combinedAccounts.filter((a: any) => ['Expense', 'Cost of Goods Sold'].includes(a.type));
+        const expenseAccounts = combinedAccounts.filter((a: any) => ['Expense', 'Cost of Goods Sold', 'Depreciation'].includes(a.type));
         
         const totalRevenue = revenueAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
         const totalExpenses = expenseAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
@@ -131,7 +131,7 @@ export default function BalanceSheetPage() {
     const netFixedAssets = fixedAssetsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
     const investmentAccounts = combinedAccounts.filter((a: any) => a.type === 'Investment');
-    const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (accountBalances[acc.code] || 0), 0);
+    const totalInvestments = investmentAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
     
     const receivableAccounts = combinedAccounts.filter((a: any) => a.type === 'Customer' || a.code === '1320');
     const totalReceivables = receivableAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0);
@@ -453,5 +453,3 @@ export default function BalanceSheetPage() {
     </div>
   );
 }
-
-  

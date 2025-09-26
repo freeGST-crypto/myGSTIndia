@@ -107,14 +107,6 @@ export const exportToPdf = (reportData: any) => {
             headStyles: { fillColor: [41, 128, 185] },
         });
     }
-    
-    // --- AI Observations ---
-    doc.addPage();
-    yPos = addHeader(doc, "AI Observations");
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    const splitText = doc.splitTextToSize(reportData.aiObservations, doc.internal.pageSize.width - 28);
-    doc.text(splitText, 14, yPos);
 
     doc.save(`CMA_Report_${companyBranding.name}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 };
@@ -123,27 +115,13 @@ export const exportToPdf = (reportData: any) => {
 export const exportToExcel = (reportData: any) => {
     const wb = XLSX.utils.book_new();
 
-    Object.keys(reportData).forEach(key => {
-        if (key === 'aiObservations' || key === 'loanDetails') return;
-
-        const sheetData = reportData[key];
-        const sheetTitle = sheetData.title.substring(0, 31);
-        
-        // Add company name and report title to the sheet
-        const headerData = [
-            [companyBranding.name],
-            [sheetTitle],
-            [] // Empty row for spacing
-        ];
-
-        const ws = XLSX.utils.aoa_to_sheet(headerData);
-        XLSX.utils.sheet_add_aoa(ws, [sheetData.headers, ...sheetData.body], { origin: -1 }); // Append data after header
+    const processSheet = (data: any[], sheetName: string) => {
+        const ws = XLSX.utils.aoa_to_sheet(data);
 
         // Auto-fit column widths
-        const colWidths = sheetData.headers.map((_: any, i: number) => {
+        const colWidths = data[0].map((_: any, i: number) => {
             let maxWidth = 0;
-            const allRows = [sheetData.headers, ...sheetData.body];
-            allRows.forEach((row: any[]) => {
+            data.forEach((row: any[]) => {
                 const cellValue = row[i] ? String(row[i]) : "";
                 if (cellValue.length > maxWidth) {
                     maxWidth = cellValue.length;
@@ -152,35 +130,18 @@ export const exportToExcel = (reportData: any) => {
             return { wch: maxWidth + 2 }; // +2 for a little padding
         });
         ws['!cols'] = colWidths;
-        
-        // Right-align numeric columns
-        const dataStartIndex = headerData.length + 1; // Row where data starts
-        sheetData.body.forEach((row: any[], r: number) => {
-            row.forEach((cell: any, c: number) => {
-                // Skip the first column (Particulars)
-                if (c > 0 && !isNaN(parseFloat(cell))) {
-                     const cellRef = XLSX.utils.encode_cell({ r: r + dataStartIndex, c: c });
-                     if(ws[cellRef]) {
-                         ws[cellRef].s = { alignment: { horizontal: "right" } };
-                     }
-                }
-            });
-        });
-
-        XLSX.utils.book_append_sheet(wb, ws, sheetTitle);
-    });
-    
-    // Add AI Observations to a separate sheet
-    const obsWs = XLSX.utils.aoa_to_sheet([
-        ["AI Generated Observations"],
-        [],
-        [reportData.aiObservations]
-    ]);
-    obsWs['!cols'] = [{ wch: 100 }];
-    if (obsWs['A3']) {
-      obsWs['A3'].s = { alignment: { wrapText: true } };
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
     }
-    XLSX.utils.book_append_sheet(wb, obsWs, "AI Observations");
+    
+    processSheet([reportData.operatingStatement.headers, ...reportData.operatingStatement.body], "Operating Statement");
+    processSheet([reportData.balanceSheet.headers, ...reportData.balanceSheet.body], "Balance Sheet");
+    processSheet([reportData.cashFlow.headers, ...reportData.cashFlow.body], "Cash Flow");
+    processSheet([reportData.ratioAnalysis.headers, ...reportData.ratioAnalysis.body], "Ratio Analysis");
+    processSheet([reportData.fundFlow.headers, ...reportData.fundFlow.body], "Fund Flow");
+    processSheet([reportData.mpbf.headers, ...reportData.mpbf.body], "MPBF");
+    if(reportData.repaymentSchedule.body.length > 0) {
+        processSheet([reportData.repaymentSchedule.headers, ...reportData.repaymentSchedule.body], "Repayment Schedule");
+    }
 
     XLSX.writeFile(wb, `CMA_Report_${companyBranding.name}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
