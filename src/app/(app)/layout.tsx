@@ -304,6 +304,7 @@ function MainLayout({
   const displayRole = simulatedRole || userRole;
   
   const hotkeys = new Map<string, (event: KeyboardEvent) => void>([
+      ['escape', () => router.push('/dashboard')],
       ['ctrl+i', () => router.push('/billing/invoices/new')],
       ['ctrl+p', () => router.push('/purchases/new')],
       ['ctrl+j', () => router.push('/accounting/journal')],
