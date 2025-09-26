@@ -50,6 +50,7 @@ import { useHotkeys } from "@/hooks/use-hotkeys";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Fab } from "@/components/layout/fab";
 import { RoleSimulatorProvider, useRoleSimulator } from "@/context/role-simulator-context";
+import { Button } from "@/components/ui/button";
 
 const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
@@ -222,28 +223,28 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   }, [pathname, item.subItems]);
   
   const content = (
-      <SidebarMenuSub>
-          {item.subItems.map((subItem: any, index: number) => (
-              <SidebarMenuSubItem key={index}>
-              {subItem.subItems ? (
-                  <CollapsibleMenuItem item={subItem} pathname={pathname} />
-              ) : (
-                  <Link href={subItem.href} passHref>
-                      <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname.startsWith(subItem.href)}
-                          className="w-full"
-                      >
-                          <span className="flex w-full items-center gap-2">
-                              {subItem.icon && <subItem.icon className="h-4 w-4" />}
-                              <span>{subItem.label}</span>
-                          </span>
-                      </SidebarMenuSubButton>
-                  </Link>
-              )}
-              </SidebarMenuSubItem>
-          ))}
-      </SidebarMenuSub>
+    <SidebarMenuSub>
+      {item.subItems.map((subItem: any, index: number) => (
+        <SidebarMenuSubItem key={index}>
+          {subItem.subItems ? (
+            <CollapsibleMenuItem item={subItem} pathname={pathname} />
+          ) : (
+            <Link href={subItem.href} passHref>
+              <SidebarMenuSubButton
+                asChild
+                isActive={pathname.startsWith(subItem.href)}
+                className="w-full"
+              >
+                <span className="flex w-full items-center gap-2">
+                  {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                  <span>{subItem.label}</span>
+                </span>
+              </SidebarMenuSubButton>
+            </Link>
+          )}
+        </SidebarMenuSubItem>
+      ))}
+    </SidebarMenuSub>
   );
 
   return (
