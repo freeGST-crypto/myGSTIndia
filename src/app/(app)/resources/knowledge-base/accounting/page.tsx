@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { ArrowLeft, Library, BookCopy, Book, Landmark, TrendingUp } from "lucide-react";
+import { ArrowLeft, Library, BookCopy, Book, Landmark, TrendingUp, Calculator } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ export default function AccountingGuidePage() {
         Back to Knowledge Base
       </Link>
       <div className="text-center">
+        <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 mb-4 mx-auto">
+            <Calculator className="h-8 w-8 text-primary" />
+        </div>
         <h1 className="text-3xl font-bold">Accounting Guide</h1>
         <p className="text-muted-foreground">Understanding the core accounting tools in GSTEase.</p>
       </div>
@@ -25,7 +28,7 @@ export default function AccountingGuidePage() {
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The Chart of Accounts is the backbone of your accounting system. It is a complete list of every financial account in your general ledger. In GSTEase, these accounts are organized into five main categories: Assets, Liabilities, Equity, Revenue, and Expenses.</p>
           <p>You can view the standard list of accounts and also add your own custom accounts for specific business needs.</p>
-          <Image src="https://picsum.photos/seed/accounting-guide-1/800/400" alt="Chart of Accounts screen" width={800} height={400} className="rounded-lg border" data-ai-hint="accounting ledger book" />
+          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Chart+of+Accounts+Screenshot" alt="Chart of Accounts screen" width={800} height={400} className="rounded-lg border" data-ai-hint="accounting ledger book" />
         </CardContent>
       </Card>
 

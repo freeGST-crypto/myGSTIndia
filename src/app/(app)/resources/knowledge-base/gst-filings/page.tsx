@@ -14,6 +14,9 @@ export default function GstFilingsGuidePage() {
         Back to Knowledge Base
       </Link>
       <div className="text-center">
+         <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 mb-4 mx-auto">
+            <FileSpreadsheet className="h-8 w-8 text-primary" />
+        </div>
         <h1 className="text-3xl font-bold">GST Filings Guide</h1>
         <p className="text-muted-foreground">Preparing and filing your GST returns seamlessly.</p>
       </div>
@@ -24,7 +27,7 @@ export default function GstFilingsGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The main GST Filings page provides a summary of your GSTR-1 (outward supplies) and GSTR-3B (summary return) for a selected month. This data is automatically compiled from your sales invoices, purchase bills, credit notes, and debit notes.</p>
-           <Image src="https://picsum.photos/seed/gst-guide-1/800/400" alt="GST Filing Dashboard" width={800} height={400} className="rounded-lg border" data-ai-hint="tax form document" />
+           <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=GST+Filing+Dashboard+Screenshot" alt="GST Filing Dashboard" width={800} height={400} className="rounded-lg border" data-ai-hint="tax form document" />
           <h4>Key Features:</h4>
           <ul>
             <li><strong>Period Selection:</strong> Choose the financial year and month to view the relevant data.</li>

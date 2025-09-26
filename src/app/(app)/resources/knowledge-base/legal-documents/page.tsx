@@ -14,6 +14,9 @@ export default function LegalDocumentsGuidePage() {
         Back to Knowledge Base
       </Link>
       <div className="text-center">
+        <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 mb-4 mx-auto">
+            <Shield className="h-8 w-8 text-primary" />
+        </div>
         <h1 className="text-3xl font-bold">Legal Documents Guide</h1>
         <p className="text-muted-foreground">How to use the document generation wizards.</p>
       </div>
@@ -24,7 +27,7 @@ export default function LegalDocumentsGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The "Legal Documents" section provides a library of wizards designed to help you create common legal and business documents quickly and easily. These tools are perfect for startups, small businesses, and professionals who need to generate standard legal paperwork without starting from scratch.</p>
-          <Image src="https://picsum.photos/seed/legal-guide-1/800/400" alt="Document selection screen" width={800} height={400} className="rounded-lg border" data-ai-hint="legal documents library" />
+          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Legal+Documents+Library" alt="Document selection screen" width={800} height={400} className="rounded-lg border" data-ai-hint="legal documents library" />
           
           <h4>How It Works:</h4>
           <ol>

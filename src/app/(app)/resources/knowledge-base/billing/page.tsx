@@ -14,6 +14,9 @@ export default function BillingGuidePage() {
         Back to Knowledge Base
       </Link>
       <div className="text-center">
+        <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 mb-4 mx-auto">
+            <Receipt className="h-8 w-8 text-primary" />
+        </div>
         <h1 className="text-3xl font-bold">Billing Guide</h1>
         <p className="text-muted-foreground">Creating and managing your sales and purchase documents.</p>
       </div>
@@ -24,7 +27,7 @@ export default function BillingGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The Invoices section is where you create and manage all your sales invoices. This is the primary way to bill your customers for goods or services.</p>
-          <Image src="https://picsum.photos/seed/billing-guide-1/800/400" alt="Invoice creation screen" width={800} height={400} className="rounded-lg border" data-ai-hint="invoice form" />
+          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Invoice+Creation+Screenshot" alt="Invoice creation screen" width={800} height={400} className="rounded-lg border" data-ai-hint="invoice form screenshot" />
           
           <h4>Key Features:</h4>
           <ul>
@@ -42,7 +45,7 @@ export default function BillingGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The Purchases section allows you to record all the bills you receive from your vendors. Keeping accurate purchase records is crucial for tracking expenses and claiming Input Tax Credit (ITC).</p>
-          <Image src="https://picsum.photos/seed/billing-guide-2/800/400" alt="Purchase bill entry screen" width={800} height={400} className="rounded-lg border" data-ai-hint="purchase bill document" />
+          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Purchase+Bill+Screenshot" alt="Purchase bill entry screen" width={800} height={400} className="rounded-lg border" data-ai-hint="purchase bill document" />
           
           <h4>Key Features:</h4>
           <ul>

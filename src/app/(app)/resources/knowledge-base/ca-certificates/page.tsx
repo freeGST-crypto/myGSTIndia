@@ -14,6 +14,9 @@ export default function CaCertificatesGuidePage() {
         Back to Knowledge Base
       </Link>
       <div className="text-center">
+         <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 mb-4 mx-auto">
+            <Award className="h-8 w-8 text-primary" />
+        </div>
         <h1 className="text-3xl font-bold">CA Certificates Guide</h1>
         <p className="text-muted-foreground">Generating professionally certified documents.</p>
       </div>
@@ -24,7 +27,7 @@ export default function CaCertificatesGuidePage() {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p>The "CA Certificates" module empowers professionals (like Chartered Accountants) to quickly generate various certificates required by clients for banking, visa, or other regulatory purposes. This tool streamlines the drafting process, ensuring consistency and accuracy.</p>
-          <Image src="https://picsum.photos/seed/ca-guide-1/800/400" alt="Certificate generation screen" width={800} height={400} className="rounded-lg border" data-ai-hint="certificate document" />
+          <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Certificate+Generation+Wizard" alt="Certificate generation screen" width={800} height={400} className="rounded-lg border" data-ai-hint="certificate document" />
           
           <h4>The Process:</h4>
           <ol>
