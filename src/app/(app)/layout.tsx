@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -34,7 +35,7 @@ import {
     BookCopy, ShoppingCart, ShoppingBag, Loader2, GitCompareArrows, FileSpreadsheet, 
     Building, TrendingUp, AreaChart, ConciergeBell, LayoutDashboard, MailWarning, 
     FileSignature, Newspaper, Info, Contact, Keyboard, PieChart, Boxes, Weight, 
-    Target, UserCog, FileArchive 
+    Target, UserCog, FileArchive, Ticket
 } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -200,6 +201,7 @@ const allMenuItems = [
         { href: "/admin/service-pricing", label: "On-Demand Pricing", icon: CreditCard, roles: ['super_admin']},
         { href: "/admin/certification-requests", label: "Certification Requests", icon: FileSignature, roles: ['super_admin']},
         { href: "/admin/blog", label: "Manage Blog", icon: Newspaper, roles: ['super_admin'] },
+        { href: "/admin/coupons", label: "Coupons & Discounts", icon: Ticket, roles: ['super_admin'] },
     ]
   },
 ];
@@ -260,160 +262,4 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
         </CollapsibleTrigger>
         <CollapsibleContent>
             {content}
-        </CollapsibleContent>
-    </Collapsible>
-  )
-}
-
-
-function NavMenu() {
-  const pathname = usePathname();
-  const [user, loadingAuth] = useAuthState(auth);
-  const userDocRef = user ? doc(db, 'users', user.uid) : null;
-  const [userData, loadingUser] = useDocumentData(userDocRef);
-  const { simulatedRole } = useRoleSimulator();
-
-  const getRole = () => {
-    if (simulatedRole) return simulatedRole;
-    if (!user) return 'business';
-    if (user.email === SUPER_ADMIN_EMAIL) return 'super_admin';
-    return userData?.userType || 'business';
-  }
-
-  const userRole = getRole();
-
-  const filteredMenu = React.useMemo(() => {
-    const filterItems = (items: any[]): any[] => {
-      return items
-        .filter(item => item.roles.includes(userRole))
-        .map(item => {
-          if (item.subItems) {
-            const filteredSubItems = filterItems(item.subItems);
-            if (filteredSubItems.length > 0) {
-              return { ...item, subItems: filteredSubItems };
-            }
-            return item.href ? { ...item, subItems: [] } : null;
-          }
-          return item;
-        })
-        .filter(Boolean);
-    };
-    return filterItems(allMenuItems);
-  }, [userRole]);
-
-  if (loadingAuth || loadingUser) {
-    return (
-        <div className="p-2 space-y-2">
-            {Array.from({length: 8}).map((_, i) => <Loader2 key={i} className="animate-spin text-sidebar-foreground/50"/>)}
-        </div>
-    );
-  }
-
-  return (
-    <SidebarMenu>
-      {filteredMenu.map((item, index) => (
-        <SidebarMenuItem key={index}>
-          {item.subItems && item.subItems.length > 0 ? (
-            <CollapsibleMenuItem item={item} pathname={pathname} />
-          ) : (
-            <Link href={item.href}>
-              <SidebarMenuButton
-                size="lg"
-                isActive={pathname.startsWith(item.href)}
-                className="w-full justify-start"
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-              </SidebarMenuButton>
-            </Link>
-          )}
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
-  );
-}
-
-// This new component will contain the logic that needs the sidebar context
-function SidebarNavManager() {
-  const { setOpenMobile } = useSidebar();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    setOpenMobile(false);
-  }, [pathname, setOpenMobile]);
-
-  return null; // This component doesn't render anything
-}
-
-
-function AppLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-
-  const hotkeys = new Map([
-    ['ctrl+i', () => router.push('/billing/invoices/new')],
-    ['ctrl+p', () => router.push('/purchases/new')],
-    ['ctrl+j', () => router.push('/accounting/journal')],
-    ['ctrl+r', () => router.push('/accounting/vouchers/rapid')],
-    ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
-    ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
-    ['ctrl+g', () => router.push('/accounting/ledgers')],
-    ['alt+t', () => router.push('/accounting/trial-balance')],
-    ['alt+n', () => router.push('/billing/credit-notes/new')],
-    ['ctrl+d', () => router.push('/billing/debit-notes/new')],
-    ['alt+p', () => router.push('/parties')],
-    ['alt+i', () => router.push('/items')],
-    ['escape', () => router.push('/dashboard')],
-  ]);
-  useHotkeys(hotkeys);
-
-  return (
-    <AccountingProvider>
-      <RoleSimulatorProvider>
-        <SidebarProvider>
-          <SidebarNavManager /> 
-          <Sidebar
-            collapsible="icon"
-            className="border-sidebar-border"
-          >
-            <SidebarHeader>
-              <GstEaseLogo className="h-9 w-auto group-data-[collapsible=icon]:h-8" />
-            </SidebarHeader>
-            <Separator />
-            <SidebarContent>
-                <NavMenu />
-            </SidebarContent>
-            <SidebarFooter>
-              <Separator />
-               <SidebarMenu>
-                  <SidebarMenuItem>
-                      <a href="mailto:support@gstease.com" className="w-full">
-                          <SidebarMenuButton className="justify-start w-full" size="lg">
-                              <Heart className="size-5" />
-                              <span className="group-data-[collapsible=icon]:hidden">Feedback</span>
-                          </SidebarMenuButton>
-                      </a>
-                  </SidebarMenuItem>
-               </SidebarMenu>
-            </SidebarFooter>
-          </Sidebar>
-          <SidebarInset>
-            <div className="w-full">
-              <Header />
-              <main className="flex-1 overflow-auto p-4 sm:p-6 bg-background pt-8 sm:pt-8 md:pb-6 pb-24">
-                 <div className="mx-auto max-w-7xl">
-                    <Suspense fallback={<Loader2 className="animate-spin" />}>
-                        {children}
-                    </Suspense>
-                 </div>
-              </main>
-            </div>
-            <Fab />
-            <BottomNav />
-          </SidebarInset>
-        </SidebarProvider>
-      </RoleSimulatorProvider>
-    </AccountingProvider>
-  );
-}
-
-export default AppLayout;
+        </Collapsi
