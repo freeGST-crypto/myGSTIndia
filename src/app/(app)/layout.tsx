@@ -248,24 +248,19 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
 
   return (
     <Collapsible className="w-full" open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            size="lg"
-            className="w-full justify-between"
-          >
-            <div className="flex items-center gap-2">
-              <item.icon className="h-5 w-5" />
-              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-            </div>
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-            {content}
-        </CollapsibleContent>
+      <CollapsibleTrigger asChild>
+        <SidebarMenuButton size="lg" className="w-full justify-between">
+          <div className="flex items-center gap-2">
+            <item.icon className="h-5 w-5" />
+            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+          </div>
+          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden" />
+        </SidebarMenuButton>
+      </CollapsibleTrigger>
+      <CollapsibleContent>{content}</CollapsibleContent>
     </Collapsible>
-  )
-}
+  );
+};
 
 function MainLayout({
   children,
