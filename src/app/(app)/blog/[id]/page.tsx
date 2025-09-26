@@ -8,10 +8,12 @@ import { User, Calendar, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SocialShareButtons } from '@/components/social-share-buttons';
+import * as React from 'react';
 
 export default function BlogPostPage() {
     const params = useParams();
     const { id } = params;
+    const contentRef = React.useRef<HTMLDivElement>(null);
 
     const post = samplePosts.find(p => p.id === id);
 
@@ -20,8 +22,8 @@ export default function BlogPostPage() {
             <div className="text-center py-12">
                 <h2 className="text-2xl font-bold">Post not found</h2>
                 <p className="text-muted-foreground">The blog post you're looking for does not exist.</p>
-                 <Link href="/blog" passHref className='mt-8 inline-block'>
-                    <span className="text-primary hover:underline flex items-center gap-2">
+                 <Link href="/blog" passHref>
+                    <span className="mt-8 inline-block text-primary hover:underline flex items-center gap-2">
                         <ArrowLeft className="size-4" /> Back to Blog
                     </span>
                 </Link>
@@ -37,7 +39,7 @@ export default function BlogPostPage() {
                 </span>
             </Link>
 
-            <article className="prose dark:prose-invert max-w-none">
+            <article ref={contentRef} className="prose dark:prose-invert max-w-none bg-card p-4 sm:p-8 rounded-lg">
                  <div className="space-y-4 not-prose">
                      <Badge variant="secondary">{post.category}</Badge>
                      <h1 className="text-4xl font-bold leading-tight">{post.title}</h1>
@@ -66,13 +68,11 @@ export default function BlogPostPage() {
                 {post.content.map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>
                 ))}
-
-                 <div className="not-prose flex items-center justify-between mt-12 border-t pt-4">
-                    <span className='font-semibold'>Share this post:</span>
-                    <SocialShareButtons url={post.shareUrl} title={post.title} />
-                 </div>
-
             </article>
+            <div className="not-prose flex items-center justify-between mt-4">
+                <span className='font-semibold'>Share this post:</span>
+                <SocialShareButtons url={post.shareUrl} title={post.title} />
+             </div>
         </div>
     )
 }

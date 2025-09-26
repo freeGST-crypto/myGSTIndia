@@ -195,14 +195,58 @@ export function QuickInvoiceDialog({ open, onOpenChange }: { open: boolean, onOp
   )
 }
 
+function EwaybillDialog({ invoice, isOpen, onOpenChange }: { invoice: Invoice | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) {
+    const { toast } = useToast();
+    const handleGenerate = () => {
+        toast({ title: "E-Waybill Generated (Simulated)", description: "The E-Waybill has been successfully generated." });
+        onOpenChange(false);
+    }
+
+    if (!invoice) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Generate E-Waybill for Invoice {invoice.id}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-2">
+                            <Label>Supply Type</Label>
+                            <Input value="Outward" readOnly />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Sub Type</Label>
+                            <Input value="Supply" readOnly />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Transporter Name</Label>
+                        <Input placeholder="Enter transporter's name" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Vehicle Number</Label>
+                        <Input placeholder="Enter vehicle number (e.g., MH01AB1234)" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleGenerate}>Generate E-Waybill</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 export default function InvoicesPage() {
   const { journalVouchers, addJournalVoucher, loading: journalLoading } = useContext(AccountingContext)!;
   const [user] = useAuthState(auth);
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
-
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isEwaybillDialogOpen, setIsEwaybillDialogOpen] = useState(false);
 
   const invoicePreviewRef = useRef(null);
 
@@ -319,7 +363,8 @@ export default function InvoicesPage() {
             }
         }
         else if (action === 'Ewaybill') {
-          toast({ title: "Coming Soon!", description: "E-Waybill generation will be available soon." });
+          setSelectedInvoice(invoice);
+          setIsEwaybillDialogOpen(true);
         }
         else {
             toast({
@@ -493,7 +538,7 @@ export default function InvoicesPage() {
         </CardContent>
       </Card>
       
-      <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
+      <Dialog open={!!selectedInvoice && !isEwaybillDialogOpen} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Invoice Preview: {selectedInvoice?.id}</DialogTitle>
@@ -516,6 +561,8 @@ export default function InvoicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+       <EwaybillDialog invoice={selectedInvoice} isOpen={isEwaybillDialogOpen} onOpenChange={setIsEwaybillDialogOpen} />
 
     </div>
   );

@@ -100,11 +100,11 @@ export default function BlogPage() {
                             <CardDescription>{post.excerpt}</CardDescription>
                         </CardContent>
                         <CardFooter className="flex justify-between items-center">
-                             <Button asChild variant="outline">
-                                <Link href={`/blog/${post.id}`}>
+                             <Link href={`/blog/${post.id}`} passHref>
+                                <Button variant="outline">
                                     Read More <ArrowRight className="ml-2 size-4"/>
-                                </Link>
-                            </Button>
+                                </Button>
+                            </Link>
                              <SocialShareButtons url={post.shareUrl} title={post.title} />
                         </CardFooter>
                     </Card>

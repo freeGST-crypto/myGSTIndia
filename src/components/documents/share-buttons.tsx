@@ -26,7 +26,7 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
     onBeforeGetContent: () => setIsProcessing(true),
     onAfterPrint: () => {
       setIsProcessing(false);
-      toast({ title: "Print/Save job completed." });
+      toast({ title: "Print job completed." });
     },
     onPrintError: () => {
       setIsProcessing(false);
