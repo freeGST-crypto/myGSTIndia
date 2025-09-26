@@ -262,4 +262,129 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
         </CollapsibleTrigger>
         <CollapsibleContent>
             {content}
-        </Collapsi
+        </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+function MainLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [user, authLoading, authError] = useAuthState(auth);
+  
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, userLoading, userError] = useDocumentData(userDocRef);
+  const { simulatedRole, setSimulatedRole } = useRoleSimulator();
+
+  const getRole = () => {
+    if (!user) return 'business'; // Default to business if not logged in for viewing purposes
+    if (user.email === SUPER_ADMIN_EMAIL) return 'super_admin';
+    return userData?.userType || 'business'; 
+  }
+  
+  const userRole = getRole();
+  const displayRole = simulatedRole || userRole;
+  
+  // Define hotkeys
+  const hotkeys = new Map<string, (event: KeyboardEvent) => void>([
+      ['ctrl+i', () => router.push('/billing/invoices/new')],
+      ['ctrl+p', () => router.push('/purchases/new')],
+      ['ctrl+j', () => router.push('/accounting/journal')],
+      ['alt+n', () => router.push('/billing/credit-notes/new')],
+      ['ctrl+d', () => router.push('/billing/debit-notes/new')],
+      ['ctrl+r', () => router.push('/accounting/vouchers/rapid')],
+      ['ctrl+b', () => router.push('/accounting/financial-statements/balance-sheet')],
+      ['ctrl+l', () => router.push('/accounting/financial-statements/profit-and-loss')],
+      ['alt+t', () => router.push('/accounting/trial-balance')],
+      ['ctrl+g', () => router.push('/accounting/ledgers')],
+      ['alt+p', () => router.push('/parties')],
+      ['alt+i', () => router.push('/items')],
+  ]);
+  useHotkeys(hotkeys);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading || userLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={48} />
+      </div>
+    );
+  }
+  
+  const filteredMenuItems = allMenuItems.filter(item => item.roles.includes(displayRole));
+
+
+  return (
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <GstEaseLogo />
+            <h2 className="text-xl font-semibold">GSTEase</h2>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {filteredMenuItems.map((item, index) => (
+                <SidebarMenuItem key={index}>
+                  {item.subItems ? (
+                    <CollapsibleMenuItem item={item} pathname={pathname} />
+                  ) : (
+                    <Link href={item.href} passHref>
+                      <SidebarMenuButton size="lg" isActive={pathname === item.href}>
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  )}
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+          <SidebarFooter>
+             <div className="border-t border-sidebar-border p-4 space-y-4">
+                 <h4 className="font-semibold text-sm">Need Help?</h4>
+                 <p className="text-xs text-sidebar-foreground/70">Our support team is here to assist you.</p>
+                  <Button asChild className="w-full" variant="secondary">
+                     <Link href="/contact">Contact Support</Link>
+                  </Button>
+            </div>
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <Header />
+          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-24 md:pb-6">
+            <Suspense fallback={<Loader2 className="animate-spin" />}>
+              {children}
+            </Suspense>
+          </main>
+          <BottomNav />
+          <Fab />
+        </SidebarInset>
+      </SidebarProvider>
+  );
+}
+
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ClientOnly>
+       <RoleSimulatorProvider>
+          <AccountingProvider>
+            <MainLayout>{children}</MainLayout>
+          </AccountingProvider>
+       </RoleSimulatorProvider>
+    </ClientOnly>
+  );
+}
