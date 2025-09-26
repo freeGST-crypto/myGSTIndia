@@ -103,7 +103,7 @@ export default function TrialBalancePage() {
             let debit = 0;
             let credit = 0;
 
-            if (accountType === 'Asset' || accountType === 'Expense') {
+            if (accountType === 'Asset' || accountType === 'Expense' || accountType === 'Cost of Goods Sold') {
                 if (finalBalance >= 0) debit = finalBalance;
                 else credit = -finalBalance;
             } else { // Liability, Equity, Revenue

@@ -1,13 +1,14 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -165,7 +166,7 @@ export default function UserManagementPage() {
           <CardHeader>
             <CardTitle>User List</CardTitle>
             <CardDescription>
-              Search, view, and manage all users on the platform.
+              Search, view, and manage all users on the platform. Select a user to see their details.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -230,7 +231,7 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="space-y-8 mt-[76px]">
+      <div className="space-y-8 lg:sticky lg:top-24">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -150,7 +150,7 @@ function DashboardContent() {
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Quickly find recent invoices.</CardDescription>
+              <CardDescription>A summary of your most recent sales invoices.</CardDescription>
               <div className="relative pt-4">
                 <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
                 <Input

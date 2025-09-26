@@ -69,7 +69,7 @@ const itemSchema = z.object({
     stockGroupId: z.string().optional(),
 });
 
-export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor', party: Party | null }) {
+export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean, onOpenChange: (open: boolean) => void, type: 'Customer' | 'Vendor', party?: Party | null }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
@@ -112,7 +112,7 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
     };
 
     const dialogTitle = party ? `Edit ${type}` : `Add New ${type}`;
-    const dialogDescription = party ? `Update the details for ${party.name}.` : `Enter the details for your new ${type.toLowerCase()}. Use this to add parties to your master list.`;
+    const dialogDescription = party ? `Update the details for ${party.name}.` : `Enter the details for your new ${type.toLowerCase()}.`;
 
 
     return (
@@ -149,7 +149,7 @@ export function PartyDialog({ open, onOpenChange, type, party }: { open: boolean
     );
 };
 
-export function ItemDialog({ open, onOpenChange, item, stockGroups }: { open: boolean, onOpenChange: (open: boolean) => void, item: Item | null, stockGroups: {id: string, name: string}[] }) {
+export function ItemDialog({ open, onOpenChange, item, stockGroups }: { open: boolean, onOpenChange: (open: boolean) => void, item?: Item | null, stockGroups?: {id: string, name: string}[] }) {
     const { toast } = useToast();
     const [user] = useAuthState(auth);
     
@@ -188,7 +188,7 @@ export function ItemDialog({ open, onOpenChange, item, stockGroups }: { open: bo
     };
     
     const dialogTitle = item ? "Edit Item" : "Add New Item";
-    const dialogDescription = item ? `Update the details for ${item.name}` : "Add a new product or service to your master list. This will make it available for selection in invoices and purchase bills.";
+    const dialogDescription = item ? `Update the details for ${item.name}` : "Add a new product or service to your master list.";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -208,7 +208,7 @@ export function ItemDialog({ open, onOpenChange, item, stockGroups }: { open: bo
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl><SelectTrigger><SelectValue placeholder="Select a group" /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                        {stockGroups.map(group => <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>)}
+                                        {(stockGroups || []).map(group => <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage /></FormItem> )}/>

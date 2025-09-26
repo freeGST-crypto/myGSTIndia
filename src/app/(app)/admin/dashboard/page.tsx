@@ -122,29 +122,29 @@ export default function AdminDashboardPage() {
 
   const renderProfessionalDashboard = () => (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Client Workspace Management</CardTitle>
-          <CardDescription>
-            Switch into a client's workspace to manage their account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <ClientList />
-        </CardContent>
-      </Card>
        <Card>
         <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Users/> Full Client List</CardTitle>
-            <CardDescription>For more advanced search and editing options, go to the full user management page.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Users/> Client Management</CardTitle>
+            <CardDescription>Manage all your clients, edit their profiles, and switch into their workspaces from the central client management page.</CardDescription>
         </CardHeader>
         <CardContent>
             <Link href="/admin/users" passHref>
                 <Button>
-                    <span>Go to User Management</span>
+                    <span>Go to User & Client Management</span>
                     <ArrowRight className="ml-2"/>
                 </Button>
             </Link>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Switch Client Workspace</CardTitle>
+          <CardDescription>
+            Quickly jump into a client's workspace to manage their account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ClientList />
         </CardContent>
       </Card>
     </div>

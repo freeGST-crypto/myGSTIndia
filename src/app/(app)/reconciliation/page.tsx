@@ -71,7 +71,7 @@ export default function ReconciliationPage() {
                 </p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-1 items-start">
+            <div className="grid gap-8 md:grid-cols-2 items-start">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><FileUp className="text-primary"/> AI-Powered ITC Reconciliation</CardTitle>
@@ -135,27 +135,6 @@ export default function ReconciliationPage() {
                     </CardContent>
                 </Card>
             </div>
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        Next Steps
-                    </CardTitle>
-                    <CardDescription>
-                        Explore other features of GSTEase.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Now that you've seen how AI can help with reconciliation, why not explore how it can assist with HSN code lookups for your products and services?
-                    </p>
-                    <Link href="/items" passHref>
-                        <Button variant="outline">
-                            <span>Go to Items</span>
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                    </Link>
-                </CardContent>
-            </Card>
         </div>
     );
 }

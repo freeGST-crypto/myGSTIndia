@@ -3,7 +3,7 @@
 
 import { useMemo, useContext } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { format, subMonths, startOfMonth, endOfMonth, addMonths } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, addMonths, parseISO } from 'date-fns';
 
 import {
   Card,
@@ -54,15 +54,25 @@ export function FinancialSummaryChart() {
 
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.id || !voucher.date) return;
-        const voucherDate = new Date(voucher.date);
+        const voucherDate = parseISO(voucher.date); // Use parseISO for reliability
+        
         if (voucherDate >= sixMonthsAgo) {
             const yearMonth = format(voucherDate, 'yyyy-MM');
             
             if (data[yearMonth]) {
-                if (voucher.id.startsWith("INV-")) {
-                    data[yearMonth].sales += voucher.amount;
-                } else if (voucher.id.startsWith("BILL-")) {
-                    data[yearMonth].purchases += voucher.amount;
+                const salesLine = voucher.lines.find(l => l.account === '4010');
+                const purchaseLine = voucher.lines.find(l => l.account === '5050');
+                const creditNoteLine = voucher.lines.find(l => l.account === '4010');
+                const debitNoteLine = voucher.lines.find(l => l.account === '5050');
+
+                if (voucher.id.startsWith("INV-") && salesLine) {
+                    data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
+                } else if (voucher.id.startsWith("BILL-") && purchaseLine) {
+                    data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
+                } else if (voucher.id.startsWith("CN-") && creditNoteLine) {
+                    data[yearMonth].sales -= parseFloat(creditNoteLine.debit) || 0;
+                } else if (voucher.id.startsWith("DN-") && debitNoteLine) {
+                    data[yearMonth].purchases -= parseFloat(debitNoteLine.credit) || 0;
                 }
             }
         }
@@ -77,7 +87,7 @@ export function FinancialSummaryChart() {
     <Card>
       <CardHeader>
         <CardTitle>Financial Summary - Last 6 Months</CardTitle>
-        <CardDescription>A look at sales, purchases, and net flow.</CardDescription>
+        <CardDescription>A look at net sales, net purchases, and cash flow.</CardDescription>
       </CardHeader>
       <CardContent>
         {chartData.length > 0 ? (
