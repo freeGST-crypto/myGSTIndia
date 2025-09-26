@@ -204,11 +204,11 @@ export default function AdminDashboardPage() {
                 <Select value={selectedRole} onValueChange={handleRoleChange}>
                     <SelectTrigger id="role-simulator"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="professional">Professional</SelectItem>
                         {userRole === 'super_admin' && (
                             <SelectItem value="super_admin">Super Admin</SelectItem>
                         )}
+                        <SelectItem value="professional">Professional</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
                     </SelectContent>
                 </Select>
               </div>
