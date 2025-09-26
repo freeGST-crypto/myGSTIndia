@@ -1,4 +1,6 @@
 
+"use client"
+
 import { Bell, CalendarDays } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -6,18 +8,30 @@ import { format } from 'date-fns';
 
 const getDeadlines = () => {
     const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // GST deadlines for the previous month's return
+    const gstMonth = new Date(currentYear, currentMonth, 1);
     
+    // PF/ESI deadlines are for the current month's payment
+    const pfEsiMonth = new Date(currentYear, currentMonth, 1);
+
     return [
         {
             title: "GSTR-1 Filing",
-            date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 11),
+            date: new Date(gstMonth.getFullYear(), gstMonth.getMonth(), 11),
             description: "Monthly return for outward supplies."
         },
         {
+            title: "PF & ESI Payment",
+            date: new Date(pfEsiMonth.getFullYear(), pfEsiMonth.getMonth(), 15),
+            description: "Monthly provident fund and ESI contribution."
+        },
+        {
             title: "GSTR-3B Filing",
-            date: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 20),
-            description: "Monthly self-declaration."
+            date: new Date(gstMonth.getFullYear(), gstMonth.getMonth(), 20),
+            description: "Monthly summary return."
         },
     ];
 }

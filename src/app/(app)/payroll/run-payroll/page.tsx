@@ -39,9 +39,9 @@ import Link from "next/link";
 import * as XLSX from 'xlsx';
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455", bankIfsc: "HDFC0000123" },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566", bankIfsc: "ICIC0000456" },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677", bankIfsc: "SBIN0000789" },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, incomeTax: 5000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "001122334455", bankIfsc: "HDFC0000123", section80C: 150000, section80D: 25000, houseRent: 300000 },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, incomeTax: 7500, lwf: 25, loan: 2500, otherDeductions: 150, bankAccount: "112233445566", bankIfsc: "ICIC0000456", section80C: 100000, section80D: 0, houseRent: 0 },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, incomeTax: 3000, lwf: 25, loan: 0, otherDeductions: 0, bankAccount: "223344556677", bankIfsc: "SBIN0000789", section80C: 75000, section80D: 15000, houseRent: 240000 },
 ];
 
 const getFinancialYears = () => {
@@ -58,11 +58,40 @@ const months = [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
 ];
 
-const calculateSalary = (emp: typeof initialEmployees[0]) => {
+// Simplified tax calculation logic (New Regime)
+const calculateTds = (emp: any) => {
+    const grossAnnual = (emp.basic + emp.hra + emp.specialAllowance) * 12;
+    const standardDeduction = 50000;
+    const section80C = Math.min(emp.section80C || 0, 150000);
+    const section80D = Math.min(emp.section80D || 0, 25000);
+
+    let taxableIncome = grossAnnual - standardDeduction - section80C - section80D;
+    
+    // HRA Exemption (simplified)
+    const hraReceived = emp.hra * 12;
+    const rentPaid = emp.houseRent || 0;
+    const hraExemption = Math.min(hraReceived, rentPaid - (emp.basic * 12 * 0.1));
+    if(hraExemption > 0) taxableIncome -= hraExemption;
+
+
+    let tax = 0;
+    if (taxableIncome > 1500000) tax = (taxableIncome - 1500000) * 0.30 + 150000;
+    else if (taxableIncome > 1200000) tax = (taxableIncome - 1200000) * 0.20 + 90000;
+    else if (taxableIncome > 900000) tax = (taxableIncome - 900000) * 0.15 + 45000;
+    else if (taxableIncome > 600000) tax = (taxableIncome - 600000) * 0.10 + 15000;
+    else if (taxableIncome > 300000) tax = (taxableIncome - 300000) * 0.05;
+    
+    const totalTax = tax > 0 ? tax + (tax * 0.04) : 0; // Add 4% cess
+    return totalTax / 12; // Monthly TDS
+};
+
+
+const calculateSalary = (emp: any) => {
+    const autoTds = calculateTds(emp);
     const grossEarnings = emp.basic + emp.hra + emp.specialAllowance;
-    const totalDeductions = emp.pf + emp.professionalTax + emp.incomeTax + emp.lwf + emp.loan + emp.otherDeductions;
+    const totalDeductions = (emp.pf || 0) + (emp.professionalTax || 0) + autoTds + (emp.lwf || 0) + (emp.loan || 0) + (emp.otherDeductions || 0);
     const netSalary = grossEarnings - totalDeductions;
-    return { grossEarnings, totalDeductions, netSalary };
+    return { grossEarnings, totalDeductions, netSalary, incomeTax: autoTds };
 };
 
 export default function RunPayrollPage() {
@@ -80,7 +109,7 @@ export default function RunPayrollPage() {
     
     const [payrollData, setPayrollData] = useState(initialEmployees.map(emp => ({...emp, ...calculateSalary(emp)})));
     
-    const handleDeductionChange = (employeeId: string, field: 'incomeTax' | 'lwf' | 'loan' | 'otherDeductions', value: number) => {
+    const handleDeductionChange = (employeeId: string, field: 'loan' | 'otherDeductions', value: number) => {
         setPayrollData(prevData => {
             const newData = prevData.map(emp => {
                 if (emp.id === employeeId) {
@@ -233,8 +262,7 @@ export default function RunPayrollPage() {
                                     <TableRow>
                                         <TableHead>Employee</TableHead>
                                         <TableHead className="text-right">Gross (₹)</TableHead>
-                                        <TableHead className="text-right">Income Tax (₹)</TableHead>
-                                        <TableHead className="text-right">LWF (₹)</TableHead>
+                                        <TableHead className="text-right">Auto TDS (₹)</TableHead>
                                         <TableHead className="text-right">Loan/Adv (₹)</TableHead>
                                         <TableHead className="text-right">Others (₹)</TableHead>
                                         <TableHead className="text-right font-semibold">Net Salary (₹)</TableHead>
@@ -248,8 +276,7 @@ export default function RunPayrollPage() {
                                                 <div className="text-sm text-muted-foreground">{emp.id}</div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono">{emp.grossEarnings.toFixed(2)}</TableCell>
-                                            <TableCell><Input type="number" className="w-24 ml-auto text-right" value={emp.incomeTax} onChange={e => handleDeductionChange(emp.id, 'incomeTax', parseFloat(e.target.value) || 0)} /></TableCell>
-                                            <TableCell><Input type="number" className="w-20 ml-auto text-right" value={emp.lwf} onChange={e => handleDeductionChange(emp.id, 'lwf', parseFloat(e.target.value) || 0)}/></TableCell>
+                                            <TableCell className="text-right font-mono">{emp.incomeTax.toFixed(2)}</TableCell>
                                             <TableCell><Input type="number" className="w-24 ml-auto text-right" value={emp.loan} onChange={e => handleDeductionChange(emp.id, 'loan', parseFloat(e.target.value) || 0)}/></TableCell>
                                             <TableCell><Input type="number" className="w-24 ml-auto text-right" value={emp.otherDeductions} onChange={e => handleDeductionChange(emp.id, 'otherDeductions', parseFloat(e.target.value) || 0)}/></TableCell>
                                             <TableCell className="text-right font-mono font-semibold">{emp.netSalary.toFixed(2)}</TableCell>
@@ -258,7 +285,7 @@ export default function RunPayrollPage() {
                                 </TableBody>
                                 <TableFooter>
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-right font-bold text-lg">Total Payout</TableCell>
+                                        <TableCell colSpan={5} className="text-right font-bold text-lg">Total Payout</TableCell>
                                         <TableCell className="text-right font-bold font-mono text-lg">₹{totalNetSalary.toFixed(2)}</TableCell>
                                     </TableRow>
                                 </TableFooter>

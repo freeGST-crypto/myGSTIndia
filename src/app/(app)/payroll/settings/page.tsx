@@ -24,7 +24,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Save, FileText, Upload } from "lucide-react";
+import { Save, FileText, Upload, SlidersHorizontal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -68,6 +68,13 @@ const formSchema = z.object({
   
   insuranceEnabled: z.boolean().default(true),
   employerInsuranceContribution: z.coerce.number().min(0).default(500),
+
+  // New fields for salary structure
+  hraExemption: z.boolean().default(true),
+  ltaExemption: z.boolean().default(false),
+  standardDeduction: z.coerce.number().min(0).default(50000),
+  section80CMax: z.coerce.number().min(0).default(150000),
+  section80DMax: z.coerce.number().min(0).default(25000),
 });
 
 export default function PayrollSettingsPage() {
@@ -93,6 +100,11 @@ export default function PayrollSettingsPage() {
       bonusRate: 8.33,
       insuranceEnabled: true,
       employerInsuranceContribution: 500,
+      hraExemption: true,
+      ltaExemption: false,
+      standardDeduction: 50000,
+      section80CMax: 150000,
+      section80DMax: 25000,
     },
   });
   
@@ -109,12 +121,73 @@ export default function PayrollSettingsPage() {
       <div className="text-center">
         <h1 className="text-3xl font-bold">Payroll Settings</h1>
         <p className="text-muted-foreground">
-          Configure statutory components and company-wide payroll preferences.
+          Configure statutory components, salary structures, and company-wide payroll preferences.
         </p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Salary Structure Builder & Tax Deductions</CardTitle>
+                    <CardDescription>Define the standard allowances and deductions applicable to your employees' salaries for tax computation.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                         <FormField
+                            control={form.control}
+                            name="standardDeduction"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Standard Deduction (₹)</FormLabel>
+                                    <FormControl><Input type="number" {...field} /></FormControl>
+                                    <FormDescription>Standard deduction applicable on salary income.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="section80CMax"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Section 80C Maximum Limit (₹)</FormLabel>
+                                    <FormControl><Input type="number" {...field} /></FormControl>
+                                    <FormDescription>Max limit for deductions like PF, LIC, ELSS etc.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="section80DMax"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Section 80D Maximum Limit (₹)</FormLabel>
+                                    <FormControl><Input type="number" {...field} /></FormControl>
+                                     <FormDescription>Max limit for medical insurance premium.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-6 pt-4">
+                         <FormField control={form.control} name="hraExemption" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0">
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} id="hra"/></FormControl>
+                                <Label htmlFor="hra">Consider HRA Exemption</Label>
+                            </FormItem>
+                         )}/>
+                         <FormField control={form.control} name="ltaExemption" render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0">
+                                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} id="lta"/></FormControl>
+                                <Label htmlFor="lta">Consider LTA Exemption</Label>
+                            </FormItem>
+                         )}/>
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card>
                 <CardHeader>
                     <CardTitle>Statutory Components</CardTitle>

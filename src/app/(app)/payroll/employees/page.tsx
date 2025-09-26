@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Edit, Trash2, ChevronDown, Upload, Download, FileSpreadsheet, IndianRupee } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -43,9 +43,9 @@ import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 
 const initialEmployees = [
-    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, netSalary: 88000, pan: "ABCDE1234F", aadhaar: "123456789012", bankAccount: "001122334455", bankIfsc: "HDFC000123" },
-    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, netSalary: 108000, pan: "FGHIJ5678K", aadhaar: "234567890123", bankAccount: "112233445566", bankIfsc: "ICIC000456" },
-    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, netSalary: 68000, pan: "KLMNO9876P", aadhaar: "345678901234", bankAccount: "223344556677", bankIfsc: "SBIN000789" },
+    { id: "EMP001", name: "Ananya Sharma", designation: "Software Engineer", basic: 50000, hra: 25000, specialAllowance: 15000, pf: 1800, professionalTax: 200, netSalary: 88000, pan: "ABCDE1234F", aadhaar: "123456789012", bankAccount: "001122334455", bankIfsc: "HDFC000123", uan: "101234567890", esi: "", section80C: 150000, section80D: 25000, houseRent: 300000 },
+    { id: "EMP002", name: "Rohan Verma", designation: "Marketing Manager", basic: 60000, hra: 30000, specialAllowance: 20000, pf: 1800, professionalTax: 200, netSalary: 108000, pan: "FGHIJ5678K", aadhaar: "234567890123", bankAccount: "112233445566", bankIfsc: "ICIC000456", uan: "109876543210", esi: "", section80C: 100000, section80D: 0, houseRent: 0 },
+    { id: "EMP003", name: "Priya Singh", designation: "HR Executive", basic: 40000, hra: 20000, specialAllowance: 10000, pf: 1800, professionalTax: 200, netSalary: 68000, pan: "KLMNO9876P", aadhaar: "345678901234", bankAccount: "223344556677", bankIfsc: "SBIN0000789", uan: "102345678901", esi: "1234567", section80C: 75000, section80D: 15000, houseRent: 240000 },
 ];
 
 export default function EmployeesPage() {
@@ -105,7 +105,7 @@ export default function EmployeesPage() {
         <div>
           <h1 className="text-3xl font-bold">Employee Management</h1>
           <p className="text-muted-foreground">
-            Add, view, and manage all your employee details.
+            Add, view, and manage all your employee details, salary structures, and investment declarations.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ export default function EmployeesPage() {
                 <DialogTrigger asChild>
                     <Button><PlusCircle className="mr-2"/>Add Employee</Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-3xl">
+                <DialogContent className="sm:max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>Add New Employee</DialogTitle>
                         <DialogDescription>Enter the details for the new employee.</DialogDescription>
@@ -158,43 +158,20 @@ export default function EmployeesPage() {
                             <div className="space-y-2"><Label>Work Location</Label><Input/></div>
                         </div>
                         <Separator/>
-                        <h3 className="font-semibold text-lg">Compensation Details</h3>
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <div className="space-y-2"><Label>Annual CTC (₹)</Label><Input type="number"/></div>
-                            <div className="space-y-2"><Label>Pay Frequency</Label>
-                            <Select defaultValue="monthly">
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="weekly">Weekly</SelectItem>
-                                <SelectItem value="daily">Daily</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Salary components (monthly basis):</p>
+                        <h3 className="font-semibold text-lg">Compensation Details (Monthly)</h3>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div className="space-y-2"><Label>Basic Salary (₹)</Label><Input type="number"/></div>
-                            <div className="space-y-2"><Label>Dearness Allowance (DA) (₹)</Label><Input type="number"/></div>
                             <div className="space-y-2"><Label>House Rent Allowance (HRA) (₹)</Label><Input type="number"/></div>
-                            <div className="space-y-2"><Label>Conveyance Allowance (₹)</Label><Input type="number"/></div>
-                            <div className="space-y-2"><Label>Medical Allowance (₹)</Label><Input type="number"/></div>
                             <div className="space-y-2"><Label>Special Allowance (₹)</Label><Input type="number"/></div>
                         </div>
                         <Separator/>
-                        <h3 className="font-semibold text-lg">Attendance &amp; Leave Policy</h3>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2"><Label>Working Days per Month</Label><Input type="number" defaultValue="22"/></div>
-                            <div className="space-y-2"><Label>Leave Policy</Label>
-                            <Select>
-                                <SelectTrigger><SelectValue placeholder="Assign a policy"/></SelectTrigger>
-                                <SelectContent>
-                                <SelectItem value="standard">Standard Policy</SelectItem>
-                                <SelectItem value="senior">Senior Staff Policy</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            </div>
+                         <h3 className="font-semibold text-lg">Investment Declarations (Annual)</h3>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="space-y-2"><Label>Section 80C Investment</Label><Input type="number" placeholder="e.g., 150000"/></div>
+                            <div className="space-y-2"><Label>Section 80D (Medical)</Label><Input type="number" placeholder="e.g., 25000" /></div>
+                            <div className="space-y-2"><Label>Annual Rent Paid</Label><Input type="number" placeholder="e.g., 300000" /></div>
                         </div>
+                        <div className="pt-2"><Label>Upload Proofs</Label><Input type="file" multiple/></div>
                         <Separator/>
                         <h3 className="font-semibold text-lg">Statutory & Bank Details</h3>
                         <div className="grid md:grid-cols-2 gap-4">
@@ -233,7 +210,7 @@ export default function EmployeesPage() {
                             <TableCell className="font-mono">{emp.id}</TableCell>
                             <TableCell className="font-medium">{emp.name}</TableCell>
                             <TableCell>{emp.designation}</TableCell>
-                            <TableCell className="text-right font-mono">{emp.netSalary.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">{calculateSalary(emp).netSalary.toFixed(2)}</TableCell>
                             <TableCell className="text-right">
                                 <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
