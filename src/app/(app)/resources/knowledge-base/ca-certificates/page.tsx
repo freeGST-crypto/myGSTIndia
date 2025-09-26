@@ -29,7 +29,7 @@ export default function CaCertificatesGuidePage() {
           <p>The "CA Certificates" module empowers professionals (like Chartered Accountants) to quickly generate various certificates required by clients for banking, visa, or other regulatory purposes. This tool streamlines the drafting process, ensuring consistency and accuracy.</p>
           <Image src="https://placehold.co/800x400/e2e8f0/64748b?text=Certificate+Generation+Wizard" alt="Certificate generation screen" width={800} height={400} className="rounded-lg border" data-ai-hint="certificate document" />
           
-          <h4>The Process:</h4>
+          <h4>How It Works:</h4>
           <ol>
             <li><strong>Select a Certificate Type:</strong> Choose from a list of common certificates, such as Net Worth, Turnover, or Capital Contribution.</li>
             <li><strong>Input Data:</strong> A step-by-step form will guide you through entering all the necessary client and financial data. For a Net Worth certificate, for example, you would input details of assets and liabilities.</li>
