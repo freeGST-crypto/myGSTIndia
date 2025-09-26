@@ -83,7 +83,7 @@ export default function TdsReturnsPage() {
 
   const tcsTransactions = useMemo(() => {
      return journalVouchers
-        .filter(v => v && v.id && v.id.startsWith("INV-") && v.lines.some(l => l.account === '2423'))
+        .filter(v => v && v.id && v.lines && v.id.startsWith("INV-") && v.lines.some(l => l.account === '2423'))
         .map(v => {
             const tcsLine = v.lines.find(l => l.account === '2423');
             return {
