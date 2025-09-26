@@ -29,10 +29,10 @@ const initialTiers = [
     description: "For individuals and small businesses just getting started with billing.",
     features: [
       { text: "Up to 20 Invoices/Purchases per month", included: true },
-      { text: "Customer &amp; Vendor Management", included: true },
+      { text: "Customer & Vendor Management", included: true },
       { text: "Basic Billing Reports", included: true },
       { text: "Financial Statements", included: false },
-      { text: "GST &amp; TDS Compliance Tools", included: false },
+      { text: "GST & TDS Compliance Tools", included: false },
       { text: "Admin Panel / Client Management", included: false },
     ],
     cta: "Start for Free",
@@ -62,8 +62,8 @@ const initialTiers = [
     description: "For CAs, tax consultants, and firms managing multiple clients.",
     features: [
       { text: "All Business Features", included: true },
-      { text: "Full GST Filing &amp; Reconciliation Suite", included: true },
-      { text: "Legal &amp; CA Certificate Generators", included: true },
+      { text: "Full GST Filing & Reconciliation Suite", included: true },
+      { text: "Legal & CA Certificate Generators", included: true },
       { text: "CMA Report Generator", included: true },
       { text: "Admin Panel with Client Management", included: true },
       { text: "Priority Support", included: true },
