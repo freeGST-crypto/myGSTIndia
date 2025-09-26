@@ -92,7 +92,16 @@ const allMenuItems = [
     subItems: [
       { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional'] },
       { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
-      { href: "/compliance/tds-tcs-reports", label: "TDS/TCS Reports", icon: BookCopy, roles: ['business', 'professional'] },
+    ],
+  },
+  {
+    label: "Income Tax",
+    icon: IndianRupee,
+    roles: ['business', 'professional'],
+    subItems: [
+      { href: "/income-tax/tds-returns", label: "TDS Returns", icon: FileText, roles: ['business', 'professional'] },
+      { href: "/income-tax/advance-tax", label: "Advance Tax", icon: Calculator, roles: ['business', 'professional'] },
+      { href: "/income-tax/form-16", label: "Form 16", icon: FileSignature, roles: ['business', 'professional'] },
     ],
   },
   {
@@ -365,7 +374,7 @@ function MainLayout({
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader>
-            <ZenithBooksLogo className="size-8 text-primary" />
+            <ZenithBooksLogo className="size-8 text-primary-foreground" />
             <div className="flex flex-col">
               <h2 className="text-xl font-bold">
                 <span className="font-bold">Zenith</span><span className="font-bold">Books</span>
