@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -17,35 +17,57 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDescription } from "@/components/ui/form";
-import { ArrowLeft, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, ArrowRight, Printer, PlusCircle, Trash2, Check, UserCheck } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+
+const employeeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  designation: z.string(),
+  department: z.string(),
+  employeeType: z.enum(["Full-time", "Part-time", "Consultant"]),
+  isSelected: z.boolean().default(false),
+});
+
+const grantSchema = z.object({
+  employeeId: z.string(),
+  optionsGranted: z.coerce.number().positive(),
+  exercisePrice: z.coerce.number().min(0),
+  grantDate: z.string().refine((val) => !isNaN(Date.parse(val))),
+});
 
 const formSchema = z.object({
-  companyName: z.string().min(3, "Company name is required."),
-  planName: z.string().min(3, "Plan name is required (e.g., 'ESOP 2024')."),
-  effectiveDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date" }),
-  
-  optionPoolSize: z.coerce.number().positive("Option pool size must be a positive percentage."),
-  
-  eligibility: z.string().default("All permanent employees, including whole-time directors of the Company, who have been with the Company for a minimum continuous period of one (1) year."),
-  
-  vestingPeriodYears: z.coerce.number().positive("Vesting period must be positive.").default(4),
-  vestingCliffMonths: z.coerce.number().min(0, "Cliff must be non-negative.").default(12),
-  vestingSchedule: z.string().default("25% of the Options shall vest upon completion of one year from the grant date (the 'cliff'), and the remaining 75% shall vest in 36 equal monthly installments thereafter."),
-
-  exercisePrice: z.string().default("The exercise price per Option shall be the fair market value of the share as determined by a registered valuer on the date of grant."),
-  exercisePeriod: z.string().default("The vested Options may be exercised by the employee at any time within a period of five (5) years from the date of vesting."),
-
-  administration: z.string().default("The Plan shall be administered by the Nomination and Remuneration Committee of the Board of Directors of the Company."),
+    employees: z.array(employeeSchema),
+    grants: z.array(grantSchema),
+    vestingStartDate: z.string().refine((val) => !isNaN(Date.parse(val))),
+    vestingPeriodYears: z.coerce.number().positive().default(4),
+    vestingCliffMonths: z.coerce.number().min(0).default(12),
+    vestingFrequency: z.enum(["Monthly", "Quarterly", "Annually"]).default("Quarterly"),
+    exerciseWindowYears: z.coerce.number().positive().default(5),
 });
 
 type FormData = z.infer<typeof formSchema>;
+type Employee = z.infer<typeof employeeSchema>;
 
-export default function EsopPolicyPage() {
+// Mock data
+const mockEmployees: Employee[] = [
+    { id: 'EMP001', name: 'Ananya Sharma', email: 'ananya.s@example.com', designation: 'Lead Engineer', department: 'Technology', employeeType: 'Full-time', isSelected: true },
+    { id: 'EMP002', name: 'Rohan Verma', email: 'rohan.v@example.com', designation: 'Product Manager', department: 'Product', employeeType: 'Full-time', isSelected: true },
+    { id: 'EMP003', name: 'Priya Singh', email: 'priya.s@example.com', designation: 'Senior Designer', department: 'Design', employeeType: 'Full-time', isSelected: false },
+    { id: 'EMP004', name: 'Vikram Reddy', email: 'vikram.r@example.com', designation: 'Marketing Consultant', department: 'Marketing', employeeType: 'Consultant', isSelected: false },
+];
+
+
+export default function EsopGrantWizardPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const printRef = useRef(null);
@@ -53,47 +75,64 @@ export default function EsopPolicyPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        companyName: "Acme Innovations Pvt. Ltd.",
-        planName: "Acme ESOP 2024",
-        effectiveDate: new Date().toISOString().split("T")[0],
-        optionPoolSize: 10,
-        eligibility: "All permanent employees, including whole-time directors of the Company, who have been with the Company for a minimum continuous period of one (1) year.",
+        employees: mockEmployees,
+        grants: mockEmployees.filter(e => e.isSelected).map(e => ({
+            employeeId: e.id,
+            optionsGranted: 1000,
+            exercisePrice: 10,
+            grantDate: new Date().toISOString().split('T')[0],
+        })),
+        vestingStartDate: new Date().toISOString().split('T')[0],
         vestingPeriodYears: 4,
         vestingCliffMonths: 12,
-        vestingSchedule: "25% of the Options shall vest upon completion of one year from the grant date (the 'cliff'), and the remaining 75% shall vest in 36 equal monthly installments thereafter.",
-        exercisePrice: "The exercise price per Option shall be the fair market value of the share as determined by a registered valuer on the date of grant.",
-        exercisePeriod: "The vested Options may be exercised by the employee at any time within a period of five (5) years from the date of vesting.",
-        administration: "The Plan shall be administered by the Nomination and Remuneration Committee of the Board of Directors of the Company.",
+        vestingFrequency: "Quarterly",
+        exerciseWindowYears: 5,
     },
   });
+
+  const watchEmployees = form.watch("employees");
+  const selectedEmployees = watchEmployees.filter(e => e.isSelected);
+
+  const { fields, update } = useFieldArray({
+      control: form.control,
+      name: "grants"
+  });
+
+  // Sync grants array with selected employees
+  useState(() => {
+    const selectedIds = new Set(selectedEmployees.map(e => e.id));
+    const currentGrantIds = new Set(form.getValues('grants').map(g => g.employeeId));
+
+    const toAdd = selectedEmployees.filter(e => !currentGrantIds.has(e.id));
+    const toRemove = Array.from(currentGrantIds).filter(id => !selectedIds.has(id));
+
+    if (toRemove.length > 0) {
+        const grants = form.getValues('grants');
+        const newGrants = grants.filter(g => !toRemove.includes(g.employeeId));
+        form.setValue('grants', newGrants);
+    }
+    if (toAdd.length > 0) {
+        const grants = form.getValues('grants');
+        const newGrants = toAdd.map(e => ({
+            employeeId: e.id,
+            optionsGranted: 1000,
+            exercisePrice: 10,
+            grantDate: new Date().toISOString().split('T')[0],
+        }));
+        form.setValue('grants', [...grants, ...newGrants]);
+    }
+  });
+
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
   });
 
   const processStep = async () => {
-    let fieldsToValidate: (keyof FormData)[] = [];
-    switch (step) {
-      case 1:
-        fieldsToValidate = ["companyName", "planName", "effectiveDate", "optionPoolSize", "eligibility"];
-        break;
-      case 2:
-        fieldsToValidate = ["vestingPeriodYears", "vestingCliffMonths", "vestingSchedule", "exercisePrice", "exercisePeriod", "administration"];
-        break;
-    }
-    
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      setStep(prev => prev + 1);
-      if (step < 3) {
-        toast({ title: `Step ${step} Saved`, description: `Proceeding to step ${step + 1}.` });
-      }
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please correct the errors before proceeding.",
-      });
+    // Validation logic can be added here per step if needed
+    setStep(prev => prev + 1);
+    if (step < 6) {
+      toast({ title: `Step ${step} Completed`, description: `Proceeding to step ${step + 1}.` });
     }
   };
 
@@ -104,15 +143,27 @@ export default function EsopPolicyPage() {
       case 1:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 1: Plan Basics</CardTitle><CardDescription>Define the name, size, and eligibility criteria for your ESOP.</CardDescription></CardHeader>
-            <CardContent className="space-y-4">
-                <FormField control={form.control} name="companyName" render={({ field }) => ( <FormItem><FormLabel>Company Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                <FormField control={form.control} name="planName" render={({ field }) => ( <FormItem><FormLabel>Plan Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                <div className="grid md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="effectiveDate" render={({ field }) => ( <FormItem><FormLabel>Effective Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="optionPoolSize" render={({ field }) => ( <FormItem><FormLabel>Total Option Pool (% of Equity)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                </div>
-                 <FormField control={form.control} name="eligibility" render={({ field }) => ( <FormItem><FormLabel>Eligibility Criteria</FormLabel><FormControl><Textarea className="min-h-24" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+            <CardHeader><CardTitle>Step 1: Employee / Beneficiary Selection</CardTitle><CardDescription>Select the employees who will receive the ESOP grant.</CardDescription></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader><TableRow><TableHead className="w-10"></TableHead><TableHead>Name</TableHead><TableHead>Designation</TableHead><TableHead>Type</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                        {form.getValues('employees').map((employee, index) => (
+                             <TableRow key={employee.id}>
+                                <TableCell><Checkbox checked={employee.isSelected} onCheckedChange={(checked) => {
+                                    const employees = form.getValues('employees');
+                                    employees[index].isSelected = !!checked;
+                                    form.setValue('employees', employees, {shouldDirty: true});
+                                    // Trigger re-render
+                                    form.trigger('employees');
+                                }} /></TableCell>
+                                <TableCell>{employee.name}</TableCell>
+                                <TableCell>{employee.designation}</TableCell>
+                                <TableCell>{employee.employeeType}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </CardContent>
             <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -120,64 +171,98 @@ export default function EsopPolicyPage() {
       case 2:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 2: Vesting & Exercise Terms</CardTitle><CardDescription>Define how and when employees can earn and purchase their shares.</CardDescription></CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="vestingPeriodYears" render={({ field }) => ( <FormItem><FormLabel>Total Vesting Period (Years)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="vestingCliffMonths" render={({ field }) => ( <FormItem><FormLabel>Vesting Cliff (Months)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                </div>
-                 <FormField control={form.control} name="vestingSchedule" render={({ field }) => ( <FormItem><FormLabel>Vesting Schedule Description</FormLabel><FormControl><Textarea className="min-h-24" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                 <Separator/>
-                 <FormField control={form.control} name="exercisePrice" render={({ field }) => ( <FormItem><FormLabel>Exercise Price Determination</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                 <FormField control={form.control} name="exercisePeriod" render={({ field }) => ( <FormItem><FormLabel>Post-Termination Exercise Period</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                 <FormField control={form.control} name="administration" render={({ field }) => ( <FormItem><FormLabel>Plan Administration</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+            <CardHeader><CardTitle>Step 2: Grant Details</CardTitle><CardDescription>Define the number of options and price for each selected employee.</CardDescription></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>No. of Options</TableHead><TableHead>Exercise Price (₹)</TableHead><TableHead>Grant Date</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                         {form.getValues('grants').map((grant, index) => {
+                             const employee = form.getValues('employees').find(e => e.id === grant.employeeId);
+                             return (
+                                <TableRow key={grant.employeeId}>
+                                    <TableCell>{employee?.name}</TableCell>
+                                    <TableCell><Input type="number" defaultValue={grant.optionsGranted} onChange={e => update(index, {...grant, optionsGranted: Number(e.target.value)})}/></TableCell>
+                                    <TableCell><Input type="number" defaultValue={grant.exercisePrice} onChange={e => update(index, {...grant, exercisePrice: Number(e.target.value)})}/></TableCell>
+                                    <TableCell><Input type="date" defaultValue={grant.grantDate} onChange={e => update(index, {...grant, grantDate: e.target.value})}/></TableCell>
+                                </TableRow>
+                             )
+                         })}
+                    </TableBody>
+                </Table>
             </CardContent>
-            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Preview Document <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
       case 3:
+        return (
+          <Card>
+            <CardHeader><CardTitle>Step 3: Vesting Schedule</CardTitle><CardDescription>Define the schedule for earning the options.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="vestingStartDate" render={({ field }) => ( <FormItem><FormLabel>Vesting Start Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="vestingPeriodYears" render={({ field }) => ( <FormItem><FormLabel>Total Vesting Period (Years)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                </div>
+                 <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="vestingCliffMonths" render={({ field }) => ( <FormItem><FormLabel>Vesting Cliff (Months)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>No options vest before this period.</FormDescription><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="vestingFrequency" render={({ field }) => ( <FormItem><FormLabel>Vesting Frequency (Post-Cliff)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Monthly">Monthly</SelectItem><SelectItem value="Quarterly">Quarterly</SelectItem><SelectItem value="Annually">Annually</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                 </div>
+            </CardContent>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+          </Card>
+        );
+      case 4:
+         return (
+          <Card>
+            <CardHeader><CardTitle>Step 4: Exercise & Expiry</CardTitle><CardDescription>Define rules for when and how employees can exercise their vested options.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+                 <FormField control={form.control} name="exerciseWindowYears" render={({ field }) => ( <FormItem><FormLabel>Exercise Window (Years)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>The period after vesting during which the employee can exercise their options.</FormDescription><FormMessage /></FormItem> )}/>
+                 <FormItem><FormLabel>Method of Exercise</FormLabel><Input defaultValue="Online portal via GSTEase" /></FormItem>
+                 <FormItem><FormLabel>Tax Obligations</FormLabel><Textarea defaultValue="The difference between the Fair Market Value (FMV) on the date of exercise and the exercise price is treated as a perquisite and is subject to income tax." /></FormItem>
+            </CardContent>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Review <ArrowRight className="ml-2"/></Button></CardFooter>
+          </Card>
+        );
+      case 5:
         const formData = form.getValues();
         return (
-             <Card>
-                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated ESOP Policy document.</CardDescription></CardHeader>
-                <CardContent>
-                  <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <h2 className="text-center font-bold">{formData.companyName}</h2>
-                    <h3 className="text-center font-bold">EMPLOYEE STOCK OPTION PLAN {new Date(formData.effectiveDate).getFullYear()} ("{formData.planName}")</h3>
-                    <p><strong>Effective Date:</strong> {new Date(formData.effectiveDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-
-                    <h4 className="font-bold mt-4">1. OBJECTIVES</h4>
-                    <p>The objectives of this Plan are to attract, retain, and motivate talented employees, to align their interests with those of the shareholders, and to promote ownership-thinking.</p>
-
-                    <h4 className="font-bold mt-4">2. TOTAL SIZE OF THE OPTION POOL</h4>
-                    <p>The total number of shares reserved for issuance under this Plan shall not exceed {formData.optionPoolSize}% of the total issued and outstanding equity shares of the Company on a fully diluted basis.</p>
-
-                    <h4 className="font-bold mt-4">3. ELIGIBILITY</h4>
-                    <p>{formData.eligibility}</p>
-
-                    <h4 className="font-bold mt-4">4. VESTING OF OPTIONS</h4>
-                    <p>The Options granted under this Plan shall vest over a total period of {formData.vestingPeriodYears} years. {formData.vestingSchedule}</p>
-
-                    <h4 className="font-bold mt-4">5. EXERCISE OF OPTIONS</h4>
-                    <p><strong>Exercise Price:</strong> {formData.exercisePrice}</p>
-                    <p><strong>Exercise Period:</strong> {formData.exercisePeriod}</p>
-                    <p>The exercise of vested Options shall be subject to a separate Grant Letter and is conditional upon the employee's continued employment with the Company.</p>
-                    
-                    <h4 className="font-bold mt-4">6. ADMINISTRATION</h4>
-                    <p>{formData.administration}</p>
-
-                    <h4 className="font-bold mt-4">7. GOVERNING LAW</h4>
-                    <p>This Plan shall be governed by and construed in accordance with the applicable laws of India.</p>
-                  </div>
-                </CardContent>
-                <CardFooter className="justify-between mt-6">
-                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+          <Card>
+            <CardHeader><CardTitle>Step 5: Review & Confirmation</CardTitle><CardDescription>Review the consolidated summary of the ESOP grant.</CardDescription></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Options</TableHead><TableHead>Exercise Price</TableHead><TableHead>Vesting</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                        {formData.grants.map(grant => {
+                            const employee = formData.employees.find(e => e.id === grant.employeeId);
+                            return (
+                                <TableRow key={grant.employeeId}>
+                                    <TableCell>{employee?.name}</TableCell>
+                                    <TableCell>{grant.optionsGranted}</TableCell>
+                                    <TableCell>₹{grant.exercisePrice}</TableCell>
+                                    <TableCell>{formData.vestingPeriodYears} years ({formData.vestingCliffMonths}-month cliff)</TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
+            </CardContent>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Confirm & Proceed <Check className="ml-2"/></Button></CardFooter>
+          </Card>
+        );
+       case 6:
+        return (
+            <Card>
+                <CardHeader className="text-center items-center">
+                    <Check className="size-12 p-2 bg-green-100 text-green-600 rounded-full"/>
+                    <CardTitle>Ready to Generate Documents</CardTitle>
+                    <CardDescription>Your ESOP grant details are confirmed. You can now generate the grant letters and export the schedule.</CardDescription>
+                </CardHeader>
+                <CardFooter className="justify-center gap-4">
+                    <Button><Printer className="mr-2"/> Generate & Email Grant Letters</Button>
+                    <Button variant="outline"><FileDown className="mr-2"/> Export Vesting Schedule (CSV)</Button>
                 </CardFooter>
             </Card>
         );
-      default:
-        return null;
+      default: return null;
     }
   };
 
@@ -188,8 +273,8 @@ export default function EsopPolicyPage() {
         Back to Document Selection
       </Link>
       <div className="text-center">
-        <h1 className="text-3xl font-bold">ESOP Policy Generator</h1>
-        <p className="text-muted-foreground">Follow the steps to create a comprehensive Employee Stock Option Plan policy.</p>
+        <h1 className="text-3xl font-bold">ESOP Grant Wizard</h1>
+        <p className="text-muted-foreground">Follow the steps to grant stock options to your employees.</p>
       </div>
       <Form {...form}>
         <form className="space-y-8">
@@ -199,4 +284,3 @@ export default function EsopPolicyPage() {
     </div>
   );
 }
-
