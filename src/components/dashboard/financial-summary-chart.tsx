@@ -3,7 +3,7 @@
 
 import { useMemo, useContext } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { format, subMonths, startOfMonth, endOfMonth, addMonths, parseISO } from 'date-fns';
+import { format, subMonths, startOfMonth, addMonths } from 'date-fns';
 
 import {
   Card,
@@ -54,23 +54,26 @@ export function FinancialSummaryChart() {
 
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.id || !voucher.date) return;
-        const voucherDate = parseISO(voucher.date); // Use parseISO for reliability
+        // Directly create Date object from YYYY-MM-DD string, avoiding parseISO issues with timezones.
+        const [year, month, day] = voucher.date.split('-').map(Number);
+        const voucherDate = new Date(year, month - 1, day);
         
         if (voucherDate >= sixMonthsAgo) {
             const yearMonth = format(voucherDate, 'yyyy-MM');
             
             if (data[yearMonth]) {
-                const salesLine = voucher.lines.find(l => l.account === '4010');
-                const purchaseLine = voucher.lines.find(l => l.account === '5050');
-
-                if (voucher.id.startsWith("INV-") && salesLine) {
-                    data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
-                } else if (voucher.id.startsWith("BILL-") && purchaseLine) {
-                    data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
-                } else if (voucher.id.startsWith("CN-") && salesLine) { // Credit Note (Sales Return)
-                    data[yearMonth].sales -= parseFloat(salesLine.debit) || 0;
-                } else if (voucher.id.startsWith("DN-") && purchaseLine) { // Debit Note (Purchase Return)
-                    data[yearMonth].purchases -= parseFloat(purchaseLine.credit) || 0;
+                if (voucher.id.startsWith("INV-")) {
+                    const salesLine = voucher.lines.find(l => l.account === '4010');
+                    if (salesLine) data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
+                } else if (voucher.id.startsWith("BILL-")) {
+                    const purchaseLine = voucher.lines.find(l => l.account === '5050');
+                    if (purchaseLine) data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
+                } else if (voucher.id.startsWith("CN-")) { // Credit Note (Sales Return)
+                    const salesReturnLine = voucher.lines.find(l => l.account === '4010');
+                    if(salesReturnLine) data[yearMonth].sales -= parseFloat(salesReturnLine.debit) || 0;
+                } else if (voucher.id.startsWith("DN-")) { // Debit Note (Purchase Return)
+                    const purchaseReturnLine = voucher.lines.find(l => l.account === '5050');
+                    if(purchaseReturnLine) data[yearMonth].purchases -= parseFloat(purchaseReturnLine.credit) || 0;
                 }
             }
         }
