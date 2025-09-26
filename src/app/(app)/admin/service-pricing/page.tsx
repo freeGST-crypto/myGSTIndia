@@ -167,4 +167,10 @@ export default function ServicePricingPage() {
         </CardContent>
         <CardFooter className="justify-end">
             <Button onClick={handleSaveChanges}>
-                <Save className="mr
+                <Save className="mr-2"/>Save Changes
+            </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
