@@ -80,10 +80,10 @@ export function SignupForm() {
 
       toast({
         title: "Account Created!",
-        description: "You have been successfully signed up.",
+        description: "You have been successfully signed up and logged in.",
       });
 
-      // 3. Redirect to dashboard
+      // 3. Redirect to dashboard, user is now logged in.
       router.push("/dashboard");
 
     } catch (error: any) {
