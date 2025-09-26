@@ -34,17 +34,30 @@ import {
   Printer,
   Check,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
 
 const employeeSchema = z.object({
   id: z.string(),
@@ -73,7 +86,9 @@ const formSchema = z.object({
   vestingStartDate: z.string().refine((val) => !isNaN(Date.parse(val))),
   vestingPeriodYears: z.coerce.number().positive().default(4),
   vestingCliffMonths: z.coerce.number().min(0).default(12),
-  vestingFrequency: z.enum(["Monthly", "Quarterly", "Annually"]).default("Quarterly"),
+  vestingFrequency: z
+    .enum(["Monthly", "Quarterly", "Annually"])
+    .default("Quarterly"),
   exerciseWindowYears: z.coerce.number().positive().default(5),
 });
 
@@ -82,38 +97,81 @@ type Employee = z.infer<typeof employeeSchema>;
 
 // Mock data
 const mockEmployees: Employee[] = [
-  { id: 'EMP001', name: 'Ananya Sharma', email: 'ananya.s@example.com', designation: 'Lead Engineer', department: 'Technology', employeeType: 'Full-time', isSelected: true },
-  { id: 'EMP002', name: 'Rohan Verma', email: 'rohan.v@example.com', designation: 'Product Manager', department: 'Product', employeeType: 'Full-time', isSelected: true },
-  { id: 'EMP003', name: 'Priya Singh', email: 'priya.s@example.com', designation: 'Senior Designer', department: 'Design', employeeType: 'Full-time', isSelected: false },
-  { id: 'EMP004', name: 'Vikram Reddy', email: 'vikram.r@example.com', designation: 'Marketing Consultant', department: 'Marketing', employeeType: 'Consultant', isSelected: false },
+  {
+    id: "EMP001",
+    name: "Ananya Sharma",
+    email: "ananya.s@example.com",
+    designation: "Lead Engineer",
+    department: "Technology",
+    employeeType: "Full-time",
+    isSelected: true,
+  },
+  {
+    id: "EMP002",
+    name: "Rohan Verma",
+    email: "rohan.v@example.com",
+    designation: "Product Manager",
+    department: "Product",
+    employeeType: "Full-time",
+    isSelected: true,
+  },
+  {
+    id: "EMP003",
+    name: "Priya Singh",
+    email: "priya.s@example.com",
+    designation: "Senior Designer",
+    department: "Design",
+    employeeType: "Full-time",
+    isSelected: false,
+  },
+  {
+    id: "EMP004",
+    name: "Vikram Reddy",
+    email: "vikram.r@example.com",
+    designation: "Marketing Consultant",
+    department: "Marketing",
+    employeeType: "Consultant",
+    isSelected: false,
+  },
 ];
 
-const PrintableGrantLetters = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
-    return (
-        <div ref={ref}>
-            {formData.grants.map(grant => {
-                const employee = formData.employees.find(e => e.id === grant.employeeId);
-                if (!employee) return null;
-                return (
-                    <div key={grant.employeeId} className="p-8 prose prose-sm break-before-page">
-                        <h2 className="text-center font-bold">GRANT LETTER</h2>
-                        <p>Date: {format(new Date(grant.grantDate), 'dd MMMM, yyyy')}</p>
-                        <p>To, {employee.name}</p>
-                        <p>Dear {employee.name},</p>
-                        <p>We are pleased to inform you that you have been granted {grant.optionsGranted} stock options under the {formData.schemeName}.</p>
-                        <p>The exercise price is ₹{grant.exercisePrice} per option.</p>
-                        <p>These options will vest over {formData.vestingPeriodYears} years with a {formData.vestingCliffMonths}-month cliff.</p>
-                        <p>Sincerely,</p>
-                        <p>The Board of Directors</p>
-                        <p>{formData.companyName}</p>
-                    </div>
-                )
-            })}
-        </div>
-    )
+const PrintableGrantLetters = React.forwardRef<
+  HTMLDivElement,
+  { formData: FormData }
+>(({ formData }, ref) => {
+  return (
+    <div ref={ref}>
+      {formData.grants.map((grant) => {
+        const employee = formData.employees.find(
+          (e) => e.id === grant.employeeId
+        );
+        if (!employee) return null;
+        return (
+          <div key={grant.employeeId} className="p-8 prose prose-sm break-before-page">
+            <h2 className="text-center font-bold">GRANT LETTER</h2>
+            <p>Date: {format(new Date(grant.grantDate), "dd MMMM, yyyy")}</p>
+            <p>To, {employee.name}</p>
+            <p>Dear {employee.name},</p>
+            <p>
+              We are pleased to inform you that you have been granted{" "}
+              {grant.optionsGranted} stock options under the{" "}
+              {formData.schemeName}.
+            </p>
+            <p>The exercise price is ₹{grant.exercisePrice} per option.</p>
+            <p>
+              These options will vest over {formData.vestingPeriodYears} years
+              with a {formData.vestingCliffMonths}-month cliff.
+            </p>
+            <p>Sincerely,</p>
+            <p>The Board of Directors</p>
+            <p>{formData.companyName}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
 });
 PrintableGrantLetters.displayName = "PrintableGrantLetters";
-
 
 export default function EsopGrantWizardPage() {
   const { toast } = useToast();
@@ -176,31 +234,41 @@ export default function EsopGrantWizardPage() {
     onAfterPrint: () =>
       toast({
         title: "Documents Generated",
-        description: "Grant letters have been sent to your printer or saved as PDF.",
+        description:
+          "Grant letters have been sent to your printer or saved as PDF.",
       }),
   });
-  
+
   const handleExportCsv = () => {
-    const data = form.getValues('grants').map(grant => {
-        const employee = form.getValues('employees').find(e => e.id === grant.employeeId);
-        return {
-            "Employee Name": employee?.name,
-            "Options Granted": grant.optionsGranted,
-            "Grant Date": grant.grantDate,
-            "Exercise Price": grant.exercisePrice,
-            "Vesting Start": form.getValues('vestingStartDate'),
-            "Vesting Period (Yrs)": form.getValues('vestingPeriodYears'),
-            "Cliff (Mths)": form.getValues('vestingCliffMonths'),
-        };
+    const data = form.getValues("grants").map((grant) => {
+      const employee = form
+        .getValues("employees")
+        .find((e) => e.id === grant.employeeId);
+      return {
+        "Employee Name": employee?.name,
+        "Options Granted": grant.optionsGranted,
+        "Grant Date": grant.grantDate,
+        "Exercise Price": grant.exercisePrice,
+        "Vesting Start": form.getValues("vestingStartDate"),
+        "Vesting Period (Yrs)": form.getValues("vestingPeriodYears"),
+        "Cliff (Mths)": form.getValues("vestingCliffMonths"),
+      };
     });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Vesting Schedule");
-    XLSX.writeFile(workbook, `Vesting_Schedule_${form.getValues('schemeName').replace(/\\s+/g, '_')}.xlsx`);
-    toast({ title: "Export Successful", description: "The vesting schedule has been downloaded." });
+    XLSX.writeFile(
+      workbook,
+      `Vesting_Schedule_${form
+        .getValues("schemeName")
+        .replace(/\s+/g, "_")}.xlsx`
+    );
+    toast({
+      title: "Export Successful",
+      description: "The vesting schedule has been downloaded.",
+    });
   };
-
 
   const processStep = async () => {
     setStep((prev) => prev + 1);
@@ -454,21 +522,21 @@ export default function EsopGrantWizardPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Vesting Frequency (Post-Cliff)</FormLabel>
-                        <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                        >
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
-                            <SelectTrigger>
+                          <SelectTrigger>
                             <SelectValue />
-                            </SelectTrigger>
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            <SelectItem value="Monthly">Monthly</SelectItem>
-                            <SelectItem value="Quarterly">Quarterly</SelectItem>
-                            <SelectItem value="Annually">Annually</SelectItem>
+                          <SelectItem value="Monthly">Monthly</SelectItem>
+                          <SelectItem value="Quarterly">Quarterly</SelectItem>
+                          <SelectItem value="Annually">Annually</SelectItem>
                         </SelectContent>
-                        </Select>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -489,7 +557,7 @@ export default function EsopGrantWizardPage() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Step 5: Exercise & Expiry</CardTitle>
+              <CardTitle>Step 5: Exercise &amp; Expiry</CardTitle>
               <CardDescription>
                 Define rules for when and how employees can exercise their
                 vested options.
@@ -537,7 +605,7 @@ export default function EsopGrantWizardPage() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Step 6: Review & Confirmation</CardTitle>
+              <CardTitle>Step 6: Review &amp; Confirmation</CardTitle>
               <CardDescription>
                 Review the consolidated summary of the ESOP grant.
               </CardDescription>
@@ -577,7 +645,7 @@ export default function EsopGrantWizardPage() {
                 <ArrowLeft className="mr-2" /> Back
               </Button>
               <Button type="button" onClick={processStep}>
-                Confirm & Proceed <Check className="ml-2" />
+                Confirm &amp; Proceed <Check className="ml-2" />
               </Button>
             </CardFooter>
           </Card>
@@ -595,15 +663,15 @@ export default function EsopGrantWizardPage() {
             </CardHeader>
             <CardFooter className="justify-center gap-4">
               <Button onClick={handlePrint}>
-                <Printer className="mr-2" /> Generate & Email Grant Letters
+                <FileDown className="mr-2" /> Download Grant Letters (PDF)
               </Button>
               <Button variant="outline" onClick={handleExportCsv}>
                 <FileDown className="mr-2" /> Export Vesting Schedule (CSV)
               </Button>
             </CardFooter>
-             {/* This div is only for the print job, it's not visible on screen */}
+            {/* This div is only for the print job, it's not visible on screen */}
             <div className="hidden">
-                 <PrintableGrantLetters ref={printRef} formData={form.getValues()} />
+              <PrintableGrantLetters ref={printRef} formData={form.getValues()} />
             </div>
           </Card>
         );
