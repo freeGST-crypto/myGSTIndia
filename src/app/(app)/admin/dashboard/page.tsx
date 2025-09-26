@@ -206,7 +206,9 @@ export default function AdminDashboardPage() {
                     <SelectContent>
                         <SelectItem value="business">Business</SelectItem>
                         <SelectItem value="professional">Professional</SelectItem>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                        {userRole === 'super_admin' && (
+                            <SelectItem value="super_admin">Super Admin</SelectItem>
+                        )}
                     </SelectContent>
                 </Select>
               </div>
