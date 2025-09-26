@@ -272,6 +272,14 @@ const CollapsibleMenuItem = ({ item, pathname }: { item: any, pathname: string }
   );
 };
 
+const quickHelpQuestions = [
+    { question: "How do I create an invoice?", href: "/resources/knowledge-base/billing" },
+    { question: "Where do I see my GST liability?", href: "/resources/knowledge-base/gst-filings" },
+    { question: "How to reconcile ITC?", href: "/reconciliation" },
+    { question: "What is a Journal Voucher?", href: "/resources/knowledge-base/accounting" },
+    { question: "How do I export my reports?", href: "/resources/knowledge-base/dashboard" },
+];
+
 function MainLayout({
   children,
 }: Readonly<{
@@ -377,10 +385,19 @@ function MainLayout({
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-             <div className="border-t border-sidebar-border p-4 space-y-4">
-                 <h4 className="font-semibold text-sm">Need Help?</h4>
-                 <p className="text-xs text-sidebar-foreground/70">Our support team is here to assist you.</p>
-                  <Button asChild className="w-full" variant="secondary">
+             <div className="border-t border-sidebar-border p-4 space-y-2">
+                 <h4 className="font-semibold text-sm px-2">Quick Help</h4>
+                 <div className="space-y-1">
+                    {quickHelpQuestions.map((item) => (
+                        <Link key={item.question} href={item.href} passHref>
+                             <Button variant="ghost" className="w-full justify-start text-xs h-auto py-1.5 px-2">
+                                {item.question}
+                            </Button>
+                        </Link>
+                    ))}
+                 </div>
+                 <Separator className="my-2 bg-sidebar-border" />
+                 <Button asChild className="w-full" variant="secondary">
                      <Link href="/contact">Contact Support</Link>
                   </Button>
             </div>
