@@ -54,7 +54,6 @@ export function FinancialSummaryChart() {
 
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.id || !voucher.date) return;
-        // Directly create Date object from YYYY-MM-DD string, avoiding parseISO issues with timezones.
         const [year, month, day] = voucher.date.split('-').map(Number);
         const voucherDate = new Date(year, month - 1, day);
         
