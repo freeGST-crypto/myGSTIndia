@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,7 +17,18 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDescription } from "@/components/ui/form";
-import { ArrowLeft, ArrowRight, Printer, PlusCircle, Trash2, Check, UserCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  PlusCircle,
+  Trash2,
+  Printer,
+  Wand2,
+  Loader2,
+  Check,
+  UserCheck,
+  FileDown,
+} from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
