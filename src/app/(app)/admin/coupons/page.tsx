@@ -1,6 +1,10 @@
+
 "use client";
 
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Card,
   CardContent,
@@ -34,19 +38,25 @@ import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { servicePricing } from "@/lib/on-demand-pricing";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-type Coupon = {
-  id: string;
-  code: string;
-  type: "percentage" | "fixed";
-  value: number;
-  status: "Active" | "Expired" | "Inactive";
-  expiryDate: Date;
-  appliesTo: {
-    subscriptions: ("business" | "professional")[];
-    services: string[];
-  };
-};
+
+const couponSchema = z.object({
+  code: z.string().min(3, "Code must be at least 3 characters.").max(20),
+  type: z.enum(["percentage", "fixed"]),
+  value: z.coerce.number().positive("Value must be a positive number."),
+  expiryDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Expiry date is required." }),
+  appliesTo: z.object({
+    subscriptions: z.array(z.string()),
+    services: z.array(z.string()),
+  }).refine(data => data.subscriptions.length > 0 || data.services.length > 0, {
+      message: "Coupon must apply to at least one subscription or service."
+  })
+});
+
+type Coupon = z.infer<typeof couponSchema> & { id: string, status: "Active" | "Expired" | "Inactive" };
+type CouponFormValues = z.infer<typeof couponSchema>;
 
 const initialCoupons: Coupon[] = [
   {
@@ -55,7 +65,7 @@ const initialCoupons: Coupon[] = [
     type: "percentage",
     value: 10,
     status: "Active",
-    expiryDate: new Date(2024, 11, 31),
+    expiryDate: new Date(2024, 11, 31).toISOString(),
     appliesTo: { subscriptions: ["business", "professional"], services: [] },
   },
   {
@@ -64,33 +74,65 @@ const initialCoupons: Coupon[] = [
     type: "fixed",
     value: 500,
     status: "Active",
-    expiryDate: new Date(2024, 8, 30),
+    expiryDate: new Date(2024, 8, 30).toISOString(),
     appliesTo: { subscriptions: [], services: ["CMA_REPORT"] },
   },
   {
     id: "C-003",
-    code: "OLDOFFER",
+    code: "GSTSPECIAL18",
+    type: "percentage",
+    value: 18,
+    status: "Active",
+    expiryDate: new Date(2024, 7, 31).toISOString(),
+    appliesTo: { subscriptions: [], services: ["GST_NOTICE"] },
+  },
+   {
+    id: "C-004",
+    code: "OLD20",
     type: "percentage",
     value: 20,
     status: "Expired",
-    expiryDate: new Date(2023, 11, 31),
+    expiryDate: new Date(2023, 11, 31).toISOString(),
     appliesTo: { subscriptions: ["business"], services: [] },
   },
 ];
 
 const allServices = Object.values(servicePricing).flat();
+const subscriptionPlans = [
+    { id: "business", label: "Business Plan Subscription" },
+    { id: "professional", label: "Professional Plan Subscription" },
+]
 
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState(initialCoupons);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleAction = (action: string, couponId: string) => {
-    toast({
-      title: `Action: ${action}`,
-      description: `This would ${action.toLowerCase()} coupon ${couponId}. This is a placeholder.`,
-    });
-  };
+  const form = useForm<CouponFormValues>({
+    resolver: zodResolver(couponSchema),
+    defaultValues: {
+        code: "",
+        type: "percentage",
+        value: 10,
+        expiryDate: new Date().toISOString().split("T")[0],
+        appliesTo: {
+            subscriptions: [],
+            services: []
+        }
+    }
+  })
+
+  const onSubmit = (data: CouponFormValues) => {
+    const newCoupon: Coupon = {
+        ...data,
+        id: `C-${Date.now().toString().slice(-4)}`,
+        status: new Date(data.expiryDate) < new Date() ? 'Expired' : 'Active',
+    };
+    setCoupons(prev => [newCoupon, ...prev]);
+    toast({ title: "Coupon Created", description: `Coupon code ${newCoupon.code} has been added.`});
+    setIsDialogOpen(false);
+    form.reset();
+  }
 
   const getStatusBadge = (status: Coupon['status']) => {
     switch (status) {
@@ -104,6 +146,17 @@ export default function CouponsPage() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+  
+  const getApplicabilityText = (appliesTo: Coupon['appliesTo']) => {
+    const subCount = appliesTo.subscriptions.length;
+    const serviceCount = appliesTo.services.length;
+
+    if (subCount > 0 && serviceCount > 0) return `${subCount} sub(s) & ${serviceCount} service(s)`;
+    if (subCount > 0) return `${subCount} subscription(s)`;
+    if (serviceCount > 0) return `${serviceCount} service(s)`;
+    return "None";
+  };
+
 
   return (
     <div className="space-y-8">
@@ -111,7 +164,7 @@ export default function CouponsPage() {
         <h1 className="text-3xl font-bold">Coupons & Discounts</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => form.reset()}>
               <PlusCircle className="mr-2" />
               Create Coupon
             </Button>
@@ -121,51 +174,80 @@ export default function CouponsPage() {
                 <DialogTitle>Create New Coupon</DialogTitle>
                 <DialogDescription>Define a new discount code for your users.</DialogDescription>
             </DialogHeader>
-            <div className="py-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Coupon Code</Label>
-                        <Input placeholder="e.g., LAUNCH20" />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                       <FormField control={form.control} name="code" render={({ field }) => ( <FormItem><FormLabel>Coupon Code</FormLabel><FormControl><Input placeholder="e.g., LAUNCH20" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                       <FormField control={form.control} name="expiryDate" render={({ field }) => ( <FormItem><FormLabel>Expiry Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </div>
-                     <div className="space-y-2">
-                        <Label>Expiry Date</Label>
-                        <Input type="date" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="type" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Discount Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="percentage">Percentage</SelectItem>
+                                        <SelectItem value="fixed">Fixed Amount</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </FormItem>
+                         )}/>
+                         <FormField control={form.control} name="value" render={({ field }) => ( <FormItem><FormLabel>Value</FormLabel><FormControl><Input type="number" placeholder="e.g., 10 (for 10%) or 500 (for ₹500)" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Discount Type</Label>
-                         <Select defaultValue="percentage">
-                            <SelectTrigger><SelectValue/></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="percentage">Percentage</SelectItem>
-                                <SelectItem value="fixed">Fixed Amount</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Value</Label>
-                        <Input type="number" placeholder="e.g., 10 (for 10%) or 500 (for ₹500)" />
-                    </div>
-                </div>
-                 <div className="space-y-2">
-                    <Label>Applicable To</Label>
-                    <div className="p-4 border rounded-md space-y-4 max-h-48 overflow-y-auto">
-                        <div className="flex items-center space-x-2"><Checkbox id="sub-biz"/><Label htmlFor="sub-biz">Business Plan Subscription</Label></div>
-                        <div className="flex items-center space-x-2"><Checkbox id="sub-pro"/><Label htmlFor="sub-pro">Professional Plan Subscription</Label></div>
-                        <h4 className="font-semibold pt-2 border-t">On-Demand Services</h4>
-                        {allServices.map(service => (
-                             <div key={service.id} className="flex items-center space-x-2">
-                                <Checkbox id={`service-${service.id}`}/>
-                                <Label htmlFor={`service-${service.id}`}>{service.name}</Label>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button onClick={() => {toast({title: "Coupon Created"}); setIsDialogOpen(false);}}>Save Coupon</Button>
-            </DialogFooter>
+                     <FormField
+                        control={form.control}
+                        name="appliesTo"
+                        render={() => (
+                             <FormItem>
+                                <FormLabel>Applicable To</FormLabel>
+                                <ScrollArea className="h-60 w-full rounded-md border p-4">
+                                     <h4 className="font-semibold mb-2">Subscriptions</h4>
+                                     {subscriptionPlans.map(plan => (
+                                         <FormField
+                                            key={plan.id}
+                                            control={form.control}
+                                            name="appliesTo.subscriptions"
+                                            render={({ field }) => (
+                                                <FormItem key={plan.id} className="flex items-center space-x-2 my-2">
+                                                    <FormControl>
+                                                        <Checkbox checked={field.value?.includes(plan.id)} onCheckedChange={checked => {
+                                                            return checked ? field.onChange([...field.value, plan.id]) : field.onChange(field.value?.filter(v => v !== plan.id))
+                                                        }}/>
+                                                    </FormControl>
+                                                    <FormLabel className="font-normal">{plan.label}</FormLabel>
+                                                </FormItem>
+                                            )}
+                                         />
+                                     ))}
+                                      <h4 className="font-semibold pt-4 mt-4 border-t">On-Demand Services</h4>
+                                     {allServices.map(service => (
+                                          <FormField
+                                            key={service.id}
+                                            control={form.control}
+                                            name="appliesTo.services"
+                                            render={({ field }) => (
+                                                <FormItem key={service.id} className="flex items-center space-x-2 my-2">
+                                                    <FormControl>
+                                                        <Checkbox checked={field.value?.includes(service.id)} onCheckedChange={checked => {
+                                                            return checked ? field.onChange([...field.value, service.id]) : field.onChange(field.value?.filter(v => v !== service.id))
+                                                        }}/>
+                                                    </FormControl>
+                                                    <FormLabel className="font-normal">{service.name}</FormLabel>
+                                                </FormItem>
+                                            )}
+                                         />
+                                     ))}
+                                </ScrollArea>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <DialogFooter>
+                        <Button type="submit">Save Coupon</Button>
+                    </DialogFooter>
+                </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
@@ -180,6 +262,7 @@ export default function CouponsPage() {
               <TableRow>
                 <TableHead>Code</TableHead>
                 <TableHead>Value</TableHead>
+                <TableHead>Applies To</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Expires On</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -193,8 +276,9 @@ export default function CouponsPage() {
                       {coupon.type === 'percentage' ? <Percent className="size-4 text-muted-foreground"/> : <IndianRupee className="size-4 text-muted-foreground"/>}
                       {coupon.value}{coupon.type === 'percentage' && '%'}
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{getApplicabilityText(coupon.appliesTo)}</TableCell>
                   <TableCell>{getStatusBadge(coupon.status)}</TableCell>
-                  <TableCell>{format(coupon.expiryDate, 'dd MMM, yyyy')}</TableCell>
+                  <TableCell>{format(new Date(coupon.expiryDate), 'dd MMM, yyyy')}</TableCell>
                   <TableCell className="text-right">
                      <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -203,15 +287,15 @@ export default function CouponsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => handleAction("Edit", coupon.id)}><Edit className="mr-2"/>Edit Coupon</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", coupon.id)}><Trash2 className="mr-2"/>Delete</DropdownMenuItem>
+                        <DropdownMenuItem><Edit className="mr-2"/>Edit Coupon</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2"/>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No coupons created yet.</TableCell>
+                  <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No coupons created yet.</TableCell>
                 </TableRow>
               )}
             </TableBody>
