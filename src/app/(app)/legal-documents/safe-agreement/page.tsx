@@ -97,7 +97,11 @@ export default function SafeAgreementPage() {
             <CardHeader><CardTitle>Step 1: Parties & Investment</CardTitle><CardDescription>Enter details about the company and the investor.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
                 <FormField control={form.control} name="companyName" render={({ field }) => ( <FormItem><FormLabel>Company Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                <FormField control={form.control} name="companyAddress" render={({ field }) => ( <FormItem><FormLabel>Company Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                <Separator/>
                 <FormField control={form.control} name="investorName" render={({ field }) => ( <FormItem><FormLabel>Investor Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                <FormField control={form.control} name="investorAddress" render={({ field }) => ( <FormItem><FormLabel>Investor Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                <Separator/>
                  <FormField control={form.control} name="agreementDate" render={({ field }) => ( <FormItem className="max-w-xs"><FormLabel>Agreement Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
             </CardContent>
             <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
