@@ -41,7 +41,7 @@ const initialTiers = [
     id: "business",
     name: "Business",
     priceMonthly: 199,
-    priceAnnual: 1910, // Approx 20% discount from 199*12=2388
+    priceAnnual: 1999,
     description: "For businesses needing comprehensive accounting, financial reporting, and tax compliance.",
     features: [
       { text: "Unlimited Invoices & Purchases", included: true },
@@ -58,7 +58,7 @@ const initialTiers = [
     id: "professional",
     name: "Professional",
     priceMonthly: 499,
-    priceAnnual: 4790, // Approx 20% discount from 499*12=5988
+    priceAnnual: 4999,
     description: "For CAs, tax consultants, and firms managing multiple clients.",
     features: [
       { text: "All Business Features", included: true },
