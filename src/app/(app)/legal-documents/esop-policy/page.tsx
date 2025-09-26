@@ -37,6 +37,8 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 
 
 const employeeSchema = z.object({
@@ -57,6 +59,8 @@ const grantSchema = z.object({
 });
 
 const formSchema = z.object({
+    companyName: z.string().min(3, "Company name is required."),
+    schemeName: z.string().min(3, "Scheme name is required (e.g., 'ESOP Scheme 2024')."),
     employees: z.array(employeeSchema),
     grants: z.array(grantSchema),
     vestingStartDate: z.string().refine((val) => !isNaN(Date.parse(val))),
@@ -86,6 +90,8 @@ export default function EsopGrantWizardPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+        companyName: "Acme Innovations Pvt. Ltd.",
+        schemeName: "ESOP Scheme 2024",
         employees: mockEmployees,
         grants: mockEmployees.filter(e => e.isSelected).map(e => ({
             employeeId: e.id,
@@ -104,45 +110,60 @@ export default function EsopGrantWizardPage() {
   const watchEmployees = form.watch("employees");
   const selectedEmployees = watchEmployees.filter(e => e.isSelected);
 
-  const { fields, update } = useFieldArray({
+  const { fields, update, replace } = useFieldArray({
       control: form.control,
       name: "grants"
   });
 
   // Sync grants array with selected employees
-  useState(() => {
+   useEffect(() => {
     const selectedIds = new Set(selectedEmployees.map(e => e.id));
-    const currentGrantIds = new Set(form.getValues('grants').map(g => g.employeeId));
+    const currentGrants = form.getValues('grants');
+    
+    const newGrants = selectedEmployees.map(emp => {
+      const existingGrant = currentGrants.find(g => g.employeeId === emp.id);
+      return existingGrant || {
+        employeeId: emp.id,
+        optionsGranted: 1000,
+        exercisePrice: 10,
+        grantDate: new Date().toISOString().split('T')[0],
+      };
+    });
 
-    const toAdd = selectedEmployees.filter(e => !currentGrantIds.has(e.id));
-    const toRemove = Array.from(currentGrantIds).filter(id => !selectedIds.has(id));
-
-    if (toRemove.length > 0) {
-        const grants = form.getValues('grants');
-        const newGrants = grants.filter(g => !toRemove.includes(g.employeeId));
-        form.setValue('grants', newGrants);
-    }
-    if (toAdd.length > 0) {
-        const grants = form.getValues('grants');
-        const newGrants = toAdd.map(e => ({
-            employeeId: e.id,
-            optionsGranted: 1000,
-            exercisePrice: 10,
-            grantDate: new Date().toISOString().split('T')[0],
-        }));
-        form.setValue('grants', [...grants, ...newGrants]);
-    }
-  });
+    replace(newGrants);
+  }, [selectedEmployees.length, form.getValues, replace]);
 
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
+    onAfterPrint: () => toast({ title: "Documents Generated", description: "Grant letters have been sent to your printer or saved as PDF." }),
   });
+  
+  const handleExportCsv = () => {
+    const data = form.getValues('grants').map(grant => {
+        const employee = form.getValues('employees').find(e => e.id === grant.employeeId);
+        return {
+            "Employee Name": employee?.name,
+            "Options Granted": grant.optionsGranted,
+            "Grant Date": grant.grantDate,
+            "Exercise Price": grant.exercisePrice,
+            "Vesting Start": form.getValues('vestingStartDate'),
+            "Vesting Period (Yrs)": form.getValues('vestingPeriodYears'),
+            "Cliff (Mths)": form.getValues('vestingCliffMonths'),
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Vesting Schedule");
+    XLSX.writeFile(workbook, `Vesting_Schedule_${form.getValues('schemeName').replace(' ', '_')}.xlsx`);
+    toast({ title: "Export Successful", description: "The vesting schedule has been downloaded." });
+  };
 
   const processStep = async () => {
     // Validation logic can be added here per step if needed
     setStep(prev => prev + 1);
-    if (step < 6) {
+    if (step < 7) {
       toast({ title: `Step ${step} Completed`, description: `Proceeding to step ${step + 1}.` });
     }
   };
@@ -151,10 +172,21 @@ export default function EsopGrantWizardPage() {
 
   const renderStep = () => {
     switch (step) {
-      case 1:
+        case 1:
+            return (
+                <Card>
+                    <CardHeader><CardTitle>Step 1: Scheme Details</CardTitle><CardDescription>Define the basic details of your company and the ESOP scheme.</CardDescription></CardHeader>
+                    <CardContent className="space-y-4">
+                        <FormField control={form.control} name="companyName" render={({ field }) => ( <FormItem><FormLabel>Company Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="schemeName" render={({ field }) => ( <FormItem><FormLabel>ESOP Scheme Name</FormLabel><FormControl><Input placeholder="e.g., ESOP Scheme 2024" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    </CardContent>
+                    <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+                </Card>
+            )
+      case 2:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 1: Employee / Beneficiary Selection</CardTitle><CardDescription>Select the employees who will receive the ESOP grant.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 2: Employee / Beneficiary Selection</CardTitle><CardDescription>Select the employees who will receive the ESOP grant.</CardDescription></CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader><TableRow><TableHead className="w-10"></TableHead><TableHead>Name</TableHead><TableHead>Designation</TableHead><TableHead>Type</TableHead></TableRow></TableHeader>
@@ -165,8 +197,7 @@ export default function EsopGrantWizardPage() {
                                     const employees = form.getValues('employees');
                                     employees[index].isSelected = !!checked;
                                     form.setValue('employees', employees, {shouldDirty: true});
-                                    // Trigger re-render
-                                    form.trigger('employees');
+                                    form.trigger('employees'); // Trigger re-render to update dependent state
                                 }} /></TableCell>
                                 <TableCell>{employee.name}</TableCell>
                                 <TableCell>{employee.designation}</TableCell>
@@ -176,13 +207,13 @@ export default function EsopGrantWizardPage() {
                     </TableBody>
                 </Table>
             </CardContent>
-            <CardFooter className="justify-end"><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
-      case 2:
+      case 3:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 2: Grant Details</CardTitle><CardDescription>Define the number of options and price for each selected employee.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 3: Grant Details</CardTitle><CardDescription>Define the number of options and price for each selected employee.</CardDescription></CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>No. of Options</TableHead><TableHead>Exercise Price (₹)</TableHead><TableHead>Grant Date</TableHead></TableRow></TableHeader>
@@ -192,9 +223,9 @@ export default function EsopGrantWizardPage() {
                              return (
                                 <TableRow key={grant.employeeId}>
                                     <TableCell>{employee?.name}</TableCell>
-                                    <TableCell><Input type="number" defaultValue={grant.optionsGranted} onChange={e => update(index, {...grant, optionsGranted: Number(e.target.value)})}/></TableCell>
-                                    <TableCell><Input type="number" defaultValue={grant.exercisePrice} onChange={e => update(index, {...grant, exercisePrice: Number(e.target.value)})}/></TableCell>
-                                    <TableCell><Input type="date" defaultValue={grant.grantDate} onChange={e => update(index, {...grant, grantDate: e.target.value})}/></TableCell>
+                                    <TableCell><Input type="number" defaultValue={grant.optionsGranted} onChange={e => form.setValue(`grants.${index}.optionsGranted`, Number(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="number" defaultValue={grant.exercisePrice} onChange={e => form.setValue(`grants.${index}.exercisePrice`, Number(e.target.value))}/></TableCell>
+                                    <TableCell><Input type="date" defaultValue={grant.grantDate} onChange={e => form.setValue(`grants.${index}.grantDate`, e.target.value)}/></TableCell>
                                 </TableRow>
                              )
                          })}
@@ -204,10 +235,10 @@ export default function EsopGrantWizardPage() {
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
-      case 3:
+      case 4:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 3: Vesting Schedule</CardTitle><CardDescription>Define the schedule for earning the options.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 4: Vesting Schedule</CardTitle><CardDescription>Define the schedule for earning the options.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
                  <div className="grid md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="vestingStartDate" render={({ field }) => ( <FormItem><FormLabel>Vesting Start Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
@@ -221,10 +252,10 @@ export default function EsopGrantWizardPage() {
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
-      case 4:
+      case 5:
          return (
           <Card>
-            <CardHeader><CardTitle>Step 4: Exercise & Expiry</CardTitle><CardDescription>Define rules for when and how employees can exercise their vested options.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 5: Exercise & Expiry</CardTitle><CardDescription>Define rules for when and how employees can exercise their vested options.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
                  <FormField control={form.control} name="exerciseWindowYears" render={({ field }) => ( <FormItem><FormLabel>Exercise Window (Years)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>The period after vesting during which the employee can exercise their options.</FormDescription><FormMessage /></FormItem> )}/>
                  <FormItem><FormLabel>Method of Exercise</FormLabel><Input defaultValue="Online portal via GSTEase" /></FormItem>
@@ -233,11 +264,11 @@ export default function EsopGrantWizardPage() {
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Review <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
         );
-      case 5:
+      case 6:
         const formData = form.getValues();
         return (
           <Card>
-            <CardHeader><CardTitle>Step 5: Review & Confirmation</CardTitle><CardDescription>Review the consolidated summary of the ESOP grant.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 6: Review & Confirmation</CardTitle><CardDescription>Review the consolidated summary of the ESOP grant.</CardDescription></CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Options</TableHead><TableHead>Exercise Price</TableHead><TableHead>Vesting</TableHead></TableRow></TableHeader>
@@ -259,7 +290,7 @@ export default function EsopGrantWizardPage() {
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Confirm & Proceed <Check className="ml-2"/></Button></CardFooter>
           </Card>
         );
-       case 6:
+       case 7:
         return (
             <Card>
                 <CardHeader className="text-center items-center">
@@ -268,9 +299,29 @@ export default function EsopGrantWizardPage() {
                     <CardDescription>Your ESOP grant details are confirmed. You can now generate the grant letters and export the schedule.</CardDescription>
                 </CardHeader>
                 <CardFooter className="justify-center gap-4">
-                    <Button><Printer className="mr-2"/> Generate & Email Grant Letters</Button>
-                    <Button variant="outline"><FileDown className="mr-2"/> Export Vesting Schedule (CSV)</Button>
+                    <Button onClick={handlePrint}><Printer className="mr-2"/> Generate & Email Grant Letters</Button>
+                    <Button variant="outline" onClick={handleExportCsv}><FileDown className="mr-2"/> Export Vesting Schedule (CSV)</Button>
                 </CardFooter>
+                 <div ref={printRef} className="hidden print:block">
+                    {form.getValues('grants').map(grant => {
+                         const employee = form.getValues('employees').find(e => e.id === grant.employeeId);
+                         if (!employee) return null;
+                         return (
+                            <div key={grant.employeeId} className="p-8 prose prose-sm break-before-page">
+                                <h2 className="text-center font-bold">GRANT LETTER</h2>
+                                <p>Date: {format(new Date(grant.grantDate), 'dd MMMM, yyyy')}</p>
+                                <p>To, {employee.name}</p>
+                                <p>Dear {employee.name},</p>
+                                <p>We are pleased to inform you that you have been granted {grant.optionsGranted} stock options under the {form.getValues('schemeName')}.</p>
+                                <p>The exercise price is ₹{grant.exercisePrice} per option.</p>
+                                <p>These options will vest over {form.getValues('vestingPeriodYears')} years with a {form.getValues('vestingCliffMonths')}-month cliff.</p>
+                                <p>Sincerely,</p>
+                                <p>The Board of Directors</p>
+                                <p>{form.getValues('companyName')}</p>
+                            </div>
+                         )
+                    })}
+                </div>
             </Card>
         );
       default: return null;
