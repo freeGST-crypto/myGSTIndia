@@ -7,6 +7,7 @@ import { GstEaseLogo } from "@/components/icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const features = [
   "Quick Invoices",
