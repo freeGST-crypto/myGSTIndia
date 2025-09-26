@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GstEaseLogo } from "@/components/icons";
