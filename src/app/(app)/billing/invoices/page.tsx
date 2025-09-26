@@ -36,7 +36,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search, MessageSquare, Printer } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search, MessageSquare, Printer, FileSpreadsheet } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -318,6 +318,9 @@ export default function InvoicesPage() {
                  toast({ variant: "destructive", title: "Cannot Send Reminder", description: "Customer phone number is not available." });
             }
         }
+        else if (action === 'Ewaybill') {
+          toast({ title: "Coming Soon!", description: "E-Waybill generation will be available soon." });
+        }
         else {
             toast({
                 title: `Action: ${action}`,
@@ -466,14 +469,11 @@ export default function InvoicesPage() {
                             <DropdownMenuItem onSelect={() => handleAction('Edit', invoice)} disabled={invoice.status === 'Cancelled'}>
                               <Edit className="mr-2" /> Edit Invoice
                             </DropdownMenuItem>
+                             <DropdownMenuItem onSelect={() => handleAction('Ewaybill', invoice)} disabled={invoice.status === 'Cancelled'}>
+                              <FileSpreadsheet className="mr-2" /> Generate E-Waybill
+                            </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Remind', invoice)} disabled={invoice.status === 'Cancelled' || invoice.status === 'Paid'}>
                                 <MessageSquare className="mr-2" /> Send Reminder
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => {
-                                setSelectedInvoice(invoice);
-                                // The ShareButtons component inside the dialog will handle the actual download
-                            }}>
-                              <Download className="mr-2" /> Download PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleAction('Duplicate', invoice)}>
                               <Copy className="mr-2" /> Duplicate Invoice

@@ -70,10 +70,6 @@ export default function NdaPage() {
     });
   }, [form]);
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-  });
-
   const processStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
     switch (step) {

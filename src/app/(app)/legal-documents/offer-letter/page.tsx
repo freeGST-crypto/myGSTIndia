@@ -81,17 +81,33 @@ export default function OfferLetterPage() {
           <CardContent>
             <Form {...form}>
               <form className="space-y-4">
-                 <FormField control={form.control} name="candidateName" render={({ field }) => (<FormItem><FormLabel>Candidate Name</FormLabel><FormControl><Input placeholder="e.g., Rohan Sharma" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                 <FormField control={form.control} name="candidateAddress" render={({ field }) => (<FormItem><FormLabel>Candidate Address</FormLabel><FormControl><Input placeholder="e.g., Mumbai, India" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                 <FormField control={form.control} name="jobTitle" render={({ field }) => (<FormItem><FormLabel>Job Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                 <FormField control={form.control} name="annualCtc" render={({ field }) => (<FormItem><FormLabel>Annual CTC (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                 <FormField control={form.control} name="candidateName" render={({ field }) => (
+                    <FormItem><FormLabel>Candidate Name</FormLabel><FormControl><Input placeholder="e.g., Rohan Sharma" {...field} /></FormControl><FormMessage /></FormItem>
+                  )}/>
+                 <FormField control={form.control} name="candidateAddress" render={({ field }) => (
+                    <FormItem><FormLabel>Candidate Address</FormLabel><FormControl><Input placeholder="e.g., Mumbai, India" {...field} /></FormControl><FormMessage /></FormItem>
+                  )}/>
+                 <FormField control={form.control} name="jobTitle" render={({ field }) => (
+                    <FormItem><FormLabel>Job Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  )}/>
+                 <FormField control={form.control} name="annualCtc" render={({ field }) => (
+                    <FormItem><FormLabel>Annual CTC (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                  )}/>
                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="joiningDate" render={({ field }) => (<FormItem><FormLabel>Proposed Joining Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                    <FormField control={form.control} name="reportingManager" render={({ field }) => (<FormItem><FormLabel>Reporting To</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                    <FormField control={form.control} name="joiningDate" render={({ field }) => (
+                        <FormItem><FormLabel>Proposed Joining Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="reportingManager" render={({ field }) => (
+                        <FormItem><FormLabel>Reporting To</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
                  </div>
                  <div className="grid sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="signerName" render={({ field }) => (<FormItem><FormLabel>Signer's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                    <FormField control={form.control} name="signerTitle" render={({ field }) => (<FormItem><FormLabel>Signer's Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                    <FormField control={form.control} name="signerName" render={({ field }) => (
+                        <FormItem><FormLabel>Signer's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
+                    <FormField control={form.control} name="signerTitle" render={({ field }) => (
+                        <FormItem><FormLabel>Signer's Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )}/>
                  </div>
               </form>
             </Form>
@@ -147,7 +163,7 @@ export default function OfferLetterPage() {
                     <ShareButtons 
                         contentRef={printRef}
                         fileName={`Offer_Letter_${formData.candidateName}`}
-                        whatsappMessage={`Hi ${formData.candidateName}, please find attached your offer letter from ${formData.companyName}.`}
+                        whatsappMessage={`Hi ${formData.candidateName}, please find the attached your offer letter from ${formData.companyName}.`}
                     />
                 </CardFooter>
             </Card>

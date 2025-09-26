@@ -17,12 +17,19 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, ArrowRight, FileDown, Printer } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  FileDown,
+  Printer,
+} from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
+
 
 const formSchema = z.object({
   clientName: z.string().min(3, "Client/Company name is required."),
@@ -74,9 +81,6 @@ export default function ConsultantAgreementPage() {
     });
   }, [form]);
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-  });
 
   const processStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
@@ -108,6 +112,22 @@ export default function ConsultantAgreementPage() {
   };
 
   const handleBack = () => setStep(prev => prev - 1);
+  
+  const numberToWords = (num: number): string => {
+    const a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
+    const b = ['', '', 'twenty','thirty','forty','fifty', 'sixty','seventy','eighty','ninety'];
+    if (!num) return 'Zero';
+    if ((num.toString()).length > 9) return 'overflow';
+    const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return '';
+    let str = '';
+    str += (parseInt(n[1]) != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+    str += (parseInt(n[2]) != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+    str += (parseInt(n[3]) != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+    str += (parseInt(n[4]) != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+    str += (parseInt(n[5]) != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+    return str.trim().charAt(0).toUpperCase() + str.trim().slice(1) + " Only";
+}
 
   const renderStep = () => {
     switch (step) {
@@ -167,6 +187,7 @@ export default function ConsultantAgreementPage() {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
         const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
+        const whatsappMessage = `Please review the draft Consultant Agreement between ${formData.clientName} and ${formData.consultantName}.`;
 
         return (
              <Card>
@@ -222,7 +243,11 @@ export default function ConsultantAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                   <ShareButtons
+                    contentRef={printRef}
+                    fileName={`Consultant_Agreement_${formData.consultantName}`}
+                    whatsappMessage={whatsappMessage}
+                  />
                 </CardFooter>
             </Card>
         );
