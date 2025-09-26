@@ -26,6 +26,7 @@ import { useDocumentData } from "react-firebase-hooks/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useRoleSimulator } from "@/context/role-simulator-context";
+import { Label } from "@/components/ui/label";
 
 const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
