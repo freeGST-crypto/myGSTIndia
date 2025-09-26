@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -43,8 +43,9 @@ import { format } from 'date-fns';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { auth, db } from '@/lib/firebase';
-import { doc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 
+const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
 export const sampleUsersList = [
     {
@@ -93,24 +94,17 @@ export const sampleUsersList = [
     },
 ];
 
-
 type UserType = typeof sampleUsersList[0];
-
 
 export default function UserManagementPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState(sampleUsersList);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
   
   const [user] = useAuthState(auth);
-  const userDocRef = user ? doc(db, 'users', user.uid) : null;
-  const [userData, loading, error] = useDocumentData(userDocRef);
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin" /></div>
-  }
   
-  const currentUserRole = userData?.userType;
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
 
   const handleSwitchWorkspace = (userName: string) => {
     toast({
@@ -121,9 +115,31 @@ export default function UserManagementPage() {
   };
   
   const handleSelectUser = (userId: string) => {
-      const user = users.find(u => u.id === userId);
-      setSelectedUser(user || null);
-  }
+      const userToSelect = users.find(u => u.id === userId);
+      if (userToSelect) {
+        setSelectedUser(userToSelect);
+        setSelectedRole(userToSelect.role);
+      }
+  };
+
+  const handleSaveChanges = () => {
+    if (!selectedUser) return;
+    
+    // Simulate updating the user in the main list
+    setUsers(prevUsers => 
+      prevUsers.map(u => 
+        u.id === selectedUser.id ? { ...u, role: selectedRole } : u
+      )
+    );
+
+    // In a real app, you would update Firestore here
+    // const userDocRef = doc(db, 'users', selectedUser.firebaseId); 
+    // await updateDoc(userDocRef, { userType: selectedRole });
+
+    toast({ title: "User Updated", description: `${selectedUser.name}'s role has been changed to ${selectedRole}.` });
+    setSelectedUser(null);
+  };
+
 
   const handleExport = () => {
     const dataToExport = users.map(user => ({
@@ -245,16 +261,16 @@ export default function UserManagementPage() {
             <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label>Name</Label>
-                    <Input defaultValue={selectedUser.name}/>
+                    <Input defaultValue={selectedUser.name} readOnly/>
                 </div>
                  <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input defaultValue={selectedUser.phone}/>
+                    <Input defaultValue={selectedUser.phone} readOnly/>
                 </div>
-                {currentUserRole === 'super_admin' && (
+                {isSuperAdmin && (
                     <div className="space-y-2">
                         <Label>Role (Super Admin Only)</Label>
-                        <Select defaultValue={selectedUser.role} >
+                        <Select value={selectedRole} onValueChange={setSelectedRole} >
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
@@ -269,21 +285,21 @@ export default function UserManagementPage() {
                 <Separator/>
                 <div className="space-y-2">
                     <Label>GSTIN</Label>
-                    <Input defaultValue={selectedUser.gstin}/>
+                    <Input defaultValue={selectedUser.gstin} readOnly/>
                 </div>
                 <div className="space-y-2">
                     <Label>PAN</Label>
-                    <Input defaultValue={selectedUser.pan}/>
+                    <Input defaultValue={selectedUser.pan} readOnly/>
                 </div>
                 <Separator/>
                 <div className="space-y-2">
                     <Label>Billing Address</Label>
-                    <Input placeholder="Address Line 1" defaultValue={selectedUser.address.line1}/>
-                    <Input placeholder="City" defaultValue={selectedUser.address.city}/>
-                    <Input placeholder="State" defaultValue={selectedUser.address.state}/>
-                    <Input placeholder="Pincode" defaultValue={selectedUser.address.pincode}/>
+                    <Input placeholder="Address Line 1" defaultValue={selectedUser.address.line1} readOnly/>
+                    <Input placeholder="City" defaultValue={selectedUser.address.city} readOnly/>
+                    <Input placeholder="State" defaultValue={selectedUser.address.state} readOnly/>
+                    <Input placeholder="Pincode" defaultValue={selectedUser.address.pincode} readOnly/>
                 </div>
-                <Button className="w-full" onClick={() => toast({ title: "User Updated", description: "User details have been saved."})}>
+                <Button className="w-full" onClick={handleSaveChanges}>
                     Save Changes
                 </Button>
             </CardContent>
