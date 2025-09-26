@@ -54,6 +54,7 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { Fab } from "@/components/layout/fab";
 import { RoleSimulatorProvider, useRoleSimulator } from "@/context/role-simulator-context";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
@@ -385,21 +386,38 @@ function MainLayout({
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-             <div className="border-t border-sidebar-border p-4 space-y-2">
-                 <h4 className="font-semibold text-sm px-2">Quick Help</h4>
-                 <div className="space-y-1">
-                    {quickHelpQuestions.map((item) => (
-                        <Link key={item.question} href={item.href} passHref>
-                             <Button variant="ghost" className="w-full justify-start text-xs h-auto py-1.5 px-2">
-                                {item.question}
-                            </Button>
-                        </Link>
-                    ))}
-                 </div>
-                 <Separator className="my-2 bg-sidebar-border" />
-                 <Button asChild className="w-full" variant="secondary">
-                     <Link href="/contact">Contact Support</Link>
+            <div className="border-t border-sidebar-border p-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <MessageSquare className="mr-2" />
+                    Help & Support
                   </Button>
+                </PopoverTrigger>
+                <PopoverContent className="mb-2" side="top" align="start">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Quick Help</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Find answers to common questions.
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                       {quickHelpQuestions.map((item) => (
+                          <Link key={item.question} href={item.href} passHref>
+                              <Button variant="link" className="h-auto p-0 text-sm w-full justify-start text-left text-muted-foreground hover:text-primary">
+                                  {item.question}
+                              </Button>
+                          </Link>
+                      ))}
+                    </div>
+                    <Separator />
+                     <Button asChild className="w-full" variant="secondary">
+                        <Link href="/contact">Contact Support</Link>
+                      </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </SidebarFooter>
         </Sidebar>
