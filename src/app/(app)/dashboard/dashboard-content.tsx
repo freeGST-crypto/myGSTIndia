@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useContext, memo } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { DollarSign, IndianRupee, CreditCard, Users, Search, Zap } from "lucide-react";
+import { IndianRupee, CreditCard, Search, Zap } from "lucide-react";
 import { FinancialSummaryChart } from "@/components/dashboard/financial-summary-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import Link from "next/link";
@@ -18,8 +18,8 @@ import { allAccounts } from "@/lib/accounts";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "../billing/invoices/page";
-import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
+import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '₹0.00';
@@ -100,7 +100,7 @@ function DashboardContent() {
         .slice(0, 5)
         .map(v => ({
             invoice: v.id,
-            customer: v.narration.replace("Sale to ", "").split(" via")[0],
+            customer: v.narration.replace("Sale of ", "").split(" to ")[0],
             amount: formatCurrency(v.amount),
             status: "Pending",
         }));
@@ -141,7 +141,7 @@ function DashboardContent() {
               <StatCard 
                 title="GST Payable"
                 value={formatCurrency(gstPayable)}
-                icon={DollarSign}
+                icon={IndianRupee}
                 loading={journalLoading}
               />
             </Link>
