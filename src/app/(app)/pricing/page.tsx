@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Check, X, Edit, Save, IndianRupee } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -77,9 +77,9 @@ export default function PricingPage() {
   const [tiers, setTiers] = useState(initialTiers);
   const [editingTier, setEditingTier] = useState<string | null>(null);
   const { toast } = useToast();
-  const { simulatedRole } = useRoleSimulator(); // Using the role from context
+  const { simulatedRole } = useRoleSimulator();
   const isSuperAdmin = simulatedRole === 'super_admin';
-  
+
   const handleEdit = (tierId: string) => {
     setEditingTier(tierId);
   };
@@ -99,6 +99,17 @@ export default function PricingPage() {
           }
           return tier;
       }))
+  }
+  
+  const handleDiscountChange = (tierId: string, discount: number) => {
+     setTiers(prev => prev.map(tier => {
+          if (tier.id === tierId) {
+              const fullAnnualPrice = tier.priceMonthly * 12;
+              const newAnnualPrice = Math.round(fullAnnualPrice * (1 - discount / 100));
+              return { ...tier, priceAnnual: newAnnualPrice };
+          }
+          return tier;
+      }));
   }
 
   return (
@@ -128,6 +139,10 @@ export default function PricingPage() {
           const price = billingCycle === 'monthly' ? tier.priceMonthly : tier.priceAnnual;
           const priceSuffix = tier.priceMonthly > 0 ? `/${billingCycle === 'monthly' ? 'month' : 'year'}` : '';
 
+          const annualDiscount = tier.priceMonthly > 0
+            ? Math.round(100 - (tier.priceAnnual / (tier.priceMonthly * 12)) * 100)
+            : 0;
+
           return (
           <Card
             key={tier.id}
@@ -146,11 +161,12 @@ export default function PricingPage() {
                     {isEditing ? (
                         <div className="flex items-center gap-1">
                             <IndianRupee className="size-5" />
-                            <Input 
+                             <Input 
                                 type="number" 
                                 value={price} 
                                 onChange={(e) => handlePriceChange(tier.id, billingCycle, Number(e.target.value))}
                                 className="text-4xl font-bold w-48 border-2"
+                                disabled={tier.id === 'freemium'}
                             />
                         </div>
                     ) : (
@@ -162,9 +178,24 @@ export default function PricingPage() {
                         </>
                     )}
                 </div>
-              <CardDescription>{tier.description}</CardDescription>
+                 {billingCycle === 'annually' && annualDiscount > 0 && !isEditing && (
+                    <Badge variant="destructive">Save {annualDiscount}%</Badge>
+                )}
+              <CardDescription className="pt-2">{tier.description}</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1">
+            <CardContent className={cn("flex-1", isEditing && "space-y-4")}>
+              {isEditing && tier.id !== 'freemium' && (
+                 <div className="space-y-2 p-4 border rounded-md">
+                    <Label>Annual Discount (%)</Label>
+                     <Input 
+                        type="number"
+                        value={annualDiscount}
+                        onChange={(e) => handleDiscountChange(tier.id, Number(e.target.value))}
+                        className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">Adjust discount to auto-calculate annual price.</p>
+                </div>
+              )}
               <ul className="space-y-4">
                 {tier.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -178,18 +209,20 @@ export default function PricingPage() {
                 ))}
               </ul>
             </CardContent>
-            <CardFooter className="flex flex-col gap-2">
-              {!isSuperAdmin && <Button className="w-full">{tier.cta}</Button>}
-               {isSuperAdmin && !isEditing && (
-                 <Button variant="outline" className="w-full" onClick={() => handleEdit(tier.id)}>
-                    <Edit className="mr-2"/> Edit Plan
-                </Button>
-               )}
-               {isSuperAdmin && isEditing && (
-                <Button variant="secondary" className="w-full" onClick={() => handleSave(tier.id)}>
+            <CardFooter>
+              {isSuperAdmin ? (
+                isEditing ? (
+                  <Button variant="secondary" className="w-full" onClick={() => handleSave(tier.id)}>
                     <Save className="mr-2"/> Save Changes
-                </Button>
-               )}
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-full" onClick={() => handleEdit(tier.id)}>
+                    <Edit className="mr-2"/> Edit Plan
+                  </Button>
+                )
+              ) : (
+                 <Button className="w-full">{tier.cta}</Button>
+              )}
             </CardFooter>
           </Card>
         )})}
