@@ -66,14 +66,16 @@ export default function ImportExportPage() {
         }
     }
 
-    const ImportCard = ({ title, description, fileType }: { title: string, description: string, fileType: string }) => (
+    const ImportCard = ({ title, description, fileType, accept = ".csv, .xlsx, .json" }: { title: string, description: string, fileType: string, accept?: string }) => (
         <div className="space-y-2 p-4 border rounded-lg">
             <h3 className="font-semibold">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Input type="file" accept=".csv, .xlsx, .json" className="max-w-xs"/>
+                <Input type="file" accept={accept} className="max-w-xs"/>
                 <Button onClick={() => handleFileUpload(fileType)}><Upload className="mr-2"/> Import Data</Button>
-                <Button variant="outline" onClick={() => handleDownloadTemplate(fileType)}><Download className="mr-2"/> Download Template</Button>
+                {accept.includes(".csv") && (
+                    <Button variant="outline" onClick={() => handleDownloadTemplate(fileType)}><Download className="mr-2"/> Download Template</Button>
+                )}
             </div>
         </div>
     );
@@ -86,9 +88,24 @@ export default function ImportExportPage() {
                 </div>
                 <h1 className="text-3xl font-bold">Import & Export Data</h1>
                 <p className="text-muted-foreground">
-                    Bulk upload your data from CSV/Excel files to get started quickly.
+                    Bulk upload your data from various sources to get started quickly.
                 </p>
             </div>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><FileText/> Tally Data</CardTitle>
+                    <CardDescription>Import masters and transactions from Tally by uploading an XML file.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ImportCard 
+                        title="Tally XML Import" 
+                        description="Import vouchers, ledgers, and inventory data from Tally's 'Day Book' XML export." 
+                        fileType="Tally XML"
+                        accept=".xml"
+                    />
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>
