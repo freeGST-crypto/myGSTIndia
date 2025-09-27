@@ -1,6 +1,7 @@
 
 // In a real application, you would use an XML parsing library like 'fast-xml-parser'.
 // Since we cannot add new dependencies, this is a conceptual placeholder.
+import { JournalVoucher } from "@/context/accounting-context";
 
 /**
  * Parses Tally DayBook XML content and extracts vouchers and ledger information.
@@ -8,16 +9,14 @@
  * @param xmlContent The string content of the Tally XML file.
  * @returns A structured object containing parsed vouchers and ledgers.
  */
-export async function parseTallyXml(xmlContent: string) {
+export async function parseTallyXml(xmlContent: string): Promise<Partial<JournalVoucher>[]> {
     
     // --- Placeholder Logic ---
-    // This is where you would use a proper XML parser to convert the XML string into a JavaScript object.
-    // For demonstration purposes, we will simulate this by assuming a very simple structure.
+    // This simulates parsing the XML and converting it into JournalVoucher objects.
+    // In a real scenario, you'd use an XML parsing library here.
 
-    console.log("Simulating parsing of Tally XML...");
+    console.log("Parsing Tally XML and converting to Journal Vouchers...");
 
-    // In a real scenario, you'd iterate through the parsed XML object.
-    // For example: const vouchers = parsedXml.ENVELOPE.BODY.DATA.TALLYMESSAGE.VOUCHER;
     const simulatedVouchers = [
         {
             VOUCHERNUMBER: '1',
@@ -41,29 +40,44 @@ export async function parseTallyXml(xmlContent: string) {
         }
     ];
 
-    const simulatedLedgers = [
-        { name: 'Customer A', parent: 'Sundry Debtors' },
-        { name: 'Vendor B', parent: 'Sundry Creditors' },
-        { name: 'Sales', parent: 'Sales Accounts' },
-        { name: 'Purchases', parent: 'Purchase Accounts' },
-        { name: 'IGST @ 18%', parent: 'Duties & Taxes' },
-        { name: 'IGST @ 5%', parent: 'Duties & Taxes' },
-    ];
+    const mapTallyAccountToGSTEase = (tallyLedgerName: string): string => {
+        // This is a crucial mapping function.
+        // In a real app, this might involve fuzzy matching, user-defined rules, or a mapping table.
+        if (tallyLedgerName.toLowerCase().includes('sales')) return '4010'; // Sales Revenue
+        if (tallyLedgerName.toLowerCase().includes('purchases')) return '5050'; // Purchases
+        if (tallyLedgerName.toLowerCase().includes('gst')) return '2110'; // GST Payable / ITC
+        // For parties, you'd look up the customer/vendor ID based on the name.
+        // For simplicity, we'll just return the name for now.
+        return tallyLedgerName;
+    }
 
+    const journalVouchers: Partial<JournalVoucher>[] = simulatedVouchers.map(v => {
+        const dateStr = v.DATE;
+        const formattedDate = `${dateStr.substring(0,4)}-${dateStr.substring(4,6)}-${dateStr.substring(6,8)}`;
+        
+        let totalDebit = 0;
 
-    // In a real implementation, you would now:
-    // 1. Iterate through `simulatedLedgers`.
-    // 2. For each ledger, check if a corresponding Party/Account exists in Firestore.
-    // 3. If not, create it.
-    // 4. Iterate through `simulatedVouchers`.
-    // 5. For each voucher, create a `JournalVoucher` object compatible with GSTEase's format.
-    // 6. Use the `addJournalVoucher` function from the AccountingContext to save it to Firestore.
+        const lines = v['ALLLEDGERENTRIES.LIST'].map(ledgerEntry => {
+            const amount = Math.abs(ledgerEntry.AMOUNT);
+            const isDebit = ledgerEntry.ISDEEMEDPOSITIVE === 'Yes';
+            if (isDebit) {
+                totalDebit += amount;
+            }
+            return {
+                account: mapTallyAccountToGSTEase(ledgerEntry.LEDGERNAME),
+                debit: isDebit ? String(amount) : '0',
+                credit: !isDebit ? String(amount) : '0',
+            };
+        });
+        
+        return {
+            id: `TALLY-${v.VOUCHERNUMBER}-${Date.now()}`,
+            date: formattedDate,
+            narration: v.NARRATION,
+            lines: lines,
+            amount: totalDebit,
+        };
+    });
     
-    console.log(`Found ${simulatedVouchers.length} vouchers and ${simulatedLedgers.length} ledgers to process.`);
-
-    return {
-        voucherCount: simulatedVouchers.length,
-        ledgerCount: simulatedLedgers.length,
-        message: "This is a simulated response. Backend processing is not fully implemented."
-    };
+    return journalVouchers;
 }

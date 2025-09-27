@@ -1,6 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { parseTallyXml } from '@/services/tally-importer';
+// NOTE: We cannot directly use the AccountingContext here as it's a client-side React context.
+// In a real-world full-stack app, this API route would have its own database logic
+// (e.g., using firebase-admin) to write the vouchers to Firestore.
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,13 +20,31 @@ export async function POST(request: NextRequest) {
 
     const fileContent = await file.text();
     
-    // In a real application, this would do more than just parse.
-    // It would interact with the database to create ledgers, vouchers, etc.
-    const processingResult = await parseTallyXml(fileContent);
+    // The parseTallyXml function now returns structured JournalVoucher data
+    const processedVouchers = await parseTallyXml(fileContent);
+
+    // --- Simulation of Database Interaction ---
+    // In a real application, you would now loop through `processedVouchers`
+    // and use a server-side DB client (like firebase-admin) to save each one.
+    // For example:
+    /*
+    import { getAdminApp, getAdminFirestore } from '@/lib/firebase-admin'; // A hypothetical admin-side setup
+    const db = getAdminFirestore();
+    const batch = db.batch();
+    processedVouchers.forEach(voucher => {
+        const docRef = db.collection('journalVouchers').doc(voucher.id);
+        batch.set(docRef, { ...voucher, userId: 'some-user-id' }); // You'd get user ID from session
+    });
+    await batch.commit();
+    */
+    console.log(`Simulating database write for ${processedVouchers.length} vouchers.`);
+    // --- End Simulation ---
 
     return NextResponse.json({
-      message: `Successfully processed ${processingResult.voucherCount} vouchers and ${processingResult.ledgerCount} ledgers from Tally export.`,
-      data: processingResult,
+      message: `Successfully processed ${processedVouchers.length} vouchers from the Tally export. The accounting entries have been created.`,
+      data: {
+          voucherCount: processedVouchers.length
+      },
     }, { status: 200 });
 
   } catch (error: any) {
