@@ -4,21 +4,54 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Download, FileText, FileSpreadsheet, Users, Warehouse } from "lucide-react";
+import { Upload, Download, FileText, FileSpreadsheet, Users, Warehouse, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
 
 export default function ImportExportPage() {
     const { toast } = useToast();
+    const [tallyFile, setTallyFile] = useState<File | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
 
-    const handleFileUpload = (fileType: string) => {
-        toast({
-            title: "File Upload Simulated",
-            description: `${fileType} file is being processed. In a real app, this would trigger a background import job.`,
-        });
+    const handleTallyFileUpload = async () => {
+        if (!tallyFile) {
+            toast({ variant: "destructive", title: "No File Selected", description: "Please select a Tally XML file to import." });
+            return;
+        }
+        setIsImporting(true);
+        
+        const formData = new FormData();
+        formData.append("file", tallyFile);
+
+        try {
+            const response = await fetch('/api/import/tally', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "An unknown error occurred.");
+            }
+
+            toast({
+                title: "Import Successful",
+                description: result.message || `${tallyFile.name} has been processed successfully.`,
+            });
+            setTallyFile(null);
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Import Failed",
+                description: error.message,
+            });
+        } finally {
+            setIsImporting(false);
+        }
     };
+
 
     const handleDownloadTemplate = (fileType: string) => {
         const headers = getHeadersForTemplate(fileType);
@@ -66,15 +99,15 @@ export default function ImportExportPage() {
         }
     }
 
-    const ImportCard = ({ title, description, fileType, accept = ".csv, .xlsx, .json" }: { title: string, description: string, fileType: string, accept?: string }) => (
+    const ImportCard = ({ title, description, fileType, accept = ".csv, .xlsx, .json", onUpload, onTemplateDownload }: { title: string, description: string, fileType: string, accept?: string, onUpload?: () => void, onTemplateDownload?: () => void }) => (
         <div className="space-y-2 p-4 border rounded-lg">
             <h3 className="font-semibold">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <Input type="file" accept={accept} className="max-w-xs"/>
-                <Button onClick={() => handleFileUpload(fileType)}><Upload className="mr-2"/> Import Data</Button>
-                {accept.includes(".csv") && (
-                    <Button variant="outline" onClick={() => handleDownloadTemplate(fileType)}><Download className="mr-2"/> Download Template</Button>
+                {onUpload && <Button onClick={onUpload}><Upload className="mr-2"/> Import Data</Button>}
+                {onTemplateDownload && (
+                    <Button variant="outline" onClick={onTemplateDownload}><Download className="mr-2"/> Download Template</Button>
                 )}
             </div>
         </div>
@@ -97,13 +130,18 @@ export default function ImportExportPage() {
                     <CardTitle className="flex items-center gap-2"><FileText/> Tally Data</CardTitle>
                     <CardDescription>Import masters and transactions from Tally by uploading an XML file.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <ImportCard 
-                        title="Tally XML Import" 
-                        description="Import vouchers, ledgers, and inventory data from Tally's 'Day Book' XML export." 
-                        fileType="Tally XML"
-                        accept=".xml"
-                    />
+                <CardContent>
+                     <div className="space-y-2 p-4 border rounded-lg">
+                        <h3 className="font-semibold">Tally XML Import</h3>
+                        <p className="text-sm text-muted-foreground">Import vouchers, ledgers, and inventory data from Tally's 'Day Book' XML export.</p>
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                            <Input type="file" accept=".xml" className="max-w-xs" onChange={(e) => setTallyFile(e.target.files?.[0] || null)}/>
+                            <Button onClick={handleTallyFileUpload} disabled={isImporting}>
+                                {isImporting ? <Loader2 className="mr-2 animate-spin" /> : <Upload className="mr-2"/>} 
+                                Import Data
+                            </Button>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -113,8 +151,8 @@ export default function ImportExportPage() {
                     <CardDescription>Import your monthly GST returns data from the official portal's JSON or CSV files.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <ImportCard title="GSTR-1 Data" description="Import outward supplies data from GSTR-1." fileType="GSTR-1" />
-                    <ImportCard title="GSTR-2B Data" description="Import ITC data from GSTR-2B for reconciliation." fileType="GSTR-2B" />
+                    <ImportCard title="GSTR-1 Data" description="Import outward supplies data from GSTR-1." fileType="GSTR-1" onTemplateDownload={() => handleDownloadTemplate('GSTR-1')} />
+                    <ImportCard title="GSTR-2B Data" description="Import ITC data from GSTR-2B for reconciliation." fileType="GSTR-2B" onTemplateDownload={() => handleDownloadTemplate('GSTR-2B')} />
                 </CardContent>
             </Card>
 
@@ -124,9 +162,9 @@ export default function ImportExportPage() {
                     <CardDescription>Import your customer, vendor, and item master data.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <ImportCard title="Customers" description="Bulk upload your customer list." fileType="Customers" />
-                    <ImportCard title="Vendors" description="Bulk upload your vendor list." fileType="Vendors" />
-                    <ImportCard title="Items" description="Bulk upload your products and services list." fileType="Items" />
+                    <ImportCard title="Customers" description="Bulk upload your customer list." fileType="Customers" onTemplateDownload={() => handleDownloadTemplate('Customers')} />
+                    <ImportCard title="Vendors" description="Bulk upload your vendor list." fileType="Vendors" onTemplateDownload={() => handleDownloadTemplate('Vendors')} />
+                    <ImportCard title="Items" description="Bulk upload your products and services list." fileType="Items" onTemplateDownload={() => handleDownloadTemplate('Items')} />
                 </CardContent>
             </Card>
 
