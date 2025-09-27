@@ -108,7 +108,7 @@ export default function EmployeesPage() {
         'Name': emp.name,
         'Designation': emp.designation,
         'PAN': emp.pan,
-        'Aadhaar': emp.aadhaar,
+        'Aadhaar': (emp as any).aadhaar,
         'Bank Account': emp.bankAccount,
         'Bank IFSC': emp.bankIfsc,
         'Basic Salary': emp.basic,
@@ -268,3 +268,5 @@ export default function EmployeesPage() {
     </div>
   );
 }
+
+    

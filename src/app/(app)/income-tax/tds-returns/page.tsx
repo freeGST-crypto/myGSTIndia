@@ -50,7 +50,7 @@ const quarters = [
     { value: "q4", label: "Q4 (Jan-Mar)" },
 ];
 
-export default function TdsTcsReportsPage() {
+export default function TdsReturnsPage() {
   const [financialYear, setFinancialYear] = useState(getFinancialYears()[0]);
   const [quarter, setQuarter] = useState("q1");
   const { journalVouchers, loading } = useContext(AccountingContext)!;
@@ -111,7 +111,7 @@ export default function TdsTcsReportsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">TDS & TCS Reports</h1>
+        <h1 className="text-3xl font-bold">TDS &amp; TCS Returns</h1>
         <p className="text-muted-foreground">
           Prepare and manage your TDS/TCS returns.
         </p>
@@ -261,4 +261,4 @@ export default function TdsTcsReportsPage() {
   );
 }
 
-
+    
