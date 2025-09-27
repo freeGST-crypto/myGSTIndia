@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Download, FileText, FileSpreadsheet, Users, Warehouse, Loader2 } from "lucide-react";
+import { Upload, Download, FileText, FileSpreadsheet, Users, Warehouse, Loader2, IndianRupee } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -153,6 +153,17 @@ export default function ImportExportPage() {
                 <CardContent className="space-y-4">
                     <ImportCard title="GSTR-1 Data" description="Import outward supplies data from GSTR-1." fileType="GSTR-1" onTemplateDownload={() => handleDownloadTemplate('GSTR-1')} />
                     <ImportCard title="GSTR-2B Data" description="Import ITC data from GSTR-2B for reconciliation." fileType="GSTR-2B" onTemplateDownload={() => handleDownloadTemplate('GSTR-2B')} />
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><IndianRupee/> Income Tax Data</CardTitle>
+                    <CardDescription>Import pre-filled ITR JSON, AIS/TIS, or Form 26AS data to simplify your tax filing process.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ImportCard title="ITR Pre-filled JSON" description="Upload the JSON from the Income Tax portal to pre-fill ITR forms." fileType="ITR JSON" accept=".json" onUpload={() => toast({title: "Import Simulated", description: "This would process the ITR JSON file."})} />
+                    <ImportCard title="AIS/TIS Report" description="Import Annual Information Statement (AIS) or Taxpayer Information Summary (TIS)." fileType="AIS/TIS" accept=".pdf,.json" onUpload={() => toast({title: "Import Simulated", description: "This would process the AIS/TIS report."})}/>
                 </CardContent>
             </Card>
 
