@@ -95,11 +95,19 @@ export default function PurchaseAnalysisPage() {
         for (const bill of filteredPurchases) {
             const purchaseLine = bill.lines.find(l => l.account === '5050');
             if (purchaseLine) {
-                 // Simplified: assumes one item per bill from narration
                 const itemNameMatch = bill.narration.match(/Purchase of (.*?) from/);
-                const itemName = itemNameMatch ? itemNameMatch[1] : 'Unknown Item';
-                if (!itemPurchases[itemName]) itemPurchases[itemName] = { total: 0, name: itemName };
-                itemPurchases[itemName].total += parseFloat(purchaseLine.debit);
+                if (itemNameMatch && itemNameMatch[1]) {
+                    const itemNames = itemNameMatch[1].split(', ');
+                    // This is a simplification. For accuracy, we'd need line-item level data.
+                    // Here, we distribute the total purchase value equally among the items in the narration.
+                    const valuePerItem = parseFloat(purchaseLine.debit) / itemNames.length;
+                    
+                    itemNames.forEach(itemName => {
+                         const trimmedName = itemName.trim();
+                         if (!itemPurchases[trimmedName]) itemPurchases[trimmedName] = { total: 0, name: trimmedName };
+                         itemPurchases[trimmedName].total += valuePerItem;
+                    });
+                }
             }
         }
          return Object.values(itemPurchases)

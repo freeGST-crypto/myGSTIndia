@@ -95,11 +95,19 @@ export default function SalesAnalysisPage() {
         for (const inv of filteredInvoices) {
             const salesLine = inv.lines.find(l => l.account === '4010');
             if (salesLine) {
-                 // Simplified: assumes one item per invoice from narration
                 const itemNameMatch = inv.narration.match(/Sale of (.*?) to/);
-                const itemName = itemNameMatch ? itemNameMatch[1] : 'Unknown Item';
-                if (!itemSales[itemName]) itemSales[itemName] = { total: 0, name: itemName };
-                itemSales[itemName].total += parseFloat(salesLine.credit);
+                 if (itemNameMatch && itemNameMatch[1]) {
+                    const itemNames = itemNameMatch[1].split(', ');
+                    // This is a simplification. For accuracy, we'd need line-item level data.
+                    // Here, we distribute the total sales value equally among the items in the narration.
+                    const valuePerItem = parseFloat(salesLine.credit) / itemNames.length;
+                    
+                    itemNames.forEach(itemName => {
+                         const trimmedName = itemName.trim();
+                         if (!itemSales[trimmedName]) itemSales[trimmedName] = { total: 0, name: trimmedName };
+                         itemSales[trimmedName].total += valuePerItem;
+                    });
+                }
             }
         }
          return Object.values(itemSales)
