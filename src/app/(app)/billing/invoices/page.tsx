@@ -104,7 +104,7 @@ export function QuickInvoiceDialog({ open, onOpenChange }: { open: boolean, onOp
     }
     
     const subtotal = quickQty * quickRate;
-    const tax = subtotal * 0.18; // Assuming 18% tax for simplicity
+    const tax = subtotal * 0.18; // Assuming 18% GST for simplicity
     const totalAmount = subtotal + tax;
     const invoiceId = `INV-${quickInvNum}`;
 
@@ -317,7 +317,7 @@ export default function InvoicesPage() {
         };
 
         try {
-            await addJournalVoucher(cancellationVoucher);
+            await addJournalVoucher(cancellationVoucher as any);
             toast({ title: "Invoice Cancelled", description: `Invoice has been successfully cancelled.` });
             return true;
         } catch (e: any) {
