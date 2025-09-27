@@ -102,7 +102,7 @@ export default function NewInvoicePage() {
         const salesLine = voucherToLoad.lines.find(l => l.account === '4010');
         const taxLine = voucherToLoad.lines.find(l => l.account === '2110');
         const tdsLine = voucherToLoad.lines.find(l => l.account === '1460');
-        const tcsLine = voucherToLoad.lines.find(l => l.account === '2120');
+        const tcsLine = voucherToLoad.lines.find(l => l.account === '2423');
 
         const subtotal = parseFloat(salesLine?.credit || '0');
         const taxAmount = parseFloat(taxLine?.credit || '0');

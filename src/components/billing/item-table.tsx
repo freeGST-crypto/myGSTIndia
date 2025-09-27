@@ -304,4 +304,3 @@ export function ItemTable({ lineItems, setLineItems, items, itemsLoading, isPurc
         </div>
     );
 }
-
