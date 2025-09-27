@@ -34,6 +34,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { collection, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { z } from "zod";
 import { PartyDialog } from "@/components/billing/add-new-dialogs";
+import { useRouter } from "next/navigation";
 
 const partySchema = z.object({
     name: z.string().min(2, "Name is required."),
@@ -57,6 +58,7 @@ export default function PartiesPage() {
     const [vendorSearchTerm, setVendorSearchTerm] = useState("");
     const { toast } = useToast();
     const [user] = useAuthState(auth);
+    const router = useRouter();
 
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
     const [customersSnapshot, customersLoading] = useCollection(customersQuery);
@@ -66,20 +68,6 @@ export default function PartiesPage() {
     const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
     const vendors: Party[] = vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Party)) || [];
 
-
-    const handleDownloadTemplate = (type: 'Customer' | 'Vendor') => {
-        const headers = "Name,Email,Phone,GSTIN,Address Line 1,City,State,Pincode";
-        const exampleData = "Sample Company,sample@email.com,9876543210,27ABCDE1234F1Z5,123 Sample St,Sample City,Sample State,123456";
-        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `${type.toLowerCase()}_template.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ title: "Template Downloaded", description: `${type} CSV template has been downloaded.` });
-    };
 
     const filteredCustomers = useMemo(() => {
         if (!customerSearchTerm) return customers;
@@ -175,31 +163,6 @@ export default function PartiesPage() {
             </TableBody>
         </Table>
     );
-    
-    const ImportExportMenu = ({ type }: { type: 'Customer' | 'Vendor' }) => (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                    Import/Export
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import {type}s
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                    Export to CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => handleDownloadTemplate(type)}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Template
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
 
   return (
     <div className="space-y-8">
@@ -224,7 +187,7 @@ export default function PartiesPage() {
                             <CardDescription>A list of all your customers.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                            <ImportExportMenu type="Customer" />
+                             <Button variant="outline" onClick={() => router.push('/import-export')}><Upload className="mr-2"/> Import</Button>
                             <Button onClick={() => { setEditingParty(null); setIsCustomerDialogOpen(true); }}>
                                 <PlusCircle className="mr-2"/>
                                 Add Customer
@@ -257,7 +220,7 @@ export default function PartiesPage() {
                             <CardDescription>A list of all your vendors/suppliers.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                            <ImportExportMenu type="Vendor" />
+                             <Button variant="outline" onClick={() => router.push('/import-export')}><Upload className="mr-2"/> Import</Button>
                             <Button onClick={() => { setEditingParty(null); setIsVendorDialogOpen(true); }}>
                                 <PlusCircle className="mr-2"/>
                                 Add Vendor

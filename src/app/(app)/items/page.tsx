@@ -14,15 +14,11 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   Wand2,
-  ArrowRight,
   PlusCircle,
   MoreHorizontal,
   Edit,
   Trash2,
-  ChevronDown,
   Upload,
-  Download,
-  FileSpreadsheet,
   Search,
   Loader2,
 } from "lucide-react";
@@ -34,6 +30,7 @@ import { collection, query, where, deleteDoc, doc } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ItemDialog } from "@/components/billing/add-new-dialogs";
+import { useRouter } from "next/navigation";
 
 const itemSchema = z.object({
     name: z.string().min(2, "Item name is required."),
@@ -61,24 +58,11 @@ export default function ItemsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
     const [user] = useAuthState(auth);
+    const router = useRouter();
 
     const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
     const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
     const items: Item[] = itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item)) || [];
-
-    const handleDownloadTemplate = () => {
-        const headers = "Name,Description,HSN,Stock,Purchase Price,Selling Price";
-        const exampleData = "Sample Product,A sample description,12345678,10,100,150";
-        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleData}`;
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "items_template.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ title: "Template Downloaded", description: "Items CSV template has been downloaded." });
-    }
 
     const filteredItems = useMemo(() => {
         if (!searchTerm) return items;
@@ -121,28 +105,7 @@ export default function ItemsPage() {
                         <CardDescription>A list of all products and services you buy and sell.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">
-                                    Import/Export
-                                    <ChevronDown className="ml-2 h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Import Items
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                    Export to CSV
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={handleDownloadTemplate}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download Template
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button variant="outline" onClick={() => router.push('/import-export')}><Upload className="mr-2"/> Import Items</Button>
                         <Button onClick={() => { setEditingItem(null); setIsItemDialogOpen(true); }}>
                             <PlusCircle className="mr-2"/>
                             Add Item

@@ -38,7 +38,7 @@ import {
     ArrowRightLeft, Calendar as CalendarIcon, Eraser, IndianRupee, Construction, Bell, CalendarDays,
     Menu, Wand2, UserCheck, Banknote, Handshake, FileKey, MessageSquare, Printer, Zap,
     AlertCircle, CheckCircle, Copy, SlidersHorizontal, Settings2, BarChart3,
-    ArrowRight
+    ArrowRight, Upload, Download
 } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -99,7 +99,7 @@ const allMenuItems = [
     icon: IndianRupee,
     roles: ['business', 'professional'],
     subItems: [
-      { href: "/income-tax/tds-tcs-reports", label: "TDS & TCS Reports", icon: FileText, roles: ['business', 'professional'] },
+      { href: "/income-tax/tds-returns", label: "TDS & TCS Returns", icon: FileText, roles: ['business', 'professional'] },
       { href: "/income-tax/advance-tax", label: "Advance Tax", icon: Calculator, roles: ['business', 'professional'] },
       { href: "/income-tax/form-16", label: "Form 16", icon: FileSignature, roles: ['business', 'professional'] },
     ],
@@ -170,6 +170,7 @@ const allMenuItems = [
       { href: "/payroll/settings", label: "Settings", icon: Settings, roles: ['business', 'professional'] },
     ],
   },
+  { href: "/import-export", label: "Import & Export", icon: Download, roles: ['business', 'professional'] },
   {
     label: "Resources",
     icon: Info,
