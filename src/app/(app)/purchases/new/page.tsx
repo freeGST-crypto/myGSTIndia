@@ -156,6 +156,9 @@ export default function NewPurchasePage() {
     setIsOcrLoading(true);
     toast({ title: "Reading Document...", description: "AI is extracting data from the uploaded bill." });
 
+    // This is a placeholder for the user's actual GSTIN from their profile
+    const userGstin = "27ABCDE1234F1Z5";
+
     try {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -164,6 +167,18 @@ export default function NewPurchasePage() {
         const result = await extractInvoiceData({ invoiceDataUri: base64data });
 
         if (result) {
+            // Validate the buyer's GSTIN
+            if (result.buyerGstin && result.buyerGstin.toUpperCase() !== userGstin.toUpperCase()) {
+                 toast({ 
+                    variant: "destructive", 
+                    title: "Validation Failed", 
+                    description: `This invoice appears to be for a different GSTIN (${result.buyerGstin}). Please upload a bill for your company.` 
+                });
+                setIsOcrLoading(false);
+                if(fileInputRef.current) fileInputRef.current.value = "";
+                return;
+            }
+
           if (result.invoiceNumber) setBillNumber(result.invoiceNumber);
           if (result.invoiceDate) {
               const parsedDate = parse(result.invoiceDate, 'yyyy-MM-dd', new Date());

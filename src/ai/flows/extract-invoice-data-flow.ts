@@ -26,6 +26,7 @@ const ExtractInvoiceDataOutputSchema = z.object({
   invoiceNumber: z.string().optional().describe("The invoice number or bill number."),
   invoiceDate: z.string().optional().describe("The date of the invoice in YYYY-MM-DD format."),
   totalAmount: z.number().optional().describe("The final total amount of the invoice."),
+  buyerGstin: z.string().optional().describe("The GSTIN of the buyer or recipient of the goods/services."),
 });
 export type ExtractInvoiceDataOutput = z.infer<typeof ExtractInvoiceDataOutputSchema>;
 
@@ -48,6 +49,7 @@ const prompt = ai.definePrompt({
   - Invoice Number
   - Invoice Date (in YYYY-MM-DD format)
   - Total Amount
+  - Buyer's GSTIN (the GSTIN of the entity to whom the invoice is issued)
   `, 
 });
 
