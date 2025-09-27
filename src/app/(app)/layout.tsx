@@ -67,10 +67,17 @@ const allMenuItems = [
     subItems: [
       { href: "/billing/invoices", label: "Invoices", icon: Receipt, roles: ['business', 'professional'] },
       { href: "/billing/sales-orders", label: "Sales Orders", icon: ShoppingBag, roles: ['business', 'professional'] },
-      { href: "/purchases", label: "Purchases", icon: ShoppingCart, roles: ['business', 'professional'] },
-      { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingCart, roles: ['business', 'professional'] },
       { href: "/billing/credit-notes", label: "Credit Notes", icon: FilePlus, roles: ['business', 'professional'] },
       { href: "/billing/debit-notes", label: "Debit Notes", icon: FileMinus, roles: ['business', 'professional'] },
+    ],
+  },
+  {
+    label: "Purchases",
+    icon: ShoppingCart,
+    roles: ['business', 'professional'],
+    subItems: [
+        { href: "/purchases", label: "Purchase Bills", icon: ShoppingCart, roles: ['business', 'professional'] },
+        { href: "/purchases/purchase-orders", label: "Purchase Orders", icon: ShoppingCart, roles: ['business', 'professional'] },
     ],
   },
   { href: "/parties", label: "Parties", icon: Users, roles: ['business', 'professional'] },
@@ -467,5 +474,3 @@ export default function AppLayout({
     </ClientOnly>
   );
 }
-
-    
