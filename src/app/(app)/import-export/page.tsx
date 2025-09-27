@@ -36,6 +36,10 @@ export default function ImportExportPage() {
 
     const getHeadersForTemplate = (type: string) => {
         switch(type) {
+            case 'GSTR-1':
+                return "GSTIN/UIN of Recipient,Receiver Name,Invoice Number,Invoice date,Invoice Value,Place Of Supply,Reverse Charge,Applicable % of Tax Rate,Invoice Type,E-Commerce GSTIN,Rate,Taxable Value,Cess Amount";
+            case 'GSTR-2B':
+                return "GSTIN of Supplier,Trade/Legal Name,Invoice number,Invoice type,Invoice date,Invoice value,Place of supply,Reverse charge,Rate,Taxable value,Integrated tax,Central tax,State tax,Cess";
             case 'Customers':
             case 'Vendors':
                 return "Name,Email,Phone,GSTIN,Address Line 1,City,State,Pincode";
@@ -48,6 +52,10 @@ export default function ImportExportPage() {
     
     const getExampleDataForTemplate = (type: string) => {
          switch(type) {
+            case 'GSTR-1':
+                return "29AABCI5678G1Z4,Innovate LLC,INV-001,01-07-2024,1180,29-Karnataka,N,18,Regular,,18,1000,0";
+            case 'GSTR-2B':
+                return "27LMNOP1234Q1Z9,Component Solutions,CS-556,Regular,15-06-2024,5900,27-Maharashtra,N,18,5000,900,0,0,0";
             case 'Customers':
             case 'Vendors':
                 return "Sample Company,sample@email.com,9876543210,27ABCDE1234F1Z5,123 Sample St,Sample City,Sample State,123456";
@@ -63,7 +71,7 @@ export default function ImportExportPage() {
             <h3 className="font-semibold">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Input type="file" accept=".csv, .xlsx" className="max-w-xs"/>
+                <Input type="file" accept=".csv, .xlsx, .json" className="max-w-xs"/>
                 <Button onClick={() => handleFileUpload(fileType)}><Upload className="mr-2"/> Import Data</Button>
                 <Button variant="outline" onClick={() => handleDownloadTemplate(fileType)}><Download className="mr-2"/> Download Template</Button>
             </div>
