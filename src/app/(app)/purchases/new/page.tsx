@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useContext, useCallback, useMemo, useEffect } from "react";
+import { useState, useContext, useCallback, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -10,8 +10,10 @@ import {
   PlusCircle,
   Save,
   Upload,
+  Loader2,
+  Wand2,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +50,8 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { PartyDialog, ItemDialog } from "@/components/billing/add-new-dialogs";
 import { ItemTable, type LineItem, type Item } from "@/components/billing/item-table";
+import { extractInvoiceData } from "@/ai/flows/extract-invoice-data-flow";
+
 
 const createNewLineItem = (): LineItem => ({
   id: `${Date.now()}-${Math.random()}`,
@@ -67,6 +71,8 @@ export default function NewPurchasePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user] = useAuthState(auth);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
   
   const { journalVouchers } = useContext(AccountingContext)!;
 
@@ -142,6 +148,67 @@ export default function NewPurchasePage() {
   const subtotal = lineItems.reduce((acc, item) => acc + (item.qty * item.rate), 0);
   const totalTax = lineItems.reduce((acc, item) => acc + (item.qty * item.rate * item.taxRate / 100), 0);
   const totalBillAmount = subtotal + totalTax;
+  
+   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsOcrLoading(true);
+    toast({ title: "Reading Document...", description: "AI is extracting data from the uploaded bill." });
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        const result = await extractInvoiceData({ invoiceDataUri: base64data });
+
+        if (result) {
+          if (result.invoiceNumber) setBillNumber(result.invoiceNumber);
+          if (result.invoiceDate) {
+              const parsedDate = parse(result.invoiceDate, 'yyyy-MM-dd', new Date());
+              if (!isNaN(parsedDate.getTime())) {
+                setBillDate(parsedDate);
+              }
+          }
+          if (result.totalAmount) {
+              const taxRate = 0.18; // Assume 18%
+              const taxableAmount = result.totalAmount / (1 + taxRate);
+               setLineItems([{
+                    id: `${Date.now()}-${Math.random()}`,
+                    itemId: "",
+                    description: "Scanned Item",
+                    hsn: "",
+                    qty: 1,
+                    rate: taxableAmount,
+                    taxRate: taxRate * 100,
+                    amount: taxableAmount,
+                }]);
+          }
+           if (result.vendorName) {
+                const vendorNameLower = result.vendorName.toLowerCase();
+                const matchedVendor = vendors.find(v => (v.name as string).toLowerCase().includes(vendorNameLower));
+                if (matchedVendor) {
+                    setVendor(matchedVendor.id);
+                } else {
+                    toast({ title: "New Vendor Detected", description: `Consider adding "${result.vendorName}" to your vendor list.` });
+                }
+            }
+          toast({ title: "Data Extracted!", description: "Form has been pre-filled with AI." });
+        } else {
+            toast({ variant: "destructive", title: "Extraction Failed", description: "Could not extract data from the document." });
+        }
+      };
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred during OCR." });
+    } finally {
+      setIsOcrLoading(false);
+      // Reset file input to allow re-uploading the same file
+      if(fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
 
   const handleSaveBill = async () => {
     if (!accountingContext) return;
@@ -188,13 +255,22 @@ export default function NewPurchasePage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <Link href="/purchases" passHref>
-          <Button variant="outline" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <h1 className="text-2xl font-bold">Add New Purchase Bill</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+            <Link href="/purchases" passHref>
+            <Button variant="outline" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+            </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">Add New Purchase Bill</h1>
+        </div>
+        <div>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isOcrLoading}>
+                {isOcrLoading ? <Loader2 className="mr-2 animate-spin"/> : <Wand2 className="mr-2"/>}
+                Read from Bill (AI-OCR)
+            </Button>
+            <Input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,.pdf" />
+        </div>
       </div>
 
       <PartyDialog type="Vendor" open={isVendorDialogOpen} onOpenChange={setIsVendorDialogOpen} />
@@ -299,12 +375,6 @@ export default function NewPurchasePage() {
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea placeholder="Add any notes for this purchase bill..." className="min-h-[120px]" />
-            </div>
-            <div className="space-y-2">
-               <Label>Attach Bill Document</Label>
-               <div className="relative w-48 h-24 rounded-md border flex items-center justify-center bg-muted/50">
-                  <Upload className="size-8 text-muted-foreground" />
-               </div>
             </div>
           </div>
 
