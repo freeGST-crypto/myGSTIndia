@@ -96,3 +96,11 @@
 .animate-scroll {
   animation: scroll 40s linear infinite;
 }
+
+@media print {
+  .print-section {
+    page-break-before: auto;
+    page-break-after: auto;
+    page-break-inside: avoid;
+  }
+}

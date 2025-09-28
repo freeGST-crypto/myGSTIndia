@@ -444,8 +444,8 @@ export default function PartnershipDeedPage() {
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
                 <CardContent>
-                    <div ref={printRef} className="bg-white text-black p-8">
-                        <div id="printable-area" className="prose prose-sm max-w-none leading-relaxed">
+                    <div ref={printRef} className="print-section">
+                        <div id="printable-area" className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                             {/* Form No. 1 */}
                             <div className="text-center space-y-2 mb-12">
                                 <h4 className="font-bold">Form No. 1</h4>
@@ -466,7 +466,7 @@ export default function PartnershipDeedPage() {
                                 <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
                                 <tbody>
                                     {formData.partners.map((p, i) => (
-                                        <tr key={p.name}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
+                                        <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
                                     ))}
                                 </tbody>
                             </table>
@@ -483,7 +483,7 @@ export default function PartnershipDeedPage() {
                             <div className="mt-16 space-y-8">
                                 <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
                                 {formData.partners.map((p, i) => (
-                                    <div key={p.name}>
+                                    <div key={i}>
                                         <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
                                         <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
                                         <p>Witness</p>
@@ -500,7 +500,7 @@ export default function PartnershipDeedPage() {
                                 
                                 <ol className="list-decimal list-inside space-y-2">
                                     {formData.partners.map((p, i) => (
-                                    <li key={p.name}>
+                                    <li key={i}>
                                         <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
                                     </li>
                                     ))}
@@ -578,12 +578,12 @@ export default function PartnershipDeedPage() {
                     </div>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <ShareButtons 
-                    contentRef={printRef}
-                    fileName={`Partnership_Deed_${formData.firmName}`}
-                    whatsappMessage={whatsappMessage}
-                  />
+                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                    <ShareButtons 
+                        contentRef={printRef}
+                        fileName={`Partnership_Deed_${formData.firmName}`}
+                        whatsappMessage={whatsappMessage}
+                    />
                 </CardFooter>
             </Card>
         );
