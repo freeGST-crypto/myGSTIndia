@@ -64,6 +64,8 @@ const formSchema = z.object({
         message: "At least one partner must be a working partner.",
     }),
   
+  totalCapital: z.coerce.number().positive(),
+
   interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional(),
   partnerRemuneration: z.coerce.number().min(0).optional(),
   
@@ -80,10 +82,10 @@ const formSchema = z.object({
   extraClauses: z.string().optional(),
 }).refine(data => {
     const totalContribution = data.partners.reduce((acc, p) => acc + p.capitalContribution, 0);
-    return totalContribution > 0;
+    return totalContribution === data.totalCapital;
 }, {
-    message: "Total capital contribution must be greater than zero.",
-    path: ["partners"],
+    message: "Total capital contribution from partners must match the LLP's total capital.",
+    path: ["totalCapital"],
 }).refine(data => {
     const totalProfitShare = data.partners.reduce((acc, p) => acc + p.profitShare, 0);
     return totalProfitShare === 100;
@@ -112,6 +114,7 @@ export default function PartnershipDeedPage() {
         { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
         { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
       ],
+      totalCapital: 100000,
       interestOnCapital: 12,
       partnerRemuneration: 0,
       bankAuthority: "joint",
@@ -171,7 +174,7 @@ export default function PartnershipDeedPage() {
             fieldsToValidate = ["firmName", "firmAddress", "businessActivity", "commencementDate", "partnershipDuration"];
             break;
         case 2:
-            fieldsToValidate = ["partners"];
+            fieldsToValidate = ["partners", "totalCapital"];
             break;
         case 3:
             fieldsToValidate = ["interestOnCapital", "partnerRemuneration"];
@@ -434,119 +437,122 @@ export default function PartnershipDeedPage() {
         );
      case 8:
         const formData = form.watch();
-        const workingPartners = formData.partners.filter(p => p.isWorkingPartner);
-        const managingPartner = workingPartners.length > 0 ? workingPartners[0].name : "the managing partner"; // Fallback
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
-        const formattedDate = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
+        const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
+        const commencementDateFormatted = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
 
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
-                <CardContent ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent>
+                    <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     
-                    {/* Form No. 1 */}
-                    <div className="text-center space-y-2 mb-12">
-                        <h4 className="font-bold">Form No. 1</h4>
-                        <p className="text-xs">Rule 4 (II)</p>
-                        <h5 className="font-bold">THE INDIAN PARTNERSHIP ACT, 1932</h5>
-                        <h5 className="font-bold">Application for Registration of Firm by the Name</h5>
-                    </div>
-                    <p>Presented or forward to the registrar of Firm and for filing by M/s {formData.firmName}</p>
-                    <p>We, the undersigned being the partners of the *Firm M/s {formData.firmName} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
-                    <table className="w-full my-4">
-                        <tbody>
-                            <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {formData.firmName}</td></tr>
-                            <tr className="h-4"></tr>
-                            <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress} <br/> (b) NIL</td></tr>
-                        </tbody>
-                    </table>
-                    <table className="w-full my-4 border-collapse border border-black">
-                        <thead><tr className="bg-muted/50"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
-                        <tbody>
-                            {formData.partners.map(p => (
-                                <tr key={p.name}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{new Date(formData.commencementDate).toLocaleDateString('en-IN')}</td></tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className="flex justify-between mt-16">
-                        <div>
-                            <p>Place:</p>
-                            <p>Date:</p>
+                        {/* Form No. 1 */}
+                        <div className="text-center space-y-2 mb-12">
+                            <h4 className="font-bold">Form No. 1</h4>
+                            <p className="text-xs">Rule 4 (II)</p>
+                            <h5 className="font-bold">THE INDIAN PARTNERSHIP ACT, 1932</h5>
+                            <h5 className="font-bold">Application for Registration of Firm by the Name</h5>
                         </div>
-                        <div>
-                            <p>Signatures</p>
-                            {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
-                        </div>
-                    </div>
-                    <div className="mt-16 space-y-8">
-                        <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
-                        {formData.partners.map(p => (
-                            <div key={p.name}>
-                                <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
-                                <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
-                                <p>Witness</p>
+                        <p>Presented or forward to the registrar of Firm and for filing by M/s {formData.firmName || "[Firm Name]"}</p>
+                        <p>We, the undersigned being the partners of the *Firm M/s {formData.firmName || "[Firm Name]"} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
+                        <table className="w-full my-4">
+                            <tbody>
+                                <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {formData.firmName || "[Firm Name]"}</td></tr>
+                                <tr className="h-4"></tr>
+                                <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress || "[Firm Address]"} <br/> (b) NIL</td></tr>
+                            </tbody>
+                        </table>
+                        <table className="w-full my-4 border-collapse border border-black">
+                            <thead><tr className="bg-muted/50"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
+                            <tbody>
+                                {formData.partners.map(p => (
+                                    <tr key={p.name}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div className="flex justify-between mt-16">
+                            <div>
+                                <p>Place:</p>
+                                <p>Date:</p>
                             </div>
-                        ))}
+                            <div>
+                                <p>Signatures</p>
+                                {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
+                            </div>
+                        </div>
+                        <div className="mt-16 space-y-8">
+                            <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
+                            {formData.partners.map(p => (
+                                <div key={p.name}>
+                                    <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
+                                    <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
+                                    <p>Witness</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Main Deed */}
+                        <div className="break-before-page">
+                            <h2 className="text-center font-bold">PARTNERSHIP DEED</h2>
+                            <h3 className="text-center font-bold">{(formData.firmName || "[Firm Name]").toUpperCase()}</h3>
+                            
+                            <p>This Deed of Partnership is executed on this the <strong>{formattedDate}</strong>, by and between:-</p>
+                            
+                            <ol className="list-decimal list-inside space-y-2">
+                                {formData.partners.map((p, i) => (
+                                <li key={p.name}>
+                                    <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
+                                </li>
+                                ))}
+                            </ol>
+                            
+                            <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity}</strong>" under the name & style of "<strong>{formData.firmName}</strong>", with effect from today, i.e. the {formattedDate}.</p>
+                            <p>AND WHEREAS both the Partners hereto have decided to reduce the terms and conditions of this instrument into writing so as to avoid misunderstandings, which may arise in future.</p>
+                            
+                            <h4 className="font-bold mt-4">NOW THIS DEED OF PARTNERSHIP WITNESSETH AS UNDER:-</h4>
+                            
+                            <ol className="list-decimal list-inside space-y-3">
+                                <li>The Name of the partnership business shall be “<strong>{formData.firmName}</strong>” and such other names as the partners may decide from time to time.</li>
+                                <li>The Principal place of business shall be at “<strong>{formData.firmAddress}</strong>” and such other places may decide from time to time.</li>
+                                <li>The Partnership has come into existence with effect from today, i.e. the {formattedDate}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
+                                <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity}</strong>” and such other business as the partners may decide from time to time.</li>
+                                <li>The capital required for the purpose of the partnership business shall be contributed and arranged by the partners from time to time as and when needed in such manner as may be mutually agreed upon.</li>
+                                <li className="font-bold italic text-center my-4">(Conti.........Page 2)</li>
+                                <h4 className="font-bold text-center break-before-page">Page 2</h4>
+                                <li>The Partners shall share the profits and bear the losses of the partnership business as under:
+                                    <table className="w-full my-2 border border-black">
+                                        <thead>
+                                            <tr className="border-b border-black">
+                                                <th className="p-1 border-r border-black">S.No.</th>
+                                                <th className="p-1 border-r border-black text-left">Name of the Partners</th>
+                                                <th className="p-1 text-right">Share of Profit/Loss</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {formData.partners.map((p, i) => (
+                                                <tr key={p.name} className="border-b border-black">
+                                                    <td className="p-1 border-r border-black text-center">{i+1}.</td>
+                                                    <td className="p-1 border-r border-black">{p.name}</td>
+                                                    <td className="p-1 text-right">{p.profitShare}%</td>
+                                                </tr>
+                                            ))}
+                                            <tr className="font-bold">
+                                                <td colSpan={2} className="p-1 border-r border-black text-right">Total</td>
+                                                <td className="p-1 text-right">100%</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    The divisible profits and losses shall be arrived at after providing for the interest on the accounts of the partners and remuneration to working partners as hereinafter provided for as per the terms of this partnership deed.
+                                </li>
+                                <li>The Partners shall be entitled for interest at the rate of <strong>{formData.interestOnCapital}% per annum</strong> or such other higher rate as may be prescribed under the Income Tax Act on the amount outstanding to their respective capital accounts. In case of Loss or lower income, the interest can be NIL or lower than aforementioned rate, as the partners may decide from time to time.</li>
+                                <li>The firm shall not be dissolved on death or retirement of any one or more of the partners unless the remaining partners with mutual consent decide otherwise.</li>
+                                {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
+                            </ol>
+
+                            <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
+                        </div>
                     </div>
-
-                    {/* Main Deed */}
-                    <h2 className="text-center font-bold break-before-page">PARTNERSHIP DEED</h2>
-                    <h3 className="text-center font-bold">{(formData.firmName || "[Firm Name]").toUpperCase()}</h3>
-                    
-                    <p>This Deed of Partnership is executed on this the <strong>{formattedDate}</strong>, by and between:-</p>
-                    
-                    <ol className="list-decimal list-inside space-y-2">
-                        {formData.partners.map((p, i) => (
-                           <li key={p.name}>
-                               <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
-                           </li>
-                        ))}
-                    </ol>
-                    
-                    <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity}</strong>" under the name & style of "<strong>{formData.firmName}</strong>", with effect from today, i.e. the {formattedDate}.</p>
-                    <p>AND WHEREAS both the Partners hereto have decided to reduce the terms and conditions of this instrument into writing so as to avoid misunderstandings, which may arise in future.</p>
-                    
-                    <h4 className="font-bold mt-4">NOW THIS DEED OF PARTNERSHIP WITNESSETH AS UNDER:-</h4>
-                    
-                    <ol className="list-decimal list-inside space-y-3">
-                        <li>The Name of the partnership business shall be “<strong>{formData.firmName}</strong>” and such other names as the partners may decide from time to time.</li>
-                        <li>The Principal place of business shall be at “<strong>{formData.firmAddress}</strong>” and such other places may decide from time to time.</li>
-                        <li>The Partnership has come into existence with effect from today, i.e. the {formattedDate}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
-                        <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity}</strong>” and such other business as the partners may decide from time to time.</li>
-                        <li>The capital required for the purpose of the partnership business shall be contributed and arranged by the partners from time to time as and when needed in such manner as may be mutually agreed upon.</li>
-                        <li className="font-bold italic text-center my-4">(Conti.........Page 2)</li>
-                        <h4 className="font-bold text-center break-before-page">Page 2</h4>
-                        <li>The Partners shall share the profits and bear the losses of the partnership business as under:
-                             <table className="w-full my-2 border border-black">
-                                <thead>
-                                    <tr className="border-b border-black">
-                                        <th className="p-1 border-r border-black">S.No.</th>
-                                        <th className="p-1 border-r border-black text-left">Name of the Partners</th>
-                                        <th className="p-1 text-right">Share of Profit/Loss</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {formData.partners.map((p, i) => (
-                                        <tr key={p.name} className="border-b border-black">
-                                            <td className="p-1 border-r border-black text-center">{i+1}.</td>
-                                            <td className="p-1 border-r border-black">{p.name}</td>
-                                            <td className="p-1 text-right">{p.profitShare}%</td>
-                                        </tr>
-                                    ))}
-                                    <tr className="font-bold">
-                                        <td colSpan={2} className="p-1 border-r border-black text-right">Total</td>
-                                        <td className="p-1 text-right">100%</td>
-                                    </tr>
-                                </tbody>
-                             </table>
-                             The divisible profits and losses shall be arrived at after providing for the interest on the accounts of the partners and remuneration to working partners as hereinafter provided for as per the terms of this partnership deed.
-                        </li>
-                        <li>The Partners shall be entitled for interest at the rate of <strong>{formData.interestOnCapital}% per annum</strong> or such other higher rate as may be prescribed under the Income Tax Act on the amount outstanding to their respective capital accounts. In case of Loss or lower income, the interest can be NIL or lower than aforementioned rate, as the partners may decide from time to time.</li>
-                        <li>The firm shall not be dissolved on death or retirement of any one or more of the partners unless the remaining partners with mutual consent decide otherwise.</li>
-                        {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
-                    </ol>
-
-                     <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
