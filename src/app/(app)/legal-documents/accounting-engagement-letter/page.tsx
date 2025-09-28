@@ -312,9 +312,7 @@ export default function AccountingEngagementLetterPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <div onClick={handlePrint}>
-                        <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
-                    </div>
+                    <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         );
