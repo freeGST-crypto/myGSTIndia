@@ -287,7 +287,8 @@ export default function PartnershipDeedPage() {
                 </div>
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
-               {form.formState.errors.partners && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.message}</p>}
+               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
+               {form.formState.errors.partners && !form.formState.errors.partners.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.message}</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -419,7 +420,7 @@ export default function PartnershipDeedPage() {
                     </FormItem>
                 )}/>
                  <Button type="button" onClick={handleSuggestClauses} disabled={isSuggestingClauses}>
-                    {isSuggestingClauses ? <Loader2 className="animate-spin mr-2"/> : <Wand2 className="mr-2" />}
+                    {isSuggestingClauses ? <Loader2 className="animate-spin mr-2"/> : <Wand2 className="mr-2"/>}
                     Suggest Clauses with AI
                 </Button>
             </CardContent>
@@ -628,12 +629,12 @@ export default function PartnershipDeedPage() {
 
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                  <Button type="button" variant="outline" onClick={handleBack}>
-                    <ArrowLeft className="mr-2"/> Back
-                  </Button>
-                  <Button type="button" onClick={handlePrint}>
-                    <Printer className="mr-2"/> Print / Save as PDF
-                  </Button>
+                    <Button type="button" variant="outline" onClick={handleBack}>
+                        <ArrowLeft className="mr-2"/> Back
+                    </Button>
+                    <Button type="button" onClick={handlePrint}>
+                        <Printer className="mr-2"/> Print / Save as PDF
+                    </Button>
                 </CardFooter>
             </Card>
         )

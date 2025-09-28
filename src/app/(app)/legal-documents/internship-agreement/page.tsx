@@ -19,6 +19,7 @@ import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
 import { ShareButtons } from "@/components/documents/share-buttons";
 
+
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
   companyAddress: z.string().min(10, "Company address is required."),
@@ -59,15 +60,23 @@ export default function InternshipAgreementPage() {
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      ...form.getValues(),
+      agreementDate: new Date().toISOString().split("T")[0],
+    });
+  }, [form]);
+
+
   const processStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
     switch (step) {
-        case 1:
-            fieldsToValidate = ["companyName", "companyAddress", "internName", "internAddress", "agreementDate", "startDate", "endDate"];
-            break;
-        case 2:
-            fieldsToValidate = ["internshipTitle", "department", "stipend", "learningObjectives", "confidentiality", "signerName", "signerTitle"];
-            break;
+      case 1:
+        fieldsToValidate = ["companyName", "companyAddress", "internName", "internAddress", "agreementDate", "startDate", "endDate"];
+        break;
+      case 2:
+        fieldsToValidate = ["internshipTitle", "department", "stipend", "learningObjectives", "confidentiality", "signerName", "signerTitle"];
+        break;
     }
     
     const isValid = await form.trigger(fieldsToValidate);

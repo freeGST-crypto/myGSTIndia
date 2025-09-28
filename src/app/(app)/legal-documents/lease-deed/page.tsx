@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -233,83 +234,84 @@ export default function LeaseDeedPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Lease Deed.</CardDescription></CardHeader>
-                <CardContent ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <h2 className="text-center font-bold">DEED OF LEASE</h2>
-                    <p>This Deed of Lease is made at <strong>{formData.landlordAddress.split(',').pop()?.trim()}</strong> this <strong>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>
-                    
-                    <p className="font-bold">BETWEEN:</p>
-                    <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called 'The Lessor' of the One Part).</p>
-                    
-                    <p className="font-bold">AND:</p>
-                    <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called 'The Lessee' of the Other Part).</p>
-
-                    <h4 className="font-bold mt-4">WHEREAS:</h4>
-                    <ol className="list-[upper-alpha] list-inside space-y-2">
-                        <li>The Lessor is the absolute owner of or otherwise well and sufficiently entitled to the land and premises described in the Schedule hereunder written.</li>
-                        <li>The Lessor has agreed to grant to the Lessee a lease in respect of the said land and premises for a term of <strong>{termInYears.toFixed(1)} years</strong> in the manner hereinafter appearing.</li>
-                    </ol>
-
-                    <h4 className="font-bold mt-4">NOW THIS DEED WITNESSETH AS FOLLOWS:</h4>
-                    <ol className="list-decimal list-inside space-y-3">
-                        <li>In pursuance of the said agreement and in consideration of the rent hereby reserved and of the terms and conditions, covenants and agreements herein contained and on the part of the Lessee to be observed and performed the Lessor doth hereby demise unto the Lessee all that the said land and premises situated at <strong>{formData.propertyAddress}</strong> (hereinafter for the brevity's sake referred to as 'the demised premises') to hold the demised premises unto the Lessee for a term of <strong>{formData.leaseTermMonths} months</strong> commencing from <strong>{startDate}</strong>, yielding and paying therefor during the said term the monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong> free and clear of all deductions and strictly in advance on or before the <strong>{formData.rentPaymentDay}th day</strong> of each and every calendar month.</li>
+                <CardContent>
+                    <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                        <h2 className="text-center font-bold">DEED OF LEASE</h2>
+                        <p>This Deed of Lease is made at <strong>{formData.landlordAddress.split(',').pop()?.trim()}</strong> this <strong>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>
                         
-                        <li>The Lessee hereby covenants with the Lessor as follows:
-                            <ul className="list-[lower-alpha] list-inside pl-4 mt-2 space-y-2">
-                                <li>To pay the rent hereby reserved on the days and in the manner aforesaid. If the rent is not paid on the due dates, the Lessee shall pay interest thereon at the rate of 18% per annum from the due date till payment.</li>
-                                <li>To bear, pay and discharge all existing and future rates, taxes, assessment duties, cess, impositions, and other outgoings whatsoever imposed or charged upon the demised land and payable by the occupier.</li>
-                                <li>To keep the demised premises in good and tenantable repairs (reasonable wear and tear excepted).</li>
-                                <li>Not to make any structural alterations or additions to the demised premises without the prior written consent of the Lessor.</li>
-                                <li>To use the demised premises only for <strong>{formData.propertyType}</strong> purposes and not for any illegal or immoral activities.</li>
-                            </ul>
-                        </li>
+                        <p className="font-bold">BETWEEN:</p>
+                        <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called 'The Lessor' of the One Part).</p>
+                        
+                        <p className="font-bold">AND:</p>
+                        <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called 'The Lessee' of the Other Part).</p>
 
-                        <li>The Lessor doth hereby covenant with the Lessee that on the Lessee paying the said monthly rent and observing and performing the covenants herein contained, they shall peaceably and quietly hold, possess and enjoy the demised premises during the said term without any eviction, interruption, or disturbance by the Lessor.</li>
-
-                        <li>It is hereby agreed that if the rent shall be in arrears for a space of two months or if any of the covenants on the part of the Lessee shall not be performed, it shall be lawful for the Lessor to re-enter upon the demised premises, without prejudice to the right of action of the Lessor in respect of any breach of the covenants.</li>
-
-                        <li>On the expiration of the term hereby created, all buildings and structures standing on the demised land shall automatically vest in the Lessor without payment of any compensation therefor by the Lessor to the Lessee.</li>
-
-                        <li>The Lessee shall not be entitled, without obtaining in writing the permission of the Lessor, to assign, mortgage, or sublet the demised premises. Such permission shall not be unreasonably withheld.</li>
-                    </ol>
-
-                    <p className="mt-8">IN WITNESS WHEREOF the Lessor and the Lessee have put their respective hands on the original and duplicate hereof the day and year first herein above written.</p>
-                    
-                     <h4 className="font-bold mt-8">THE SCHEDULE ABOVE REFERRED TO</h4>
-                     <p>(Full description of the property being leased)</p>
-                     <p>All that piece and parcel of {formData.propertyType} premises situated at: <strong>{formData.propertyAddress}</strong>, with all fittings, fixtures, and appurtenances.</p>
-
-                    <div className="flex justify-between mt-16">
-                        <div className="text-center">
-                            <p>_________________________</p>
-                            <p>(THE LESSOR)</p>
-                            <p>{formData.landlordName}</p>
-                        </div>
-                        <div className="text-center">
-                            <p>_________________________</p>
-                            <p>(THE LESSEE)</p>
-                            <p>{formData.tenantName}</p>
-                        </div>
-                    </div>
-                     <div className="mt-16">
-                        <p>WITNESSES:</p>
-                        <ol className="list-decimal list-inside mt-8 space-y-8">
-                            <li>
-                                <p>Name: _________________________</p>
-                                <p>Address: _______________________</p>
-                                <p>Signature: ______________________</p>
-                            </li>
-                            <li>
-                                <p>Name: _________________________</p>
-                                <p>Address: _______________________</p>
-                                <p>Signature: ______________________</p>
-                            </li>
+                        <h4 className="font-bold mt-4">WHEREAS:</h4>
+                        <ol className="list-[upper-alpha] list-inside space-y-2">
+                            <li>The Lessor is the absolute owner of or otherwise well and sufficiently entitled to the land and premises described in the Schedule hereunder written.</li>
+                            <li>The Lessor has agreed to grant to the Lessee a lease in respect of the said land and premises for a term of <strong>{termInYears.toFixed(1)} years</strong> in the manner hereinafter appearing.</li>
                         </ol>
-                    </div>
 
+                        <h4 className="font-bold mt-4">NOW THIS DEED WITNESSETH AS FOLLOWS:</h4>
+                        <ol className="list-decimal list-inside space-y-3">
+                            <li>In pursuance of the said agreement and in consideration of the rent hereby reserved and of the terms and conditions, covenants and agreements herein contained and on the part of the Lessee to be observed and performed the Lessor doth hereby demise unto the Lessee all that the said land and premises situated at <strong>{formData.propertyAddress}</strong> (hereinafter for the brevity's sake referred to as 'the demised premises') to hold the demised premises unto the Lessee for a term of <strong>{formData.leaseTermMonths} months</strong> commencing from <strong>{startDate}</strong>, yielding and paying therefor during the said term the monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong> free and clear of all deductions and strictly in advance on or before the <strong>{formData.rentPaymentDay}th day</strong> of each and every calendar month.</li>
+                            
+                            <li>The Lessee hereby covenants with the Lessor as follows:
+                                <ul className="list-[lower-alpha] list-inside pl-4 mt-2 space-y-2">
+                                    <li>To pay the rent hereby reserved on the days and in the manner aforesaid. If the rent is not paid on the due dates, the Lessee shall pay interest thereon at the rate of 18% per annum from the due date till payment.</li>
+                                    <li>To bear, pay and discharge all existing and future rates, taxes, assessment duties, cess, impositions, and other outgoings whatsoever imposed or charged upon the demised land and payable by the occupier.</li>
+                                    <li>To keep the demised premises in good and tenantable repairs (reasonable wear and tear excepted).</li>
+                                    <li>Not to make any structural alterations or additions to the demised premises without the prior written consent of the Lessor.</li>
+                                    <li>To use the demised premises only for <strong>{formData.propertyType}</strong> purposes and not for any illegal or immoral activities.</li>
+                                </ul>
+                            </li>
+
+                            <li>The Lessor doth hereby covenant with the Lessee that on the Lessee paying the said monthly rent and observing and performing the covenants herein contained, they shall peaceably and quietly hold, possess and enjoy the demised premises during the said term without any eviction, interruption, or disturbance by the Lessor.</li>
+
+                            <li>It is hereby agreed that if the rent shall be in arrears for a space of two months or if any of the covenants on the part of the Lessee shall not be performed, it shall be lawful for the Lessor to re-enter upon the demised premises, without prejudice to the right of action of the Lessor in respect of any breach of the covenants.</li>
+
+                            <li>On the expiration of the term hereby created, all buildings and structures standing on the demised land shall automatically vest in the Lessor without payment of any compensation therefor by the Lessor to the Lessee.</li>
+
+                            <li>The Lessee shall not be entitled, without obtaining in writing the permission of the Lessor, to assign, mortgage, or sublet the demised premises. Such permission shall not be unreasonably withheld.</li>
+                        </ol>
+
+                        <p className="mt-8">IN WITNESS WHEREOF the Lessor and the Lessee have put their respective hands on the original and duplicate hereof the day and year first herein above written.</p>
+                        
+                         <h4 className="font-bold mt-8">THE SCHEDULE ABOVE REFERRED TO</h4>
+                         <p>(Full description of the property being leased)</p>
+                         <p>All that piece and parcel of {formData.propertyType} premises situated at: <strong>{formData.propertyAddress}</strong>, with all fittings, fixtures, and appurtenances.</p>
+
+                        <div className="flex justify-between mt-16">
+                            <div className="text-center">
+                                <p>_________________________</p>
+                                <p>(THE LESSOR)</p>
+                                <p>{formData.landlordName}</p>
+                            </div>
+                            <div className="text-center">
+                                <p>_________________________</p>
+                                <p>(THE LESSEE)</p>
+                                <p>{formData.tenantName}</p>
+                            </div>
+                        </div>
+                         <div className="mt-16">
+                            <p>WITNESSES:</p>
+                            <ol className="list-decimal list-inside mt-8 space-y-8">
+                                <li>
+                                    <p>Name: _________________________</p>
+                                    <p>Address: _______________________</p>
+                                    <p>Signature: ______________________</p>
+                                </li>
+                                <li>
+                                    <p>Name: _________________________</p>
+                                    <p>Address: _______________________</p>
+                                    <p>Signature: ______________________</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                    <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         );
