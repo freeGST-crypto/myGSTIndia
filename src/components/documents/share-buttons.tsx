@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -28,18 +29,19 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
 
     toast({ title: "Generating PDF...", description: "Please wait..." });
 
+    const element = contentRef.current;
     const options = {
-      margin: [10, 10, 10, 10], // top, left, bottom, right in mm
+      margin: [10, 5, 10, 5], // top, left, bottom, right in mm
       filename: `${fileName}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+      pagebreak: { mode: ["css", "legacy"], before: '.break-before-page' },
     };
 
     html2pdf()
       .set(options)
-      .from(contentRef.current)
+      .from(element)
       .save()
       .then(() => {
         toast({ title: "Download Complete", description: `${fileName}.pdf has been downloaded.` });

@@ -58,7 +58,10 @@ const formSchema = z.object({
   partnershipDuration: z.enum(["at-will", "fixed-term"]),
   termYears: z.coerce.number().optional(),
   
-  partners: z.array(partnerSchema).min(2, "At least two partners are required."),
+  partners: z.array(partnerSchema).min(2, "At least two partners are required.")
+    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
+        message: "At least two partners must be designated partners.",
+    }),
   
   totalCapital: z.coerce.number().positive(),
 
@@ -108,7 +111,7 @@ export default function PartnershipDeedPage() {
       partnershipDuration: "at-will",
       partners: [
         { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
-        { name: "", parentage: "", address: "", age: 30, capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
+        { name: "", parentage: "", address: "", isDesignated: false, age: 30, capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
       ],
       totalCapital: 100000,
       interestOnCapital: 12,
@@ -305,7 +308,7 @@ export default function PartnershipDeedPage() {
                     <FormField control={form.control} name="interestOnCapital" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Interest on Capital (% p.a.)</FormLabel>
-                            <FormControl><Input type="number" placeholder="12" {...field} /></FormControl>
+                            <FormControl><Input type="number" {...field} /></FormControl>
                             <FormDescription>As per the Income Tax Act, the maximum deductible interest is 12% p.a. Enter 0 for no interest.</FormDescription>
                             <FormMessage />
                         </FormItem>
@@ -441,8 +444,8 @@ export default function PartnershipDeedPage() {
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
                 <CardContent>
-                    <div className="print-section">
-                        <div ref={printRef} id="printable-area" className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+                    <div ref={printRef} className="print-section">
+                        <div id="printable-area" className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                             {/* Form No. 1 */}
                             <div className="text-center space-y-2 mb-12">
                                 <h4 className="font-bold">Form No. 1</h4>
@@ -497,7 +500,7 @@ export default function PartnershipDeedPage() {
                                 
                                 <ol className="list-decimal list-inside space-y-2">
                                     {formData.partners.map((p, i) => (
-                                    <li key={i}>
+                                    <li key={p.name}>
                                         <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
                                     </li>
                                     ))}
@@ -528,7 +531,7 @@ export default function PartnershipDeedPage() {
                                             </thead>
                                             <tbody>
                                                 {formData.partners.map((p, i) => (
-                                                    <tr key={i} className="border-b border-black">
+                                                    <tr key={p.name} className="border-b border-black">
                                                         <td className="p-1 border-r border-black text-center">{i+1}.</td>
                                                         <td className="p-1 border-r border-black">{p.name}</td>
                                                         <td className="p-1 text-right">{p.profitShare}%</td>
@@ -547,8 +550,8 @@ export default function PartnershipDeedPage() {
                                     {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
                                 </ol>
 
-                                <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
-
+                                <p className="mt-8">IN WITNESS WHEREOF, the Partners hereto have signed this Agreement on the day, month and year first above written.</p>
+                                
                                 <div className="grid grid-cols-2 gap-16 mt-16">
                                     {formData.partners.map(p => (
                                         <div key={p.name} className="text-center">
@@ -575,12 +578,12 @@ export default function PartnershipDeedPage() {
                     </div>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <ShareButtons 
-                        contentRef={printRef}
-                        fileName={`Partnership_Deed_${formData.firmName}`}
-                        whatsappMessage={whatsappMessage}
-                    />
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <ShareButtons 
+                    contentRef={printRef}
+                    fileName={`Partnership_Deed_${formData.firmName}`}
+                    whatsappMessage={whatsappMessage}
+                  />
                 </CardFooter>
             </Card>
         );
