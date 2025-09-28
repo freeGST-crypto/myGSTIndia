@@ -42,7 +42,7 @@ import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
   name: z.string().min(2, "Partner name is required."),
-  parentage: z.string().min(3, "S/o, W/o, D/o is required."),
+  parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
   age: z.coerce.number().positive("Age must be a positive number.").default(30),
   address: z.string().min(10, "Address is required."),
   capitalContribution: z.coerce.number().positive("Must be a positive number."),
@@ -62,7 +62,7 @@ const formSchema = z.object({
   
   totalCapital: z.coerce.number().positive(),
 
-  interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional().default(0),
+  interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional().default(12),
   partnerRemuneration: z.coerce.number().min(0).optional().default(0),
   
   bankAuthority: z.enum(["joint", "single", "specific"]),
@@ -442,7 +442,7 @@ export default function PartnershipDeedPage() {
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
                 <CardContent>
                     <div ref={printRef} className="print-section">
-                        <div id="printable-area" className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+                        <div className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                             {/* Form No. 1 */}
                             <div className="text-center space-y-2 mb-12">
                                 <h4 className="font-bold">Form No. 1</h4>
@@ -463,7 +463,7 @@ export default function PartnershipDeedPage() {
                                 <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
                                 <tbody>
                                     {formData.partners.map((p, i) => (
-                                        <tr key={p.name}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
+                                        <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
                                     ))}
                                 </tbody>
                             </table>
@@ -474,13 +474,13 @@ export default function PartnershipDeedPage() {
                                 </div>
                                 <div>
                                     <p>Signatures</p>
-                                    {formData.partners.map((p, i) => <p key={p.name} className="mt-8">({i+1})</p>)}
+                                    {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
                                 </div>
                             </div>
                             <div className="mt-16 space-y-8">
                                 <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
                                 {formData.partners.map((p, i) => (
-                                    <div key={p.name}>
+                                    <div key={i}>
                                         <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
                                         <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
                                         <p>Witness</p>
@@ -497,7 +497,7 @@ export default function PartnershipDeedPage() {
                                 
                                 <ol className="list-decimal list-inside space-y-2">
                                     {formData.partners.map((p, i) => (
-                                    <li key={p.name}>
+                                    <li key={i}>
                                         <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
                                     </li>
                                     ))}
@@ -516,7 +516,8 @@ export default function PartnershipDeedPage() {
                                     <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>” and such other business as the partners may decide from time to time.</li>
                                     <li>The capital required for the purpose of the partnership business shall be contributed and arranged by the partners from time to time as and when needed in such manner as may be mutually agreed upon.</li>
                                     <li className="font-bold italic text-center my-4">(Conti.........Page 2)</li>
-                                    <h4 className="font-bold text-center break-before-page">Page 2</h4>
+                                    <div className="break-before-page"></div>
+                                    <h4 className="font-bold text-center">Page 2</h4>
                                     <li>The Partners shall share the profits and bear the losses of the partnership business as under:
                                         <table className="w-full my-2 border border-black">
                                             <thead>

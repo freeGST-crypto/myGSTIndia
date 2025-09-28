@@ -4,7 +4,8 @@
 import { Button } from "@/components/ui/button";
 import { Printer, FileDown, MessageSquare } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
-import html2pdf from "html2pdf.js";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import React from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,40 +18,66 @@ interface ShareButtonsProps {
 export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareButtonsProps) {
   const { toast } = useToast();
 
-  // Print handler
+  // Print handler - this uses the browser's native print functionality
   const handlePrint = useReactToPrint({
     content: () => contentRef.current,
     documentTitle: fileName,
   });
 
-  // Multi-page PDF download using html2pdf.js
-  const handleDownloadPDF = () => {
-    if (!contentRef.current) return;
+  const handleDownloadPDF = async () => {
+    const input = contentRef.current;
+    if (!input) {
+        toast({ variant: "destructive", title: "Error", description: "Printable content not found." });
+        return;
+    }
 
-    toast({ title: "Generating PDF...", description: "Please wait..." });
+    toast({ title: "Generating PDF...", description: "Please wait while the document is being prepared." });
 
-    const element = contentRef.current;
-    const options = {
-      margin: [10, 5, 10, 5], // top, left, bottom, right in mm
-      filename: `${fileName}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"], before: '.break-before-page' },
-    };
+    try {
+        const canvas = await html2canvas(input, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            scrollY: -window.scrollY,
+            windowWidth: input.scrollWidth,
+            windowHeight: input.scrollHeight
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4'); // A4 size page of PDF
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps= pdf.getImageProperties(imgData);
+        const imgWidth = imgProps.width;
+        const imgHeight = imgProps.height;
+        
+        const ratio = imgWidth / pdfWidth;
+        const canvasHeight = imgHeight / ratio;
+        
+        let heightLeft = canvasHeight;
+        let position = 0;
 
-    html2pdf()
-      .set(options)
-      .from(element)
-      .save()
-      .then(() => {
+        // Add the first page
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, canvasHeight);
+        heightLeft -= pdfHeight;
+
+        // Add subsequent pages
+        while (heightLeft > 0) {
+            position = heightLeft - canvasHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, canvasHeight);
+            heightLeft -= pdfHeight;
+        }
+
+        pdf.save(`${fileName}.pdf`);
         toast({ title: "Download Complete", description: `${fileName}.pdf has been downloaded.` });
-      })
-      .catch((err) => {
-        console.error(err);
-        toast({ variant: "destructive", title: "Error", description: "Failed to generate PDF." });
-      });
+
+    } catch (error) {
+        console.error("Failed to generate PDF:", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to generate PDF. Please try again." });
+    }
   };
+
 
   // WhatsApp share
   const handleWhatsAppShare = () => {
