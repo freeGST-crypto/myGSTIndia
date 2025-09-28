@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -311,8 +311,10 @@ export default function AccountingEngagementLetterPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                    <div onClick={handlePrint}>
+                        <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
+                    </div>
                 </CardFooter>
             </Card>
         );

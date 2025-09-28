@@ -217,7 +217,9 @@ export default function ServiceAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                  <div onClick={handlePrint}>
+                    <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
+                  </div>
                 </CardFooter>
             </Card>
         );
