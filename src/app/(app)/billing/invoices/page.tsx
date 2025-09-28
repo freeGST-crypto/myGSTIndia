@@ -51,7 +51,6 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { InvoicePreview } from "@/components/billing/invoice-preview";
-import { useReactToPrint } from 'react-to-print';
 import { ShareButtons } from "@/components/documents/share-buttons";
 
 declare module 'jspdf' {
@@ -248,7 +247,7 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isEwaybillDialogOpen, setIsEwaybillDialogOpen] = useState(false);
 
-  const invoicePreviewRef = useRef(null);
+  const invoicePreviewRef = useRef<HTMLDivElement>(null);
 
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);

@@ -5,7 +5,6 @@ import * as React from "react";
 import { format } from 'date-fns';
 import QRCode from 'qrcode';
 import Image from 'next/image';
-import { ShareButtons } from "@/components/documents/share-buttons";
 
 const numberToWords = (num: number): string => {
     const a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
@@ -49,8 +48,6 @@ interface InvoicePreviewProps {
 export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewProps>(
   ({ invoice, customers }, ref) => {
     const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState('');
-    const contentRef = React.useRef<HTMLDivElement>(null);
-
 
     const customerDetails = customers.find(c => c.id === invoice.raw.customerId);
     const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234", upiId: "gstease@okhdfcbank" };
@@ -72,9 +69,6 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
         total: invoice.amount
     }];
     
-    const whatsappMessage = `Dear ${customerDetails?.name || invoice.customer},\n\nPlease find attached your invoice ${invoice.id} for ₹${invoice.amount.toFixed(2)}.\n\nThank you for your business!\n${companyDetails.name}`;
-
-
     React.useEffect(() => {
         if (companyDetails.upiId) {
             const upiString = `upi://pay?pa=${companyDetails.upiId}&pn=${encodeURIComponent(companyDetails.name)}&am=${invoice.amount.toFixed(2)}&cu=INR&tn=${invoice.id}`;
@@ -90,8 +84,7 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
 
 
     return (
-      <div ref={ref} className="bg-white p-0 text-black font-sans text-xs">
-        <div ref={contentRef} className="p-8">
+      <div ref={ref} className="bg-white p-8 text-black font-sans text-xs">
             <header className="text-center border-b-2 border-slate-700 pb-4 mb-8">
                 <h1 className="text-2xl font-bold m-0 text-slate-800">TAX INVOICE</h1>
             </header>
@@ -179,7 +172,6 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
                 <div className="h-20"></div>
                 <p className="border-t pt-1">Authorised Signatory</p>
             </footer>
-        </div>
       </div>
     );
   }

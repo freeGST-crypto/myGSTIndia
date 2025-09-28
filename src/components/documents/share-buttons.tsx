@@ -42,14 +42,20 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
     }
     
     setIsProcessing(true);
+    toast({ title: 'Generating PDF...', description: 'Please wait while your document is being prepared.'});
+    
     try {
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`${fileName}.pdf`);
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        await pdf.html(element, {
+            callback: function (doc) {
+                doc.save(`${fileName}.pdf`);
+            },
+            x: 10,
+            y: 10,
+            width: 190, // A4 width in mm approx
+            windowWidth: element.scrollWidth,
+            autoPaging: 'slice',
+        });
         toast({ title: "Download Successful", description: `${fileName}.pdf has been downloaded.` });
     } catch (error) {
         console.error(error);
@@ -72,6 +78,10 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
 
   return (
     <div className="flex gap-2">
+      <Button variant="outline" onClick={handlePrint} disabled={isProcessing}>
+        {isProcessing ? <Loader2 className="mr-2 animate-spin" /> : <Printer className="mr-2" />}
+        Print
+      </Button>
       <Button onClick={handleDownloadPdf} disabled={isProcessing}>
         {isProcessing ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
         Download PDF
