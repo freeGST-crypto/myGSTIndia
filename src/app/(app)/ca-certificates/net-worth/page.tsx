@@ -20,6 +20,7 @@ import { ShareButtons } from "@/components/documents/share-buttons";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { format } from "date-fns";
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
