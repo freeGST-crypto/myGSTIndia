@@ -38,7 +38,6 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { suggestClausesAction } from "./actions";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useReactToPrint } from "react-to-print";
 import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
@@ -60,8 +59,8 @@ const formSchema = z.object({
   termYears: z.coerce.number().optional(),
   
   partners: z.array(partnerSchema).min(2, "At least two partners are required.")
-    .refine(partners => partners.filter(p => p.isWorkingPartner).length >= 1, {
-        message: "At least one partner must be a working partner.",
+    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
+        message: "At least two partners must be designated partners.",
     }),
   
   totalCapital: z.coerce.number().positive(),
@@ -440,10 +439,14 @@ export default function PartnershipDeedPage() {
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
         const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
         const commencementDateFormatted = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
+        const whatsappMessage = `Hi, please find the attached draft Partnership Deed for ${formData.firmName}. Kindly review and let me know if any changes are required.`;
 
         return (
              <Card>
-                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
+                <CardHeader>
+                    <CardTitle>Final Step: Preview & Download</CardTitle>
+                    <CardDescription>Review the generated Partnership Deed.</CardDescription>
+                </CardHeader>
                 <CardContent>
                     <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     
@@ -556,7 +559,11 @@ export default function PartnershipDeedPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <ShareButtons contentRef={printRef} fileName={`Partnership_Deed_${formData.firmName}`} />
+                    <ShareButtons 
+                        contentRef={printRef}
+                        fileName={`Partnership_Deed_${formData.firmName}`}
+                        whatsappMessage={whatsappMessage}
+                    />
                 </CardFooter>
             </Card>
         )
