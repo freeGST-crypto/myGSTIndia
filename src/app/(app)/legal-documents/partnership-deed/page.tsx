@@ -257,7 +257,8 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 2: Partner & Contribution Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
-              {form.formState.errors.partners?.message && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.message}</p>}
+              <FormField control={form.control} name="totalCapital" render={({ field }) => (<FormItem><FormLabel>Total Capital Contribution of LLP (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              {form.formState.errors.totalCapital && <p className="text-sm font-medium text-destructive">{form.formState.errors.totalCapital.message}</p>}
               <Separator />
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
@@ -293,7 +294,7 @@ export default function PartnershipDeedPage() {
                 </div>
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
-               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
+              {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
                {form.formState.errors.partners && !form.formState.errors.partners.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
@@ -550,7 +551,13 @@ export default function PartnershipDeedPage() {
                      <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
 
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                    <ShareButtons
+                        contentRef={printRef}
+                        fileName={`Partnership_Deed_${formData.firmName}`}
+                    />
+                </CardFooter>
             </Card>
         )
       default:
