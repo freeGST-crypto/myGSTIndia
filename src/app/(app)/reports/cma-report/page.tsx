@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -43,9 +43,9 @@ import {
   AlertTriangle,
   FileSignature,
   ArrowLeft,
+  Printer,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Accordion } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { getCmaObservationsAction } from "./actions";
 
@@ -68,10 +68,10 @@ import {
 } from "@/lib/cma-logic";
 
 // Import export helpers
-import { exportToPdf, exportToExcel } from "@/lib/cma-utils";
+import { exportToExcel } from "@/lib/cma-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShareButtons } from "@/components/documents/share-buttons";
 import Link from "next/link";
+import { useReactToPrint } from "react-to-print";
 
 const initialAssets: FixedAsset[] = [
   { id: 1, name: "Plant & Machinery", cost: 1000000, depreciationRate: 15, additionYear: 0 },
@@ -97,6 +97,13 @@ export default function CmaReportGeneratorPage() {
   const [aiObservations, setAiObservations] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const reportPrintRef = useRef(null);
+  const handlePrint = useReactToPrint({
+      content: () => reportPrintRef.current,
+      documentTitle: "CMA_Report",
+      onAfterPrint: () => toast({ title: "Print/Save dialog closed."})
+  });
   
   const handleGenerateReport = () => {
     setIsGenerating(true);
@@ -397,7 +404,7 @@ export default function CmaReportGeneratorPage() {
                     <CardTitle>Generated CMA Report</CardTitle>
                     <CardDescription>Review the projected financial statements. You can export the full report below.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent ref={reportPrintRef}>
                     {generatedReport && (
                         <Accordion type="multiple" defaultValue={["operating-statement", "balance-sheet"]} className="w-full">
                            <OperatingStatement key="operating-statement" report={generatedReport}/>
@@ -418,7 +425,7 @@ export default function CmaReportGeneratorPage() {
                            Get AI Observations
                         </Button>
                         <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                        <Button variant="outline" onClick={() => exportToPdf(generatedReport)}><FileDown className="mr-2"/> Export to PDF</Button>
+                        <Button variant="outline" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
                     </div>
                 </CardFooter>
             </Card>
@@ -431,7 +438,7 @@ export default function CmaReportGeneratorPage() {
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            This action will send a request to the admin for digital signature. The admin can then sign the document offline and upload the certified copy.
+                            This action will send a request to the Admin for digital signature. The admin can then sign the document offline and upload the certified copy.
                         </p>
                     </CardContent>
                     <CardFooter>
@@ -462,7 +469,7 @@ export default function CmaReportGeneratorPage() {
                     <Button variant="secondary" onClick={() => setActiveTab('report')}>Back to Report</Button>
                      <div className="flex gap-2">
                         <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                        <Button variant="outline" onClick={() => exportToPdf(generatedReport)}><FileDown className="mr-2"/> Export to PDF</Button>
+                        <Button variant="outline" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
                     </div>
                 </CardFooter>
             </Card>

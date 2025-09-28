@@ -20,10 +20,10 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FileDown, Calendar as CalendarIcon } from "lucide-react";
+import { FileDown, Calendar as CalendarIcon, Printer } from "lucide-react";
 import { ReportRow } from "@/components/accounting/report-row";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useContext, useMemo } from "react";
+import { useState, useContext, useMemo, useRef } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -34,14 +34,8 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { collection, query, where } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { useReactToPrint } from "react-to-print";
 
-declare module 'jspdf' {
-    interface jsPDF {
-        autoTable: (options: any) => jsPDF;
-    }
-}
 
 const formatCurrency = (value: number) => {
     // A value of -0.000001 should be 0.00, not -0.00
@@ -54,6 +48,12 @@ export default function BalanceSheetPage() {
     const { journalVouchers } = useContext(AccountingContext)!;
     const [user] = useAuthState(auth);
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const reportRef = useRef(null);
+
+    const handlePrint = useReactToPrint({
+        content: () => reportRef.current,
+        documentTitle: `Balance_Sheet_${format(date || new Date(), "yyyy-MM-dd")}`
+    });
 
     const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
     const [customersSnapshot] = useCollection(customersQuery);
@@ -169,63 +169,6 @@ export default function BalanceSheetPage() {
         ];
     }, [journalVouchers, netProfit, capitalAccount, reservesAndSurplus]);
     
-    const exportPdf = () => {
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text("Balance Sheet", 14, 22);
-        doc.setFontSize(11);
-        doc.text(`As on ${date ? format(date, "dd MMM, yyyy") : 'selected date'}`, 14, 29);
-
-        // Liabilities and Equity
-        const liabilitiesData = [
-            ["Capital & Reserves", ""],
-            ["  Capital Account", formatCurrency(capitalAccount)],
-            ["  Reserves & Surplus (incl. P&L)", formatCurrency(reservesAndSurplus)],
-            ["Long-Term Liabilities", ""],
-            ...longTermLiabilitiesAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
-            ["Current Liabilities", ""],
-            ...currentLiabilitiesAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
-        ];
-        (doc as any).autoTable({
-            head: [['Liabilities & Equity', 'Amount (₹)']],
-            body: liabilitiesData,
-            startY: 40,
-            theme: 'striped',
-            styles: { fontSize: 10 },
-            headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-            foot: [
-                ['Total', formatCurrency(totalEquityAndLiabilities)]
-            ],
-            footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] }
-        });
-
-        // Assets
-        const assetsData = [
-            ["Fixed Assets", ""],
-            ...fixedAssetsAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
-            ["Net Fixed Assets", formatCurrency(netFixedAssets)],
-            ["Investments", formatCurrency(totalInvestments)],
-            ["Current Assets", ""],
-            ["  Accounts Receivable", formatCurrency(totalReceivables)],
-            ...currentAssetsAccounts.map((acc: any) => [`  ${acc.name}`, formatCurrency(accountBalances[acc.code] || 0)]),
-        ];
-         (doc as any).autoTable({
-            head: [['Assets', 'Amount (₹)']],
-            body: assetsData,
-            startY: (doc as any).lastAutoTable.finalY + 10,
-            theme: 'striped',
-            styles: { fontSize: 10 },
-            headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-            foot: [
-                ['Total', formatCurrency(totalAssets)]
-            ],
-            footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] }
-        });
-
-        doc.save(`Balance_Sheet_${format(date || new Date(), "yyyy-MM-dd")}.pdf`);
-        toast({ title: "Export Successful", description: "Your Balance Sheet has been exported as a PDF." });
-    }
-
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -235,9 +178,9 @@ export default function BalanceSheetPage() {
             A snapshot of your company's financial health.
           </p>
         </div>
-        <Button onClick={exportPdf}>
-          <FileDown className="mr-2"/>
-          Export PDF
+        <Button onClick={handlePrint}>
+          <Printer className="mr-2"/>
+          Print / Save PDF
         </Button>
       </div>
 
@@ -274,182 +217,184 @@ export default function BalanceSheetPage() {
             </CardHeader>
         </Card>
       
-      <Card>
-          <CardHeader>
-              <CardTitle>Balance Sheet</CardTitle>
-              <CardDescription>As on {date ? format(date, "dd MMM, yyyy") : 'selected date'}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                {/* Liabilities + Equity Column */}
-                <div className="w-full">
-                    <Table className="w-full">
-                        <TableHeader><TableRow><TableHead>Liabilities & Equity</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Capital Account" value={capitalAccount} isSub />
-                            <ReportRow label="Reserves & Surplus (incl. P&L)" value={reservesAndSurplus} isSub />
-                            
-                            <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
-                            {longTermLiabilitiesAccounts.map((acc: any) => (
-                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
-                            ))}
-
-                            <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
-                             {currentLiabilitiesAccounts.map((acc: any) => (
-                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
-                            ))}
-                        </TableBody>
-                        <TableFooter>
-                            <TableRow className="font-bold bg-muted/50">
-                                <TableCell>Total</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(totalEquityAndLiabilities)}</TableCell>
-                            </TableRow>
-                        </TableFooter>
-                    </Table>
-                </div>
-
-                {/* Assets Column */}
-                <div className="w-full">
-                    <Table className="w-full">
-                        <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
-                            {fixedAssetsAccounts.map((acc: any) => (
-                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
-                            ))}
-                            <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
-
-                            <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalInvestments)}</TableCell></TableRow>
-
-                            <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
-                            <ReportRow label="Accounts Receivable" value={totalReceivables} isSub />
-                            {currentAssetsAccounts.map((acc: any) => (
-                                <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
-                            ))}
-                        </TableBody>
-                        <TableFooter>
-                            <TableRow className="font-bold bg-muted/50">
-                                <TableCell>Total</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(totalAssets)}</TableCell>
-                            </TableRow>
-                        </TableFooter>
-                    </Table>
-                </div>
-            </div>
-            
-            {Math.abs(totalAssets - totalEquityAndLiabilities) > 0.01 && (
-                 <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center">
-                    Warning: Balance Sheet is out of balance by ₹{formatCurrency(Math.abs(totalAssets - totalEquityAndLiabilities))}!
-                </div>
-            )}
-          </CardContent>
-           <CardFooter className="text-xs text-muted-foreground pt-4">
-              Note: This is a system-generated report. Figures are in INR.
-          </CardFooter>
-      </Card>
-
+      <div ref={reportRef} className="print:p-8">
         <Card>
-          <CardHeader>
-              <CardTitle>Schedules to the Balance Sheet</CardTitle>
-              <CardDescription>Detailed breakdown of key Balance Sheet items.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="multiple" defaultValue={["depreciation", "capital-accounts"]} className="w-full">
-                <AccordionItem value="depreciation">
-                    <AccordionTrigger>Schedule 1: Depreciation on Fixed Assets</AccordionTrigger>
-                    <AccordionContent>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Asset</TableHead>
-                                        <TableHead className="text-right">Opening WDV</TableHead>
-                                        <TableHead className="text-right">Additions</TableHead>
-                                        <TableHead className="text-right">Depreciation Rate (%)</TableHead>
-                                        <TableHead className="text-right">Depreciation for Year</TableHead>
-                                        <TableHead className="text-right">Closing WDV</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {depreciationSchedule.length > 0 ? depreciationSchedule.map((item, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell className="font-medium">{item.asset}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(item.openingWdv)}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(item.additions)}</TableCell>
-                                            <TableCell className="text-right">{item.depreciationRate}%</TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(item.depreciation)}</TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(item.closingWdv)}</TableCell>
-                                        </TableRow>
-                                    )) : (
-                                        <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No fixed asset data found. Add fixed assets in the Chart of Accounts.</TableCell></TableRow>
-                                    )}
-                                </TableBody>
-                                <TableFooter>
-                                    <TableRow className="font-bold bg-muted/50">
-                                        <TableCell colSpan={4}>Total</TableCell>
-                                        <TableCell className="text-right font-mono">{formatCurrency(totalDepreciation)}</TableCell>
-                                        <TableCell></TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            </Table>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-                 <AccordionItem value="capital-accounts">
-                    <AccordionTrigger>Schedule 2: Capital Accounts</AccordionTrigger>
-                    <AccordionContent>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Particulars</TableHead>
-                                        {capitalAccounts.map(p => <TableHead key={p.partner} className="text-right">{p.partner}</TableHead>)}
-                                        <TableHead className="text-right font-bold">Total</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                     {capitalAccounts.length > 0 ? (
-                                        <>
-                                            <TableRow>
-                                                <TableCell className="font-medium">Opening Balance</TableCell>
-                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.opening)}</TableCell>)}
-                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.opening, 0))}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium">Capital Introduced</TableCell>
-                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.introduced)}</TableCell>)}
-                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.introduced, 0))}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium">Drawings</TableCell>
-                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.drawings)}</TableCell>)}
-                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.drawings, 0))}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium">Share of Profit/(Loss)</TableCell>
-                                                {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.profitShare)}</TableCell>)}
-                                                <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.profitShare, 0))}</TableCell>
-                                            </TableRow>
-                                        </>
-                                     ) : (
-                                        <TableRow><TableCell colSpan={3} className="text-center h-24 text-muted-foreground">No capital account data for this period.</TableCell></TableRow>
-                                     )}
-                                </TableBody>
-                                <TableFooter>
-                                    <TableRow className="font-bold bg-muted/50">
-                                        <TableCell>Closing Balance</TableCell>
-                                         {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.closing)}</TableCell>)}
-                                        <TableCell className="text-right font-mono">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.closing, 0))}</TableCell>
-                                    </TableRow>
-                                </TableFooter>
-                            </Table>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-          </CardContent>
-      </Card>
+            <CardHeader>
+                <CardTitle>Balance Sheet</CardTitle>
+                <CardDescription>As on {date ? format(date, "dd MMM, yyyy") : 'selected date'}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                  {/* Liabilities + Equity Column */}
+                  <div className="w-full">
+                      <Table className="w-full">
+                          <TableHeader><TableRow><TableHead>Liabilities & Equity</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                          <TableBody>
+                              <TableRow><TableCell className="font-semibold">Capital & Reserves</TableCell><TableCell></TableCell></TableRow>
+                              <ReportRow label="Capital Account" value={capitalAccount} isSub />
+                              <ReportRow label="Reserves & Surplus (incl. P&L)" value={reservesAndSurplus} isSub />
+                              
+                              <TableRow><TableCell className="font-semibold pt-4">Long-Term Liabilities</TableCell><TableCell></TableCell></TableRow>
+                              {longTermLiabilitiesAccounts.map((acc: any) => (
+                                  <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                              ))}
+
+                              <TableRow><TableCell className="font-semibold pt-4">Current Liabilities</TableCell><TableCell></TableCell></TableRow>
+                               {currentLiabilitiesAccounts.map((acc: any) => (
+                                  <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                              ))}
+                          </TableBody>
+                          <TableFooter>
+                              <TableRow className="font-bold bg-muted/50">
+                                  <TableCell>Total</TableCell>
+                                  <TableCell className="text-right font-mono">{formatCurrency(totalEquityAndLiabilities)}</TableCell>
+                              </TableRow>
+                          </TableFooter>
+                      </Table>
+                  </div>
+
+                  {/* Assets Column */}
+                  <div className="w-full">
+                      <Table className="w-full">
+                          <TableHeader><TableRow><TableHead>Assets</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                          <TableBody>
+                              <TableRow><TableCell className="font-semibold">Fixed Assets</TableCell><TableCell></TableCell></TableRow>
+                              {fixedAssetsAccounts.map((acc: any) => (
+                                  <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                              ))}
+                              <TableRow><TableCell className="font-semibold pl-8">Net Fixed Assets</TableCell><TableCell className="text-right font-mono font-semibold">{formatCurrency(netFixedAssets)}</TableCell></TableRow>
+
+                              <TableRow><TableCell className="font-semibold pt-4">Investments</TableCell><TableCell className="text-right font-mono">{formatCurrency(totalInvestments)}</TableCell></TableRow>
+
+                              <TableRow><TableCell className="font-semibold pt-4">Current Assets</TableCell><TableCell></TableCell></TableRow>
+                              <ReportRow label="Accounts Receivable" value={totalReceivables} isSub />
+                              {currentAssetsAccounts.map((acc: any) => (
+                                  <ReportRow key={acc.code} label={acc.name} value={accountBalances[acc.code] || 0} isSub />
+                              ))}
+                          </TableBody>
+                          <TableFooter>
+                              <TableRow className="font-bold bg-muted/50">
+                                  <TableCell>Total</TableCell>
+                                  <TableCell className="text-right font-mono">{formatCurrency(totalAssets)}</TableCell>
+                              </TableRow>
+                          </TableFooter>
+                      </Table>
+                  </div>
+              </div>
+              
+              {Math.abs(totalAssets - totalEquityAndLiabilities) > 0.01 && (
+                   <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center">
+                      Warning: Balance Sheet is out of balance by ₹{formatCurrency(Math.abs(totalAssets - totalEquityAndLiabilities))}!
+                  </div>
+              )}
+            </CardContent>
+             <CardFooter className="text-xs text-muted-foreground pt-4">
+                Note: This is a system-generated report. Figures are in INR.
+            </CardFooter>
+        </Card>
+
+        <Card className="mt-8">
+            <CardHeader>
+                <CardTitle>Schedules to the Balance Sheet</CardTitle>
+                <CardDescription>Detailed breakdown of key Balance Sheet items.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="multiple" defaultValue={["depreciation", "capital-accounts"]} className="w-full">
+                  <AccordionItem value="depreciation">
+                      <AccordionTrigger>Schedule 1: Depreciation on Fixed Assets</AccordionTrigger>
+                      <AccordionContent>
+                          <div className="overflow-x-auto">
+                              <Table>
+                                  <TableHeader>
+                                      <TableRow>
+                                          <TableHead>Asset</TableHead>
+                                          <TableHead className="text-right">Opening WDV</TableHead>
+                                          <TableHead className="text-right">Additions</TableHead>
+                                          <TableHead className="text-right">Depreciation Rate (%)</TableHead>
+                                          <TableHead className="text-right">Depreciation for Year</TableHead>
+                                          <TableHead className="text-right">Closing WDV</TableHead>
+                                      </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                      {depreciationSchedule.length > 0 ? depreciationSchedule.map((item, index) => (
+                                          <TableRow key={index}>
+                                              <TableCell className="font-medium">{item.asset}</TableCell>
+                                              <TableCell className="text-right font-mono">{formatCurrency(item.openingWdv)}</TableCell>
+                                              <TableCell className="text-right font-mono">{formatCurrency(item.additions)}</TableCell>
+                                              <TableCell className="text-right">{item.depreciationRate}%</TableCell>
+                                              <TableCell className="text-right font-mono">{formatCurrency(item.depreciation)}</TableCell>
+                                              <TableCell className="text-right font-mono">{formatCurrency(item.closingWdv)}</TableCell>
+                                          </TableRow>
+                                      )) : (
+                                          <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No fixed asset data found. Add fixed assets in the Chart of Accounts.</TableCell></TableRow>
+                                      )}
+                                  </TableBody>
+                                  <TableFooter>
+                                      <TableRow className="font-bold bg-muted/50">
+                                          <TableCell colSpan={4}>Total</TableCell>
+                                          <TableCell className="text-right font-mono">{formatCurrency(totalDepreciation)}</TableCell>
+                                          <TableCell></TableCell>
+                                      </TableRow>
+                                  </TableFooter>
+                              </Table>
+                          </div>
+                      </AccordionContent>
+                  </AccordionItem>
+                   <AccordionItem value="capital-accounts">
+                      <AccordionTrigger>Schedule 2: Capital Accounts</AccordionTrigger>
+                      <AccordionContent>
+                          <div className="overflow-x-auto">
+                              <Table>
+                                  <TableHeader>
+                                      <TableRow>
+                                          <TableHead>Particulars</TableHead>
+                                          {capitalAccounts.map(p => <TableHead key={p.partner} className="text-right">{p.partner}</TableHead>)}
+                                          <TableHead className="text-right font-bold">Total</TableHead>
+                                      </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                       {capitalAccounts.length > 0 ? (
+                                          <>
+                                              <TableRow>
+                                                  <TableCell className="font-medium">Opening Balance</TableCell>
+                                                  {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.opening)}</TableCell>)}
+                                                  <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.opening, 0))}</TableCell>
+                                              </TableRow>
+                                              <TableRow>
+                                                  <TableCell className="font-medium">Capital Introduced</TableCell>
+                                                  {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.introduced)}</TableCell>)}
+                                                  <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.introduced, 0))}</TableCell>
+                                              </TableRow>
+                                              <TableRow>
+                                                  <TableCell className="font-medium">Drawings</TableCell>
+                                                  {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.drawings)}</TableCell>)}
+                                                  <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.drawings, 0))}</TableCell>
+                                              </TableRow>
+                                              <TableRow>
+                                                  <TableCell className="font-medium">Share of Profit/(Loss)</TableCell>
+                                                  {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.profitShare)}</TableCell>)}
+                                                  <TableCell className="text-right font-mono font-bold">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.profitShare, 0))}</TableCell>
+                                              </TableRow>
+                                          </>
+                                       ) : (
+                                          <TableRow><TableCell colSpan={3} className="text-center h-24 text-muted-foreground">No capital account data for this period.</TableCell></TableRow>
+                                       )}
+                                  </TableBody>
+                                  <TableFooter>
+                                      <TableRow className="font-bold bg-muted/50">
+                                          <TableCell>Closing Balance</TableCell>
+                                           {capitalAccounts.map(p => <TableCell key={p.partner} className="text-right font-mono">{formatCurrency(p.closing)}</TableCell>)}
+                                          <TableCell className="text-right font-mono">{formatCurrency(capitalAccounts.reduce((acc, p) => acc + p.closing, 0))}</TableCell>
+                                      </TableRow>
+                                  </TableFooter>
+                              </Table>
+                          </div>
+                      </AccordionContent>
+                  </AccordionItem>
+              </Accordion>
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

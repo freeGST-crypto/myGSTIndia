@@ -48,16 +48,8 @@ import { db, auth } from "@/lib/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { InvoicePreview } from "@/components/billing/invoice-preview";
 import { ShareButtons } from "@/components/documents/share-buttons";
-
-declare module 'jspdf' {
-    interface jsPDF {
-        autoTable: (options: any) => jsPDF;
-    }
-}
 
 type Invoice = {
   id: string;

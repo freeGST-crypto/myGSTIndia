@@ -18,90 +18,15 @@ const companyBranding = {
     gstin: "27ABCDE1234F1Z5",
 };
 
-const addHeaderToElement = (title: string): HTMLDivElement => {
-    const headerDiv = document.createElement('div');
-    headerDiv.innerHTML = `
-        <div style="padding: 20px; font-family: sans-serif; color: #000;">
-            <h1 style="font-size: 16px; font-weight: bold;">${companyBranding.name}</h1>
-            <p style="font-size: 10px;">${companyBranding.address}</p>
-            <p style="font-size: 10px;">GSTIN: ${companyBranding.gstin}</p>
-            <h2 style="font-size: 14px; font-weight: bold; text-align: center; margin-top: 20px;">${title}</h2>
-        </div>
-    `;
-    return headerDiv;
-};
-
-const createTableElement = (headers: string[], body: (string | number)[][]): HTMLTableElement => {
-    const table = document.createElement('table');
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-    table.style.fontSize = '10px';
-    const thead = table.createTHead();
-    const headerRow = thead.insertRow();
-    headers.forEach(headerText => {
-        const th = document.createElement('th');
-        th.textContent = headerText;
-        th.style.border = '1px solid #ddd';
-        th.style.padding = '4px';
-        th.style.textAlign = 'left';
-        th.style.backgroundColor = '#f2f2f2';
-        headerRow.appendChild(th);
-    });
-
-    const tbody = table.createTBody();
-    body.forEach(rowData => {
-        const row = tbody.insertRow();
-        rowData.forEach((cellData, cellIndex) => {
-            const cell = row.insertCell();
-            cell.textContent = String(cellData);
-            cell.style.border = '1px solid #ddd';
-            cell.style.padding = '4px';
-            if (cellIndex > 0) {
-              cell.style.textAlign = 'right';
-            }
-        });
-    });
-    return table;
-};
-
-export const exportToPdf = async (reportData: any) => {
-    const doc = new jsPDF('p', 'pt', 'a4');
-    const container = document.createElement('div');
-    container.style.width = '210mm'; // A4 width
-
-    const addSection = (title: string, data: { headers: string[], body: (string | number)[][] }) => {
-        const sectionDiv = document.createElement('div');
-        sectionDiv.style.breakBefore = 'page';
-        sectionDiv.appendChild(addHeader(doc, title));
-        sectionDiv.appendChild(createTableElement(data.headers, data.body));
-        container.appendChild(sectionDiv);
-    };
-
-    addSection("Part I: Operating Statement", reportData.operatingStatement);
-    addSection("Part II: Analysis of Balance Sheet", reportData.balanceSheet);
-    addSection("Part III: Cash Flow Statement", reportData.cashFlow);
-    addSection("Part IV: Ratio Analysis", reportData.ratioAnalysis);
-    addSection("Part V: Fund Flow Statement", reportData.fundFlow);
-    addSection("Part VI: MPBF Assessment", reportData.mpbf);
-    if (reportData.repaymentSchedule.body.length > 0) {
-        addSection("Part VII: Loan Repayment Schedule", reportData.repaymentSchedule);
-    }
-    
-    // Temporarily append to body to render for html2canvas
-    document.body.appendChild(container);
-    
-    await doc.html(container, {
-        callback: function (doc) {
-            doc.save(`CMA_Report_${companyBranding.name}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-        },
-        x: 10,
-        y: 10,
-        width: 190, // A4 width in mm approx
-        windowWidth: container.scrollWidth,
-        autoPaging: 'slice',
-    });
-
-    document.body.removeChild(container);
+export const exportToPdf = (reportData: any) => {
+    // This function now uses the browser's print-to-PDF functionality
+    // which is more reliable for complex, multi-page layouts.
+    // The actual printing will be triggered from a component using useReactToPrint.
+    // This function can be a placeholder or removed if all PDF generation
+    // is handled directly by components.
+    // For now, we'll just log that it was called.
+    console.log("Preparing to generate PDF via print dialog. Trigger this from a component with useReactToPrint.");
+    window.print();
 };
 
 
