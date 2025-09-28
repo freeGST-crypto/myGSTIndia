@@ -104,11 +104,11 @@ export default function ConsultantAgreementPage() {
         toast({ title: `Step ${step} Saved`, description: `Proceeding to the next step.` });
       }
     } else {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please correct the errors before proceeding.",
-      });
+        toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Please correct the errors before proceeding.",
+        });
     }
   };
 

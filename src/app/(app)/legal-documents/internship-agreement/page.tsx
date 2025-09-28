@@ -170,7 +170,7 @@ export default function InternshipAgreementPage() {
                     <h4 className="font-bold mt-4">6. No Employment Guarantee</h4>
                     <p>This Agreement does not constitute an offer of employment. Completion of the internship does not guarantee future employment with the Company.</p>
 
-                    <p>IN WITNESS WHEREOF, the parties have executed this Agreement.</p>
+                    <p>IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first above written.</p>
 
                     <div className="grid grid-cols-2 gap-16 mt-16">
                         <div className="text-left">
