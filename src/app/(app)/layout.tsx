@@ -184,6 +184,7 @@ const allMenuItems = [
     roles: ['business', 'professional', 'super_admin'],
     subItems: [
         { href: "/resources/knowledge-base", label: "Knowledge Base", icon: BookOpen, roles: ['business', 'professional', 'super_admin'] },
+        { href: "/my-documents", label: "My Documents", icon: FileArchive, roles: ['business', 'professional'] },
         { href: "/about", label: "About Us", icon: Info, roles: ['business', 'professional', 'super_admin'] },
         { href: "/blog", label: "Blog", icon: Newspaper, roles: ['business', 'professional', 'super_admin'] },
         { href: "/app-shortcuts", label: "App Shortcuts", icon: Keyboard, roles: ['business', 'professional', 'super_admin'] },
