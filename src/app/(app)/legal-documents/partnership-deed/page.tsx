@@ -554,9 +554,7 @@ export default function PartnershipDeedPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <div ref={printRef}>
-                      <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
-                    </div>
+                    <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         )
@@ -583,5 +581,3 @@ export default function PartnershipDeedPage() {
     </div>
   );
 }
-
-    
