@@ -37,7 +37,25 @@ import { useRouter } from "next/navigation";
 // Mapping from documentType in DB to the user-friendly name and edit path
 const documentTypeMap: { [key: string]: { name: string; path: string } } = {
     'net-worth-certificate': { name: "Net Worth Certificate", path: "/ca-certificates/net-worth" },
-    // Add other mappings here as they are implemented
+    'capital-contribution-certificate': { name: "Capital Contribution Certificate", path: "/ca-certificates/capital-contribution" },
+    'turnover-certificate': { name: "Turnover Certificate", path: "/ca-certificates/turnover" },
+    'foreign-remittance-certificate': { name: "Form 15CB", path: "/ca-certificates/foreign-remittance" },
+    'general-attestation-certificate': { name: "General Attestation", path: "/ca-certificates/general-attestation" },
+    'visa-immigration-certificate': { name: "Visa/Immigration Certificate", path: "/ca-certificates/visa-immigration" },
+    'llp-agreement': { name: "LLP Agreement", path: "/legal-documents/llp-agreement" },
+    'partnership-deed': { name: "Partnership Deed", path: "/legal-documents/partnership-deed" },
+    'lease-deed': { name: "Lease Deed", path: "/legal-documents/lease-deed" },
+    'rental-deed': { name: "Rental Deed", path: "/legal-documents/rental-deed" },
+    'founders-agreement': { name: "Founders' Agreement", path: "/legal-documents/founders-agreement" },
+    'consultant-agreement': { name: "Consultant Agreement", path: "/legal-documents/consultant-agreement" },
+    'service-agreement': { name: "Service Agreement", path: "/legal-documents/service-agreement" },
+    'vendor-agreement': { name: "Vendor Agreement", path: "/legal-documents/vendor-agreement" },
+    'internship-agreement': { name: "Internship Agreement", path: "/legal-documents/internship-agreement" },
+    'appointment-letter': { name: "Appointment Letter", path: "/legal-documents/appointment-letter" },
+    'offer-letter': { name: "Offer Letter", path: "/legal-documents/offer-letter" },
+    'safe-agreement': { name: "SAFE Agreement", path: "/legal-documents/safe-agreement" },
+    'franchise-agreement': { name: "Franchise Agreement", path: "/legal-documents/franchise-agreement" },
+    'loan-agreement': { name: "Loan Agreement", path: "/legal-documents/loan-agreement" },
 };
 
 type UserDocument = {
@@ -63,7 +81,7 @@ export default function MyDocumentsPage() {
     documentsSnapshot?.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    } as UserDocument)) || [], [documentsSnapshot]);
+    } as UserDocument)).sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate()) || [], [documentsSnapshot]);
 
   const handleEdit = (docId: string, docType: string) => {
     const mapping = documentTypeMap[docType];

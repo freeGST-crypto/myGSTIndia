@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,16 +9,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, ArrowRight, Printer, Loader2 } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight, Printer, Loader2, Save } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { db, auth } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import { format } from "date-fns";
+
 
 const formSchema = z.object({
+  documentName: z.string().min(3, "A document name is required for saving."),
   entityName: z.string().min(3, "Entity name is required."),
   entityType: z.enum(["Company", "LLP", "Partnership", "Private Limited Company"]),
   contributorName: z.string().min(3, "Contributor's name is required."),
@@ -49,14 +53,20 @@ const numberToWords = (num: number): string => {
 
 export default function CapitalContributionCertificatePage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const docId = searchParams.get('id');
+
   const [step, setStep] = useState(1);
   const printRef = useRef<HTMLDivElement>(null);
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!docId);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      documentName: `Capital Contribution - ${format(new Date(), 'yyyy-MM-dd')}`,
       entityName: "",
       entityType: "Company",
       contributorName: "",
@@ -68,6 +78,32 @@ export default function CapitalContributionCertificatePage() {
     },
   });
 
+  useEffect(() => {
+    if(docId && user) {
+        const loadDocument = async () => {
+            setIsLoading(true);
+            const docRef = doc(db, 'userDocuments', docId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.userId === user.uid) {
+                    form.reset(data.formData);
+                    toast({title: "Draft Loaded", description: `Loaded saved draft: ${data.formData.documentName}`});
+                } else {
+                    toast({variant: 'destructive', title: "Unauthorized", description: "You don't have permission to access this document."});
+                    router.push('/ca-certificates/capital-contribution');
+                }
+            } else {
+                 toast({variant: 'destructive', title: "Not Found", description: "The requested document draft could not be found."});
+                 router.push('/ca-certificates/capital-contribution');
+            }
+            setIsLoading(false);
+        }
+        loadDocument();
+    }
+  }, [docId, user, form, router, toast]);
+
   const handlePreview = async () => {
     const isValid = await form.trigger();
     if(isValid) {
@@ -76,6 +112,38 @@ export default function CapitalContributionCertificatePage() {
     } else {
         toast({ variant: "destructive", title: "Validation Error", description: "Please fill all required fields."});
     }
+  }
+
+  const handleSaveDraft = async () => {
+      if (!user) {
+          toast({variant: 'destructive', title: 'Authentication Error'});
+          return;
+      }
+      setIsSubmitting(true);
+      const formData = form.getValues();
+      try {
+          if (docId) {
+              const docRef = doc(db, "userDocuments", docId);
+              await updateDoc(docRef, { formData, updatedAt: new Date() });
+              toast({title: "Draft Updated", description: `Updated "${formData.documentName}".`});
+          } else {
+              const docRef = await addDoc(collection(db, 'userDocuments'), {
+                  userId: user.uid,
+                  documentType: 'capital-contribution-certificate',
+                  documentName: formData.documentName,
+                  status: 'Draft',
+                  formData,
+                  createdAt: new Date(),
+              });
+              toast({title: "Draft Saved!", description: `Saved "${formData.documentName}".`});
+              router.push(`/ca-certificates/capital-contribution?id=${docRef.id}`);
+          }
+      } catch (e) {
+          console.error(e);
+          toast({variant: 'destructive', title: 'Save Failed', description: 'Could not save the draft.'});
+      } finally {
+          setIsSubmitting(false);
+      }
   }
   
   const handleCertificationRequest = async () => {
@@ -109,6 +177,9 @@ export default function CapitalContributionCertificatePage() {
   }
 
   const renderContent = () => {
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin size-8 text-primary"/></div>;
+    }
     if (step === 1) {
         return (
              <Card>
@@ -116,6 +187,8 @@ export default function CapitalContributionCertificatePage() {
                     <CardTitle>Contribution Details</CardTitle>
                 </CardHeader>
                  <CardContent className="space-y-4">
+                     <FormField control={form.control} name="documentName" render={({ field }) => (<FormItem><FormLabel>Document Name (for your reference)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                     <Separator />
                      <div className="grid md:grid-cols-2 gap-4">
                         <FormField control={form.control} name="entityName" render={({ field }) => (<FormItem><FormLabel>Company / LLP / Firm Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <FormField control={form.control} name="entityType" render={({ field }) => (<FormItem><FormLabel>Entity Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Company">Company</SelectItem><SelectItem value="LLP">LLP</SelectItem><SelectItem value="Partnership">Partnership</SelectItem><SelectItem value="Private Limited Company">Private Limited Company</SelectItem></SelectContent></Select><FormMessage /></FormItem>)}/>
@@ -133,7 +206,8 @@ export default function CapitalContributionCertificatePage() {
                          <FormField control={form.control} name="bankDetails" render={({ field }) => (<FormItem><FormLabel>Bank Details (if applicable)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                      </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="justify-between">
+                     <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>{isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Save className="mr-2"/>} Save Draft</Button>
                      <Button type="button" onClick={handlePreview}>
                        <ArrowRight className="mr-2" /> Preview Certificate
                     </Button>
