@@ -31,10 +31,8 @@ import {
   ArrowRight,
   PlusCircle,
   Trash2,
-  FileDown,
   Wand2,
   Loader2,
-  Printer
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -435,7 +433,7 @@ export default function PartnershipDeedPage() {
           </Card>
         );
      case 8:
-        const formData = form.getValues();
+        const formData = form.watch();
         const workingPartners = formData.partners.filter(p => p.isWorkingPartner);
         const managingPartner = workingPartners.length > 0 ? workingPartners[0].name : "the managing partner"; // Fallback
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
@@ -493,7 +491,7 @@ export default function PartnershipDeedPage() {
 
                     {/* Main Deed */}
                     <h2 className="text-center font-bold break-before-page">PARTNERSHIP DEED</h2>
-                    <h3 className="text-center font-bold">{formData.firmName.toUpperCase()}</h3>
+                    <h3 className="text-center font-bold">{(formData.firmName || "[Firm Name]").toUpperCase()}</h3>
                     
                     <p>This Deed of Partnership is executed on this the <strong>{formattedDate}</strong>, by and between:-</p>
                     
@@ -549,14 +547,10 @@ export default function PartnershipDeedPage() {
                     </ol>
 
                      <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
-
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <ShareButtons
-                        contentRef={printRef}
-                        fileName={`Partnership_Deed_${formData.firmName}`}
-                    />
+                    <ShareButtons contentRef={printRef} fileName={`Partnership_Deed_${formData.firmName}`} />
                 </CardFooter>
             </Card>
         )
