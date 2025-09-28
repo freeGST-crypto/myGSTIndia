@@ -102,8 +102,8 @@ export default function SocietyRegistrationDeedPage() {
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       setStep(prev => prev + 1);
-      if (step < 5) {
-        toast({ title: `Step ${step} Saved`, description: `Proceeding to the next step.` });
+       if (step < 5) {
+        toast({ title: `Step ${step} Saved`, description: `Proceeding to step ${step + 1}.` });
       }
     } else {
       toast({
@@ -186,6 +186,9 @@ export default function SocietyRegistrationDeedPage() {
         );
       case 5:
         const formData = form.getValues();
+        const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
+        const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
+
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Memorandum of Association and Bye-Laws.</CardDescription></CardHeader>

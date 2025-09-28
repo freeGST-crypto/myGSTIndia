@@ -254,7 +254,7 @@ export function ItemTable({ lineItems, setLineItems, items, itemsLoading, isPurc
             <div className="md:hidden space-y-4">
                  {lineItems.map((item, index) => (
                     <ItemRowMobile
-                        key={item.id}
+                        key={item.id || index}
                         item={item}
                         index={index}
                         onRemove={handleRemoveItem}
@@ -282,7 +282,7 @@ export function ItemTable({ lineItems, setLineItems, items, itemsLoading, isPurc
                     <TableBody>
                         {lineItems.map((item, index) => (
                             <ItemRowDesktop
-                                key={item.id}
+                                key={item.id || index}
                                 item={item}
                                 index={index}
                                 onRemove={handleRemoveItem}
