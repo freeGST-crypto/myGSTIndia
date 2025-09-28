@@ -19,6 +19,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   documentName: z.string().min(3, "A document name is required for saving."),
