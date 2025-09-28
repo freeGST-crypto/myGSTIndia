@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,7 +13,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,11 +29,14 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDes
 import {
   ArrowLeft,
   ArrowRight,
-  FileDown
+  FileDown,
+  Printer
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useReactToPrint } from "react-to-print";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   landlordName: z.string().min(3, "Lessor name is required."),
@@ -70,6 +73,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function LeaseDeedPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -95,6 +99,10 @@ export default function LeaseDeedPage() {
       allowPets: false,
       allowSubletting: false,
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -225,7 +233,7 @@ export default function LeaseDeedPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Lease Deed.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     <h2 className="text-center font-bold">DEED OF LEASE</h2>
                     <p>This Deed of Lease is made at <strong>{formData.landlordAddress.split(',').pop()?.trim()}</strong> this <strong>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>
                     
@@ -234,10 +242,10 @@ export default function LeaseDeedPage() {
                     
                     <p className="font-bold">AND:</p>
                     <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called 'The Lessee' of the Other Part).</p>
-                    
+
                     <h4 className="font-bold mt-4">WHEREAS:</h4>
-                    <ol className="list-decimal list-inside space-y-2">
-                        <li>The Lessor is absolutely seized and possessed of or otherwise well and sufficiently entitled to the land and premises described in the Schedule hereunder written.</li>
+                    <ol className="list-[upper-alpha] list-inside space-y-2">
+                        <li>The Lessor is the absolute owner of or otherwise well and sufficiently entitled to the land and premises described in the Schedule hereunder written.</li>
                         <li>The Lessor has agreed to grant to the Lessee a lease in respect of the said land and premises for a term of <strong>{termInYears.toFixed(1)} years</strong> in the manner hereinafter appearing.</li>
                     </ol>
 
@@ -299,7 +307,10 @@ export default function LeaseDeedPage() {
                     </div>
 
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started", description: "Your document is being prepared."})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                    <button onClick={handlePrint} className={cn(buttonVariants())}><Printer className="mr-2"/> Print / Save as PDF</button>
+                </CardFooter>
             </Card>
         );
       default:
