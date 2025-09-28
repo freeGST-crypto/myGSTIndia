@@ -41,13 +41,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
-    name: z.string().min(2, "Partner name is required."),
-    parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
-    age: z.coerce.number().positive("Age must be a positive number.").default(30),
-    address: z.string().min(10, "Address is required."),
-    capitalContribution: z.coerce.number().positive("Must be a positive number."),
-    profitShare: z.coerce.number().min(0, { message: "Cannot be negative" }).max(100, { message: "Cannot exceed 100" }),
-    isWorkingPartner: z.boolean().default(false),
+  name: z.string().min(2, "Partner name is required."),
+  parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
+  age: z.coerce.number().positive("Age must be a positive number.").default(30),
+  address: z.string().min(10, "Address is required."),
+  capitalContribution: z.coerce.number().positive("Must be a positive number."),
+  profitShare: z.coerce.number().min(0, { message: "Cannot be negative" }).max(100, { message: "Cannot exceed 100" }),
+  isWorkingPartner: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -58,10 +58,7 @@ const formSchema = z.object({
   partnershipDuration: z.enum(["at-will", "fixed-term"]),
   termYears: z.coerce.number().optional(),
   
-  partners: z.array(partnerSchema).min(2, "At least two partners are required.")
-    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
-        message: "At least two partners must be designated partners.",
-    }),
+  partners: z.array(partnerSchema).min(2, "At least two partners are required."),
   
   totalCapital: z.coerce.number().positive(),
 
@@ -111,7 +108,7 @@ export default function PartnershipDeedPage() {
       partnershipDuration: "at-will",
       partners: [
         { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
-        { name: "", parentage: "", address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
+        { name: "", parentage: "", address: "", age: 30, capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
       ],
       totalCapital: 100000,
       interestOnCapital: 12,
@@ -295,7 +292,7 @@ export default function PartnershipDeedPage() {
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {form.formState.errors.partners && !form.formState.errors.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
+               {form.formState.errors.partners && !form.formState.errors.partners.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -437,15 +434,15 @@ export default function PartnershipDeedPage() {
      case 8:
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
         const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
-        const commencementDateFormatted = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
+        const commencementDateFormatted = formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : "[Date]";
         const whatsappMessage = `Hi, please find the attached draft Partnership Deed for ${formData.firmName || "[Firm Name]"}. Kindly review and let me know if any changes are required.`;
 
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
                 <CardContent>
-                    <div ref={printRef} className="print-section">
-                        <div id="printable-area" className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+                    <div className="print-section">
+                        <div ref={printRef} id="printable-area" className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                             {/* Form No. 1 */}
                             <div className="text-center space-y-2 mb-12">
                                 <h4 className="font-bold">Form No. 1</h4>
