@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -70,6 +71,8 @@ export default function ShareholdersAgreementPage() {
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
+    documentTitle: `Shareholders_Agreement_${form.getValues("companyName")}`,
+    onAfterPrint: () => toast({ title: "Print Complete" }),
   });
 
   const processStep = async () => {
@@ -180,9 +183,7 @@ export default function ShareholdersAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <div onClick={handlePrint}>
-                    <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
-                  </div>
+                  <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         );

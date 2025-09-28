@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -210,7 +211,7 @@ export default function NdaPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <ShareButtons
+                   <ShareButtons
                     contentRef={printRef}
                     fileName={`NDA_${formData.disclosingPartyName}_${formData.receivingPartyName}`}
                     whatsappMessage={whatsappMessage}
