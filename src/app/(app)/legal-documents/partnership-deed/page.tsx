@@ -81,6 +81,12 @@ const formSchema = z.object({
   
   extraClauses: z.string().optional(),
 }).refine(data => {
+    const totalContribution = data.partners.reduce((acc, p) => acc + p.capitalContribution, 0);
+    return totalContribution > 0;
+}, {
+    message: "Total capital contribution must be greater than zero.",
+    path: ["partners"],
+}).refine(data => {
     const totalProfitShare = data.partners.reduce((acc, p) => acc + p.profitShare, 0);
     return totalProfitShare === 100;
 }, {
@@ -549,9 +555,7 @@ export default function PartnershipDeedPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <div onClick={handlePrint}>
-                        <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
-                    </div>
+                    <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         )

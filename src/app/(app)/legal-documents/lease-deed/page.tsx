@@ -14,7 +14,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,14 +30,12 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDes
 import {
   ArrowLeft,
   ArrowRight,
-  FileDown,
   Printer
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
-import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   landlordName: z.string().min(3, "Lessor name is required."),
@@ -274,7 +272,7 @@ export default function LeaseDeedPage() {
                             <li>The Lessee shall not be entitled, without obtaining in writing the permission of the Lessor, to assign, mortgage, or sublet the demised premises. Such permission shall not be unreasonably withheld.</li>
                         </ol>
 
-                        <p className="mt-8">IN WITNESS WHEREOF the Lessor and the Lessee have put their respective hands on the original and duplicate hereof the day and year first herein above written.</p>
+                        <p className="mt-8">IN WITNESS WHEREOF, the Lessor and the Lessee have put their respective hands on the original and duplicate hereof the day and year first herein above written.</p>
                         
                          <h4 className="font-bold mt-8">THE SCHEDULE ABOVE REFERRED TO</h4>
                          <p>(Full description of the property being leased)</p>
@@ -311,9 +309,7 @@ export default function LeaseDeedPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <div onClick={handlePrint}>
-                    <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
-                  </div>
+                  <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         );
@@ -341,4 +337,3 @@ export default function LeaseDeedPage() {
   );
 }
 
-    
