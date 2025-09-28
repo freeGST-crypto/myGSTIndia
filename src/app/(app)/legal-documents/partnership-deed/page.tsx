@@ -46,11 +46,11 @@ import { useReactToPrint } from "react-to-print";
 const partnerSchema = z.object({
     name: z.string().min(2, "Partner name is required."),
     parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
-    age: z.coerce.number().positive("Age must be a positive number."),
+    age: z.coerce.number().positive("Age must be a positive number.").default(30),
     address: z.string().min(10, "Address is required."),
     capitalContribution: z.coerce.number().positive("Must be a positive number."),
     profitShare: z.coerce.number().min(0, { message: "Cannot be negative" }).max(100, { message: "Cannot exceed 100" }),
-    isWorkingPartner: z.boolean().default(false)
+    isWorkingPartner: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -62,8 +62,8 @@ const formSchema = z.object({
   termYears: z.coerce.number().optional(),
   
   partners: z.array(partnerSchema).min(2, "At least two partners are required.")
-    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
-        message: "At least two partners must be designated partners.",
+    .refine(partners => partners.filter(p => p.isWorkingPartner).length >= 1, {
+        message: "At least one partner must be a working partner.",
     }),
   
   interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional(),
@@ -80,12 +80,6 @@ const formSchema = z.object({
   arbitrationCity: z.string().optional(),
   
   extraClauses: z.string().optional(),
-}).refine(data => {
-    const totalContribution = data.partners.reduce((acc, p) => acc + p.capitalContribution, 0);
-    return totalContribution > 0; // Simplified check, equality with a total field is complex here.
-}, {
-    message: "Total capital contribution must be greater than zero.",
-    path: ["partners"],
 }).refine(data => {
     const totalProfitShare = data.partners.reduce((acc, p) => acc + p.profitShare, 0);
     return totalProfitShare === 100;
@@ -199,7 +193,7 @@ export default function PartnershipDeedPage() {
             break;
     }
     
-    const isValid = await form.trigger(fieldsToValidate);
+    const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) {
       setStep(prev => prev + 1);
        if (step < 8) {
@@ -258,8 +252,9 @@ export default function PartnershipDeedPage() {
       case 2:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 2: Partner Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 2: Partner & Contribution Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
+              {form.formState.errors.partners?.message && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.message}</p>}
               <Separator />
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
@@ -290,7 +285,7 @@ export default function PartnershipDeedPage() {
                     )}/>
                   </div>
                    <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => (
-                     <FormItem className="flex flex-row items-center justify-start gap-2 pt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label className="font-normal" htmlFor={field.name}>This is a working/active partner</Label></FormItem>
+                     <FormItem className="flex flex-row items-center justify-start gap-2 pt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} id={`isWorking-${index}`} /></FormControl><Label className="font-normal" htmlFor={`isWorking-${index}`}>This is a working/active partner</Label></FormItem>
                   )}/>
                 </div>
               ))}
@@ -554,7 +549,9 @@ export default function PartnershipDeedPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                    <div onClick={handlePrint}>
+                        <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
+                    </div>
                 </CardFooter>
             </Card>
         )
