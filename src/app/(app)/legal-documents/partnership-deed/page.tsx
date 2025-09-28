@@ -170,7 +170,7 @@ export default function PartnershipDeedPage() {
 
 
   const processStep = async () => {
-    let fieldsToValidate: (keyof FormData | `partners.${number}.${keyof typeof partnerSchema.shape}` | "partners")[] = [];
+    let fieldsToValidate: (keyof FormData | `partners.${number}.${keyof z.infer<typeof partnerSchema>}` | "partners")[] = [];
     switch (step) {
         case 1:
             fieldsToValidate = ["firmName", "firmAddress", "businessActivity", "commencementDate", "partnershipDuration"];
@@ -444,7 +444,7 @@ export default function PartnershipDeedPage() {
 
         return (
              <Card>
-                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed. This is a detailed preview based on your inputs. Download for the fully formatted document.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
                 <CardContent ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     
                     {/* Form No. 1 */}
@@ -553,12 +553,10 @@ export default function PartnershipDeedPage() {
 
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={handleBack}>
-                        <ArrowLeft className="mr-2"/> Back
-                    </Button>
-                    <Button type="button" onClick={handlePrint}>
-                        <Printer className="mr-2"/> Print / Save as PDF
-                    </Button>
+                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                    <div ref={printRef}>
+                      <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                    </div>
                 </CardFooter>
             </Card>
         )
@@ -585,3 +583,5 @@ export default function PartnershipDeedPage() {
     </div>
   );
 }
+
+    

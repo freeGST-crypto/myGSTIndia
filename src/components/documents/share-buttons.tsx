@@ -3,12 +3,10 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, MessageSquare, Loader2, Linkedin, Twitter, Facebook, Download } from "lucide-react";
+import { Printer, MessageSquare, Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from "react-to-print";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 
 interface ShareButtonsProps {
   contentRef: React.RefObject<HTMLDivElement>;
@@ -26,11 +24,11 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
     onBeforeGetContent: () => setIsProcessing(true),
     onAfterPrint: () => {
       setIsProcessing(false);
-      toast({ title: "Print job completed." });
+      toast({ title: "Print job sent to printer." });
     },
     onPrintError: () => {
       setIsProcessing(false);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to print or save PDF.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to print document.' });
     },
   });
   
@@ -45,16 +43,22 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
     toast({ title: 'Generating PDF...', description: 'Please wait while your document is being prepared.'});
     
     try {
-        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'pt',
+            format: 'a4',
+        });
+
         await pdf.html(element, {
             callback: function (doc) {
                 doc.save(`${fileName}.pdf`);
             },
-            x: 10,
-            y: 10,
-            width: 190, // A4 width in mm approx
+            x: 15,
+            y: 15,
+            width: 565,
             windowWidth: element.scrollWidth,
             autoPaging: 'slice',
+            margin: [40, 0, 40, 0]
         });
         toast({ title: "Download Successful", description: `${fileName}.pdf has been downloaded.` });
     } catch (error) {
@@ -75,13 +79,18 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
 
-
-  return (
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={handlePrint} disabled={isProcessing}>
+  const printTrigger = (
+    <div onClick={handlePrint}>
+      <Button variant="outline" disabled={isProcessing}>
         {isProcessing ? <Loader2 className="mr-2 animate-spin" /> : <Printer className="mr-2" />}
         Print
       </Button>
+    </div>
+  );
+
+  return (
+    <div className="flex gap-2">
+      {printTrigger}
       <Button onClick={handleDownloadPdf} disabled={isProcessing}>
         {isProcessing ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
         Download PDF
@@ -92,3 +101,5 @@ export const ShareButtons = ({ contentRef, fileName, whatsappMessage }: ShareBut
     </div>
   );
 };
+
+    

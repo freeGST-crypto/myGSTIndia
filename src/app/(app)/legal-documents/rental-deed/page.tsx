@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,20 +30,21 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel, FormDes
 import {
   ArrowLeft,
   ArrowRight,
-  FileDown
+  Printer
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useReactToPrint } from "react-to-print";
 
 const formSchema = z.object({
-  landlordName: z.string().min(3, "Landlord name is required."),
+  landlordName: z.string().min(3, "Lessor name is required."),
   landlordParentage: z.string().min(3, "Parentage is required."),
-  landlordAddress: z.string().min(10, "Landlord address is required."),
+  landlordAddress: z.string().min(10, "Lessor address is required."),
   
-  tenantName: z.string().min(3, "Tenant name is required."),
+  tenantName: z.string().min(3, "Lessee name is required."),
   tenantParentage: z.string().min(3, "Parentage is required."),
-  tenantAddress: z.string().min(10, "Tenant address is required."),
+  tenantAddress: z.string().min(10, "Lessee address is required."),
 
   propertyAddress: z.string().min(10, "Property address is required."),
   propertyType: z.enum(["residential", "commercial"]).default("residential"),
@@ -70,6 +72,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function RentalDeedPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -95,6 +98,10 @@ export default function RentalDeedPage() {
       allowPets: false,
       allowSubletting: false,
     },
+  });
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -225,75 +232,81 @@ export default function RentalDeedPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Rental Agreement.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
-                    <h2 className="text-center font-bold">RENTAL AGREEMENT</h2>
-                    <p>This Rental Agreement is made and executed on this <strong>{new Date().toLocaleDateString('en-GB', dateOptions)}</strong> at {formData.landlordAddress.split(',').pop()?.trim()}.</p>
-                    
-                    <p className="font-bold">BETWEEN:</p>
-                    <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called the "LANDLORD" or "LESSOR" of the one part).</p>
-                    
-                    <p className="font-bold">AND:</p>
-                    <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called the "TENANT" or "LESSEE" of the other part).</p>
+                <CardContent>
+                    <div ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                        <h2 className="text-center font-bold">RENTAL AGREEMENT</h2>
+                        <p>This Rental Agreement is made and executed on this <strong>{new Date().toLocaleDateString('en-GB', dateOptions)}</strong> at {formData.landlordAddress.split(',').pop()?.trim()}.</p>
+                        
+                        <p className="font-bold">BETWEEN:</p>
+                        <p><strong>{formData.landlordName}</strong>, {formData.landlordParentage}, resident of {formData.landlordAddress}. (Hereinafter called the "LANDLORD" or "LESSOR" of the one part).</p>
+                        
+                        <p className="font-bold">AND:</p>
+                        <p><strong>{formData.tenantName}</strong>, {formData.tenantParentage}, resident of {formData.tenantAddress}. (Hereinafter called the "TENANT" or "LESSEE" of the other part).</p>
 
-                    <p>"LANDLORD" and "TENANT" are hereinafter collectively referred to as "the Parties".</p>
-                    
-                    <h4 className="font-bold mt-4">WHEREAS:</h4>
-                    <ol className="list-[upper-alpha] list-inside space-y-2">
-                        <li>The Landlord is the absolute owner of the {formData.propertyType} property situated at <strong>{formData.propertyAddress}</strong> (hereinafter referred to as the "Scheduled Property").</li>
-                        <li>The Tenant has approached the Landlord to take on rent the Scheduled Property for {formData.propertyType} purposes.</li>
-                        <li>The Landlord has agreed to let out the property to the Tenant on the terms and conditions hereafter appearing.</li>
-                    </ol>
-
-                    <h4 className="font-bold mt-4">NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:</h4>
-                    <ol className="list-decimal list-inside space-y-3">
-                        <li>The tenancy shall commence from <strong>{startDate}</strong> and shall be for a period of <strong>{formData.leaseTermMonths} months</strong>, ending on <strong>{endDate}</strong>.</li>
-                        <li>The Tenant shall pay a monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
-                        <li>The rent shall be increased by <strong>{formData.rentIncreasePercent}%</strong> after every <strong>{formData.rentIncreaseFrequency} months</strong> of tenancy.</li>
-                        <li>The Tenant has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Landlord. This deposit will be refunded to the Tenant within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Tenant.</li>
-                        <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong> from the commencement of the lease. If the Tenant vacates the property during this period for any reason, the entire security deposit shall be forfeited by the Landlord.</li>
-                        <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
-                        <li>The Tenant shall bear and pay for all charges for electricity, water, internet, gas, and any other utilities consumed on the Scheduled Property directly to the concerned authorities.</li>
-                        <li>The Tenant shall use the Scheduled Property only for <strong>{formData.propertyType}</strong> purposes and shall not use it for any illegal, immoral, or commercial activities (unless specified as commercial).</li>
-                        <li>The Tenant shall maintain the Scheduled Property in a good, clean, and habitable condition and shall not cause any damage to the fixtures, fittings, and appliances. Any damage caused beyond normal wear and tear shall be repaired at the Tenant's expense.</li>
-                        <li>The Tenant shall not make any structural alterations or additions to the Scheduled Property without the prior written consent of the Landlord.</li>
-                        <li>The Landlord shall have the right to inspect the Scheduled Property at reasonable times with at least 24 hours prior notice to the Tenant.</li>
-                        <li>The Tenant shall {formData.allowPets ? "" : "not"} be allowed to keep pets on the property.</li>
-                        <li>The Tenant shall {formData.allowSubletting ? "" : "not"} sublet, assign, or part with the possession of the property or any part thereof without the prior written consent of the Landlord.</li>
-                        <li>Any disputes between the parties shall be subject to the exclusive jurisdiction of the courts in {formData.landlordAddress.split(',').pop()?.trim()}.</li>
-                    </ol>
-
-                    <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written in the presence of the following witnesses.</p>
-                    
-                    <div className="flex justify-between mt-16">
-                        <div className="text-center">
-                            <p>_________________________</p>
-                            <p>(LANDLORD)</p>
-                            <p>{formData.landlordName}</p>
-                        </div>
-                        <div className="text-center">
-                            <p>_________________________</p>
-                            <p>(TENANT)</p>
-                            <p>{formData.tenantName}</p>
-                        </div>
-                    </div>
-                     <div className="mt-16">
-                        <p>WITNESSES:</p>
-                        <ol className="list-decimal list-inside mt-8 space-y-8">
-                            <li>
-                                <p>Name: _________________________</p>
-                                <p>Address: _______________________</p>
-                                <p>Signature: ______________________</p>
-                            </li>
-                            <li>
-                                <p>Name: _________________________</p>
-                                <p>Address: _______________________</p>
-                                <p>Signature: ______________________</p>
-                            </li>
+                        <p>"LANDLORD" and "TENANT" are hereinafter collectively referred to as "the Parties".</p>
+                        
+                        <h4 className="font-bold mt-4">WHEREAS:</h4>
+                        <ol className="list-[upper-alpha] list-inside space-y-2">
+                            <li>The Landlord is the absolute owner of the {formData.propertyType} property situated at <strong>{formData.propertyAddress}</strong> (hereinafter referred to as the "Scheduled Property").</li>
+                            <li>The Tenant has approached the Landlord to take on rent the Scheduled Property for {formData.propertyType} purposes.</li>
+                            <li>The Landlord has agreed to let out the property to the Tenant on the terms and conditions hereafter appearing.</li>
                         </ol>
-                    </div>
 
+                        <h4 className="font-bold mt-4">NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:</h4>
+                        <ol className="list-decimal list-inside space-y-3">
+                            <li>The tenancy shall commence from <strong>{startDate}</strong> and shall be for a period of <strong>{formData.leaseTermMonths} months</strong>, ending on <strong>{endDate}</strong>.</li>
+                            <li>The Tenant shall pay a monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
+                            <li>The rent shall be increased by <strong>{formData.rentIncreasePercent}%</strong> after every <strong>{formData.rentIncreaseFrequency} months</strong> of tenancy.</li>
+                            <li>The Tenant has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Landlord. This deposit will be refunded to the Tenant within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Tenant.</li>
+                            <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong> from the commencement of the lease. If the Tenant vacates the property during this period for any reason, the entire security deposit shall be forfeited by the Landlord.</li>
+                            <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
+                            <li>The Tenant shall bear and pay for all charges for electricity, water, internet, gas, and any other utilities consumed on the Scheduled Property directly to the concerned authorities.</li>
+                            <li>The Tenant shall use the Scheduled Property only for <strong>{formData.propertyType}</strong> purposes and shall not use it for any illegal, immoral, or commercial activities (unless specified as commercial).</li>
+                            <li>The Tenant shall maintain the Scheduled Property in a good, clean, and habitable condition and shall not cause any damage to the fixtures, fittings, and appliances. Any damage caused beyond normal wear and tear shall be repaired at the Tenant's expense.</li>
+                            <li>The Tenant shall not make any structural alterations or additions to the Scheduled Property without the prior written consent of the Landlord.</li>
+                            <li>The Landlord shall have the right to inspect the Scheduled Property at reasonable times with at least 24 hours prior notice to the Tenant.</li>
+                            <li>The Tenant shall {formData.allowPets ? "" : "not"} be allowed to keep pets on the property.</li>
+                            <li>The Tenant shall {formData.allowSubletting ? "" : "not"} sublet, assign, or part with the possession of the property or any part thereof without the prior written consent of the Landlord.</li>
+                            <li>Any disputes between the parties shall be subject to the exclusive jurisdiction of the courts in {formData.landlordAddress.split(',').pop()?.trim()}.</li>
+                        </ol>
+
+                        <p className="mt-8">IN WITNESS WHEREOF, the parties have executed this agreement on the date first above written in the presence of the following witnesses.</p>
+                        
+                        <div className="flex justify-between mt-16">
+                            <div className="text-center">
+                                <p>_________________________</p>
+                                <p>(LANDLORD)</p>
+                                <p>{formData.landlordName}</p>
+                            </div>
+                            <div className="text-center">
+                                <p>_________________________</p>
+                                <p>(TENANT)</p>
+                                <p>{formData.tenantName}</p>
+                            </div>
+                        </div>
+                         <div className="mt-16">
+                            <p>WITNESSES:</p>
+                            <ol className="list-decimal list-inside mt-8 space-y-8">
+                                <li>
+                                    <p>Name: _________________________</p>
+                                    <p>Address: _______________________</p>
+                                    <p>Signature: ______________________</p>
+                                </li>
+                                <li>
+                                    <p>Name: _________________________</p>
+                                    <p>Address: _______________________</p>
+                                    <p>Signature: ______________________</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started", description: "Your document is being prepared."})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
+                <CardFooter className="justify-between mt-6">
+                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                    <div onClick={handlePrint}>
+                        <Button><Printer className="mr-2"/> Print / Save as PDF</Button>
+                    </div>
+                </CardFooter>
             </Card>
         );
       default:
@@ -319,3 +332,5 @@ export default function RentalDeedPage() {
     </div>
   );
 }
+
+    
