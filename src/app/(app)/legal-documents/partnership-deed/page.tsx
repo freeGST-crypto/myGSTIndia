@@ -44,7 +44,7 @@ import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
   name: z.string().min(2, "Partner name is required."),
-  parentage: z.string().min(3, "S/o, W/o, D/o is required."),
+  parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
   age: z.coerce.number().positive("Age must be a positive number.").default(30),
   address: z.string().min(10, "Address is required."),
   capitalContribution: z.coerce.number().positive("Must be a positive number."),
@@ -238,10 +238,11 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
 PartnershipDeedToPrint.displayName = 'PartnershipDeedToPrint';
 
 const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
+    const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
     return (
         <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
             <h3 className="text-center font-bold">CERTIFICATE</h3>
-            <p>WE THE PARTNERS OF “{formData.firmName.toUpperCase()}”, {formData.firmAddress.split(',').pop()?.trim()}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'}) : '[Date]'}.</p>
+            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress.split(',').pop()?.trim()}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
             <p>THE DEED WAS RUNNING INTO THREE PAGES AND OUT OF THEM THE FIRST PAGE WERE PRINTED ON THE NON-JUDICIAL STAMP PAPERS IN FRANKLIN DATED {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '[Date]'} WITH NO</p>
             <div className="mt-16 text-right">
                 <p>Signature of the Partners:</p>
@@ -321,7 +322,7 @@ export default function PartnershipDeedPage() {
     if (form.getValues("partners").length > 0) {
         setDeponentId(form.getValues("partners")[0].name);
     }
-  }, [form.watch("partners")]);
+  }, []);
 
   const formData = form.watch();
   const partnersWatch = form.watch("partners");
