@@ -21,6 +21,8 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
