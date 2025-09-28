@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import { useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -240,7 +241,7 @@ export default function PartnershipDeedPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
+  const printRef = React.useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -337,7 +338,7 @@ export default function PartnershipDeedPage() {
             break;
     }
     
-    const isValid = await form.trigger(fieldsToValidate as any);
+    const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       setStep(prev => prev + 1);
        if (step < 8) {
@@ -583,11 +584,10 @@ export default function PartnershipDeedPage() {
                 <CardContent>
                     <PartnershipDeedToPrint ref={printRef} formData={formData} />
                 </CardContent>
-                <CardFooter className="justify-between mt-6">
-                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <ShareButtons 
+                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                 <ShareButtons
                     contentRef={printRef}
-                    fileName={`Partnership_Deed_${formData.firmName || "[Firm Name]"}`}
+                    fileName={`Partnership_Deed_${formData.firmName}`}
                     whatsappMessage={whatsappMessage}
                   />
                 </CardFooter>
