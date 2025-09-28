@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,12 +34,14 @@ import {
   Trash2,
   FileDown,
   Wand2,
-  Loader2
+  Loader2,
+  Printer
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { suggestClausesAction } from "./actions";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useReactToPrint } from "react-to-print";
 
 const partnerSchema = z.object({
     name: z.string().min(2, "Partner name is required."),
@@ -89,6 +91,7 @@ export default function PartnershipDeedPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
+  const printRef = useRef(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -117,6 +120,10 @@ export default function PartnershipDeedPage() {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "partners",
+  });
+  
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
   });
 
   const partnersWatch = form.watch("partners");
@@ -275,12 +282,7 @@ export default function PartnershipDeedPage() {
                     )}/>
                   </div>
                    <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => (
-                     <FormItem className="flex flex-row items-center justify-start gap-2 pt-2">
-                        <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <Label className="font-normal" htmlFor={field.name}>This is a working/active partner</Label>
-                    </FormItem>
+                     <FormItem className="flex flex-row items-center justify-start gap-2 pt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label className="font-normal" htmlFor={field.name}>This is a working/active partner</Label></FormItem>
                   )}/>
                 </div>
               ))}
@@ -434,7 +436,7 @@ export default function PartnershipDeedPage() {
         return (
              <Card>
                 <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed. This is a detailed preview based on your inputs. Download for the fully formatted document.</CardDescription></CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
+                <CardContent ref={printRef} className="prose prose-sm dark:prose-invert max-w-none border rounded-md p-6 bg-muted/20 leading-relaxed">
                     
                     {/* Form No. 1 */}
                     <div className="text-center space-y-2 mb-12">
@@ -625,7 +627,7 @@ export default function PartnershipDeedPage() {
                     ))}
 
                 </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={() => toast({title: "Download Started", description: "Your document is being prepared for download."})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
+                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button></CardFooter>
             </Card>
         )
       default:
