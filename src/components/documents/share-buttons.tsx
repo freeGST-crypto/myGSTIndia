@@ -18,9 +18,19 @@ interface ShareButtonsProps {
 export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareButtonsProps) {
   const { toast } = useToast();
   
+  const PrintTrigger = React.forwardRef<HTMLButtonElement>((props, ref) => {
+    return (
+      <Button ref={ref} variant="outline">
+        <Printer className="mr-2" /> Print
+      </Button>
+    );
+  });
+  PrintTrigger.displayName = 'PrintTrigger';
+
   const handlePrint = useReactToPrint({
     content: () => contentRef.current,
     documentTitle: fileName,
+    trigger: () => <PrintTrigger />,
   });
 
   const handleDownloadPDF = async () => {
@@ -66,9 +76,7 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
 
   return (
     <div className="flex gap-2">
-      <Button variant="outline" onClick={handlePrint}>
-        <Printer className="mr-2" /> Print
-      </Button>
+      {handlePrint}
       <Button onClick={handleDownloadPDF}>
         <FileDown className="mr-2" /> Download PDF
       </Button>

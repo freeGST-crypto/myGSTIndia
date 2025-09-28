@@ -28,6 +28,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { useReactToPrint } from 'react-to-print';
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   tenantName: z.string().min(3, "Tenant's name is required."),
@@ -75,14 +76,9 @@ export default function RentalReceiptsPage() {
   });
 
   const formData = form.watch();
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Rental_Receipt_${formData.rentPeriod || 'date'}`,
-    onAfterPrint: () => toast({ title: "Print Complete" }),
-  });
   
   const formattedPeriod = formData.rentPeriod ? new Date(formData.rentPeriod + '-02').toLocaleString('default', { month: 'long', year: 'numeric' }) : '';
+  const whatsappMessage = `Hi ${formData.landlordName}, here is the rent receipt for ${formattedPeriod} for your records. Thank you.`;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -134,13 +130,13 @@ export default function RentalReceiptsPage() {
           </CardContent>
         </Card>
         
-        <div className="space-y-4">
-            <Card className="sticky top-20">
-                <CardHeader>
-                    <CardTitle>Live Preview</CardTitle>
-                    <CardDescription>The receipt will update as you type.</CardDescription>
-                </CardHeader>
-                <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg">
+        <Card className="sticky top-20">
+            <CardHeader>
+                <CardTitle>Live Preview</CardTitle>
+                <CardDescription>The receipt will update as you type.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div ref={printRef} className="p-8 border-dashed border-2 rounded-lg bg-white text-black">
                     <div className="space-y-6">
                         <h2 className="text-2xl font-bold text-center">RENT RECEIPT</h2>
                         <div className="flex justify-between">
@@ -156,16 +152,16 @@ export default function RentalReceiptsPage() {
                         <div className="space-y-2 text-base leading-relaxed">
                             <p>Received with thanks from <strong>{formData.tenantName || '[Tenant Name]'}</strong>, a sum of <strong>₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}</strong>/-</p>
                             <p>(in words: <strong>{numberToWords(formData.rentAmount || 0)}</strong>) by cash/cheque towards the rent for the month of <strong>{formattedPeriod}</strong> for the property situated at:</p>
-                            <p className="py-2 px-4 bg-muted/30 rounded"><em>{formData.propertyAddress || '[Property Address]'}</em></p>
+                            <p className="py-2 px-4 bg-slate-100 rounded"><em>{formData.propertyAddress || '[Property Address]'}</em></p>
                         </div>
                         
                         <div className="pt-16 grid grid-cols-2 gap-4 items-end">
                             <div>
-                                <p><strong>₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}</strong>/-</p>
-                                <p className="text-xs text-muted-foreground mt-2">Amount in Figures</p>
+                                <p className="font-bold text-lg">₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}/-</p>
+                                <p className="text-xs text-slate-500 mt-2">Amount in Figures</p>
                             </div>
                             <div className="text-right">
-                                <div className="border-t pt-2 mt-4">
+                                <div className="border-t pt-2 mt-4 border-slate-400">
                                     <p className="font-semibold">{formData.landlordName || '[Landlord Name]'}</p>
                                     <p>(Landlord)</p>
                                     <p>PAN: {formData.landlordPan || '[Landlord PAN]'}</p>
@@ -173,12 +169,16 @@ export default function RentalReceiptsPage() {
                             </div>
                         </div>
                     </div>
-                </CardContent>
-                <CardFooter>
-                    <Button onClick={handlePrint}><Printer className="mr-2" /> Print / Save as PDF</Button>
-                </CardFooter>
-            </Card>
-        </div>
+                </div>
+            </CardContent>
+            <CardFooter>
+                 <ShareButtons 
+                    contentRef={printRef}
+                    fileName={`Rent_Receipt_${formData.tenantName}_${formData.rentPeriod}`}
+                    whatsappMessage={whatsappMessage}
+                />
+            </CardFooter>
+        </Card>
       </div>
     </div>
   );
