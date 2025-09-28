@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -171,9 +170,7 @@ export default function RentalReceiptsPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <div onClick={handlePrint}>
-                        <Button><Printer className="mr-2" /> Print / Save as PDF</Button>
-                    </div>
+                    <Button onClick={handlePrint}><Printer className="mr-2" /> Print / Save as PDF</Button>
                 </CardFooter>
             </Card>
         </div>
@@ -181,5 +178,3 @@ export default function RentalReceiptsPage() {
     </div>
   );
 }
-
-    
