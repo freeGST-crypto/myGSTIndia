@@ -68,7 +68,10 @@ const formSchema = z.object({
   partnershipDuration: z.enum(["at-will", "fixed-term"]),
   termYears: z.coerce.number().optional(),
   
-  partners: z.array(partnerSchema).min(2, "At least two partners are required."),
+  partners: z.array(partnerSchema).min(2, "At least two partners are required.")
+    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
+        message: "At least two partners must be designated partners.",
+    }),
   
   totalCapital: z.coerce.number().min(0, "Total capital cannot be negative."),
 
@@ -95,7 +98,7 @@ const formSchema = z.object({
     path: ["totalCapital"],
 }).refine(data => {
     const totalProfitShare = data.partners.reduce((acc, p) => acc + p.profitShare, 0);
-    return totalProfitShare === 100;
+    return Math.abs(totalProfitShare - 100) < 0.01;
 }, {
     message: "Total profit share must equal 100%.",
     path: ["partners"],
@@ -117,11 +120,11 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
                 <h5 className="font-bold">THE INDIAN PARTNERSHIP ACT, 1932</h5>
                 <h5 className="font-bold">Application for Registration of Firm by the Name</h5>
             </div>
-            <p>Presented or forward to the registrar of Firm and for filing by M/s {formData.firmName || "[Firm Name]"}</p>
-            <p>We, the undersigned being the partners of the *Firm M/s {formData.firmName || "[Firm Name]"} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
+            <p>Presented or forward to the registrar of Firm and for filing by M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</p>
+            <p>We, the undersigned being the partners of the *Firm M/s {(formData.firmName || "[Firm Name]").toUpperCase()} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
             <table className="w-full my-4">
                 <tbody>
-                    <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {formData.firmName || "[Firm Name]"}</td></tr>
+                    <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</td></tr>
                     <tr className="h-4"></tr>
                     <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress || "[Firm Address]"} <br/> (b) NIL</td></tr>
                 </tbody>
@@ -201,13 +204,13 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
                 </ol>
                 
                 <p>(Collectively referred to as “Partners” and individually as a “Partner”).</p>
-                <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>" under the name & style of "<strong>{formData.firmName || '[Firm Name]'}</strong>", with effect from today, i.e. the {formattedDate}.</p>
+                <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>" under the name & style of "<strong>{(formData.firmName || "[Firm Name]").toUpperCase()}</strong>", with effect from today, i.e. the {formattedDate}.</p>
                 <p>AND WHEREAS both the Partners hereto have decided to reduce the terms and conditions of this instrument into writing so as to avoid misunderstandings, which may arise in future.</p>
                 
                 <h4 className="font-bold mt-4">NOW THIS DEED OF PARTNERSHIP WITNESSETH AS UNDER:-</h4>
                 
                 <ol className="list-decimal list-inside space-y-3">
-                    <li>The Name of the partnership business shall be “<strong>{formData.firmName || '[Firm Name]'}</strong>” and such other names as the partners may decide from time to time.</li>
+                    <li>The Name of the partnership business shall be “<strong>{(formData.firmName || "[Firm Name]").toUpperCase()}</strong>” and such other names as the partners may decide from time to time.</li>
                     <li>The Principal place of business shall be at “<strong>{formData.firmAddress || '[Firm Address]'}</strong>” and such other places may decide from time to time.</li>
                     <li>The Partnership has come into existence with effect from today, i.e. the {commencementDateFormatted}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
                     <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>” and such other business as the partners may decide from time to time.</li>
@@ -299,7 +302,7 @@ const AffidavitToPrint = React.forwardRef<HTMLDivElement, { formData: FormData; 
             <h3 className="text-center font-bold">AFFIDAVIT</h3>
             <p>I {deponent.name}, {deponent.parentage} R/o “{deponent.address}” do hereby solemnly affirm and state that as follows:</p>
             <p>That I am the owner of the above mentioned property at “{deponent.address}”.</p>
-            <p>We are doing partnership business in the name and style of M/s “{formData.firmName}” and which is managed by me i.e. {deponent.name} at R/o “{deponent.address}” which is owned by me and I am not charging any rent for running this partnership business.</p>
+            <p>We are doing partnership business in the name and style of M/s “{formData.firmName}”  and which is managed by me i.e. {deponent.name} at R/o “{deponent.address}” which is owned by me and I am not charging any rent for running this partnership business.</p>
             <p>I do hereby declare and confirm that the contents of the affidavit are true and correct to the best of my knowledge and belief and nothing material has been concealed.</p>
             <div className="flex justify-between mt-16">
                 <div>
@@ -434,7 +437,32 @@ export default function PartnershipDeedPage() {
   }
 
   const handleSuggestClauses = async () => {
-    // Implementation from previous turn
+    const businessActivity = form.getValues("businessActivity");
+    if (!businessActivity) {
+      form.setError("businessActivity", {type: "manual", message: "Business activity is required to suggest clauses."});
+      return;
+    }
+    setIsSuggestingClauses(true);
+    try {
+        const existingClauses = form.getValues("extraClauses");
+        const result = await suggestClausesAction({
+            documentType: "LLP Agreement",
+            businessActivity,
+            existingClauses: existingClauses || ""
+        });
+        if(result?.suggestedClauses && result.suggestedClauses.length > 0) {
+            const newClausesText = result.suggestedClauses.map(c => `\n\n${c.title.toUpperCase()}\n${c.clauseText}`).join('');
+            form.setValue("extraClauses", (existingClauses || "") + newClausesText);
+            toast({ title: "AI Clauses Added", description: "Suggested clauses have been appended." });
+        } else {
+             toast({ variant: "destructive", title: "Suggestion Failed", description: "Could not generate clauses." });
+        }
+    } catch (error) {
+        console.error(error);
+        toast({ variant: "destructive", title: "Error", description: "An error occurred while generating clauses." });
+    } finally {
+        setIsSuggestingClauses(false);
+    }
   }
 
 
@@ -542,9 +570,11 @@ export default function PartnershipDeedPage() {
                    <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => ( <FormItem className="flex flex-row items-center justify-start gap-2 pt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} id={`isWorking-${index}`} /></FormControl><Label className="font-normal" htmlFor={`isWorking-${index}`}>This is a working/active partner</Label></FormItem> )}/>
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
+              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {form.formState.errors.partners && !form.formState.errors.partners.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
+               {totalProfitShare !== 100 && (
+                    <div className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare.toFixed(2)}%</div>
+                )}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
