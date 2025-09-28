@@ -1,10 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Printer, FileDown } from "lucide-react";
+import { Printer, FileDown, MessageSquare } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import html2pdf from "html2pdf.js";
 import React from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,61 +15,74 @@ interface ShareButtonsProps {
 
 export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareButtonsProps) {
   const { toast } = useToast();
-  
+
+  // Print handler
   const handlePrint = useReactToPrint({
     content: () => contentRef.current,
     documentTitle: fileName,
   });
 
-  const handleDownloadPDF = async () => {
+  // Multi-page PDF download using html2pdf.js
+  const handleDownloadPDF = () => {
     if (!contentRef.current) return;
 
-    toast({ title: "Generating PDF...", description: "Please wait while the document is being prepared." });
+    toast({ title: "Generating PDF...", description: "Please wait..." });
 
-    const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        useCORS: true,
-        scrollX: 0,
-        scrollY: -window.scrollY, // avoid cut-offs
-    });
-    const imgData = canvas.toDataURL("image/png");
+    const options = {
+      margin: [10, 10, 10, 10], // top, left, bottom, right in mm
+      filename: `${fileName}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+    };
 
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pageWidth;
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    let position = 0;
-    let heightLeft = pdfHeight;
-
-    // First page
-    pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-    heightLeft -= pageHeight;
-
-    // Add remaining pages
-    while (heightLeft > 0) {
-        position = -heightLeft; // Correctly calculate the position for the next slice of the image
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
-    }
-
-    pdf.save(`${fileName}.pdf`);
-    toast({ title: "Download Complete", description: `${fileName}.pdf has been downloaded.` });
+    html2pdf()
+      .set(options)
+      .from(contentRef.current)
+      .save()
+      .then(() => {
+        toast({ title: "Download Complete", description: `${fileName}.pdf has been downloaded.` });
+      })
+      .catch((err) => {
+        console.error(err);
+        toast({ variant: "destructive", title: "Error", description: "Failed to generate PDF." });
+      });
   };
 
+  // WhatsApp share
+  const handleWhatsAppShare = () => {
+    if (!whatsappMessage) {
+      toast({
+        variant: "destructive",
+        title: "No message",
+        description: "WhatsApp message not configured for this document.",
+      });
+      return;
+    }
+    const encodedMessage = encodeURIComponent(whatsappMessage);
+    window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
+  };
 
   return (
     <div className="flex gap-2">
       <Button variant="outline" onClick={handlePrint}>
         <Printer className="mr-2" /> Print
       </Button>
+
       <Button onClick={handleDownloadPDF}>
         <FileDown className="mr-2" /> Download PDF
       </Button>
+
+      {whatsappMessage && (
+        <Button
+          variant="outline"
+          onClick={handleWhatsAppShare}
+          className="bg-green-100 text-green-700 hover:bg-green-200"
+        >
+          <MessageSquare className="mr-2" /> Share
+        </Button>
+      )}
     </div>
   );
 }
