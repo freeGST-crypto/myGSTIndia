@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -39,7 +38,7 @@ const formSchema = z.object({
   paymentAmount: z.coerce.number().positive("Payment must be a positive number."),
   paymentTerms: z.string().min(3, "Payment terms are required (e.g., Net 30, upon completion)."),
   
-  term: z.string().default("This Agreement will begin on the effective date and will remain in full force and effect until the completion of the Services, unless terminated earlier as provided in this Agreement."),
+  term: z.string().default("This Agreement will commence on the effective date and will remain in full force and effect until the completion of the Services, unless terminated earlier as provided in this Agreement."),
   confidentiality: z.string().default("Both parties agree to keep confidential all non-public information obtained from the other party."),
   
   jurisdictionCity: z.string().min(2, "Jurisdiction city is required."),
