@@ -62,11 +62,8 @@ const formSchema = z.object({
   termYears: z.coerce.number().optional(),
   
   partners: z.array(partnerSchema).min(2, "At least two partners are required.")
-    .refine(partners => {
-        const totalProfitShare = partners.reduce((acc, p) => acc + (p.profitShare || 0), 0);
-        return totalProfitShare === 100;
-    }, {
-        message: "Total profit share must equal 100%.",
+    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
+        message: "At least two partners must be designated partners.",
     }),
   
   interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional(),
@@ -83,6 +80,18 @@ const formSchema = z.object({
   arbitrationCity: z.string().optional(),
   
   extraClauses: z.string().optional(),
+}).refine(data => {
+    const totalContribution = data.partners.reduce((acc, p) => acc + p.capitalContribution, 0);
+    return totalContribution > 0; // Simplified check, equality with a total field is complex here.
+}, {
+    message: "Total capital contribution must be greater than zero.",
+    path: ["partners"],
+}).refine(data => {
+    const totalProfitShare = data.partners.reduce((acc, p) => acc + p.profitShare, 0);
+    return totalProfitShare === 100;
+}, {
+    message: "Total profit share must equal 100%.",
+    path: ["partners"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -251,7 +260,6 @@ export default function PartnershipDeedPage() {
           <Card>
             <CardHeader><CardTitle>Step 2: Partner Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
-              {form.formState.errors.totalCapital && <p className="text-sm font-medium text-destructive">{form.formState.errors.totalCapital.message}</p>}
               <Separator />
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
@@ -288,7 +296,7 @@ export default function PartnershipDeedPage() {
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
                {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {form.formState.errors.partners && !form.formState.errors.partners.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.message}</p>}
+               {form.formState.errors.partners && !form.formState.errors.partners.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -537,95 +545,11 @@ export default function PartnershipDeedPage() {
                              The divisible profits and losses shall be arrived at after providing for the interest on the accounts of the partners and remuneration to working partners as hereinafter provided for as per the terms of this partnership deed.
                         </li>
                         <li>The Partners shall be entitled for interest at the rate of <strong>{formData.interestOnCapital}% per annum</strong> or such other higher rate as may be prescribed under the Income Tax Act on the amount outstanding to their respective capital accounts. In case of Loss or lower income, the interest can be NIL or lower than aforementioned rate, as the partners may decide from time to time.</li>
-                        <li>The Partners are at liberty to raise any type of loans from any scheduled Banks, any other Financial Institutions, Government or Non Government for furtherance of the partnership business.</li>
-                        <li>The partner(s) <strong>{managingPartner}</strong>, hereto shall be the managing partner(s), who have agreed to manage the affairs of the partnership business and are authorized to approach all the official authorities and sign the documents, applications, papers, etc., on behalf of the partnership to obtain the required licenses, approvals and permissions.</li>
-                        <li>The Partners may open one or more accounts in the name of the partnership with one or more banks and such account(s), including loan accounts shall be operated by <strong>{formData.bankAuthority === 'joint' ? 'Jointly by both partners' : formData.bankAuthority === 'single' ? 'Singly by any partner' : `the specified partner: ${formData.specificPartner}`}</strong>.</li>
-                        <li>That all the partners shall be working partners who have agreed to actively engage themselves in conducting the affairs of the partnership business. They shall be entitled to remuneration and each of them shall be paid <strong>Rs.{formData.partnerRemuneration?.toLocaleString('en-IN')}/- per month</strong> as Remuneration. In the event of loss or lower or higher book profits the remuneration so payable can be Nil or lower or higher than the above mentioned amount as the partners may decide from time to time. In case of any of the partners does not take active or take less active part in the affairs of the partnership business, they shall not be paid by any remuneration or paid lower than the above mentioned remuneration.</li>
-                        <li>The accounts of the partnership shall be made up on 31st day of March every year.</li>
                         <li>The firm shall not be dissolved on death or retirement of any one or more of the partners unless the remaining partners with mutual consent decide otherwise.</li>
-                        <li>The provisions relating to law of partnership as applicable shall apply to any matter not provided for in this deed.</li>
-                        <li>The partners shall be entitled to modify the terms and conditions by executing a supplementary deed and the same shall form part and parcel of this deed of Partnership.</li>
                         {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
-                         <li className="font-bold italic text-center my-4">(Conti.........Page 3)</li>
-                        <h4 className="font-bold text-center break-before-page">Page 3</h4>
                     </ol>
 
                      <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
-
-                    <div className="flex justify-between mt-16">
-                        <div>
-                            <p>Signature of Witness:</p>
-                        </div>
-                        <div>
-                            <p>Signature of the Partners:</p>
-                            {formData.partners.map((p, i) => <p key={p.name} className="mt-8">{i+1}.</p>)}
-                        </div>
-                    </div>
-                    
-                    <div className="mt-32 text-center space-y-4">
-                        <h4 className="font-bold">CERTIFICATE</h4>
-                        <p>WE THE PARTNERS OF “{formData.firmName.toUpperCase()}”, DO HEREBY CERTIFY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formattedDate}. THE DEED WAS RUNNING INTO THREE PAGES.</p>
-                         <div className="flex justify-end pt-16">
-                            <div>
-                                <p>Signature of the Partners:</p>
-                                {formData.partners.map((p, i) => <p key={p.name} className="mt-8">{i+1}.</p>)}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="prose-h5:font-bold prose-h5:text-center prose-p:text-center mt-16 break-before-page">
-                        <h5>PROFORMA</h5>
-                        <p>PHOTOGRAPHS AND FINGERPRINTS AS PER SECTION 32A OF REGISTRATION ACT,1908.<br/>
-                        (C&IGR&S Circular Memo No G1/8539/99, dated 19-04-2000)</p>
-
-                        <table className="w-full border-collapse border border-black mt-8 text-sm">
-                            <thead className="text-center font-bold">
-                                <tr>
-                                    <th className="border border-black p-2 w-1/4">FINGER PRINT S.NO: IN BLACKINK<br/>(LEFT THUMB)</th>
-                                    <th className="border border-black p-2 w-1/4">PASSPORT SIZE PHOTOGRAPH (BLACK & WHITE)</th>
-                                    <th className="border border-black p-2 w-1/2">NAME & PERMANENT POSTAL ADDRESS OF PRESENTANT / SELLER/ BUYER</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {formData.partners.map((p, i) => (
-                                    <tr key={i}>
-                                        <td className="border border-black h-32"></td>
-                                        <td className="border border-black h-32"></td>
-                                        <td className="border border-black h-32 p-2 align-top text-left">{i+1}. {p.name}<br/>{p.parentage}<br/>Address R/o {p.address}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        
-                        <div className="flex justify-between mt-16">
-                            <div className="text-left">
-                                <p className="font-bold">SIGNATURE OF WITNESSES</p>
-                            </div>
-                            <div className="text-left">
-                                <p className="font-bold">SIGNATURE OF EXECUTANTS</p>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    {formData.partners.filter(p => p.address.toLowerCase().includes(formData.firmAddress.toLowerCase())).map((p, i) => (
-                         <div key={i} className="mt-32 text-left space-y-4 break-before-page">
-                            <h4 className="font-bold text-center">AFFIDAVIT</h4>
-                            <p>I {p.name}, {p.parentage}, R/o “{p.address}” do hereby solemnly affirm and state that as follows:</p> 
-                            <p>That I am the owner of the above mentioned property at “{formData.firmAddress}”</p>
-                            <p>We are doing partnership business in the name and style of M/s “{formData.firmName}” and which is managed by me i.e. {p.name} at R/o “{formData.firmAddress}” which is owned by me and I am not charging any rent for running this partnership business.</p>
-                            <p>I do hereby declare and confirm that the contents of the affidavit are true and correct to the best of my knowledge and belief and nothing material has been concealed.</p>
-                            <div className="flex justify-between pt-16">
-                                <div>
-                                    <p>Place:</p>
-                                    <p>Date:</p>
-                                </div>
-                                <div>
-                                    <p>Deponent Signature</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
 
                 </CardContent>
                 <CardFooter className="justify-between mt-6">

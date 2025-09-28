@@ -60,6 +60,7 @@ export default function OfferLetterPage() {
   const formData = form.watch();
 
   const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+  const whatsappMessage = `Hi ${formData.candidateName}, please find the attached your offer letter from ${formData.companyName}.`;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -164,7 +165,7 @@ export default function OfferLetterPage() {
                     <ShareButtons 
                         contentRef={printRef}
                         fileName={`Offer_Letter_${formData.candidateName}`}
-                        whatsappMessage={`Hi ${formData.candidateName}, please find the attached your offer letter from ${formData.companyName}.`}
+                        whatsappMessage={whatsappMessage}
                     />
                 </CardFooter>
             </Card>

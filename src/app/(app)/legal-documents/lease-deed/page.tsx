@@ -309,10 +309,7 @@ export default function LeaseDeedPage() {
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
-                </CardFooter>
+                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button></CardFooter>
             </Card>
         );
       default:
