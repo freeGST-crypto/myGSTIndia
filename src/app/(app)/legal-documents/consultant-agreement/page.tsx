@@ -188,7 +188,6 @@ export default function ConsultantAgreementPage() {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
         const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
-        const whatsappMessage = `Please review the draft Consultant Agreement between ${formData.clientName} and ${formData.consultantName}.`;
 
         return (
              <Card>
@@ -247,7 +246,6 @@ export default function ConsultantAgreementPage() {
                    <ShareButtons
                     contentRef={printRef}
                     fileName={`Consultant_Agreement_${formData.consultantName}`}
-                    whatsappMessage={whatsappMessage}
                   />
                 </CardFooter>
             </Card>

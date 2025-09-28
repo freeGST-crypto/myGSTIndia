@@ -35,6 +35,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   landlordName: z.string().min(3, "Lessor name is required."),
@@ -97,10 +98,6 @@ export default function RentalDeedPage() {
       allowPets: false,
       allowSubletting: false,
     },
-  });
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
   });
 
   const processStep = async () => {
@@ -301,8 +298,11 @@ export default function RentalDeedPage() {
                     </div>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                  <ShareButtons
+                    contentRef={printRef}
+                    fileName={`Rental_Agreement_${formData.tenantName}`}
+                  />
                 </CardFooter>
             </Card>
         );

@@ -1,3 +1,4 @@
+
 {
   "name": "nextn",
   "version": "0.1.0",
@@ -79,7 +80,6 @@
     "typescript": "^5"
   },
   "overrides": {
-    "@radix-ui/react-slot": "1.2.3"
+    "@radix-ui/react-slot": "1.1.0"
   }
 }
-

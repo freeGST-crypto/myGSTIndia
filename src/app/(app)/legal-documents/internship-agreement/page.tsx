@@ -137,7 +137,6 @@ export default function InternshipAgreementPage() {
         );
       case 3:
         const formData = form.getValues();
-        const whatsappMessage = `Hi ${formData.internName}, please find the attached Internship Agreement from ${formData.companyName}.`;
 
         return (
              <Card>
@@ -193,7 +192,6 @@ export default function InternshipAgreementPage() {
                   <ShareButtons 
                     contentRef={printRef}
                     fileName={`Internship_Agreement_${formData.internName}`}
-                    whatsappMessage={whatsappMessage}
                   />
                 </CardFooter>
             </Card>

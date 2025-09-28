@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   serviceProviderName: z.string().min(3, "Service Provider name is required."),
@@ -72,12 +73,6 @@ export default function ServiceAgreementPage() {
       agreementDate: new Date().toISOString().split("T")[0],
     });
   }, [form]);
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Service_Agreement_${form.getValues("clientName")}`,
-    onAfterPrint: () => toast({ title: "Print Complete" }),
-  });
 
   const processStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
@@ -219,7 +214,10 @@ export default function ServiceAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                  <ShareButtons
+                    contentRef={printRef}
+                    fileName={`Service_Agreement_${formData.clientName}`}
+                  />
                 </CardFooter>
             </Card>
         );

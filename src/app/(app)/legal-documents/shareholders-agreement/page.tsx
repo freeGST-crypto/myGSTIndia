@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const shareholderSchema = z.object({
   name: z.string().min(2, "Shareholder name is required."),
@@ -66,12 +67,6 @@ export default function ShareholdersAgreementPage() {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "shareholders",
-  });
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Shareholders_Agreement_${form.getValues("companyName")}`,
-    onAfterPrint: () => toast({ title: "Print Complete" }),
   });
 
   const processStep = async () => {
@@ -182,7 +177,10 @@ export default function ShareholdersAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                  <ShareButtons
+                    contentRef={printRef}
+                    fileName={`Shareholders_Agreement_${formData.companyName}`}
+                  />
                 </CardFooter>
             </Card>
         );

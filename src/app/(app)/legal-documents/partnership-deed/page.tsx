@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { suggestClausesAction } from "./actions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReactToPrint } from "react-to-print";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
     name: z.string().min(2, "Partner name is required."),
@@ -130,9 +131,6 @@ export default function PartnershipDeedPage() {
     name: "partners",
   });
   
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-  });
 
   const partnersWatch = form.watch("partners");
   const totalProfitShare = partnersWatch.reduce((acc, partner) => acc + (Number(partner.profitShare) || 0), 0);
@@ -554,7 +552,10 @@ export default function PartnershipDeedPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                     <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <Button type="button" onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                    <ShareButtons
+                        contentRef={printRef}
+                        fileName={`Partnership_Deed_${formData.firmName}`}
+                    />
                 </CardFooter>
             </Card>
         )

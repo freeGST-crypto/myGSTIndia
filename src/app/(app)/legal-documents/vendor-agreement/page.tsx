@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   buyerName: z.string().min(3, "Buyer/Company name is required."),
@@ -71,12 +72,6 @@ export default function VendorAgreementPage() {
       agreementDate: new Date().toISOString().split("T")[0],
     });
   }, [form]);
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Vendor_Agreement_${form.getValues("vendorName")}`,
-    onAfterPrint: () => toast({ title: "Print Complete" }),
-  });
 
   const processStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
@@ -216,7 +211,10 @@ export default function VendorAgreementPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                  <ShareButtons
+                    contentRef={printRef}
+                    fileName={`Vendor_Agreement_${formData.vendorName}`}
+                  />
                 </CardFooter>
             </Card>
         );

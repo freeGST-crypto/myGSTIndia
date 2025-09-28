@@ -143,7 +143,6 @@ export default function NdaPage() {
         const formData = form.getValues();
         const dateOptions: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
         const agreementDate = formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]';
-        const whatsappMessage = `Please review the Non-Disclosure Agreement between ${formData.disclosingPartyName} and ${formData.receivingPartyName}.`;
 
 
         return (
@@ -213,7 +212,6 @@ export default function NdaPage() {
                    <ShareButtons
                     contentRef={printRef}
                     fileName={`NDA_${formData.disclosingPartyName}_${formData.receivingPartyName}`}
-                    whatsappMessage={whatsappMessage}
                   />
                 </CardFooter>
             </Card>
