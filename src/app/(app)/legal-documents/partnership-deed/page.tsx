@@ -58,10 +58,7 @@ const formSchema = z.object({
   partnershipDuration: z.enum(["at-will", "fixed-term"]),
   termYears: z.coerce.number().optional(),
   
-  partners: z.array(partnerSchema).min(2, "At least two partners are required.")
-    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
-        message: "At least two partners must be designated partners.",
-    }),
+  partners: z.array(partnerSchema).min(2, "At least two partners are required."),
   
   totalCapital: z.coerce.number().positive(),
 
@@ -99,7 +96,7 @@ export default function PartnershipDeedPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -131,7 +128,7 @@ export default function PartnershipDeedPage() {
     name: "partners",
   });
   
-
+  const formData = form.watch();
   const partnersWatch = form.watch("partners");
   const totalProfitShare = partnersWatch.reduce((acc, partner) => acc + (Number(partner.profitShare) || 0), 0);
 
@@ -295,7 +292,7 @@ export default function PartnershipDeedPage() {
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Another Partner</Button>
               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {form.formState.errors.partners && !form.formState.errors.partners.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
+               {form.formState.errors.partners && !form.formState.errors.root && totalProfitShare !== 100 && <p className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare}%</p>}
             </CardContent>
             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
           </Card>
@@ -435,11 +432,10 @@ export default function PartnershipDeedPage() {
           </Card>
         );
      case 8:
-        const formData = form.watch();
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
         const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
         const commencementDateFormatted = new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions);
-        const whatsappMessage = `Hi, please find the attached draft Partnership Deed for ${formData.firmName}. Kindly review and let me know if any changes are required.`;
+        const whatsappMessage = `Hi, please find the attached draft Partnership Deed for ${formData.firmName || "[Firm Name]"}. Kindly review and let me know if any changes are required.`;
 
         return (
              <Card>
@@ -469,7 +465,7 @@ export default function PartnershipDeedPage() {
                         <table className="w-full my-4 border-collapse border border-black">
                             <thead><tr className="bg-muted/50"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
                             <tbody>
-                                {formData.partners.map(p => (
+                                {formData.partners.map((p, i) => (
                                     <tr key={p.name}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
                                 ))}
                             </tbody>
@@ -486,7 +482,7 @@ export default function PartnershipDeedPage() {
                         </div>
                         <div className="mt-16 space-y-8">
                             <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
-                            {formData.partners.map(p => (
+                            {formData.partners.map((p, i) => (
                                 <div key={p.name}>
                                     <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
                                     <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
@@ -510,16 +506,17 @@ export default function PartnershipDeedPage() {
                                 ))}
                             </ol>
                             
-                            <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity}</strong>" under the name & style of "<strong>{formData.firmName}</strong>", with effect from today, i.e. the {formattedDate}.</p>
+                            <p>(Collectively referred to as “Partners” and individually as a “Partner”).</p>
+                            <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>" under the name & style of "<strong>{formData.firmName || '[Firm Name]'}</strong>", with effect from today, i.e. the {formattedDate}.</p>
                             <p>AND WHEREAS both the Partners hereto have decided to reduce the terms and conditions of this instrument into writing so as to avoid misunderstandings, which may arise in future.</p>
                             
                             <h4 className="font-bold mt-4">NOW THIS DEED OF PARTNERSHIP WITNESSETH AS UNDER:-</h4>
                             
                             <ol className="list-decimal list-inside space-y-3">
-                                <li>The Name of the partnership business shall be “<strong>{formData.firmName}</strong>” and such other names as the partners may decide from time to time.</li>
-                                <li>The Principal place of business shall be at “<strong>{formData.firmAddress}</strong>” and such other places may decide from time to time.</li>
-                                <li>The Partnership has come into existence with effect from today, i.e. the {formattedDate}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
-                                <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity}</strong>” and such other business as the partners may decide from time to time.</li>
+                                <li>The Name of the partnership business shall be “<strong>{formData.firmName || '[Firm Name]'}</strong>” and such other names as the partners may decide from time to time.</li>
+                                <li>The Principal place of business shall be at “<strong>{formData.firmAddress || '[Firm Address]'}</strong>” and such other places may decide from time to time.</li>
+                                <li>The Partnership has come into existence with effect from today, i.e. the {commencementDateFormatted}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
+                                <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>” and such other business as the partners may decide from time to time.</li>
                                 <li>The capital required for the purpose of the partnership business shall be contributed and arranged by the partners from time to time as and when needed in such manner as may be mutually agreed upon.</li>
                                 <li className="font-bold italic text-center my-4">(Conti.........Page 2)</li>
                                 <h4 className="font-bold text-center break-before-page">Page 2</h4>
@@ -534,7 +531,7 @@ export default function PartnershipDeedPage() {
                                         </thead>
                                         <tbody>
                                             {formData.partners.map((p, i) => (
-                                                <tr key={p.name} className="border-b border-black">
+                                                <tr key={i} className="border-b border-black">
                                                     <td className="p-1 border-r border-black text-center">{i+1}.</td>
                                                     <td className="p-1 border-r border-black">{p.name}</td>
                                                     <td className="p-1 text-right">{p.profitShare}%</td>
@@ -554,19 +551,41 @@ export default function PartnershipDeedPage() {
                             </ol>
 
                             <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
+
+                             <div className="grid grid-cols-2 gap-16 mt-16">
+                                {formData.partners.map(p => (
+                                    <div key={p.name} className="text-center">
+                                        <p className="mb-12">_________________________</p>
+                                        <p>({p.name})</p>
+                                    </div>
+                                ))}
+                            </div>
+                             <div className="mt-16">
+                                <p className="font-bold">Witnesses:</p>
+                                <ol className="list-decimal list-inside mt-8 space-y-8">
+                                    <li>
+                                        <p>Name & Signature: _________________________</p>
+                                        <p>Address: _______________________</p>
+                                    </li>
+                                    <li>
+                                        <p>Name & Signature: _________________________</p>
+                                        <p>Address: _______________________</p>
+                                    </li>
+                                </ol>
+                            </div>
                         </div>
                     </div>
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <ShareButtons 
+                  <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
+                   <ShareButtons 
                         contentRef={printRef}
                         fileName={`Partnership_Deed_${formData.firmName}`}
                         whatsappMessage={whatsappMessage}
                     />
                 </CardFooter>
             </Card>
-        )
+        );
       default:
         return null;
     }
