@@ -56,7 +56,7 @@ const partnerSchema = z.object({
   designation: z.string().min(2, "Designation is required (e.g., President, Member)."),
   capitalContribution: z.coerce.number().min(0, "Capital Contribution must be positive or zero."),
   profitShare: z.coerce.number().min(0, { message: "Cannot be negative" }).max(100, { message: "Cannot exceed 100" }),
-  isWorkingPartner: z.boolean().default(false),
+  isDesignated: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -71,6 +71,11 @@ const formSchema = z.object({
   partners: z.array(partnerSchema).min(2, "At least two partners are required.")
     .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
         message: "At least two partners must be designated partners.",
+    }).refine(partners => {
+        const totalProfitShare = partners.reduce((acc, p) => acc + p.profitShare, 0);
+        return Math.abs(totalProfitShare - 100) < 0.01;
+    }, {
+        message: "Total profit share for all partners must equal 100%.",
     }),
   
   totalCapital: z.coerce.number().min(0, "Total capital cannot be negative."),
@@ -94,15 +99,10 @@ const formSchema = z.object({
     // Allow a small tolerance for floating point issues
     return Math.abs(totalContribution - data.totalCapital) < 0.01;
 }, {
-    message: "Total capital contribution from partners must match the LLP's total capital.",
+    message: "Total capital contribution from partners must match the Firm's total capital.",
     path: ["totalCapital"],
-}).refine(data => {
-    const totalProfitShare = data.partners.reduce((acc, p) => acc + p.profitShare, 0);
-    return Math.abs(totalProfitShare - 100) < 0.01;
-}, {
-    message: "Total profit share must equal 100%.",
-    path: ["partners"],
 });
+
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -300,7 +300,7 @@ const AffidavitToPrint = React.forwardRef<HTMLDivElement, { formData: FormData; 
     return (
         <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
             <h3 className="text-center font-bold">AFFIDAVIT</h3>
-            <p>I {deponent.name}, {deponent.parentage} R/o “{deponent.address}” do hereby solemnly affirm and state that as follows:</p>
+            <p>I {deponent.name}, {deponent.parentage} R/o “{deponent.address}” holding (Aadhar ...), do hereby solemnly affirm and state that as follows:</p>
             <p>That I am the owner of the above mentioned property at “{deponent.address}”.</p>
             <p>We are doing partnership business in the name and style of M/s “{formData.firmName}”  and which is managed by me i.e. {deponent.name} at R/o “{deponent.address}” which is owned by me and I am not charging any rent for running this partnership business.</p>
             <p>I do hereby declare and confirm that the contents of the affidavit are true and correct to the best of my knowledge and belief and nothing material has been concealed.</p>
@@ -347,8 +347,8 @@ export default function PartnershipDeedPage() {
       commencementDate: new Date().toISOString().split("T")[0],
       partnershipDuration: "at-will",
       partners: [
-        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner 1", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
-        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner 2", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
+        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true, isDesignated: true },
+        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false, isDesignated: true },
       ],
       totalCapital: 100000,
       interestOnCapital: 12,
@@ -393,6 +393,9 @@ export default function PartnershipDeedPage() {
     }
   }, [docId, user, form, router, toast]);
 
+  const partnersWatch = form.watch("partners");
+  const totalProfitShare = partnersWatch.reduce((acc, partner) => acc + (Number(partner.profitShare) || 0), 0);
+
   useEffect(() => {
     const partners = form.getValues("partners");
     if (partners.length > 0 && !deponentId) {
@@ -401,8 +404,6 @@ export default function PartnershipDeedPage() {
   }, [form, deponentId]);
 
   const formData = form.watch();
-  const partnersWatch = form.watch("partners");
-  const totalProfitShare = partnersWatch.reduce((acc, partner) => acc + (Number(partner.profitShare) || 0), 0);
 
   const handleSaveDraft = async () => {
       if (!user) {
@@ -470,10 +471,10 @@ export default function PartnershipDeedPage() {
     let fieldsToValidate: (keyof FormData | `partners.${number}.${keyof z.infer<typeof partnerSchema>}` | "partners")[] = [];
     switch (step) {
         case 1:
-            fieldsToValidate = ["firmName", "firmAddress", "businessActivity", "commencementDate", "partnershipDuration", "totalCapital", "documentName"];
+            fieldsToValidate = ["documentName", "firmName", "firmAddress", "businessActivity", "commencementDate", "partnershipDuration"];
             break;
         case 2:
-            fieldsToValidate = ["partners"];
+            fieldsToValidate = ["partners", "totalCapital"];
             break;
         case 3:
             fieldsToValidate = ["interestOnCapital", "partnerRemuneration"];
@@ -527,7 +528,6 @@ export default function PartnershipDeedPage() {
               <FormField control={form.control} name="firmName" render={({ field }) => ( <FormItem><FormLabel>Firm Name</FormLabel><FormControl><Input placeholder="e.g., Acme Innovations" {...field} /></FormControl><FormMessage /></FormItem> )}/>
               <FormField control={form.control} name="firmAddress" render={({ field }) => ( <FormItem><FormLabel>Principal Place of Business</FormLabel><FormControl><Textarea placeholder="Full registered address of the firm" {...field} /></FormControl><FormMessage /></FormItem> )}/>
               <FormField control={form.control} name="businessActivity" render={({ field }) => ( <FormItem><FormLabel>Nature of Business</FormLabel><FormControl><Textarea placeholder="e.g., Trading of textiles, providing software consultancy services, etc." {...field} /></FormControl><FormMessage /></FormItem> )}/>
-              <FormField control={form.control} name="totalCapital" render={({ field }) => (<FormItem><FormLabel>Total Capital Contribution of Firm (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <div className="grid md:grid-cols-2 gap-4">
                   <FormField control={form.control} name="commencementDate" render={({ field }) => ( <FormItem><FormLabel>Date of Commencement</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                    <FormField control={form.control} name="partnershipDuration" render={({ field }) => (
@@ -549,8 +549,10 @@ export default function PartnershipDeedPage() {
       case 2:
         return (
           <Card>
-            <CardHeader><CardTitle>Step 2: Partner & Contribution Details</CardTitle><CardDescription>Add details for each partner in the firm.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 2: Partner & Contribution Details</CardTitle><CardDescription>Add details for each partner and their contribution.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
+              <FormField control={form.control} name="totalCapital" render={({ field }) => (<FormItem><FormLabel>Total Capital Contribution of Firm (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <Separator />
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
                   <h3 className="font-medium">Partner {index + 1}</h3>
@@ -563,14 +565,18 @@ export default function PartnershipDeedPage() {
                   </div>
                    <FormField control={form.control} name={`partners.${index}.address`} render={({ field }) => ( <FormItem><FormLabel>Residential Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
                   
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-3 gap-4">
                     <FormField control={form.control} name={`partners.${index}.capitalContribution`} render={({ field }) => ( <FormItem><FormLabel>Capital Contribution (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     <FormField control={form.control} name={`partners.${index}.profitShare`} render={({ field }) => ( <FormItem><FormLabel>Profit/Loss Share (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name={`partners.${index}.occupation`} render={({ field }) => ( <FormItem><FormLabel>Occupation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                   </div>
-                   <FormField control={form.control} name={`partners.${index}.isWorkingPartner`} render={({ field }) => ( <FormItem className="flex flex-row items-center justify-start gap-2 pt-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} id={`isWorking-${index}`} /></FormControl><Label className="font-normal" htmlFor={`isWorking-${index}`}>This is a working/active partner</Label></FormItem> )}/>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name={`partners.${index}.designation`} render={({ field }) => ( <FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="President, Member..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name={`partners.${index}.isDesignated`} render={({ field }) => ( <FormItem className="flex flex-row items-center justify-start gap-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} id={`isDesignated-${index}`} /></FormControl><Label className="font-normal" htmlFor={`isDesignated-${index}`}>This is a Designated Partner</Label></FormItem> )}/>
+                  </div>
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isWorkingPartner: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
+              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isWorkingPartner: false, isDesignated: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
                {totalProfitShare !== 100 && (
                     <div className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare.toFixed(2)}%</div>
