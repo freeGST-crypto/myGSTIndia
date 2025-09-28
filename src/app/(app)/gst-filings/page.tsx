@@ -159,24 +159,24 @@ export default function GstFilingsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold">GST Filings</h1>
                     <p className="text-muted-foreground">
                         Prepare and review your GSTR-1 and GSTR-3B reports.
                     </p>
                 </div>
-                 <div className="flex items-center gap-2">
+                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                      <Select value={financialYear} onValueChange={setFinancialYear}>
-                        <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                         <SelectContent>{getFinancialYears().map(fy => <SelectItem key={fy} value={fy}>{fy}</SelectItem>)}</SelectContent>
                     </Select>
                      <Select value={month} onValueChange={setMonth}>
-                        <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                         <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
                     </Select>
                      <Link href="/reconciliation/gstr-comparison" passHref>
-                        <Button variant="outline">
+                        <Button variant="outline" className="w-full">
                             <GitCompareArrows className="mr-2"/>
                             Compare Reports
                         </Button>
@@ -185,14 +185,14 @@ export default function GstFilingsPage() {
             </div>
 
             <Tabs defaultValue="gstr-1">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-2xl">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-2xl h-auto md:h-10">
                     <TabsTrigger value="gstr-1">GSTR-1 Summary</TabsTrigger>
                     <TabsTrigger value="gstr-3b">GSTR-3B Summary</TabsTrigger>
                     <TabsTrigger value="gstr-9">GSTR-9 Annual</TabsTrigger>
                     <TabsTrigger value="gstr-9c">GSTR-9C Reconciliation</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="gstr-1">
+                <TabsContent value="gstr-1" className="mt-4">
                     <Card>
                         <CardHeader>
                             <CardTitle>GSTR-1 Summary for {selectedPeriodLabel}</CardTitle>
@@ -235,7 +235,7 @@ export default function GstFilingsPage() {
                     </Card>
                 </TabsContent>
                 
-                <TabsContent value="gstr-3b">
+                <TabsContent value="gstr-3b" className="mt-4">
                      <Card>
                         <CardHeader>
                             <CardTitle>GSTR-3B Summary for {selectedPeriodLabel}</CardTitle>
@@ -294,7 +294,7 @@ export default function GstFilingsPage() {
                     </Card>
                 </TabsContent>
 
-                <TabsContent value="gstr-9">
+                <TabsContent value="gstr-9" className="mt-4">
                     <Card>
                         <CardHeader>
                             <CardTitle>GSTR-9 Annual Return</CardTitle>
@@ -314,7 +314,7 @@ export default function GstFilingsPage() {
                     </Card>
                 </TabsContent>
                 
-                <TabsContent value="gstr-9c">
+                <TabsContent value="gstr-9c" className="mt-4">
                     <Card>
                         <CardHeader>
                             <CardTitle>GSTR-9C Reconciliation Statement</CardTitle>
