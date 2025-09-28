@@ -416,7 +416,7 @@ export default function PartnershipDeedPage() {
      case 7:
          return (
           <Card>
-            <CardHeader><CardTitle>Step 7: Additional Clauses</CardTitle><CardDescription>Add any custom clauses or use AI to suggest them.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Step 7: Additional Clauses</CardTitle><CardDescription>Add any custom clauses or use AI to suggest them based on your business.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
                 <FormField control={form.control} name="extraClauses" render={({ field }) => (
                     <FormItem>
@@ -550,13 +550,7 @@ export default function PartnershipDeedPage() {
                      <p className="mt-8">This Deed of Partnership is executed with free will and true consent of the partners above said and in witness whereof set their signatures hereunder on the day, month and year aforementioned.</p>
 
                 </CardContent>
-                <CardFooter className="justify-between mt-6">
-                    <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                    <ShareButtons
-                        contentRef={printRef}
-                        fileName={`Partnership_Deed_${formData.firmName}`}
-                    />
-                </CardFooter>
+                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button onClick={() => toast({title: "Download Started"})}><FileDown className="mr-2"/> Download Final Deed</Button></CardFooter>
             </Card>
         )
       default:
