@@ -27,7 +27,6 @@ import {
 import { ArrowLeft, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useReactToPrint } from 'react-to-print';
 import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
@@ -175,7 +174,6 @@ export default function RentalReceiptsPage() {
                  <ShareButtons 
                     contentRef={printRef}
                     fileName={`Rent_Receipt_${formData.tenantName}_${formData.rentPeriod}`}
-                    whatsappMessage={whatsappMessage}
                 />
             </CardFooter>
         </Card>
