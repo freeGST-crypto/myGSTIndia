@@ -42,7 +42,7 @@ import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
   name: z.string().min(2, "Partner name is required."),
-  parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
+  parentage: z.string().min(3, "S/o, W/o, D/o is required."),
   age: z.coerce.number().positive("Age must be a positive number.").default(30),
   address: z.string().min(10, "Address is required."),
   capitalContribution: z.coerce.number().positive("Must be a positive number."),
@@ -58,15 +58,12 @@ const formSchema = z.object({
   partnershipDuration: z.enum(["at-will", "fixed-term"]),
   termYears: z.coerce.number().optional(),
   
-  partners: z.array(partnerSchema).min(2, "At least two partners are required.")
-    .refine(partners => partners.filter(p => p.isDesignated).length >= 2, {
-        message: "At least two partners must be designated partners.",
-    }),
+  partners: z.array(partnerSchema).min(2, "At least two partners are required."),
   
   totalCapital: z.coerce.number().positive(),
 
-  interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional(),
-  partnerRemuneration: z.coerce.number().min(0).optional(),
+  interestOnCapital: z.coerce.number().min(0).max(12, "As per IT Act, max 12% is allowed.").optional().default(0),
+  partnerRemuneration: z.coerce.number().min(0).optional().default(0),
   
   bankAuthority: z.enum(["joint", "single", "specific"]),
   specificPartner: z.string().optional(),
@@ -111,7 +108,7 @@ export default function PartnershipDeedPage() {
       partnershipDuration: "at-will",
       partners: [
         { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true },
-        { name: "", parentage: "", address: "", isDesignated: false, age: 30, capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
+        { name: "", parentage: "", age: 30, address: "", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false },
       ],
       totalCapital: 100000,
       interestOnCapital: 12,
@@ -466,7 +463,7 @@ export default function PartnershipDeedPage() {
                                 <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
                                 <tbody>
                                     {formData.partners.map((p, i) => (
-                                        <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
+                                        <tr key={p.name}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
                                     ))}
                                 </tbody>
                             </table>
@@ -477,13 +474,13 @@ export default function PartnershipDeedPage() {
                                 </div>
                                 <div>
                                     <p>Signatures</p>
-                                    {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
+                                    {formData.partners.map((p, i) => <p key={p.name} className="mt-8">({i+1})</p>)}
                                 </div>
                             </div>
                             <div className="mt-16 space-y-8">
                                 <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
                                 {formData.partners.map((p, i) => (
-                                    <div key={i}>
+                                    <div key={p.name}>
                                         <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
                                         <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
                                         <p>Witness</p>
@@ -581,7 +578,7 @@ export default function PartnershipDeedPage() {
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
                   <ShareButtons 
                     contentRef={printRef}
-                    fileName={`Partnership_Deed_${formData.firmName}`}
+                    fileName={`Partnership_Deed_${formData.firmName || "[Firm Name]"}`}
                     whatsappMessage={whatsappMessage}
                   />
                 </CardFooter>
