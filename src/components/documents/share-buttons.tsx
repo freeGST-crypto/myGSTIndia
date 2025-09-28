@@ -52,7 +52,7 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
 
     // Add remaining pages
     while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
+        position = -heightLeft; // Correctly calculate the position for the next slice of the image
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
         heightLeft -= pageHeight;
