@@ -34,6 +34,7 @@ import {
   Trash2,
   Wand2,
   Loader2,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -43,7 +44,7 @@ import { ShareButtons } from "@/components/documents/share-buttons";
 
 const partnerSchema = z.object({
   name: z.string().min(2, "Partner name is required."),
-  parentage: z.string().min(3, "S/o, W/o, or D/o is required."),
+  parentage: z.string().min(3, "S/o, W/o, D/o is required."),
   age: z.coerce.number().positive("Age must be a positive number.").default(30),
   address: z.string().min(10, "Address is required."),
   capitalContribution: z.coerce.number().positive("Must be a positive number."),
@@ -100,7 +101,7 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
 
     return (
         <div ref={ref} className="print-section">
-            <div className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+             <div className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                 {/* Form No. 1 */}
                 <div className="text-center space-y-2 mb-12">
                     <h4 className="font-bold">Form No. 1</h4>
@@ -236,12 +237,55 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
 });
 PartnershipDeedToPrint.displayName = 'PartnershipDeedToPrint';
 
+const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
+    return (
+        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+            <h3 className="text-center font-bold">CERTIFICATE</h3>
+            <p>WE THE PARTNERS OF “{formData.firmName.toUpperCase()}”, {formData.firmAddress.split(',').pop()?.trim()}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'}) : '[Date]'}.</p>
+            <p>THE DEED WAS RUNNING INTO THREE PAGES AND OUT OF THEM THE FIRST PAGE WERE PRINTED ON THE NON-JUDICIAL STAMP PAPERS IN FRANKLIN DATED {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '[Date]'} WITH NO</p>
+            <div className="mt-16 text-right">
+                <p>Signature of the Partners:</p>
+                {formData.partners.map((p, i) => <p key={i} className="mt-8">{i + 1}.</p>)}
+            </div>
+        </div>
+    );
+});
+CertificateToPrint.displayName = 'CertificateToPrint';
+
+const AffidavitToPrint = React.forwardRef<HTMLDivElement, { formData: FormData; deponent: z.infer<typeof partnerSchema> | undefined }>
+(({ formData, deponent }, ref) => {
+    if (!deponent) return <div ref={ref}>Please select a deponent.</div>;
+    return (
+        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+            <h3 className="text-center font-bold">AFFIDAVIT</h3>
+            <p>I {deponent.name}, {deponent.parentage} R/o “{deponent.address}” do hereby solemnly affirm and state that as follows:</p>
+            <p>That I am the owner of the above mentioned property at “{deponent.address}”.</p>
+            <p>We are doing partnership business in the name and style of M/s “{formData.firmName}” and which is managed by me i.e. {deponent.name} at R/o “{deponent.address}” which is owned by me and I am not charging any rent for running this partnership business.</p>
+            <p>I do hereby declare and confirm that the contents of the affidavit are true and correct to the best of my knowledge and belief and nothing material has been concealed.</p>
+            <div className="flex justify-between mt-16">
+                <div>
+                    <p>Place:</p>
+                    <p>Date:</p>
+                </div>
+                <div>
+                    <p>Deponent Signature</p>
+                </div>
+            </div>
+        </div>
+    );
+});
+AffidavitToPrint.displayName = 'AffidavitToPrint';
+
 
 export default function PartnershipDeedPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
-  const printRef = React.useRef<HTMLDivElement>(null);
+  const [deponentId, setDeponentId] = useState('');
+  
+  const printRefDeed = React.useRef<HTMLDivElement>(null);
+  const printRefCertificate = React.useRef<HTMLDivElement>(null);
+  const printRefAffidavit = React.useRef<HTMLDivElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -273,6 +317,12 @@ export default function PartnershipDeedPage() {
     name: "partners",
   });
   
+  React.useEffect(() => {
+    if (form.getValues("partners").length > 0) {
+        setDeponentId(form.getValues("partners")[0].name);
+    }
+  }, [form.watch("partners")]);
+
   const formData = form.watch();
   const partnersWatch = form.watch("partners");
   const totalProfitShare = partnersWatch.reduce((acc, partner) => acc + (Number(partner.profitShare) || 0), 0);
@@ -578,20 +628,59 @@ export default function PartnershipDeedPage() {
         );
      case 8:
         const whatsappMessage = `Hi, please find the attached draft Partnership Deed for ${formData.firmName || "[Firm Name]"}. Kindly review and let me know if any changes are required.`;
+        const deponent = formData.partners.find(p => p.name === deponentId);
         return (
+            <div className="space-y-8">
              <Card>
-                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review the generated Partnership Deed.</CardDescription></CardHeader>
+                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review and download the generated Partnership Deed and supporting documents.</CardDescription></CardHeader>
                 <CardContent>
-                    <PartnershipDeedToPrint ref={printRef} formData={formData} />
+                    <PartnershipDeedToPrint ref={printRefDeed} formData={formData} />
                 </CardContent>
                 <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
                  <ShareButtons
-                    contentRef={printRef}
+                    contentRef={printRefDeed}
                     fileName={`Partnership_Deed_${formData.firmName}`}
                     whatsappMessage={whatsappMessage}
                   />
                 </CardFooter>
             </Card>
+            <Card>
+                <CardHeader><CardTitle>Ancillary Document: Certificate</CardTitle></CardHeader>
+                 <CardContent>
+                    <CertificateToPrint ref={printRefCertificate} formData={formData} />
+                </CardContent>
+                <CardFooter>
+                    <ShareButtons
+                        contentRef={printRefCertificate}
+                        fileName={`Certificate_of_Deed_${formData.firmName}`}
+                    />
+                </CardFooter>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ancillary Document: Self-Affidavit</CardTitle>
+                    <CardDescription>This affidavit is for a partner who is providing their own property for the business address without rent.</CardDescription>
+                </CardHeader>
+                 <CardContent>
+                    <div className="max-w-xs mb-4">
+                        <Label>Select Deponent (Partner making the affidavit)</Label>
+                        <Select value={deponentId} onValueChange={setDeponentId}>
+                            <SelectTrigger><SelectValue placeholder="Select a Partner"/></SelectTrigger>
+                            <SelectContent>
+                                {formData.partners.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <AffidavitToPrint ref={printRefAffidavit} formData={formData} deponent={deponent} />
+                </CardContent>
+                 <CardFooter>
+                    <ShareButtons
+                        contentRef={printRefAffidavit}
+                        fileName={`Affidavit_${deponent?.name}`}
+                    />
+                </CardFooter>
+            </Card>
+            </div>
         );
       default:
         return null;
