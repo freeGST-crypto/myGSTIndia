@@ -19,6 +19,7 @@ import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ShareButtons } from "@/components/documents/share-buttons";
 import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
 
 
 const formSchema = z.object({

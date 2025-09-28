@@ -8,17 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, FileSignature, ArrowRight, Loader2, Save } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ShareButtons } from "@/components/documents/share-buttons";
 import { db, auth } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
+  documentName: z.string().min(3, "A document name is required for saving."),
   remitterName: z.string().min(3, "Remitter's name is required."),
   remitterPan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format."),
   remitteeName: z.string().min(3, "Remittee's name is required."),
@@ -35,14 +38,20 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function ForeignRemittancePage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const docId = searchParams.get('id');
+
   const [step, setStep] = useState(1);
   const printRef = useRef<HTMLDivElement>(null);
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!docId);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      documentName: `Form 15CB - ${new Date().toISOString().split("T")[0]}`,
       remitterName: "",
       remitterPan: "",
       remitteeName: "",
@@ -55,6 +64,32 @@ export default function ForeignRemittancePage() {
       dtaaClause: "As per Article 12 of the India-USA DTAA, the tax is to be withheld at the rate of 15%.",
     },
   });
+
+  useEffect(() => {
+    if(docId && user) {
+        const loadDocument = async () => {
+            setIsLoading(true);
+            const docRef = doc(db, 'userDocuments', docId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.userId === user.uid) {
+                    form.reset(data.formData);
+                    toast({title: "Draft Loaded", description: `Loaded saved draft: ${data.formData.documentName}`});
+                } else {
+                    toast({variant: 'destructive', title: "Unauthorized", description: "You don't have permission to access this document."});
+                    router.push('/ca-certificates/foreign-remittance');
+                }
+            } else {
+                 toast({variant: 'destructive', title: "Not Found", description: "The requested document draft could not be found."});
+                 router.push('/ca-certificates/foreign-remittance');
+            }
+            setIsLoading(false);
+        }
+        loadDocument();
+    }
+  }, [docId, user, form, router, toast]);
   
   const handlePreview = async () => {
     const isValid = await form.trigger();
@@ -66,6 +101,38 @@ export default function ForeignRemittancePage() {
     }
   }
   
+  const handleSaveDraft = async () => {
+      if (!user) {
+          toast({variant: 'destructive', title: 'Authentication Error'});
+          return;
+      }
+      setIsSubmitting(true);
+      const formData = form.getValues();
+      try {
+          if (docId) {
+              const docRef = doc(db, "userDocuments", docId);
+              await updateDoc(docRef, { formData, updatedAt: new Date() });
+              toast({title: "Draft Updated", description: `Updated "${formData.documentName}".`});
+          } else {
+              const docRef = await addDoc(collection(db, 'userDocuments'), {
+                  userId: user.uid,
+                  documentType: 'foreign-remittance-certificate',
+                  documentName: formData.documentName,
+                  status: 'Draft',
+                  formData,
+                  createdAt: new Date(),
+              });
+              toast({title: "Draft Saved!", description: `Saved "${formData.documentName}".`});
+              router.push(`/ca-certificates/foreign-remittance?id=${docRef.id}`);
+          }
+      } catch (e) {
+          console.error(e);
+          toast({variant: 'destructive', title: 'Save Failed', description: 'Could not save the draft.'});
+      } finally {
+          setIsSubmitting(false);
+      }
+  }
+
   const handleCertificationRequest = async () => {
       if (!user) {
           toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to make a request." });
@@ -97,6 +164,9 @@ export default function ForeignRemittancePage() {
   }
 
   const renderContent = () => {
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin size-8 text-primary"/></div>;
+    }
     if (step === 1) {
         return (
             <>
@@ -105,6 +175,8 @@ export default function ForeignRemittancePage() {
                     <CardTitle>Remittance Details</CardTitle>
                 </CardHeader>
                  <CardContent className="space-y-4">
+                     <FormField control={form.control} name="documentName" render={({ field }) => (<FormItem><FormLabel>Document Name (for your reference)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                     <Separator />
                      <div className="grid md:grid-cols-2 gap-4">
                         <FormField control={form.control} name="remitterName" render={({ field }) => (<FormItem><FormLabel>Remitter's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <FormField control={form.control} name="remitterPan" render={({ field }) => (<FormItem><FormLabel>Remitter's PAN</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
@@ -130,7 +202,8 @@ export default function ForeignRemittancePage() {
                     <FormField control={form.control} name="taxability" render={({ field }) => (<FormItem><FormLabel>Taxability under Income Tax Act</FormLabel><FormControl><Textarea className="min-h-24" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                     <FormField control={form.control} name="dtaaClause" render={({ field }) => (<FormItem><FormLabel>Applicable DTAA Clause & Rate</FormLabel><FormControl><Textarea className="min-h-24" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="justify-between">
+                    <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>{isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Save className="mr-2"/>} Save Draft</Button>
                     <Button type="button" onClick={handlePreview}>
                        <ArrowRight className="mr-2" /> Preview Form 15CB
                     </Button>

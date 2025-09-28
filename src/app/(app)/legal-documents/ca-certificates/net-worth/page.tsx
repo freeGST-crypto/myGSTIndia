@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,15 +10,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
-import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, FileSignature, Trash2, PlusCircle, ArrowRight, Loader2, Save } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableFooter as TableFoot, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareButtons } from "@/components/documents/share-buttons";
 import { db, auth } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+
 
 const assetSchema = z.object({
   description: z.string().min(3, "Description is required."),
@@ -31,6 +35,7 @@ const liabilitySchema = z.object({
 });
 
 const formSchema = z.object({
+  documentName: z.string().min(3, "A document name is required for saving."),
   clientName: z.string().min(3, "Client's name is required."),
   clientPan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format."),
   clientAddress: z.string().min(10, "Address is required."),
@@ -115,14 +120,20 @@ CertificateToPrint.displayName = 'CertificateToPrint';
 
 export default function NetWorthCertificatePage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const docId = searchParams.get('id');
+
   const [step, setStep] = useState(1);
   const printRef = useRef<HTMLDivElement>(null);
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!docId);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      documentName: `Net Worth Certificate - ${format(new Date(), 'yyyy-MM-dd')}`,
       clientName: "",
       clientPan: "",
       clientAddress: "",
@@ -131,6 +142,32 @@ export default function NetWorthCertificatePage() {
       liabilities: [{ description: "Housing Loan from HDFC Bank", value: 2000000 }],
     },
   });
+
+  useEffect(() => {
+    if(docId && user) {
+        const loadDocument = async () => {
+            setIsLoading(true);
+            const docRef = doc(db, 'userDocuments', docId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.userId === user.uid) {
+                    form.reset(data.formData);
+                    toast({title: "Draft Loaded", description: `Loaded saved draft: ${data.formData.documentName}`});
+                } else {
+                    toast({variant: 'destructive', title: "Unauthorized", description: "You don't have permission to access this document."});
+                    router.push('/ca-certificates/net-worth');
+                }
+            } else {
+                 toast({variant: 'destructive', title: "Not Found", description: "The requested document draft could not be found."});
+                 router.push('/ca-certificates/net-worth');
+            }
+            setIsLoading(false);
+        }
+        loadDocument();
+    }
+  }, [docId, user, form, router, toast]);
 
   const { fields: assetFields, append: appendAsset, remove: removeAsset } = useFieldArray({ control: form.control, name: "assets" });
   const { fields: liabilityFields, append: appendLiability, remove: removeLiability } = useFieldArray({ control: form.control, name: "liabilities" });
@@ -150,6 +187,38 @@ export default function NetWorthCertificatePage() {
             description: "Please fill all required fields before generating the draft.",
         });
     }
+  }
+
+  const handleSaveDraft = async () => {
+      if (!user) {
+          toast({variant: 'destructive', title: 'Authentication Error'});
+          return;
+      }
+      setIsSubmitting(true);
+      const formData = form.getValues();
+      try {
+          if (docId) {
+              const docRef = doc(db, "userDocuments", docId);
+              await updateDoc(docRef, { formData, updatedAt: new Date() });
+              toast({title: "Draft Updated", description: `Updated "${formData.documentName}".`});
+          } else {
+              const docRef = await addDoc(collection(db, 'userDocuments'), {
+                  userId: user.uid,
+                  documentType: 'net-worth-certificate',
+                  documentName: formData.documentName,
+                  status: 'Draft',
+                  formData,
+                  createdAt: new Date(),
+              });
+              toast({title: "Draft Saved!", description: `Saved "${formData.documentName}".`});
+              router.push(`/ca-certificates/net-worth?id=${docRef.id}`);
+          }
+      } catch (e) {
+          console.error(e);
+          toast({variant: 'destructive', title: 'Save Failed', description: 'Could not save the draft.'});
+      } finally {
+          setIsSubmitting(false);
+      }
   }
 
   const handleCertificationRequest = async () => {
@@ -183,6 +252,9 @@ export default function NetWorthCertificatePage() {
   }
 
   const renderStepContent = () => {
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin size-8 text-primary"/></div>;
+    }
     switch(step) {
         case 1:
             return (
@@ -191,6 +263,8 @@ export default function NetWorthCertificatePage() {
                         <CardTitle>Step 1: Client and Date Information</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        <FormField control={form.control} name="documentName" render={({ field }) => (<FormItem><FormLabel>Document Name</FormLabel><FormControl><Input placeholder="A name to identify this draft" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                        <Separator/>
                         <FormField control={form.control} name="clientName" render={({ field }) => (<FormItem><FormLabel>Client's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <FormField control={form.control} name="clientAddress" render={({ field }) => (<FormItem><FormLabel>Client's Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         <div className="grid md:grid-cols-2 gap-4">
@@ -198,15 +272,16 @@ export default function NetWorthCertificatePage() {
                             <FormField control={form.control} name="asOnDate" render={({ field }) => (<FormItem><FormLabel>Net Worth as on Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                         </div>
                     </CardContent>
-                     <CardFooter className="justify-end"><Button type="button" onClick={() => form.trigger(["clientName", "clientAddress", "clientPan", "asOnDate"]).then(isValid => isValid && setStep(2))}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
+                     <CardFooter className="justify-between">
+                         <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>{isSubmitting ? <Loader2 className="mr-2 animate-spin"/> : <Save className="mr-2"/>} Save Draft</Button>
+                         <Button type="button" onClick={() => form.trigger(["clientName", "clientAddress", "clientPan", "asOnDate"]).then(isValid => isValid && setStep(2))}>Next <ArrowRight className="mr-2"/></Button>
+                    </CardFooter>
                 </Card>
             )
         case 2:
             return (
                  <Card>
-                    <CardHeader>
-                        <CardTitle>Step 2: Assets</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Step 2: Assets</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         {assetFields.map((field, index) => (
                              <div key={field.id} className="flex gap-2 items-end">
@@ -226,9 +301,7 @@ export default function NetWorthCertificatePage() {
         case 3:
             return (
                  <Card>
-                    <CardHeader>
-                        <CardTitle>Step 3: Liabilities</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Step 3: Liabilities</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         {liabilityFields.map((field, index) => (
                              <div key={field.id} className="flex gap-2 items-end">
@@ -301,5 +374,3 @@ export default function NetWorthCertificatePage() {
     </div>
   );
 }
-
-    
