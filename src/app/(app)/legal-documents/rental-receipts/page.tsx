@@ -140,37 +140,35 @@ export default function RentalReceiptsPage() {
                     <CardTitle>Live Preview</CardTitle>
                     <CardDescription>The receipt will update as you type.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div ref={printRef} className="p-8 border-dashed border-2 rounded-lg">
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-bold text-center">RENT RECEIPT</h2>
-                            <div className="flex justify-between">
-                                <div>
-                                    <p className="font-bold">Receipt No:</p>
-                                    <p>{formData.rentPeriod ? formData.rentPeriod.replace('-', '') : 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <p className="font-bold">Date:</p>
-                                    <p>{formData.receiptDate ? new Date(formData.receiptDate).toLocaleDateString('en-GB') : ''}</p>
-                                </div>
+                <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg">
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-center">RENT RECEIPT</h2>
+                        <div className="flex justify-between">
+                            <div>
+                                <p className="font-bold">Receipt No:</p>
+                                <p>{formData.rentPeriod ? formData.rentPeriod.replace('-', '') : 'N/A'}</p>
                             </div>
-                            <div className="space-y-2 text-base leading-relaxed">
-                                <p>Received with thanks from <strong>{formData.tenantName || '[Tenant Name]'}</strong>, a sum of <strong>₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}</strong>/-</p>
-                                <p>(in words: <strong>{numberToWords(formData.rentAmount || 0)}</strong>) by cash/cheque towards the rent for the month of <strong>{formattedPeriod}</strong> for the property situated at:</p>
-                                <p className="py-2 px-4 bg-muted/30 rounded"><em>{formData.propertyAddress || '[Property Address]'}</em></p>
+                            <div>
+                                <p className="font-bold">Date:</p>
+                                <p>{formData.receiptDate ? new Date(formData.receiptDate).toLocaleDateString('en-GB') : ''}</p>
                             </div>
-                            
-                            <div className="pt-16 grid grid-cols-2 gap-4 items-end">
-                                <div>
-                                    <p><strong>₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}</strong>/-</p>
-                                    <p className="text-xs text-muted-foreground mt-2">Amount in Figures</p>
-                                </div>
-                                <div className="text-right">
-                                    <div className="border-t pt-2 mt-4">
-                                        <p className="font-semibold">{formData.landlordName || '[Landlord Name]'}</p>
-                                        <p>(Landlord)</p>
-                                        <p>PAN: {formData.landlordPan || '[Landlord PAN]'}</p>
-                                    </div>
+                        </div>
+                        <div className="space-y-2 text-base leading-relaxed">
+                            <p>Received with thanks from <strong>{formData.tenantName || '[Tenant Name]'}</strong>, a sum of <strong>₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}</strong>/-</p>
+                            <p>(in words: <strong>{numberToWords(formData.rentAmount || 0)}</strong>) by cash/cheque towards the rent for the month of <strong>{formattedPeriod}</strong> for the property situated at:</p>
+                            <p className="py-2 px-4 bg-muted/30 rounded"><em>{formData.propertyAddress || '[Property Address]'}</em></p>
+                        </div>
+                        
+                        <div className="pt-16 grid grid-cols-2 gap-4 items-end">
+                            <div>
+                                <p><strong>₹{formData.rentAmount ? formData.rentAmount.toLocaleString('en-IN') : '0.00'}</strong>/-</p>
+                                <p className="text-xs text-muted-foreground mt-2">Amount in Figures</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="border-t pt-2 mt-4">
+                                    <p className="font-semibold">{formData.landlordName || '[Landlord Name]'}</p>
+                                    <p>(Landlord)</p>
+                                    <p>PAN: {formData.landlordPan || '[Landlord PAN]'}</p>
                                 </div>
                             </div>
                         </div>

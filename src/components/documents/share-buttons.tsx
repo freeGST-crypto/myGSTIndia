@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Printer, FileDown } from "lucide-react";
+import { Printer, FileDown, MessageSquare } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -12,9 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ShareButtonsProps {
   contentRef: React.RefObject<HTMLDivElement>;
   fileName: string;
+  whatsappMessage?: string;
 }
 
-export function ShareButtons({ contentRef, fileName }: ShareButtonsProps) {
+export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareButtonsProps) {
   const { toast } = useToast();
   
   const handlePrint = useReactToPrint({
@@ -53,6 +54,15 @@ export function ShareButtons({ contentRef, fileName }: ShareButtonsProps) {
     pdf.save(`${fileName}.pdf`);
     toast({ title: 'Download Complete', description: `${fileName}.pdf has been downloaded.` });
   };
+  
+  const handleWhatsAppShare = () => {
+    if (whatsappMessage) {
+       const message = encodeURIComponent(whatsappMessage);
+       window.open(`https://wa.me/?text=${message}`, '_blank');
+    } else {
+        toast({variant: 'destructive', title: "No message", description: "WhatsApp message not configured for this document."})
+    }
+  }
 
   return (
     <div className="flex gap-2">
@@ -62,6 +72,11 @@ export function ShareButtons({ contentRef, fileName }: ShareButtonsProps) {
       <Button onClick={handleDownloadPDF}>
         <FileDown className="mr-2" /> Download PDF
       </Button>
+      {whatsappMessage && (
+        <Button variant="outline" onClick={handleWhatsAppShare} className="bg-green-100 text-green-700 hover:bg-green-200">
+            <MessageSquare className="mr-2" /> Share
+        </Button>
+      )}
     </div>
   );
 }
