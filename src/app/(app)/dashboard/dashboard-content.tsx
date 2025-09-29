@@ -20,11 +20,8 @@ import { Button } from "@/components/ui/button";
 import { QuickInvoiceDialog } from "@/components/billing/quick-invoice-dialog";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
+import { formatCurrency } from "@/lib/utils";
 
-const formatCurrency = (value: number) => {
-    if (isNaN(value)) return '₹0.00';
-    return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
-}
 
 function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,7 +93,7 @@ function DashboardContent() {
 
   const invoices = useMemo(() => {
     return journalVouchers
-        .filter(v => v && v.id && v.id.startsWith("INV-"))
+        .filter(v => v && v.id && v.id.startsWith("INV-") && !v.reverses)
         .slice(0, 5)
         .map(v => ({
             invoice: v.id,

@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useContext, useMemo, useRef } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
@@ -36,12 +36,6 @@ import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useReactToPrint } from "react-to-print";
 
-
-const formatCurrency = (value: number) => {
-    // A value of -0.000001 should be 0.00, not -0.00
-    if (Math.abs(value) < 0.01) value = 0;
-    return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 export default function BalanceSheetPage() {
     const { toast } = useToast();
@@ -284,7 +278,7 @@ export default function BalanceSheetPage() {
               
               {Math.abs(totalAssets - totalEquityAndLiabilities) > 0.01 && (
                    <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive font-semibold text-center">
-                      Warning: Balance Sheet is out of balance by ₹{formatCurrency(Math.abs(totalAssets - totalEquityAndLiabilities))}!
+                      Warning: Balance Sheet is out of balance by {formatCurrency(Math.abs(totalAssets - totalEquityAndLiabilities))}!
                   </div>
               )}
             </CardContent>

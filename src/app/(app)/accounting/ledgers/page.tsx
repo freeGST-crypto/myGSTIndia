@@ -39,6 +39,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { Separator } from "@/components/ui/separator";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { formatCurrency } from "@/lib/utils";
 
 declare module 'jspdf' {
     interface jsPDF {
@@ -153,10 +154,10 @@ export default function LedgersPage() {
             startY: 40,
             head: [['', '']],
             body: [
-                ['Opening Balance', `₹${balances.opening.toFixed(2)}`],
-                ['Total Debits', `₹${balances.totalDebits.toFixed(2)}`],
-                ['Total Credits', `₹${balances.totalCredits.toFixed(2)}`],
-                [{ content: 'Closing Balance', styles: { fontStyle: 'bold' } }, { content: `₹${balances.closing.toFixed(2)}`, styles: { fontStyle: 'bold' } }],
+                ['Opening Balance', formatCurrency(balances.opening)],
+                ['Total Debits', formatCurrency(balances.totalDebits)],
+                ['Total Credits', formatCurrency(balances.totalCredits)],
+                [{ content: 'Closing Balance', styles: { fontStyle: 'bold' } }, { content: formatCurrency(balances.closing), styles: { fontStyle: 'bold' } }],
             ],
             theme: 'grid',
             styles: { fontSize: 10 },
@@ -252,10 +253,10 @@ export default function LedgersPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                        <StatCard title="Opening Balance" value={`₹${balances.opening.toFixed(2)}`} icon={FileText} loading={jvLoading} />
-                        <StatCard title="Total Debits" value={`₹${balances.totalDebits.toFixed(2)}`} icon={FileText} className="text-red-500" loading={jvLoading} />
-                        <StatCard title="Total Credits" value={`₹${balances.totalCredits.toFixed(2)}`} icon={FileText} className="text-green-500" loading={jvLoading} />
-                        <StatCard title="Closing Balance" value={`₹${balances.closing.toFixed(2)}`} icon={FileText} loading={jvLoading} />
+                        <StatCard title="Opening Balance" value={formatCurrency(balances.opening)} icon={FileText} loading={jvLoading} />
+                        <StatCard title="Total Debits" value={formatCurrency(balances.totalDebits)} icon={FileText} className="text-red-500" loading={jvLoading} />
+                        <StatCard title="Total Credits" value={formatCurrency(balances.totalCredits)} icon={FileText} className="text-green-500" loading={jvLoading} />
+                        <StatCard title="Closing Balance" value={formatCurrency(balances.closing)} icon={FileText} loading={jvLoading} />
                     </div>
                     <div className="overflow-x-auto">
                         <Table>
@@ -295,4 +296,3 @@ export default function LedgersPage() {
     </div>
   );
 }
-

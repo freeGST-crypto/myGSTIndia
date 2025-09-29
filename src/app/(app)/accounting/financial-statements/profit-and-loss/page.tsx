@@ -33,13 +33,8 @@ import { collection, query, where } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useReactToPrint } from "react-to-print";
+import { formatCurrency } from "@/lib/utils";
 
-
-const formatCurrency = (value: number) => {
-    // A value of -0.000001 should be 0.00, not -0.00
-    if (Math.abs(value) < 0.01) value = 0;
-    return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 export default function ProfitAndLossPage() {
     const { toast } = useToast();

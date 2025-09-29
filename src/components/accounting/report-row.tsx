@@ -1,9 +1,6 @@
 
 import { TableCell, TableRow } from "@/components/ui/table";
-
-const formatCurrency = (value: number) => {
-    return value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { formatCurrency } from "@/lib/utils";
 
 type ReportRowProps = {
     label: string;
