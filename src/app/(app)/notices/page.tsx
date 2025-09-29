@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MailWarning, Upload, AlertTriangle, Wand2, UserCheck } from "lucide-react";
+import { MailWarning, Upload, AlertTriangle, Wand2, UserCheck, Download, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { servicePricing } from "@/lib/on-demand-pricing";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -34,6 +35,11 @@ export default function NoticesPage() {
     const [file, setFile] = useState<File | null>(null);
     const [aiResponse, setAiResponse] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    
+    // New state for addressing fields
+    const [to, setTo] = useState("The Proper Officer");
+    const [department, setDepartment] = useState("GST Department, Range-X");
+    const [address, setAddress] = useState("City, State");
 
     const selectedService = servicePricing.notice_handling.find(s => s.id === noticeType);
 
@@ -57,8 +63,9 @@ export default function NoticesPage() {
         setTimeout(() => {
             const simulatedResponse = `
 To,
-The Proper Officer,
-GST Department,
+${to},
+${department},
+${address}.
 
 Subject: Response to Notice Ref: ${Math.random().toString(36).substring(2, 10).toUpperCase()}
 
@@ -75,10 +82,24 @@ We request you to kindly consider this explanation and drop the proceedings.
 Thank you,
 For [Your Company Name]
 `;
-            setAiResponse(simulatedResponse);
+            setAiResponse(simulatedResponse.trim());
             setIsLoading(false);
         }, 2000);
     }
+
+    const handleDownload = () => {
+        if (!aiResponse) return;
+        const blob = new Blob([aiResponse], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'AI_Draft_Response.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast({ title: "Download Started", description: "Your draft reply has been downloaded." });
+    };
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -97,31 +118,41 @@ For [Your Company Name]
               <CardDescription>Provide the notice details and our AI will draft a preliminary response.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-             <div className="space-y-2">
-                <Label htmlFor="notice-from">Notice From</Label>
-                <Select value={noticeType} onValueChange={setNoticeType}>
-                    <SelectTrigger id="notice-from">
-                        <SelectValue placeholder="Select department"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {servicePricing.notice_handling.map(service => (
-                            <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+             <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="notice-from">Notice From</Label>
+                    <Select value={noticeType} onValueChange={setNoticeType}>
+                        <SelectTrigger id="notice-from">
+                            <SelectValue placeholder="Select department"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {servicePricing.notice_handling.map(service => (
+                                <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="notice-upload">Upload Notice Document</Label>
+                    <Input id="notice-upload" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                 </div>
              </div>
-             <div className="space-y-2">
-                <Label htmlFor="notice-upload">Upload Notice Document</Label>
-                 <div className="flex items-center justify-center w-full">
-                    <label htmlFor="notice-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/75">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground">
-                            <Upload className="w-8 h-8 mb-2" />
-                            <p className="mb-2 text-sm">{file ? file.name : "Click to upload or drag & drop"}</p>
-                            <p className="text-xs">PDF, PNG, JPG accepted</p>
-                        </div>
-                        <Input id="notice-upload" type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                    </label>
-                </div> 
+             <div>
+                <h3 className="text-md font-medium">Addressing Details</h3>
+                <div className="grid md:grid-cols-3 gap-4 mt-2">
+                    <div className="space-y-2">
+                        <Label>To</Label>
+                        <Input value={to} onChange={(e) => setTo(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Department / Ward</Label>
+                        <Input value={department} onChange={(e) => setDepartment(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Address</Label>
+                        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+                    </div>
+                </div>
              </div>
              <div className="space-y-2">
                 <Label htmlFor="description">Brief Description of Case (Optional)</Label>
@@ -150,12 +181,21 @@ For [Your Company Name]
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Important Disclaimer</AlertTitle>
                     <AlertDescription>
-                        This draft is generated by AI and may contain mistakes. It is intended as a starting point and is not a substitute for professional legal or tax advice.
+                        This draft is generated by AI and may contain mistakes. It is intended as a starting point and is not a substitute for professional legal or tax advice. Always consult a qualified professional before sending any response.
                     </AlertDescription>
                 </Alert>
             </CardContent>
-            <CardFooter className="flex justify-between items-center">
-                 <Button variant="secondary" onClick={() => toast({title: "Draft Saved!", description: "Your response draft has been saved."})}>Save Draft</Button>
+            <CardFooter className="flex justify-between items-center flex-wrap gap-2">
+                 <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => toast({title: "Draft Saved!", description: "Your response draft has been saved."})}>
+                        <Save className="mr-2" />
+                        Save Draft
+                    </Button>
+                    <Button variant="secondary" onClick={handleDownload}>
+                        <Download className="mr-2" />
+                        Download Reply
+                    </Button>
+                 </div>
                  <Button onClick={() => router.push('/book-appointment')}>
                     <UserCheck className="mr-2"/>
                     Consult a Professional

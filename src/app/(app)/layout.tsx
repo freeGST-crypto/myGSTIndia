@@ -101,7 +101,6 @@ const allMenuItems = [
       { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional'] },
       { href: "/gst-filings/gstr-9c-reconciliation", label: "GSTR-9C Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
       { href: "/reconciliation", label: "Reconciliation Tools", icon: GitCompareArrows, roles: ['business', 'professional'] },
-      { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
     ],
   },
   {
@@ -174,6 +173,7 @@ const allMenuItems = [
     icon: ConciergeBell,
     roles: ['business', 'professional', 'super_admin']
   },
+   { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
   {
     label: "Payroll",
     icon: UserCog,
