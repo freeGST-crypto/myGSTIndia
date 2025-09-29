@@ -3,7 +3,7 @@
 
 import { useMemo, useContext } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { format, subMonths, startOfMonth, addMonths } from 'date-fns';
+import { format, subMonths, startOfMonth, addMonths, parseISO } from 'date-fns';
 
 import {
   Card,
@@ -55,11 +55,10 @@ export function FinancialSummaryChart() {
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.id || !voucher.date) return;
         
-        const [year, month, day] = voucher.date.split('-').map(Number);
-        if(isNaN(year) || isNaN(month) || isNaN(day)) return;
-
-        const voucherDate = new Date(year, month - 1, day);
-        if (voucherDate < sixMonthsAgo) return;
+        const voucherDate = parseISO(voucher.date); // Use parseISO for 'yyyy-MM-dd'
+        if (isNaN(voucherDate.getTime()) || voucherDate < sixMonthsAgo) {
+            return;
+        }
         
         const yearMonth = format(voucherDate, 'yyyy-MM');
         
@@ -69,22 +68,15 @@ export function FinancialSummaryChart() {
             const isCreditNote = voucher.id.startsWith("CN-");
             const isDebitNote = voucher.id.startsWith("DN-");
 
+            // Use the main voucher amount, which represents the total value
             if (isInvoice) {
-                // For invoices, credit to sales (4010) is the taxable value
-                const salesLine = voucher.lines.find(l => l.account === '4010');
-                if (salesLine) data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
+                data[yearMonth].sales += voucher.amount || 0;
             } else if (isCreditNote) {
-                // For credit notes, debit to sales (4010) reduces sales
-                const salesReturnLine = voucher.lines.find(l => l.account === '4010');
-                if(salesReturnLine) data[yearMonth].sales -= parseFloat(salesReturnLine.debit) || 0;
+                data[yearMonth].sales -= voucher.amount || 0;
             } else if (isBill) {
-                // For bills, debit to purchases (5050) is the taxable value
-                const purchaseLine = voucher.lines.find(l => l.account === '5050');
-                if (purchaseLine) data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
+                data[yearMonth].purchases += voucher.amount || 0;
             } else if (isDebitNote) {
-                 // For debit notes, credit to purchases (5050) reduces purchases
-                const purchaseReturnLine = voucher.lines.find(l => l.account === '5050');
-                if(purchaseReturnLine) data[yearMonth].purchases -= parseFloat(purchaseReturnLine.credit) || 0;
+                data[yearMonth].purchases -= voucher.amount || 0;
             }
         }
     });
