@@ -4,150 +4,110 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Briefcase, MapPin, Star, Calendar } from "lucide-react";
+import { Search, Briefcase, HandCoins, FileSignature, Shield, BookOpen, FileText, IndianRupee } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { servicePricing } from '@/lib/on-demand-pricing';
+import { cn } from '@/lib/utils';
 
-const professionals = [
-  {
-    id: "pro-1",
-    name: "Rohan Sharma, CA",
-    title: "Chartered Accountant",
-    location: "Mumbai, MH",
-    rating: 4.9,
-    reviews: 120,
-    specialties: ["GST Compliance", "Startup Advisory", "Income Tax"],
-    imageUrl: "https://picsum.photos/seed/pro1/100/100",
-  },
-  {
-    id: "pro-2",
-    name: "Priya Mehta, CS",
-    title: "Company Secretary",
-    location: "Delhi, DL",
-    rating: 4.8,
-    reviews: 85,
-    specialties: ["MCA Compliance", "Company Incorporation", "Legal Drafting"],
-    imageUrl: "https://picsum.photos/seed/pro2/100/100",
-  },
-  {
-    id: "pro-3",
-    name: "Anjali Singh, Tax Consultant",
-    title: "Tax Consultant",
-    location: "Bengaluru, KA",
-    rating: 4.9,
-    reviews: 210,
-    specialties: ["Income Tax Notices", "Tax Planning", "TDS/TCS"],
-    imageUrl: "https://picsum.photos/seed/pro3/100/100",
-  },
-    {
-    id: "pro-4",
-    name: "Vikram Rathod, CA",
-    title: "Chartered Accountant",
-    location: "Pune, MH",
-    rating: 4.7,
-    reviews: 95,
-    specialties: ["Audit & Assurance", "CMA Reports", "Virtual CFO"],
-    imageUrl: "https://picsum.photos/seed/pro4/100/100",
-  },
+type ServiceId = keyof typeof servicePricing[keyof typeof servicePricing] extends { id: infer U }[] ? U : never;
+
+const serviceCategories = [
+    { id: 'ca_certs', title: 'CA Certificates', icon: Award },
+    { id: 'reports', title: 'Management Reports', icon: FileText },
+    { id: 'notice_handling', title: 'Notice Handling', icon: MailWarning },
+    { id: 'registration_deeds', title: 'Registration Deeds', icon: FileSignature },
+    { id: 'founder_startup', title: 'Founder & Startup Docs', icon: HandCoins },
+    { id: 'agreements', title: 'General Agreements', icon: Handshake },
+    { id: 'hr_documents', title: 'HR Documents', icon: Briefcase },
+    { id: 'company_documents', title: 'Company Secretarial', icon: BookOpen },
+    { id: 'gst_documents', title: 'GST Compliance Docs', icon: FileSpreadsheet },
+    { id: 'accounting_documents', title: 'Accounting Docs', icon: Book },
 ];
-
-const serviceAreas = ["GST Compliance", "Income Tax", "MCA Compliance", "Startup Advisory", "Audit & Assurance"];
-const locations = ["Mumbai, MH", "Delhi, DL", "Bengaluru, KA", "Pune, MH", "All Locations"];
 
 export default function ProfessionalServicesPage() {
     const router = useRouter();
+    const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
 
-    const handleBookAppointment = (proName: string, proType: string) => {
-        router.push(`/book-appointment?proName=${encodeURIComponent(proName)}&proType=${encodeURIComponent(proType)}`);
+    const handleServiceToggle = (serviceId: string) => {
+        setSelectedServices(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(serviceId)) {
+                newSet.delete(serviceId);
+            } else {
+                newSet.add(serviceId);
+            }
+            return newSet;
+        });
+    };
+    
+    const handleFindProfessional = () => {
+        if(selectedServices.size === 0) {
+            // In a real app, show a toast message
+            console.warn("No services selected");
+            return;
+        }
+        const servicesQuery = Array.from(selectedServices).join(',');
+        router.push(`/find-professional?services=${servicesQuery}`);
     }
 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-4xl font-bold">Find a Professional</h1>
+        <h1 className="text-4xl font-bold">Professional Services Marketplace</h1>
         <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Connect with vetted Chartered Accountants, Company Secretaries, and Tax Experts for your business needs.
+          Select the services you need, and we'll connect you with the best-suited professionals from our vetted network.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div className="flex-1 space-y-2">
-                <Label htmlFor="search-pro">Search by Name or Specialty</Label>
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input id="search-pro" placeholder="e.g., GST, Rohan Sharma..." className="pl-8" />
-                </div>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="service-area">Service Area</Label>
-                <Select>
-                    <SelectTrigger id="service-area" className="w-full md:w-[200px]">
-                        <SelectValue placeholder="All Services" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {serviceAreas.map(area => <SelectItem key={area} value={area}>{area}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Select>
-                    <SelectTrigger id="location" className="w-full md:w-[200px]">
-                        <SelectValue placeholder="All Locations" />
-                    </SelectTrigger>
-                    <SelectContent>
-                         {locations.map(loc => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-      
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {professionals.map((pro) => (
-          <Card key={pro.id} className="flex flex-col">
-            <CardHeader className="flex flex-row items-start gap-4">
-                <Avatar className="h-16 w-16 border">
-                    <AvatarImage src={pro.imageUrl} alt={pro.name}/>
-                    <AvatarFallback>{pro.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                    <CardTitle>{pro.name}</CardTitle>
-                    <CardDescription>{pro.title}</CardDescription>
-                     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                        <MapPin className="size-3.5"/> {pro.location}
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-4">
-                <div>
-                    <h4 className="text-sm font-semibold mb-2">Specialties</h4>
-                    <div className="flex flex-wrap gap-2">
-                        {pro.specialties.map(spec => <Badge key={spec} variant="secondary">{spec}</Badge>)}
-                    </div>
-                </div>
-                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                        <Star className="size-4 text-amber-400 fill-amber-400"/>
-                        <span className="font-bold text-foreground">{pro.rating}</span> ({pro.reviews} reviews)
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => handleBookAppointment(pro.name, pro.title)}>
-                <Calendar className="mr-2"/>
-                Book an Appointment
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-4 border-b -mx-6 px-6">
+           <div className="max-w-7xl mx-auto flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Selected Services ({selectedServices.size})</h2>
+                <Button onClick={handleFindProfessional} disabled={selectedServices.size === 0}>
+                    Find a Professional
+                </Button>
+           </div>
+        </div>
+
+      <div className="space-y-8">
+        {serviceCategories.map(category => {
+            const services = servicePricing[category.id as keyof typeof servicePricing];
+            if (!services || services.length === 0) return null;
+            
+            return (
+                 <Card key={category.id}>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3"><category.icon className="text-primary"/>{category.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {services.map(service => (
+                            <div 
+                                key={service.id}
+                                onClick={() => handleServiceToggle(service.id)}
+                                className={cn(
+                                    "p-4 border rounded-lg cursor-pointer transition-all flex items-start gap-4",
+                                    selectedServices.has(service.id) && "ring-2 ring-primary bg-primary/5"
+                                )}
+                            >
+                               <Checkbox 
+                                    checked={selectedServices.has(service.id)}
+                                    className="mt-1"
+                               />
+                               <div className="flex-1">
+                                    <h3 className="font-semibold">{service.name}</h3>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                        <IndianRupee className="size-3"/> Starting from {service.price.toLocaleString('en-IN')}
+                                    </p>
+                               </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )
+        })}
       </div>
     </div>
   );
