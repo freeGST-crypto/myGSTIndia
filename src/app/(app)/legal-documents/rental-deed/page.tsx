@@ -220,10 +220,10 @@ export default function RentalDeedPage() {
             </Card>
           );
       case 4:
-        const formData = form.getValues();
+        const formData = form.watch();
         const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
-        const startDate = new Date(formData.leaseStartDate).toLocaleDateString('en-GB', dateOptions);
-        const endDate = new Date(new Date(formData.leaseStartDate).setMonth(new Date(formData.leaseStartDate).getMonth() + formData.leaseTermMonths)).toLocaleDateString('en-GB', dateOptions);
+        const startDate = formData.leaseStartDate ? new Date(formData.leaseStartDate).toLocaleDateString('en-GB', dateOptions) : "[Start Date]";
+        const endDate = formData.leaseStartDate ? new Date(new Date(formData.leaseStartDate).setMonth(new Date(formData.leaseStartDate).getMonth() + formData.leaseTermMonths)).toLocaleDateString('en-GB', dateOptions) : "[End Date]";
 
         return (
              <Card>
@@ -251,9 +251,9 @@ export default function RentalDeedPage() {
                         <h4 className="font-bold mt-4">NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:</h4>
                         <ol className="list-decimal list-inside space-y-3">
                             <li>The tenancy shall commence from <strong>{startDate}</strong> and shall be for a period of <strong>{formData.leaseTermMonths} months</strong>, ending on <strong>{endDate}</strong>.</li>
-                            <li>The Tenant shall pay a monthly rent of <strong>₹{formData.monthlyRent.toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
+                            <li>The Tenant shall pay a monthly rent of <strong>₹{(formData.monthlyRent || 0).toLocaleString('en-IN')}</strong>. The rent shall be paid on or before the <strong>{formData.rentPaymentDay}th day</strong> of each English calendar month.</li>
                             <li>The rent shall be increased by <strong>{formData.rentIncreasePercent}%</strong> after every <strong>{formData.rentIncreaseFrequency} months</strong> of tenancy.</li>
-                            <li>The Tenant has paid an interest-free security deposit of <strong>₹{formData.securityDeposit.toLocaleString('en-IN')}</strong> to the Landlord. This deposit will be refunded to the Tenant within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Tenant.</li>
+                            <li>The Tenant has paid an interest-free security deposit of <strong>₹{(formData.securityDeposit || 0).toLocaleString('en-IN')}</strong> to the Landlord. This deposit will be refunded to the Tenant within <strong>{formData.depositRefundDays} days</strong> of vacating the Scheduled Property, after deducting any arrears of rent or costs of damages caused by the Tenant.</li>
                             <li>There shall be a lock-in period of <strong>{formData.lockInMonths} months</strong> from the commencement of the lease. If the Tenant vacates the property during this period for any reason, the entire security deposit shall be forfeited by the Landlord.</li>
                             <li>After the lock-in period, either party may terminate this agreement by giving <strong>{formData.noticePeriodMonths} month(s)</strong> written notice to the other party.</li>
                             <li>The Tenant shall bear and pay for all charges for electricity, water, internet, gas, and any other utilities consumed on the Scheduled Property directly to the concerned authorities.</li>
