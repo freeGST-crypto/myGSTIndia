@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Briefcase, HandCoins, FileSignature, Shield, BookOpen, FileText, IndianRupee } from "lucide-react";
+import { Search, Briefcase, HandCoins, FileSignature, Shield, BookOpen, FileText, IndianRupee, Award, MailWarning, Handshake, Book, FileSpreadsheet } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { servicePricing } from '@/lib/on-demand-pricing';
 import { cn } from '@/lib/utils';
