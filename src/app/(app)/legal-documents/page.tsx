@@ -47,7 +47,7 @@ const documentTools = [
     title: "Rental / Lease Deed",
     description: "Generate a rental agreement for residential or commercial properties.",
     icon: Landmark,
-    href: "/legal-documents/rental-deed",
+    href: "/legal-documents/lease-deed",
   },
    {
     title: "Loan Agreement (from Director)",
