@@ -8,156 +8,106 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { MailWarning, PlusCircle, Upload, FileText, Edit, Trash2, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-const sampleNotices = [
-    { id: "GST-2024-001", type: "GST Show Cause Notice", dateReceived: "2024-07-15", status: "Pending Review" },
-    { id: "IT-2024-001", type: "Income Tax Scrutiny Notice (u/s 143(2))", dateReceived: "2024-07-10", status: "Draft Reply Submitted" },
-    { id: "GST-2024-002", type: "GST ITC Mismatch Notice", dateReceived: "2024-06-25", status: "Resolved" },
-];
+import { MailWarning, Upload, FileText, IndianRupee } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { servicePricing } from "@/lib/on-demand-pricing";
 
 export default function NoticesPage() {
-    const [notices, setNotices] = useState(sampleNotices);
-    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const { toast } = useToast();
+    const [noticeType, setNoticeType] = useState("GST_NOTICE");
+    const [file, setFile] = useState<File | null>(null);
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-        case "Pending Review":
-            return <Badge variant="secondary">{status}</Badge>;
-        case "Draft Reply Submitted":
-            return <Badge className="bg-blue-500 text-white hover:bg-blue-600">{status}</Badge>;
-        case "Resolved":
-            return <Badge className="bg-green-600 text-white hover:bg-green-700">{status}</Badge>;
-        default:
-            return <Badge variant="outline">{status}</Badge>;
+    const selectedService = servicePricing.notice_handling.find(s => s.id === noticeType);
+
+    const handleSubmit = () => {
+        if (!file || !noticeType) {
+            toast({
+                variant: "destructive",
+                title: "Missing Information",
+                description: "Please select a notice type and upload the document."
+            });
+            return;
         }
-    };
+
+        // Simulate submission
+        toast({
+            title: "Notice Submitted for Review",
+            description: "A professional will get in touch with you shortly. The fee will be charged upon acceptance.",
+        });
+    }
 
   return (
-    <div className="space-y-8">
-       <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <MailWarning /> Handle Notices
-                </h1>
-                <p className="text-muted-foreground">
-                    Upload and manage departmental notices for professional assistance.
-                </p>
-            </div>
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button>
-                        <Upload className="mr-2"/> Upload New Notice
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Upload Departmental Notice</DialogTitle>
-                        <DialogDescription>
-                            Provide the notice details and upload the document for our experts to review.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="notice-type">Notice Type</Label>
-                            <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select the type of notice"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="gst">GST Department Notice</SelectItem>
-                                    <SelectItem value="it">Income Tax Department Notice</SelectItem>
-                                    <SelectItem value="roc">Registrar of Companies (ROC) Notice</SelectItem>
-                                    <SelectItem value="other">Other Department Notice</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="notice-file">Upload Notice (PDF/Image)</Label>
-                            <Input id="notice-file" type="file" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="notice-comments">Your Comments (Optional)</Label>
-                            <Textarea id="notice-comments" placeholder="Add any relevant comments or context about this notice." />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={() => setIsUploadDialogOpen(false)}>Submit for Review</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-      </div>
+    <div className="space-y-8 max-w-2xl mx-auto">
+       <div className="text-center">
+            <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
+                <MailWarning /> Handle Notices
+            </h1>
+            <p className="text-muted-foreground mt-2">
+                Upload and manage departmental notices for professional assistance.
+            </p>
+        </div>
 
       <Card>
           <CardHeader>
-              <CardTitle>Submitted Notices</CardTitle>
-              <CardDescription>Track the status of all notices you have submitted for review and resolution.</CardDescription>
+              <CardTitle>Submit Your Notice</CardTitle>
+              <CardDescription>Provide the notice details and a brief description of your case.</CardDescription>
           </CardHeader>
-          <CardContent>
-              <Table>
-                  <TableHeader>
-                      <TableRow>
-                          <TableHead>Notice ID</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Date Received</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                      {notices.map(notice => (
-                          <TableRow key={notice.id}>
-                              <TableCell className="font-mono">{notice.id}</TableCell>
-                              <TableCell>{notice.type}</TableCell>
-                              <TableCell>{notice.dateReceived}</TableCell>
-                              <TableCell>{getStatusBadge(notice.status)}</TableCell>
-                              <TableCell className="text-right">
-                                  <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                          <DropdownMenuItem><FileText className="mr-2"/> View Details & Reply</DropdownMenuItem>
-                                          <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2"/> Withdraw</DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                  </DropdownMenu>
-                              </TableCell>
-                          </TableRow>
-                      ))}
-                  </TableBody>
-              </Table>
+          <CardContent className="space-y-6">
+             <div className="space-y-2">
+                <Label htmlFor="notice-from">Notice From</Label>
+                <Select value={noticeType} onValueChange={setNoticeType}>
+                    <SelectTrigger id="notice-from">
+                        <SelectValue placeholder="Select department"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {servicePricing.notice_handling.map(service => (
+                            <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+             </div>
+             <div className="space-y-2">
+                <Label htmlFor="notice-upload">Upload Notice</Label>
+                 <div className="flex items-center justify-center w-full">
+                    <label htmlFor="notice-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/75">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground">
+                            <Upload className="w-8 h-8 mb-2" />
+                            <p className="mb-2 text-sm">{file ? file.name : "Click to upload or drag & drop"}</p>
+                            <p className="text-xs">PDF, PNG, JPG accepted</p>
+                        </div>
+                        <Input id="notice-upload" type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                    </label>
+                </div> 
+             </div>
+             <div className="space-y-2">
+                <Label htmlFor="description">Brief Description of Case</Label>
+                <Textarea id="description" placeholder="Provide some background about the notice..." className="min-h-24"/>
+             </div>
           </CardContent>
+          <CardFooter className="flex flex-col items-start gap-4">
+            <div className="w-full p-4 border rounded-lg bg-secondary/50">
+                <h4 className="font-semibold">Professional Fee</h4>
+                <p className="text-3xl font-bold flex items-center">
+                    <IndianRupee className="size-6 mr-1"/>
+                    {selectedService?.price.toLocaleString('en-IN') || '0'}
+                </p>
+                <p className="text-xs text-muted-foreground">This fee is for initial analysis and a suggested reply draft. Further action may be charged separately after consultation.</p>
+            </div>
+            <Button onClick={handleSubmit} size="lg">Submit for Review</Button>
+          </CardFooter>
       </Card>
     </div>
   );
