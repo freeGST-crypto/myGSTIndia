@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -17,10 +18,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileDown, FileSpreadsheet } from "lucide-react";
-import Link from "next/link";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { FileDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-// Generates a list of financial years
+type ReportRow = {
+    deductee: string;
+    pan: string;
+    invoiceId: string;
+    invoiceDate: string;
+    invoiceAmount: number;
+    tdsSection: string;
+    tdsRate: number;
+    tdsAmount: number;
+};
+
+// Generates a list of financial years, e.g., "2024-2025"
 const getFinancialYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -31,37 +51,81 @@ const getFinancialYears = () => {
     return years;
 };
 
+const months = [
+    { value: "04", label: "April" }, { value: "05", label: "May" }, { value: "06", label: "June" },
+    { value: "07", label: "July" }, { value: "08", label: "August" }, { value: "09", label: "September" },
+    { value: "10", label: "October" }, { value: "11", label: "November" }, { value: "12", label: "December" },
+    { value: "01", label: "January" }, { value: "02", label: "February" }, { value: "03", label: "March" }
+];
 
 export default function TdsReturns() {
+  const { toast } = useToast();
+  const [reportType, setReportType] = useState("tds");
+  const [period, setPeriod] = useState("monthly");
   const [financialYear, setFinancialYear] = useState(getFinancialYears()[0]);
-  const [formType, setFormType] = useState("26q");
+  const [month, setMonth] = useState("04");
   const [quarter, setQuarter] = useState("q1");
+  const [reportData, setReportData] = useState<ReportRow[]>([]);
+  const [reportTitle, setReportTitle] = useState("");
 
-  const getReturnStatus = () => {
-    // This is a placeholder. In a real app, you'd fetch this from a database.
-    if (financialYear === getFinancialYears()[0] && (quarter === "q1" || quarter === "q2")) {
-      return { status: "Filed", filedOn: "2024-07-31" };
+  const financialYears = getFinancialYears();
+
+  const generateReport = () => {
+    toast({
+        title: "Generating Report...",
+        description: "Simulating data fetch for the selected period."
+    });
+    
+    // Simulate fetching data based on selection
+    const generatedData: ReportRow[] = [
+      {
+        deductee: "Global Tech Inc.",
+        pan: "ABCDE1234F",
+        invoiceId: "INV-001",
+        invoiceDate: "2024-05-15",
+        invoiceAmount: 25000.0,
+        tdsSection: "194J",
+        tdsRate: 10,
+        tdsAmount: 2500.0,
+      },
+      {
+        deductee: "Innovate Solutions",
+        pan: "FGHIJ5678K",
+        invoiceId: "INV-002",
+        invoiceDate: "2024-05-20",
+        invoiceAmount: 15000.0,
+        tdsSection: "194C",
+        tdsRate: 1,
+        tdsAmount: 150.0,
+      },
+    ];
+    setReportData(generatedData);
+    
+    let periodLabel = "";
+    if (period === 'monthly') {
+        const monthLabel = months.find(m => m.value === month)?.label;
+        periodLabel = `${monthLabel} ${financialYear.split('-')[0]}`;
+    } else {
+        periodLabel = `${quarter.toUpperCase()}, ${financialYear}`;
     }
-    return { status: "Due", filedOn: "Not Applicable" };
+    setReportTitle(`${reportType.toUpperCase()} Report for ${periodLabel}`);
   };
-  
-  const returnStatus = getReturnStatus();
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">TDS & TCS Returns</h1>
+        <h1 className="text-3xl font-bold">TDS &amp; TCS Reports</h1>
         <p className="text-muted-foreground">
-          Prepare, review, and download your TDS/TCS returns.
+          Generate reports for TDS deducted on payments and TCS collected on sales.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Return Filing Status</CardTitle>
-          <CardDescription>Select the return type and period to check status or prepare a new return.</CardDescription>
+          <CardTitle>Report Generation</CardTitle>
+          <CardDescription>Select the report parameters to generate your report.</CardDescription>
         </CardHeader>
-        <CardContent className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardContent className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Financial Year</label>
             <Select value={financialYear} onValueChange={setFinancialYear}>
@@ -72,60 +136,105 @@ export default function TdsReturns() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Form Type</label>
-            <Select value={formType} onValueChange={setFormType}>
+            <label className="text-sm font-medium">Report Type</label>
+            <Select value={reportType} onValueChange={setReportType}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="26q">Form 26Q (TDS on payments other than salary)</SelectItem>
-                <SelectItem value="24q">Form 24Q (TDS on salary)</SelectItem>
-                 <SelectItem value="27q">Form 27Q (TDS on payments to non-residents)</SelectItem>
-                 <SelectItem value="27eq">Form 27EQ (TCS)</SelectItem>
+                <SelectItem value="tds">TDS Report</SelectItem>
+                <SelectItem value="tcs">TCS Report</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Quarter</label>
-            <Select value={quarter} onValueChange={setQuarter}>
+            <label className="text-sm font-medium">Period</label>
+            <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="q1">Q1 (Apr-Jun)</SelectItem>
-                <SelectItem value="q2">Q2 (Jul-Sep)</SelectItem>
-                <SelectItem value="q3">Q3 (Oct-Dec)</SelectItem>
-                <SelectItem value="q4">Q4 (Jan-Mar)</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
               </SelectContent>
             </Select>
           </div>
+          {period === 'monthly' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Month</label>
+              <Select value={month} onValueChange={setMonth}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {period === 'quarterly' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Quarter</label>
+              <Select value={quarter} onValueChange={setQuarter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="q1">Q1 (Apr-Jun)</SelectItem>
+                  <SelectItem value="q2">Q2 (Jul-Sep)</SelectItem>
+                  <SelectItem value="q3">Q3 (Oct-Dec)</SelectItem>
+                  <SelectItem value="q4">Q4 (Jan-Mar)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardContent>
+        <CardFooter>
+          <Button onClick={generateReport}>Generate Report</Button>
+        </CardFooter>
       </Card>
       
        <Card>
-        <CardHeader>
-          <CardTitle>Return for {quarter.toUpperCase()}, {financialYear}</CardTitle>
-          <CardDescription>Form {formType.toUpperCase()}</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{reportTitle || "Generated Report"}</CardTitle>
+            <CardDescription>A summary of tax deducted/collected for the selected period will appear here.</CardDescription>
+          </div>
+          <Button variant="outline" disabled={reportData.length === 0}>
+            <FileDown className="mr-2" />
+            Export Report
+          </Button>
         </CardHeader>
         <CardContent>
-            <div className="p-6 border rounded-lg flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                    <p className="text-muted-foreground">Status</p>
-                    <p className={`text-2xl font-bold ${returnStatus.status === 'Filed' ? 'text-green-600' : 'text-orange-500'}`}>{returnStatus.status}</p>
-                </div>
-                 <div>
-                    <p className="text-muted-foreground">Filed On</p>
-                    <p className="text-lg font-medium">{returnStatus.filedOn}</p>
-                </div>
-                 <div className="flex gap-2">
-                    <Link href="/income-tax/tds-tcs-reports">
-                        <Button variant="outline">View Report</Button>
-                    </Link>
-                    <Button><FileSpreadsheet className="mr-2"/> Prepare Return</Button>
-                 </div>
-            </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Deductee/Collectee</TableHead>
+                <TableHead>PAN</TableHead>
+                <TableHead>Invoice #</TableHead>
+                <TableHead>Invoice Date</TableHead>
+                <TableHead className="text-right">Invoice Amount</TableHead>
+                <TableHead>TDS/TCS Section</TableHead>
+                <TableHead className="text-right">Rate (%)</TableHead>
+                <TableHead className="text-right">Tax Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+                {reportData.length > 0 ? (
+                    reportData.map((row, index) => (
+                        <TableRow key={index}>
+                        <TableCell className="font-medium">{row.deductee}</TableCell>
+                        <TableCell>{row.pan}</TableCell>
+                        <TableCell>{row.invoiceId}</TableCell>
+                        <TableCell>{row.invoiceDate}</TableCell>
+                        <TableCell className="text-right">₹{row.invoiceAmount.toFixed(2)}</TableCell>
+                        <TableCell>{row.tdsSection}</TableCell>
+                        <TableCell className="text-right">{row.tdsRate}%</TableCell>
+                        <TableCell className="text-right">₹{row.tdsAmount.toFixed(2)}</TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                            No report data. Please generate a report to see the results.
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+          </Table>
         </CardContent>
-        <CardFooter>
-            <p className="text-xs text-muted-foreground">
-                This utility helps you prepare the return data. You will need to use a filing utility to upload the final FVU file to the income tax portal.
-            </p>
-        </CardFooter>
       </Card>
     </div>
   );
