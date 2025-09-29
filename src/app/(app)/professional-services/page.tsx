@@ -82,8 +82,8 @@ export default function FindProfessionalPage() {
           </div>
         </CardContent>
          <CardContent>
-             <h3 className="text-lg font-semibold mb-4">Or Select a Service</h3>
-            <div className="flex flex-wrap gap-2">
+             <h3 className="text-lg font-semibold mb-4 text-center">Or Select a Service to Get Started</h3>
+            <div className="flex flex-wrap gap-2 justify-center">
                 {serviceAreas.map(service => (
                     <Button 
                         key={service.value}
