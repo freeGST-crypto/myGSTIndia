@@ -73,6 +73,16 @@ const initialItcRecon = [
     { id: "E", description: "ITC claimed in Annual Return (GSTR-9)", value: 3400000 },
 ];
 
+// Additional Liability (Table 11)
+const initialAdditionalLiability = [
+    { description: "IGST", value: 0 },
+    { description: "CGST", value: 0 },
+    { description: "SGST/UTGST", value: 0 },
+    { description: "Cess", value: 0 },
+    { description: "Interest", value: 0 },
+    { description: "Penalty", value: 0 },
+];
+
 export default function Gstr9cPage() {
   const { toast } = useToast();
 
@@ -80,6 +90,7 @@ export default function Gstr9cPage() {
   const [taxableTurnoverReconData, setTaxableTurnoverReconData] = useState(initialTaxableTurnoverRecon);
   const [taxPaidData, setTaxPaidData] = useState(initialTaxPaidRecon);
   const [itcReconData, setItcReconData] = useState(initialItcRecon);
+  const [additionalLiabilityData, setAdditionalLiabilityData] = useState(initialAdditionalLiability);
   const [unreconciledReasons, setUnreconciledReasons] = useState({
       grossTurnover: [{ id: 1, reason: "", amount: 0 }],
       taxableTurnover: [{ id: 1, reason: "", amount: 0 }],
@@ -92,6 +103,17 @@ export default function Gstr9cPage() {
     membershipNo: "123456",
     firmName: "S. Sharma & Associates"
   });
+  
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      toast({
+        title: "GSTR-9 File Uploaded",
+        description: `${file.name} has been processed. Data in relevant tables would be auto-filled in a real application.`,
+      });
+      // In a real app, you would parse the JSON and update the component's state.
+    }
+  };
 
   const totalTurnover = turnoverReconData.reduce((acc, item) => acc + item.value, 0);
   const totalTaxableTurnover = taxableTurnoverReconData.reduce((acc, item) => acc + item.value, 0);
@@ -185,8 +207,16 @@ export default function Gstr9cPage() {
             <CardHeader>
                 <CardTitle>GSTR-9C Data Entry (FY 2024-25)</CardTitle>
                 <CardDescription>
-                    Enter the values from your Audited Financials and GSTR-9.
+                    Enter the values from your Audited Financials and GSTR-9. You can upload a GSTR-9 JSON file to auto-populate fields.
                 </CardDescription>
+                 <div className="pt-4">
+                  <Input id="gstr9-upload" type="file" className="hidden" accept=".json" onChange={handleFileUpload} />
+                  <Button asChild variant="outline">
+                    <Label htmlFor="gstr9-upload">
+                      <Upload className="mr-2" /> Upload GSTR-9 JSON
+                    </Label>
+                  </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <Accordion type="multiple" defaultValue={['turnover-recon']} className="w-full">
@@ -229,7 +259,7 @@ export default function Gstr9cPage() {
                     </AccordionItem>
                     
                     <AccordionItem value="taxable-turnover-recon">
-                        <AccordionTrigger>Part III: Reconciliation of Taxable Turnover</AccordionTrigger>
+                        <AccordionTrigger>Part III: Reconciliation of Taxable Turnover (Table 7)</AccordionTrigger>
                         <AccordionContent>
                             <h4 className="font-semibold text-md mb-2">Table 7: Reconciliation of Taxable Turnover</h4>
                              <Table>
@@ -266,7 +296,7 @@ export default function Gstr9cPage() {
                     </AccordionItem>
                     
                     <AccordionItem value="tax-paid-recon">
-                        <AccordionTrigger>Part IV: Reconciliation of Tax Paid</AccordionTrigger>
+                        <AccordionTrigger>Part IV: Reconciliation of Tax Paid (Table 9)</AccordionTrigger>
                         <AccordionContent>
                             <h4 className="font-semibold text-md mb-2">Table 9: Reconciliation of rate wise liability and amount payable thereon</h4>
                             <Table>
@@ -294,11 +324,20 @@ export default function Gstr9cPage() {
                                <TableHeader><TableRow><TableHead className="w-3/4">Reason</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                                <TableBody><TableRow><TableCell><Input placeholder="Enter reason for difference"/></TableCell><TableCell><Input type="number" className="text-right" defaultValue="0" /></TableCell></TableRow></TableBody>
                            </Table>
+                           <h4 className="font-semibold text-md mb-2 mt-6">Table 11: Additional amount payable but not paid</h4>
+                            <Table>
+                               <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-right">Value (₹)</TableHead></TableRow></TableHeader>
+                               <TableBody>
+                                   {additionalLiabilityData.map(item => (
+                                       <TableRow key={item.description}><TableCell>{item.description}</TableCell><TableCell><Input className="text-right" type="number" defaultValue={item.value}/></TableCell></TableRow>
+                                   ))}
+                               </TableBody>
+                           </Table>
                         </AccordionContent>
                     </AccordionItem>
 
                     <AccordionItem value="itc-recon">
-                        <AccordionTrigger>Part V: Reconciliation of Input Tax Credit (ITC)</AccordionTrigger>
+                        <AccordionTrigger>Part V: Reconciliation of Input Tax Credit (ITC) (Table 12)</AccordionTrigger>
                         <AccordionContent>
                              <h4 className="font-semibold text-md mb-2">Table 12: Reconciliation of Net ITC</h4>
                              <Table>
