@@ -116,7 +116,7 @@ export default function CreditNotesPage() {
     };
 
     try {
-        await addJournalVoucher(voidVoucher);
+        await addJournalVoucher(voidVoucher as any);
         toast({ title: "Credit Note Voided", description: `Credit Note #${creditNoteId} has been successfully voided.` });
     } catch (e: any) {
         toast({ variant: "destructive", title: "Voiding Failed", description: e.message });

@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, MoreHorizontal, FileText, IndianRupee, CheckCircle, Package, Edit, Trash2, ArrowRight } from "lucide-react";
+import { PlusCircle, MoreHorizontal, FileText, CheckCircle, Package, Edit, Trash2, ArrowRight } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { format } from "date-fns";
 
