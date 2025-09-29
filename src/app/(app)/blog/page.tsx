@@ -12,6 +12,22 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export const samplePosts = [
     {
+        id: "5",
+        title: "The Rise of the 'Big Fifth': How ZenithBooks is Uniting India's Professionals",
+        author: "The ZenithBooks Team",
+        date: "2024-06-28",
+        category: "Industry Disruption",
+        excerpt: "The era of the Big Four is being challenged, not by a single new firm, but by a powerful, decentralized network. ZenithBooks is the platform uniting a million Indian CAs, advocates, and tax experts, forging the nation's 'Big Fifth' through collective strength and technology.",
+        content: [
+            "For decades, the professional services landscape in India has been dominated by the 'Big Four'. Their brand, scale, and global reach have been unparalleled. But what if the next great leap forward isn't about creating a single new giant, but about empowering a million smaller ones? This is the vision behind ZenithBooks—to build India's 'Big Fifth' not as a single entity, but as a unified, technology-powered network of the nation's brightest professional minds.",
+            "The traditional model is centralized and monolithic. The ZenithBooks model is decentralized, agile, and infinitely scalable. We are creating a digital ecosystem where every independent CA, advocate, and tax professional has access to the same world-class tools, AI-driven insights, and streamlined compliance workflows that were once the exclusive domain of large corporations. This is not just software; it is a force multiplier for the Indian professional.",
+            "By providing a common platform, we are breaking down geographical barriers and enabling collaboration on an unprecedented scale. A small-town CA can now offer services with the same efficiency and sophistication as a large urban firm. A startup can get access to top-tier legal and financial advice without the prohibitive costs. This is the power of the network effect. When thousands of professionals operate on a unified platform, they collectively become a formidable force—a 'Big Fifth' that is more resilient, more diverse, and more in tune with the needs of a new India. ZenithBooks is not just a participant in this transformation; we are its architects."
+        ],
+        imageUrl: PlaceHolderImages.find(p => p.id === 'blog-5')?.imageUrl || "https://picsum.photos/seed/blog5/600/400",
+        imageHint: PlaceHolderImages.find(p => p.id === 'blog-5')?.imageHint || "professional network",
+        shareUrl: "/blog/5"
+    },
+    {
         id: "4",
         title: "India's New Big Four: Answering the Call for a Self-Reliant Nation",
         author: "The ZenithBooks Team",
@@ -130,3 +146,5 @@ export default function BlogPage() {
         </div>
     );
 }
+
+    
