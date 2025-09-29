@@ -241,15 +241,16 @@ export default function TdsReturns() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Library /> TDS/TCS Rate Chart</CardTitle>
-          <CardDescription>A quick reference for common TDS sections and their rates.</CardDescription>
+          <CardDescription>A quick reference for common TDS and TCS sections and their rates.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Section</TableHead>
-                        <TableHead>Nature of Payment</TableHead>
-                        <TableHead className="text-right">TDS Rate (%)</TableHead>
+                        <TableHead>Nature of Payment/Collection</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Rate (%)</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -257,6 +258,11 @@ export default function TdsReturns() {
                         <TableRow key={section.section + section.description}>
                             <TableCell className="font-mono">{section.section}</TableCell>
                             <TableCell>{section.description}</TableCell>
+                            <TableCell>
+                                <span className={`font-semibold ${section.isTCS ? 'text-blue-600' : 'text-orange-600'}`}>
+                                    {section.isTCS ? 'TCS' : 'TDS'}
+                                </span>
+                            </TableCell>
                             <TableCell className="text-right font-mono">{section.rate > 0 ? `${section.rate}%` : "Slab Rates"}</TableCell>
                         </TableRow>
                     ))}
