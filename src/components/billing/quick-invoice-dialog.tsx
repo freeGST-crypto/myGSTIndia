@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useContext } from "react";
+import { useState, useMemo, useContext, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,13 @@ export function QuickInvoiceDialog({ open, onOpenChange }: { open: boolean, onOp
   const itemsQuery = user ? query(collection(db, 'items'), where("userId", "==", user.uid)) : null;
   const [itemsSnapshot, itemsLoading] = useCollection(itemsQuery);
   const items = useMemo(() => itemsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [itemsSnapshot]);
+  
+  useEffect(() => {
+    if (quickItem) {
+      setQuickRate(quickItem.sellingPrice || 0);
+    }
+  }, [quickItem]);
+
 
   if (!accountingContext) return null;
   const { addJournalVoucher } = accountingContext;
@@ -97,7 +104,7 @@ export function QuickInvoiceDialog({ open, onOpenChange }: { open: boolean, onOp
     const selectedItem = items.find((i: any) => i.id === itemId);
     if(selectedItem) {
         setQuickItem(selectedItem as any);
-        setQuickRate((selectedItem as any).sellingPrice);
+        setQuickRate((selectedItem as any).sellingPrice || 0);
     }
   }
 
