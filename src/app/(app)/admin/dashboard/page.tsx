@@ -4,8 +4,6 @@
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { Users, Briefcase, FileText, BadgeDollarSign, MailWarning, FileSignature, Newspaper, HandCoins } from "lucide-react";
 import { ActivityFeed } from "@/components/admin/activity-feed";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClientList } from "@/components/admin/client-list";
 
 export default function AdminDashboard() {
   return (
@@ -25,22 +23,12 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Professional's Client Management</CardTitle>
-                    <CardDescription>View clients linked to your professional account and switch between their workspaces to manage their data.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ClientList />
-                </CardContent>
-            </Card>
-        </div>
-        <div className="space-y-8">
-            <ActivityFeed />
+        <div className="lg:col-span-3">
+          <ActivityFeed />
         </div>
       </div>
     </div>
   );
 }
 
+    

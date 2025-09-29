@@ -21,6 +21,8 @@ import { QuickInvoiceDialog } from "@/components/billing/quick-invoice-dialog";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 import { formatCurrency } from "@/lib/utils";
+import { useRoleSimulator } from "@/context/role-simulator-context";
+import { ClientList } from "@/components/admin/client-list";
 
 
 function DashboardContent() {
@@ -28,6 +30,8 @@ function DashboardContent() {
   const accountingContext = useContext(AccountingContext);
   const [user] = useAuthState(auth);
   const [isQuickInvoiceOpen, setIsQuickInvoiceOpen] = useState(false);
+  const { simulatedRole } = useRoleSimulator();
+  const displayRole = simulatedRole || 'business';
   
   if (!accountingContext) {
     // This can happen briefly on initial load or if context is not provided
@@ -112,6 +116,22 @@ function DashboardContent() {
     );
   }, [invoices, searchTerm]);
 
+  if (displayRole === 'professional' || displayRole === 'super_admin') {
+      return (
+          <div className="space-y-8">
+               <Card>
+                <CardHeader>
+                    <CardTitle>Professional's Client Management</CardTitle>
+                    <CardDescription>View clients linked to your professional account and switch between their workspaces to manage their data.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ClientList />
+                </CardContent>
+            </Card>
+          </div>
+      )
+  }
+
   return (
     <div className="space-y-8">
       <MarketingCarousel />
@@ -175,3 +195,5 @@ function DashboardContent() {
 }
 
 export default memo(DashboardContent);
+
+    
