@@ -8,8 +8,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { SocialShareButtons } from "@/components/social-share-buttons";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export const samplePosts = [
+    {
+        id: "4",
+        title: "India's New Big Four: Answering the Call for a Self-Reliant Nation",
+        author: "The ZenithBooks Team",
+        date: "2024-06-25",
+        category: "National Vision",
+        excerpt: "Prime Minister Modi's call for Indian firms to rival the 'Big Four' is more than a statement—it's a mission. Discover how technology is empowering a million smaller firms to collectively become the new titans of the industry.",
+        content: [
+            "In a powerful address, Prime Minister Narendra Modi articulated a vision that resonates with the core of our national ambition: for India to have its own 'Big Four' in accounting and professional services. This isn't just about replacing foreign names with Indian ones; it's a call to build institutions that are globally competitive, technologically advanced, and deeply rooted in the Indian ethos. The dominance of a few global firms is being challenged not by a few large competitors, but by the collective might of a million smaller, tech-enabled Indian firms.",
+            "The dream of an 'Aatmanirbhar Bharat' (Self-Reliant India) finds its most potent expression in the services sector. For decades, Indian professionals have been the backbone of global corporations. Now, it's time to build our own tables, not just have a seat at theirs. The challenge is immense—the Big Four have scale, legacy, and vast resources. But the opportunity is even greater. The Indian economy is on a trajectory of unprecedented growth, and it needs an advisory and compliance ecosystem that is agile, accessible, and aligned with its unique needs.",
+            "This is where technology becomes the great equalizer. At ZenithBooks, we believe we are not just building software; we are building the digital infrastructure for this revolution. Our platform is designed to arm every local CA, advocate, and tax professional with the same cutting-edge tools that were once the exclusive domain of large corporations. By unifying compliance, automating complex processes, and providing AI-powered insights, we are empowering a distributed network of experts to deliver world-class service. The future isn't a new 'Big Four'; it's a 'Big Million', and ZenithBooks is proud to be their platform of choice."
+        ],
+        imageUrl: PlaceHolderImages.find(p => p.id === 'blog-4')?.imageUrl || "https://picsum.photos/seed/blog4/600/400",
+        imageHint: "Indian city",
+        shareUrl: "/blog/4"
+    },
     {
         id: "1",
         title: "Understanding Input Tax Credit (ITC) under GST",
@@ -64,7 +81,7 @@ export default function BlogPage() {
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
             <div className="text-center">
-                <h1 className="text-4xl font-bold">GSTEase Blog</h1>
+                <h1 className="text-4xl font-bold">ZenithBooks Blog</h1>
                 <p className="mt-2 text-lg text-muted-foreground">Insights on Taxation, Finance, and International Trade from our experts.</p>
             </div>
 

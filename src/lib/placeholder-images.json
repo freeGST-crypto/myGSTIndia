@@ -17,6 +17,12 @@
       "description": "Generate CMA Reports with AI-Powered Insights",
       "imageUrl": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MHx8fHwxNzU4Nzk0NjYwfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "business meeting"
+    },
+    {
+      "id": "blog-4",
+      "description": "Indian flag over a cityscape",
+      "imageUrl": "https://images.unsplash.com/photo-1621045239328-9a7090859556?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxpbmRpYW4lMjBjaXR5fGVufDB8fHx8MTc1ODkyMDM0NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "Indian city"
     }
   ]
 }
