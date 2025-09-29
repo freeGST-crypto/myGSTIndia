@@ -68,6 +68,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/html2pdf.js": "^0.10.0",
     "@types/jspdf": "^2.0.0",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
