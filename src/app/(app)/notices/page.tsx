@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MailWarning, Upload, AlertTriangle, Wand2, UserCheck, Download, Save } from "lucide-react";
+import { MailWarning, Upload, AlertTriangle, Wand2, UserCheck, Download, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { servicePricing } from "@/lib/on-demand-pricing";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
