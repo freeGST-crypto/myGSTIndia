@@ -44,6 +44,13 @@ export function FinancialSummaryChart() {
     const data: { [key: string]: { sales: number; purchases: number; month: string } } = {};
     const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
 
+    // Get the UTC timestamp for the start of the 6-month period
+    const sixMonthsAgoTimestamp = Date.UTC(
+      sixMonthsAgo.getFullYear(),
+      sixMonthsAgo.getMonth(),
+      1
+    );
+
     // Initialize last 6 months
     for (let i = 0; i < 6; i++) {
         const monthDate = addMonths(sixMonthsAgo, i);
@@ -55,10 +62,12 @@ export function FinancialSummaryChart() {
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.id || !voucher.date) return;
         const [year, month, day] = voucher.date.split('-').map(Number);
-        const voucherDate = new Date(year, month - 1, day);
         
-        if (voucherDate >= sixMonthsAgo) {
-            const yearMonth = format(voucherDate, 'yyyy-MM');
+        // Use Date.UTC to ensure timezone-consistent comparison
+        const voucherTimestamp = Date.UTC(year, month - 1, day);
+        
+        if (voucherTimestamp >= sixMonthsAgoTimestamp) {
+            const yearMonth = format(new Date(year, month-1, day), 'yyyy-MM');
             
             if (data[yearMonth]) {
                 if (voucher.id.startsWith("INV-")) {
