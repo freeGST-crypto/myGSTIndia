@@ -135,11 +135,26 @@ export default function ImportExportPage() {
                              <TabsContent value="gst" className="pt-4">
                                 <div className="p-4 border rounded-lg space-y-4">
                                     <h3 className="font-semibold flex items-center gap-2"><Database className="text-primary"/> GST Data</h3>
-                                    <p className="text-sm text-muted-foreground">Import data from the GST Portal to use in reconciliation tools.</p>
-                                     <Alert>
-                                        <AlertTitle>Coming Soon!</AlertTitle>
-                                        <AlertDescription>Direct import from the GST portal is under development. For now, please download files from the portal and upload them in the respective reconciliation sections.</AlertDescription>
-                                    </Alert>
+                                    <p className="text-sm text-muted-foreground">Import your monthly GST returns data from the official portal's JSON or CSV files.</p>
+                                    
+                                    <div className="space-y-4 pt-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="gstr1-upload">GSTR-1 Data</Label>
+                                            <p className="text-xs text-muted-foreground">Import outward supplies data from GSTR-1.</p>
+                                            <div className="flex gap-2">
+                                                <Input id="gstr1-upload" type="file" accept=".json,.csv" />
+                                                <Button variant="outline" size="icon"><Download className="size-4"/></Button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="gstr2b-upload">GSTR-2B Data</Label>
+                                            <p className="text-xs text-muted-foreground">Import ITC data from GSTR-2B for reconciliation.</p>
+                                            <div className="flex gap-2">
+                                                <Input id="gstr2b-upload" type="file" accept=".json,.csv" />
+                                                <Button variant="outline" size="icon"><Download className="size-4"/></Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </TabsContent>
                              <TabsContent value="it" className="pt-4">
