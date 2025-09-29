@@ -35,6 +35,7 @@ import {
   Wand2,
   Loader2,
   Save,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +48,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as TableFoot } from "@/components/ui/table";
 import { format } from "date-fns";
+import html2pdf from "html2pdf.js";
 
 
 const partnerSchema = z.object({
@@ -306,7 +308,7 @@ CertificateToPrint.displayName = 'CertificateToPrint';
 
 const AffidavitToPrint = React.forwardRef<HTMLDivElement, { formData: FormData; deponent: z.infer<typeof partnerSchema> | undefined }>
 (({ formData, deponent }, ref) => {
-    if (!deponent) return <div ref={ref}>Please select a deponent.</div>;
+    if (!deponent) return (<div ref={ref}>Please select a deponent.</div>);
     return (
         <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
             <h3 className="text-center font-bold">AFFIDAVIT</h3>
@@ -419,6 +421,33 @@ export default function PartnershipDeedPage() {
   }, [form, deponentId]);
 
   const formData = form.watch();
+
+  const handleDownloadPdf = (contentRef: React.RefObject<HTMLDivElement>, fileName: string) => {
+    const element = contentRef.current;
+    if (!element) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not find the content to download.",
+      });
+      return;
+    }
+
+    toast({
+      title: "Generating PDF...",
+      description: "Your document is being prepared for download.",
+    });
+
+    const opt = {
+      margin: 0.5,
+      filename: `${fileName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+    };
+
+    html2pdf().from(element).set(opt).save();
+  };
 
   const handleSaveDraft = async () => {
       if (!user) {
@@ -753,32 +782,32 @@ export default function PartnershipDeedPage() {
                     </CardContent>
                     <CardFooter className="justify-between">
                         <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back to Edit</Button>
-                        <ShareButtons contentRef={printRefDeed} fileName={`Partnership_Deed_${formData.firmName}`} />
+                        <Button onClick={() => handleDownloadPdf(printRefDeed, `Partnership_Deed_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button>
                     </CardFooter>
                 </Card>
 
                 <Card>
                     <CardHeader><CardTitle>Annexure: Form No. 1</CardTitle><CardDescription>Application for Registration of Firm.</CardDescription></CardHeader>
                     <CardContent><Form1ToPrint ref={printRefForm1} formData={formData} /></CardContent>
-                    <CardFooter><ShareButtons contentRef={printRefForm1} fileName={`Form1_${formData.firmName}`} /></CardFooter>
+                    <CardFooter><Button onClick={() => handleDownloadPdf(printRefForm1, `Form1_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button></CardFooter>
                 </Card>
 
                 <Card>
                     <CardHeader><CardTitle>Annexure: Declaration by Partners</CardTitle></CardHeader>
                     <CardContent><DeclarationToPrint ref={printRefDeclaration} formData={formData} /></CardContent>
-                    <CardFooter><ShareButtons contentRef={printRefDeclaration} fileName={`Declaration_${formData.firmName}`} /></CardFooter>
+                    <CardFooter><Button onClick={() => handleDownloadPdf(printRefDeclaration, `Declaration_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button></CardFooter>
                 </Card>
 
                 <Card>
                     <CardHeader><CardTitle>Annexure: Proforma for Photos & Fingerprints</CardTitle></CardHeader>
                     <CardContent><ProformaToPrint ref={printRefProforma} formData={formData} /></CardContent>
-                    <CardFooter><ShareButtons contentRef={printRefProforma} fileName={`Proforma_${formData.firmName}`} /></CardFooter>
+                    <CardFooter><Button onClick={() => handleDownloadPdf(printRefProforma, `Proforma_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button></CardFooter>
                 </Card>
 
                 <Card>
                     <CardHeader><CardTitle>Annexure: Certificate of True Copy</CardTitle></CardHeader>
                     <CardContent><CertificateToPrint ref={printRefCertificate} formData={formData} /></CardContent>
-                    <CardFooter><ShareButtons contentRef={printRefCertificate} fileName={`Certificate_${formData.firmName}`} /></CardFooter>
+                    <CardFooter><Button onClick={() => handleDownloadPdf(printRefCertificate, `Certificate_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button></CardFooter>
                 </Card>
                 
                 <Card>
@@ -798,7 +827,7 @@ export default function PartnershipDeedPage() {
                         </div>
                         <AffidavitToPrint ref={printRefAffidavit} formData={formData} deponent={deponent} />
                     </CardContent>
-                    <CardFooter><ShareButtons contentRef={printRefAffidavit} fileName={`Affidavit_${deponent?.name}`} /></CardFooter>
+                    <CardFooter><Button onClick={() => handleDownloadPdf(printRefAffidavit, `Affidavit_${deponent?.name}`)}><Printer className="mr-2"/> Download PDF</Button></CardFooter>
                 </Card>
             </div>
         );

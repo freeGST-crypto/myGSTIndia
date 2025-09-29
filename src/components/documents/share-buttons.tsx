@@ -43,6 +43,7 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
     html2pdf().from(element).set(opt).save();
   };
 
+
   const handleWhatsAppShare = () => {
     if (!whatsappMessage) {
       toast({
@@ -74,3 +75,5 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
     </div>
   );
 }
+
+    
