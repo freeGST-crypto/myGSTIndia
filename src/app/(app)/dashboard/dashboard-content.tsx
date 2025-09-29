@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useContext, memo } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { IndianRupee, CreditCard, Search, Zap } from "lucide-react";
+import { IndianRupee, CreditCard, Search, Zap, Building } from "lucide-react";
 import { FinancialSummaryChart } from "@/components/dashboard/financial-summary-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import Link from "next/link";
@@ -23,28 +23,49 @@ import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 import { formatCurrency } from "@/lib/utils";
 import { useRoleSimulator } from "@/context/role-simulator-context";
 import { ClientList } from "@/components/admin/client-list";
+import { useDocumentData } from "react-firebase-hooks/firestore";
+import { doc } from "firebase/firestore";
+
+const SUPER_ADMIN_EMAIL = 'smr@smr.com';
 
 
 function DashboardContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const accountingContext = useContext(AccountingContext);
-  const [user] = useAuthState(auth);
+  const [user, loadingUser, authError] = useAuthState(auth);
   const [isQuickInvoiceOpen, setIsQuickInvoiceOpen] = useState(false);
   const { simulatedRole } = useRoleSimulator();
-  const displayRole = simulatedRole || 'business';
+
+  // --- Client Workspace State ---
+  const [activeClient, setActiveClient] = useState<{ id: string, name: string } | null>(null);
+
+  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const [userData, userLoading, userError] = useDocumentData(userDocRef);
+
+  const getRole = () => {
+    if (!user) return 'business';
+    if (user.email === SUPER_ADMIN_EMAIL) return 'super_admin';
+    return userData?.userType || 'business'; 
+  }
+  const userRole = getRole();
+  const displayRole = simulatedRole || userRole;
+
+  // Determine which user ID to use for queries (the pro's or the selected client's)
+  // For this prototype, we will still use the logged-in user's ID for data fetching.
+  // A real implementation would switch the `userId` in queries based on `activeClient.id`.
+  const queryUserId = user?.uid;
   
   if (!accountingContext) {
-    // This can happen briefly on initial load or if context is not provided
     return <div>Loading Accounting Data...</div>;
   }
 
   const { journalVouchers, loading: journalLoading } = accountingContext;
 
-  const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
+  const customersQuery = queryUserId ? query(collection(db, 'customers'), where("userId", "==", queryUserId)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [customersSnapshot]);
 
-  const vendorsQuery = user ? query(collection(db, 'vendors'), where("userId", "==", user.uid)) : null;
+  const vendorsQuery = queryUserId ? query(collection(db, 'vendors'), where("userId", "==", queryUserId)) : null;
   const [vendorsSnapshot, vendorsLoading] = useCollection(vendorsQuery);
   const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [vendorsSnapshot]);
 
@@ -52,7 +73,6 @@ function DashboardContent() {
   const accountBalances = useMemo(() => {
     const balances: Record<string, number> = {};
     
-    // Initialize all accounts from lists
     allAccounts.forEach(acc => { balances[acc.code] = 0; });
     customers.forEach(c => { if(c.id) balances[c.id] = 0; });
     vendors.forEach(v => { if(v.id) balances[v.id] = 0; });
@@ -75,7 +95,6 @@ function DashboardContent() {
     if (customersLoading || journalLoading) return 0;
     return customers.reduce((sum, customer) => {
         if (customer.id && accountBalances[customer.id]) {
-            // Receivables are debit balances
             return sum + accountBalances[customer.id];
         }
         return sum;
@@ -86,14 +105,13 @@ function DashboardContent() {
     if (vendorsLoading || journalLoading) return 0;
     return vendors.reduce((sum, vendor) => {
       if (vendor.id && accountBalances[vendor.id]) {
-        // Payables are credit balances, so they will be negative in our calculation
         return sum - accountBalances[vendor.id];
       }
       return sum;
     }, 0);
   }, [vendors, accountBalances, vendorsLoading, journalLoading]);
   
-  const gstPayable = accountBalances['2110'] ? -accountBalances['2110'] : 0; // GST Payable is a credit balance
+  const gstPayable = accountBalances['2110'] ? -accountBalances['2110'] : 0;
 
   const invoices = useMemo(() => {
     return journalVouchers
@@ -119,19 +137,46 @@ function DashboardContent() {
   if (displayRole === 'professional' || displayRole === 'super_admin') {
       return (
           <div className="space-y-8">
-               <Card>
-                <CardHeader>
-                    <CardTitle>Professional's Client Management</CardTitle>
-                    <CardDescription>View clients linked to your professional account and switch between their workspaces to manage their data.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ClientList />
-                </CardContent>
-            </Card>
+               <ClientList onSwitchWorkspace={setActiveClient} activeClientId={activeClient?.id || null} />
+                
+               {activeClient && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Building /> Workspace: {activeClient.name}
+                        </CardTitle>
+                        <CardDescription>You are currently viewing the dashboard for {activeClient.name}. All data displayed below belongs to this client.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {/* Placeholder for client-specific dashboard content */}
+                        <p className="text-muted-foreground">Client-specific dashboard components would be rendered here. For this prototype, we will show the main dashboard layout.</p>
+                    </CardContent>
+                 </Card>
+               )}
+
+              {/* Render the main business dashboard below the client manager */}
+               <div className="space-y-8 mt-8">
+                  <MarketingCarousel />
+                  <div className="grid gap-8 lg:grid-cols-3 items-start">
+                    <div className="lg:col-span-2 space-y-8">
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <Link href="/accounting/ledgers"><StatCard title="Receivables" value={formatCurrency(totalReceivables)} icon={IndianRupee} loading={journalLoading || customersLoading} /></Link>
+                        <Link href="/accounting/ledgers"><StatCard title="Payables" value={formatCurrency(totalPayables)} icon={CreditCard} loading={journalLoading || vendorsLoading} /></Link>
+                        <Link href="/accounting/ledgers?account=2110"><StatCard title="GST Payable" value={formatCurrency(gstPayable)} icon={IndianRupee} loading={journalLoading} /></Link>
+                      </div>
+                      <FinancialSummaryChart />
+                    </div>
+                    <div className="space-y-8 lg:col-span-1">
+                        <ShortcutGuide />
+                        <ComplianceCalendar />
+                    </div>
+                  </div>
+               </div>
           </div>
       )
   }
 
+  // Default Business Dashboard
   return (
     <div className="space-y-8">
       <MarketingCarousel />
@@ -195,5 +240,3 @@ function DashboardContent() {
 }
 
 export default memo(DashboardContent);
-
-    

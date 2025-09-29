@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, ArrowRightLeft, FileArchive } from "lucide-react";
+import { PlusCircle, ArrowRightLeft, FileArchive, LogIn } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,12 @@ const sampleAssignedWork = [
     { id: 'REQ-002', client: 'Synergy Corp', type: 'GST Notice Reply', dueDate: '2024-08-10', status: 'In Progress' },
 ];
 
-export function ClientList() {
+interface ClientListProps {
+  onSwitchWorkspace: (client: { id: string, name: string } | null) => void;
+  activeClientId: string | null;
+}
+
+export function ClientList({ onSwitchWorkspace, activeClientId }: ClientListProps) {
   const { toast } = useToast();
   const [clients, setClients] = useState(sampleClients);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,12 +45,22 @@ export function ClientList() {
   const [newClientEmail, setNewClientEmail] = useState("");
 
 
-  const handleSwitchWorkspace = (clientName: string) => {
-    toast({
-      title: `Switched to ${clientName}'s Workspace`,
-      description: `You are now managing the account for ${clientName}. Be careful!`,
-    });
-    // In a real app, this would trigger a context switch or redirect.
+  const handleSwitchWorkspace = (client: {id: string, name: string} | null) => {
+    if (client && client.id === activeClientId) {
+      // If clicking the active client, switch back to own workspace
+      onSwitchWorkspace(null);
+      toast({
+        title: "Switched to Own Workspace",
+      });
+    } else {
+      onSwitchWorkspace(client);
+      if(client) {
+        toast({
+            title: `Switched to ${client.name}'s Workspace`,
+            description: `You are now managing the account for ${client.name}.`,
+        });
+      }
+    }
   };
   
   const handleAddNewClient = () => {
@@ -62,7 +77,6 @@ export function ClientList() {
     setClients(prev => [...prev, newClient]);
     toast({ title: "Client Added", description: `${newClient.name} has been added to your client list.`});
     
-    // Reset form and close dialog
     setNewClientName("");
     setNewClientGstin("");
     setNewClientEmail("");
@@ -120,20 +134,35 @@ export function ClientList() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
+                    <TableRow className={!activeClientId ? "bg-muted/80" : ""}>
+                        <TableCell className="font-medium">My Workspace</TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">Your own business data</TableCell>
+                        <TableCell className="text-right">
+                            <Button
+                                variant={!activeClientId ? "default" : "outline"}
+                                size="sm"
+                                disabled={!activeClientId}
+                                onClick={() => handleSwitchWorkspace(null)}
+                            >
+                                <LogIn className="mr-2" />
+                                My Workspace
+                            </Button>
+                        </TableCell>
+                    </TableRow>
                     {clients.map((client) => (
-                    <TableRow key={client.id}>
+                    <TableRow key={client.id} className={activeClientId === client.id ? "bg-muted/80" : ""}>
                         <TableCell className="font-medium">{client.name}</TableCell>
                         <TableCell className="font-mono text-xs">
                         {client.gstin}
                         </TableCell>
                         <TableCell className="text-right">
                         <Button
-                            variant="outline"
+                            variant={activeClientId === client.id ? "default" : "outline"}
                             size="sm"
-                            onClick={() => handleSwitchWorkspace(client.name)}
+                            onClick={() => handleSwitchWorkspace(client)}
                         >
                             <ArrowRightLeft className="mr-2" />
-                            Switch Workspace
+                             {activeClientId === client.id ? "Active" : "Switch"}
                         </Button>
                         </TableCell>
                     </TableRow>
