@@ -90,8 +90,15 @@ export default function ProfitAndLossPage() {
     const cogsAccounts = combinedAccounts.filter((a: any) => a.type === 'Cost of Goods Sold');
     const expenseAccounts = combinedAccounts.filter((a: any) => a.type === 'Expense');
 
-    const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, revenueAccounts]);
-    const totalCogs = useMemo(() => cogsAccounts.reduce((sum, acc: any) => sum + (accountBalances[acc.code] || 0), 0), [accountBalances, cogsAccounts]);
+    const totalRevenue = useMemo(() => revenueAccounts.reduce((sum, acc: any) => {
+        // Sales returns (Credit Notes) are debits to sales accounts, so they naturally reduce the balance.
+        return sum + (accountBalances[acc.code] || 0)
+    }, 0), [accountBalances, revenueAccounts]);
+
+    const totalCogs = useMemo(() => cogsAccounts.reduce((sum, acc: any) => {
+        // Purchase returns (Debit Notes) are credits to purchase accounts, reducing the balance.
+        return sum + (accountBalances[acc.code] || 0)
+    }, 0), [accountBalances, cogsAccounts]);
     
     const grossProfit = totalRevenue - totalCogs;
     
@@ -171,7 +178,7 @@ export default function ProfitAndLossPage() {
                       <Table>
                           <TableHeader><TableRow><TableHead>Particulars</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
                           <TableBody>
-                              <ReportRow label="By Sales & Other Income" value={totalRevenue} />
+                              <ReportRow label="By Sales &amp; Other Income" value={totalRevenue} />
                               {grossProfit < 0 && <ReportRow label="By Gross Loss c/d" value={-grossProfit} />}
                           </TableBody>
                            <TableFooter>
