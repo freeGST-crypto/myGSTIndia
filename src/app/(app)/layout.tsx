@@ -100,7 +100,8 @@ const allMenuItems = [
     subItems: [
       { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional'] },
       { href: "/gst-filings/gstr-9c-reconciliation", label: "GSTR-9C Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
-      { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
+      { href: "/reconciliation", label: "Reconciliation Tools", icon: GitCompareArrows, roles: ['business', 'professional'] },
+      { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
     ],
   },
   {
@@ -167,10 +168,9 @@ const allMenuItems = [
     icon: Shield,
     roles: ['business', 'professional']
   },
-  { href: "/notices", label: "Handle Notices", icon: MailWarning, roles: ['business', 'professional'] },
   {
     href: "/professional-services",
-    label: "Professional Services",
+    label: "Find a Professional",
     icon: ConciergeBell,
     roles: ['business', 'professional', 'super_admin']
   },
@@ -209,15 +209,6 @@ const allMenuItems = [
       { href: "/settings/users", label: "User Management", icon: Users, roles: ['business', 'professional', 'super_admin'] },
       { href: "/settings/professional-profile", label: "Professional Profile", icon: Briefcase, roles: ['professional'] },
     ],
-  },
-  {
-    label: "Client Workspace",
-    icon: Briefcase,
-    roles: ['professional'],
-    subItems: [
-        { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ['professional']},
-        { href: "/admin/users", label: "User & Client Management", icon: Users, roles: ['professional']},
-    ]
   },
   {
     label: "Admin",
@@ -484,5 +475,3 @@ export default function AppLayout({
     </ClientOnly>
   );
 }
-
-    
