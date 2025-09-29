@@ -29,12 +29,20 @@ const exportOptions = [
 ];
 
 export default function ImportExportPage() {
-    const [tallyFile, setTallyFile] = useState<File | null>(null);
+    const [tallyVoucherFile, setTallyVoucherFile] = useState<File | null>(null);
+    const [tallyMasterFile, setTallyMasterFile] = useState<File | null>(null);
     const [isImporting, setIsImporting] = useState(false);
     const { toast } = useToast();
 
+    const [gstr1File, setGstr1File] = useState<File | null>(null);
+    const [gstr2bFile, setGstr2bFile] = useState<File | null>(null);
+    const [itrJsonFile, setItrJsonFile] = useState<File | null>(null);
+    const [aisFile, setAisFile] = useState<File | null>(null);
+
+
     const handleTallyImport = async (importType: 'vouchers' | 'masters') => {
-        if (!tallyFile) {
+        const fileToImport = importType === 'vouchers' ? tallyVoucherFile : tallyMasterFile;
+        if (!fileToImport) {
             toast({
                 variant: "destructive",
                 title: "No File Selected",
@@ -50,7 +58,7 @@ export default function ImportExportPage() {
         });
 
         const formData = new FormData();
-        formData.append('file', tallyFile);
+        formData.append('file', fileToImport);
 
         try {
             // In a real app, you might have different endpoints or pass the importType
@@ -78,9 +86,18 @@ export default function ImportExportPage() {
             });
         } finally {
             setIsImporting(false);
-            setTallyFile(null);
+            if(importType === 'vouchers') setTallyVoucherFile(null);
+            else setTallyMasterFile(null);
         }
     };
+    
+    const handleGenericImport = (file: File | null, type: string) => {
+         if (!file) {
+            toast({ variant: "destructive", title: "No File Selected", description: `Please select a file for ${type}.` });
+            return;
+        }
+         toast({ title: "Import Successful (Simulated)", description: `Your ${type} file '${file.name}' has been processed.`});
+    }
 
     return (
         <div className="space-y-8">
@@ -111,9 +128,9 @@ export default function ImportExportPage() {
                                         <p className="text-sm text-muted-foreground">Upload your Day Book exported from Tally in XML format. We'll automatically create the corresponding accounting vouchers.</p>
                                         <div className="space-y-2">
                                             <Label htmlFor="tally-file-vouchers">Tally Day Book (.xml)</Label>
-                                            <Input id="tally-file-vouchers" type="file" accept=".xml" onChange={(e) => setTallyFile(e.target.files?.[0] || null)} />
+                                            <Input id="tally-file-vouchers" type="file" accept=".xml" onChange={(e) => setTallyVoucherFile(e.target.files?.[0] || null)} />
                                         </div>
-                                        <Button onClick={() => handleTallyImport('vouchers')} disabled={isImporting || !tallyFile}>
+                                        <Button onClick={() => handleTallyImport('vouchers')} disabled={isImporting || !tallyVoucherFile}>
                                             {isImporting ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2" />}
                                             Import Vouchers
                                         </Button>
@@ -123,9 +140,9 @@ export default function ImportExportPage() {
                                         <p className="text-sm text-muted-foreground">Upload your Masters export from Tally in XML format to import customers, vendors, and stock items.</p>
                                         <div className="space-y-2">
                                             <Label htmlFor="tally-file-masters">Tally Masters (.xml)</Label>
-                                            <Input id="tally-file-masters" type="file" accept=".xml" onChange={(e) => setTallyFile(e.target.files?.[0] || null)} />
+                                            <Input id="tally-file-masters" type="file" accept=".xml" onChange={(e) => setTallyMasterFile(e.target.files?.[0] || null)} />
                                         </div>
-                                        <Button onClick={() => handleTallyImport('masters')} disabled={isImporting || !tallyFile}>
+                                        <Button onClick={() => handleTallyImport('masters')} disabled={isImporting || !tallyMasterFile}>
                                             {isImporting ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2" />}
                                             Import Masters
                                         </Button>
@@ -133,7 +150,7 @@ export default function ImportExportPage() {
                                 </div>
                             </TabsContent>
                              <TabsContent value="gst" className="pt-4">
-                                <div className="p-4 border rounded-lg space-y-4">
+                                <div className="p-4 border rounded-lg space-y-6">
                                     <h3 className="font-semibold flex items-center gap-2"><Database className="text-primary"/> GST Data</h3>
                                     <p className="text-sm text-muted-foreground">Import your monthly GST returns data from the official portal's JSON or CSV files.</p>
                                     
@@ -142,16 +159,16 @@ export default function ImportExportPage() {
                                             <Label htmlFor="gstr1-upload">GSTR-1 Data</Label>
                                             <p className="text-xs text-muted-foreground">Import outward supplies data from GSTR-1.</p>
                                             <div className="flex gap-2">
-                                                <Input id="gstr1-upload" type="file" accept=".json,.csv" />
-                                                <Button variant="outline" size="icon"><Download className="size-4"/></Button>
+                                                <Input id="gstr1-upload" type="file" accept=".json,.csv" onChange={e => setGstr1File(e.target.files?.[0] || null)} />
+                                                <Button variant="outline" onClick={() => handleGenericImport(gstr1File, 'GSTR-1')}>Import</Button>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="gstr2b-upload">GSTR-2B Data</Label>
                                             <p className="text-xs text-muted-foreground">Import ITC data from GSTR-2B for reconciliation.</p>
                                             <div className="flex gap-2">
-                                                <Input id="gstr2b-upload" type="file" accept=".json,.csv" />
-                                                <Button variant="outline" size="icon"><Download className="size-4"/></Button>
+                                                <Input id="gstr2b-upload" type="file" accept=".json,.csv" onChange={e => setGstr2bFile(e.target.files?.[0] || null)} />
+                                                <Button variant="outline" onClick={() => handleGenericImport(gstr2bFile, 'GSTR-2B')}>Import</Button>
                                             </div>
                                         </div>
                                     </div>
@@ -167,16 +184,16 @@ export default function ImportExportPage() {
                                             <Label htmlFor="itr-json-upload">ITR Pre-filled JSON</Label>
                                             <p className="text-xs text-muted-foreground">Upload the JSON from the Income Tax portal to pre-fill ITR forms.</p>
                                             <div className="flex gap-2">
-                                                <Input id="itr-json-upload" type="file" accept=".json" />
-                                                <Button variant="outline">Import Data</Button>
+                                                <Input id="itr-json-upload" type="file" accept=".json" onChange={e => setItrJsonFile(e.target.files?.[0] || null)} />
+                                                <Button variant="outline" onClick={() => handleGenericImport(itrJsonFile, 'ITR JSON')}>Import Data</Button>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="ais-upload">AIS/TIS Report</Label>
                                             <p className="text-xs text-muted-foreground">Import Annual Information Statement (AIS) or Taxpayer Information Summary (TIS).</p>
                                             <div className="flex gap-2">
-                                                <Input id="ais-upload" type="file" accept=".pdf,.json" />
-                                                <Button variant="outline">Import Data</Button>
+                                                <Input id="ais-upload" type="file" accept=".pdf,.json" onChange={e => setAisFile(e.target.files?.[0] || null)}/>
+                                                <Button variant="outline" onClick={() => handleGenericImport(aisFile, 'AIS/TIS')}>Import Data</Button>
                                             </div>
                                         </div>
                                     </div>
@@ -200,7 +217,7 @@ export default function ImportExportPage() {
                                         <p className="text-xs text-muted-foreground">{opt.description}</p>
                                     </div>
                                 </div>
-                                <Button size="sm" variant="ghost">Export</Button>
+                                <Button size="sm" variant="ghost" onClick={() => toast({ title: "Export Started (Simulated)", description: `Your ${opt.title} report is being generated.`})}>Export</Button>
                              </div>
                         ))}
                     </CardContent>
