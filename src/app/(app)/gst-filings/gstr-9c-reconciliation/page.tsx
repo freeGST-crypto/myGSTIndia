@@ -32,6 +32,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Textarea } from "@/components/ui/textarea";
 
 
 // Reconciliation of Gross Turnover (Table 5)
@@ -58,9 +59,9 @@ const initialTaxableTurnoverRecon = [
 
 // Reconciliation of Tax Paid (Table 9)
 const initialTaxPaidRecon = [
-    { rate: "5%", taxableValue: 10000000, cgst: 250000, sgst: 250000, igst: 0, cess: 0 },
-    { rate: "12%", taxableValue: 15000000, cgst: 900000, sgst: 900000, igst: 0, cess: 0 },
-    { rate: "18%", taxableValue: 25000000, cgst: 0, sgst: 0, igst: 4500000, cess: 0 },
+    { rate: 5, taxableValue: 10000000, cgst: 250000, sgst: 250000, igst: 0, cess: 0 },
+    { rate: 12, taxableValue: 15000000, cgst: 900000, sgst: 900000, igst: 0, cess: 0 },
+    { rate: 18, taxableValue: 25000000, cgst: 0, sgst: 0, igst: 4500000, cess: 0 },
 ];
 
 // Reconciliation of ITC (Table 12)
@@ -80,25 +81,84 @@ export default function Gstr9cPage() {
   const [taxableTurnoverReconData, setTaxableTurnoverReconData] = useState(initialTaxableTurnoverRecon);
   const [taxPaidData, setTaxPaidData] = useState(initialTaxPaidRecon);
   const [itcReconData, setItcReconData] = useState(initialItcRecon);
+  
+  const [auditorDetails, setAuditorDetails] = useState({
+    auditorName: "S. Sharma",
+    membershipNo: "123456",
+    firmName: "S. Sharma & Associates"
+  });
 
   const totalTurnover = turnoverReconData.reduce((acc, item) => acc + item.value, 0);
   const totalTaxableTurnover = taxableTurnoverReconData.reduce((acc, item) => acc + item.value, 0);
   const itcDifference = (itcReconData.find(i=>i.id === 'D')?.value || 0) - (itcReconData.find(i=>i.id === 'E')?.value || 0);
   
-  const handleGenerateJson = () => {
-    const reportData = {
-        financialYear: "2023-24",
-        reconciliationOfTurnover: turnoverReconData,
-        reconciliationOfTaxableTurnover: taxableTurnoverReconData,
-        reconciliationOfTaxPaid: taxPaidData,
-        reconciliationOfITC: itcReconData,
+ const handleGenerateJson = () => {
+    // --- 1. Data Mapping & Validation (Simulated) ---
+    // In a real app, pull from Firestore and run robust validation
+    const companyMetadata = {
+        gstin: "27ABCDE1234F1Z5",
+        legalName: "GSTEase Solutions Pvt Ltd",
+        tradeName: "GSTEase Solutions",
+        fy: "2023-24"
     };
-    const jsonString = JSON.stringify(reportData, null, 2);
+
+    // --- 2. Build JSON matching GSTR-9C Offline Utility Schema ---
+    const gstr9cJson = {
+      formName: "GSTR9C",
+      schemaVersion: "1.0",
+      gstin: companyMetadata.gstin,
+      fy: companyMetadata.fy,
+      legalName: companyMetadata.legalName,
+      tradeName: companyMetadata.tradeName,
+      partA: {
+        turnoverDetails: {
+          auditedTurnover: turnoverReconData.find(r => r.id === 'A')?.value || 0,
+          unbilledRevenueBegin: turnoverReconData.find(r => r.id === 'B')?.value || 0,
+          unadjAdvEnd: turnoverReconData.find(r => r.id === 'C')?.value || 0,
+          deemedSupply: turnoverReconData.find(r => r.id === 'D')?.value || 0,
+          // ... map all other turnover reconciliation fields
+          turnoverAsPerGstr9: totalTurnover
+        },
+        taxableTurnoverDetails: {
+            annualTurnoverAdj: taxableTurnoverReconData.find(r => r.id === 'A')?.value || 0,
+            exemptedTurnover: taxableTurnoverReconData.find(r => r.id === 'B')?.value || 0,
+             // ... map other taxable turnover fields
+            taxableTurnoverGstr9: totalTaxableTurnover
+        },
+        taxPaid: {
+          details: taxPaidData.map(item => ({
+            tax_rate: item.rate,
+            taxable_val: item.taxableValue,
+            igst: item.igst,
+            cgst: item.cgst,
+            sgst: item.sgst,
+            cess: item.cess
+          }))
+        },
+        itc: {
+            itcBooked: itcReconData.find(r => r.id === 'D')?.value || 0,
+            itcClaimedGstr9: itcReconData.find(r => r.id === 'E')?.value || 0,
+            unreconciledItc: itcDifference
+        }
+      },
+      partB: {
+        auditorDetails: {
+            memberName: auditorDetails.auditorName,
+            membershipNo: auditorDetails.membershipNo,
+            firmName: auditorDetails.firmName,
+            certifyDate: new Date().toISOString().split('T')[0]
+        },
+        certStatus: "N" // Y/N for certification
+      }
+    };
+
+    // --- 3. Trigger Download ---
+    const jsonString = JSON.stringify(gstr9cJson, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `GSTR9C_2023-24_${new Date().toISOString()}.json`;
+    link.download = `GSTR9C_${companyMetadata.gstin}_${companyMetadata.fy}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -107,7 +167,7 @@ export default function Gstr9cPage() {
       title: `JSON Generation Complete`,
       description: `Your GSTR-9C JSON file has been downloaded.`,
     });
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -124,7 +184,7 @@ export default function Gstr9cPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>GSTR-9C Data Entry</CardTitle>
+                <CardTitle>GSTR-9C Data Entry (FY 2024-25)</CardTitle>
                 <CardDescription>
                     Enter the values from your Audited Financials and GSTR-9.
                 </CardDescription>
@@ -133,7 +193,7 @@ export default function Gstr9cPage() {
                 <Accordion type="multiple" defaultValue={['turnover-recon']} className="w-full">
                     {/* Turnover Reconciliation */}
                     <AccordionItem value="turnover-recon">
-                        <AccordionTrigger>Part II: Reconciliation of Turnover</AccordionTrigger>
+                        <AccordionTrigger>Part II: Reconciliation of Turnover (Table 5)</AccordionTrigger>
                         <AccordionContent>
                            <Table>
                                <TableHeader>
@@ -155,7 +215,7 @@ export default function Gstr9cPage() {
                                <TableFooter>
                                     <TableRow className="font-bold bg-muted/50">
                                        <TableCell>Q</TableCell>
-                                       <TableCell>Turnover as per annual return (GSTR9)</TableCell>
+                                       <TableCell>Annual turnover as per GSTR-9</TableCell>
                                        <TableCell className="text-right font-mono">{totalTurnover.toLocaleString()}</TableCell>
                                    </TableRow>
                                </TableFooter>
@@ -165,7 +225,7 @@ export default function Gstr9cPage() {
                     
                      {/* Taxable Turnover Reconciliation */}
                     <AccordionItem value="taxable-turnover-recon">
-                        <AccordionTrigger>Part III: Reconciliation of Taxable Turnover</AccordionTrigger>
+                        <AccordionTrigger>Part III: Reconciliation of Taxable Turnover (Table 7)</AccordionTrigger>
                         <AccordionContent>
                              <Table>
                                <TableHeader>
@@ -187,7 +247,7 @@ export default function Gstr9cPage() {
                                <TableFooter>
                                     <TableRow className="font-bold bg-muted/50">
                                        <TableCell>E</TableCell>
-                                       <TableCell>Taxable Turnover as per liability declared in Annual Return (GSTR9)</TableCell>
+                                       <TableCell>Taxable Turnover as per liability declared in GSTR-9</TableCell>
                                        <TableCell className="text-right font-mono">{totalTaxableTurnover.toLocaleString()}</TableCell>
                                    </TableRow>
                                </TableFooter>
@@ -197,7 +257,7 @@ export default function Gstr9cPage() {
                     
                     {/* Tax Paid Reconciliation */}
                     <AccordionItem value="tax-paid-recon">
-                        <AccordionTrigger>Part IV: Reconciliation of Tax Paid</AccordionTrigger>
+                        <AccordionTrigger>Part IV: Reconciliation of Tax Paid (Table 9)</AccordionTrigger>
                         <AccordionContent>
                             <Table>
                                 <TableHeader>
@@ -205,7 +265,7 @@ export default function Gstr9cPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {taxPaidData.map(item => (
-                                        <TableRow key={item.rate}><TableCell>{item.rate}</TableCell><TableCell><Input className="text-right" defaultValue={item.taxableValue}/></TableCell><TableCell><Input className="text-right" defaultValue={item.cgst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.sgst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.igst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.cess}/></TableCell></TableRow>
+                                        <TableRow key={item.rate}><TableCell>{item.rate}%</TableCell><TableCell><Input className="text-right" defaultValue={item.taxableValue}/></TableCell><TableCell><Input className="text-right" defaultValue={item.cgst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.sgst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.igst}/></TableCell><TableCell><Input className="text-right" defaultValue={item.cess}/></TableCell></TableRow>
                                     ))}
                                 </TableBody>
                                 <TableFooter>
@@ -224,7 +284,7 @@ export default function Gstr9cPage() {
 
                      {/* ITC Reconciliation */}
                     <AccordionItem value="itc-recon">
-                        <AccordionTrigger>Part V: Reconciliation of Input Tax Credit (ITC)</AccordionTrigger>
+                        <AccordionTrigger>Part V: Reconciliation of Input Tax Credit (Table 12)</AccordionTrigger>
                         <AccordionContent>
                              <Table>
                                <TableHeader>
@@ -255,10 +315,32 @@ export default function Gstr9cPage() {
                            </Table>
                         </AccordionContent>
                     </AccordionItem>
-
                 </Accordion>
             </CardContent>
-             <CardFooter className="flex justify-end gap-2">
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Part-B: Certification</CardTitle>
+                <CardDescription>Enter the details of the certifying auditor.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Name of Auditor</Label>
+                        <Input value={auditorDetails.auditorName} onChange={e => setAuditorDetails(prev => ({...prev, auditorName: e.target.value}))} placeholder="e.g., S. Sharma" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Membership No.</Label>
+                        <Input value={auditorDetails.membershipNo} onChange={e => setAuditorDetails(prev => ({...prev, membershipNo: e.target.value}))} placeholder="e.g., 123456" />
+                    </div>
+                 </div>
+                  <div className="space-y-2">
+                    <Label>Name of Audit Firm</Label>
+                    <Input value={auditorDetails.firmName} onChange={e => setAuditorDetails(prev => ({...prev, firmName: e.target.value}))} placeholder="e.g., S. Sharma & Associates"/>
+                </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-2">
                 <Button variant="outline"><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
                 <Button onClick={handleGenerateJson}><FileJson className="mr-2"/> Download GSTR-9C JSON</Button>
              </CardFooter>
