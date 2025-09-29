@@ -7,7 +7,7 @@ import { FileText, Users, Handshake, Briefcase, Landmark, Shield, BookOpen, Libr
 import { Button } from "@/components/ui/button";
 
 const documentTools = [
-    { title: "Partnership Deed", description: "Create a legal document to form a business partnership.", href: "/legal-documents/partnership-deed", price: 3000, icon: Users },
+    { title: "Partnership Deed", description: "Create a legal document to form a business partnership.", href: "/legal-documents/partnership-deed", price: 3000, icon: Handshake },
     { title: "Rental Deed", description: "Draft a legal agreement for property rental.", href: "/legal-documents/rental-deed", price: 1500, icon: Landmark },
     { title: "Lease Deed", description: "Create a formal lease agreement for long-term property usage.", href: "/legal-documents/lease-deed", price: 1500, icon: Landmark },
     { title: "Self Affidavit for GST", description: "Generate a self-declaration affidavit for GST registration.", href: "/legal-documents/self-affidavit-gst", price: 0, icon: FileSignature },

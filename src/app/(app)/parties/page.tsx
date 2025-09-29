@@ -33,7 +33,7 @@ import {
   Trash2,
   Search,
   Users,
-  Store,
+  Briefcase,
   Upload,
   Download
 } from "lucide-react";
@@ -162,7 +162,7 @@ export default function PartiesPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2 max-w-sm">
             <TabsTrigger value="customers"><Users className="mr-2"/>Customers</TabsTrigger>
-            <TabsTrigger value="vendors"><Store className="mr-2"/>Vendors</TabsTrigger>
+            <TabsTrigger value="vendors"><Briefcase className="mr-2"/>Vendors</TabsTrigger>
         </TabsList>
         <div className="relative pt-4 mt-4">
             <Search className="absolute left-2.5 top-6 h-4 w-4 text-muted-foreground" />
@@ -207,4 +207,3 @@ export default function PartiesPage() {
     </div>
   );
 }
-
