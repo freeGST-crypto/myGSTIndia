@@ -73,7 +73,6 @@ const initialItcRecon = [
     { id: "E", description: "ITC claimed in Annual Return (GSTR-9)", value: 3400000 },
 ];
 
-
 export default function Gstr9cPage() {
   const { toast } = useToast();
 
@@ -81,6 +80,12 @@ export default function Gstr9cPage() {
   const [taxableTurnoverReconData, setTaxableTurnoverReconData] = useState(initialTaxableTurnoverRecon);
   const [taxPaidData, setTaxPaidData] = useState(initialTaxPaidRecon);
   const [itcReconData, setItcReconData] = useState(initialItcRecon);
+  const [unreconciledReasons, setUnreconciledReasons] = useState({
+      grossTurnover: [{ id: 1, reason: "", amount: 0 }],
+      taxableTurnover: [{ id: 1, reason: "", amount: 0 }],
+      taxPayable: [{ id: 1, reason: "", amount: 0 }],
+      itc: [{ id: 1, reason: "", amount: 0 }],
+  });
   
   const [auditorDetails, setAuditorDetails] = useState({
     auditorName: "S. Sharma",
@@ -92,9 +97,7 @@ export default function Gstr9cPage() {
   const totalTaxableTurnover = taxableTurnoverReconData.reduce((acc, item) => acc + item.value, 0);
   const itcDifference = (itcReconData.find(i=>i.id === 'D')?.value || 0) - (itcReconData.find(i=>i.id === 'E')?.value || 0);
   
- const handleGenerateJson = () => {
-    // --- 1. Data Mapping & Validation (Simulated) ---
-    // In a real app, pull from Firestore and run robust validation
+  const handleGenerateJson = () => {
     const companyMetadata = {
         gstin: "27ABCDE1234F1Z5",
         legalName: "GSTEase Solutions Pvt Ltd",
@@ -102,7 +105,6 @@ export default function Gstr9cPage() {
         fy: "2023-24"
     };
 
-    // --- 2. Build JSON matching GSTR-9C Offline Utility Schema ---
     const gstr9cJson = {
       formName: "GSTR9C",
       schemaVersion: "1.0",
@@ -116,13 +118,11 @@ export default function Gstr9cPage() {
           unbilledRevenueBegin: turnoverReconData.find(r => r.id === 'B')?.value || 0,
           unadjAdvEnd: turnoverReconData.find(r => r.id === 'C')?.value || 0,
           deemedSupply: turnoverReconData.find(r => r.id === 'D')?.value || 0,
-          // ... map all other turnover reconciliation fields
           turnoverAsPerGstr9: totalTurnover
         },
         taxableTurnoverDetails: {
             annualTurnoverAdj: taxableTurnoverReconData.find(r => r.id === 'A')?.value || 0,
             exemptedTurnover: taxableTurnoverReconData.find(r => r.id === 'B')?.value || 0,
-             // ... map other taxable turnover fields
             taxableTurnoverGstr9: totalTaxableTurnover
         },
         taxPaid: {
@@ -148,11 +148,10 @@ export default function Gstr9cPage() {
             firmName: auditorDetails.firmName,
             certifyDate: new Date().toISOString().split('T')[0]
         },
-        certStatus: "N" // Y/N for certification
+        certStatus: "N"
       }
     };
 
-    // --- 3. Trigger Download ---
     const jsonString = JSON.stringify(gstr9cJson, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -191,10 +190,10 @@ export default function Gstr9cPage() {
             </CardHeader>
             <CardContent>
                 <Accordion type="multiple" defaultValue={['turnover-recon']} className="w-full">
-                    {/* Turnover Reconciliation */}
                     <AccordionItem value="turnover-recon">
-                        <AccordionTrigger>Part II: Reconciliation of Turnover (Table 5)</AccordionTrigger>
+                        <AccordionTrigger>Part II: Reconciliation of Turnover</AccordionTrigger>
                         <AccordionContent>
+                           <h4 className="font-semibold text-md mb-2">Table 5: Reconciliation of Gross Turnover</h4>
                            <Table>
                                <TableHeader>
                                    <TableRow>
@@ -220,13 +219,19 @@ export default function Gstr9cPage() {
                                    </TableRow>
                                </TableFooter>
                            </Table>
+                           <h4 className="font-semibold text-md mb-2 mt-6">Table 6: Reasons for Un-Reconciled difference in Gross Turnover</h4>
+                           <p className="text-sm text-muted-foreground mb-2">Add reasons for any difference between Table 5Q and your audited annual turnover.</p>
+                           <Table>
+                               <TableHeader><TableRow><TableHead className="w-3/4">Reason</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                               <TableBody><TableRow><TableCell><Input placeholder="Enter reason for difference"/></TableCell><TableCell><Input type="number" className="text-right" defaultValue="0" /></TableCell></TableRow></TableBody>
+                           </Table>
                         </AccordionContent>
                     </AccordionItem>
                     
-                     {/* Taxable Turnover Reconciliation */}
                     <AccordionItem value="taxable-turnover-recon">
-                        <AccordionTrigger>Part III: Reconciliation of Taxable Turnover (Table 7)</AccordionTrigger>
+                        <AccordionTrigger>Part III: Reconciliation of Taxable Turnover</AccordionTrigger>
                         <AccordionContent>
+                            <h4 className="font-semibold text-md mb-2">Table 7: Reconciliation of Taxable Turnover</h4>
                              <Table>
                                <TableHeader>
                                    <TableRow>
@@ -252,13 +257,18 @@ export default function Gstr9cPage() {
                                    </TableRow>
                                </TableFooter>
                            </Table>
+                           <h4 className="font-semibold text-md mb-2 mt-6">Table 8: Reasons for Un-Reconciled difference in Taxable Turnover</h4>
+                           <Table>
+                               <TableHeader><TableRow><TableHead className="w-3/4">Reason</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                               <TableBody><TableRow><TableCell><Input placeholder="Enter reason for difference"/></TableCell><TableCell><Input type="number" className="text-right" defaultValue="0" /></TableCell></TableRow></TableBody>
+                           </Table>
                         </AccordionContent>
                     </AccordionItem>
                     
-                    {/* Tax Paid Reconciliation */}
                     <AccordionItem value="tax-paid-recon">
-                        <AccordionTrigger>Part IV: Reconciliation of Tax Paid (Table 9)</AccordionTrigger>
+                        <AccordionTrigger>Part IV: Reconciliation of Tax Paid</AccordionTrigger>
                         <AccordionContent>
+                            <h4 className="font-semibold text-md mb-2">Table 9: Reconciliation of rate wise liability and amount payable thereon</h4>
                             <Table>
                                 <TableHeader>
                                     <TableRow><TableHead>Rate</TableHead><TableHead className="text-right">Taxable Value (₹)</TableHead><TableHead className="text-right">CGST (₹)</TableHead><TableHead className="text-right">SGST (₹)</TableHead><TableHead className="text-right">IGST (₹)</TableHead><TableHead className="text-right">Cess (₹)</TableHead></TableRow>
@@ -279,13 +289,18 @@ export default function Gstr9cPage() {
                                      </TableRow>
                                 </TableFooter>
                             </Table>
+                             <h4 className="font-semibold text-md mb-2 mt-6">Table 10: Reasons for un-reconciled payment of tax</h4>
+                           <Table>
+                               <TableHeader><TableRow><TableHead className="w-3/4">Reason</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                               <TableBody><TableRow><TableCell><Input placeholder="Enter reason for difference"/></TableCell><TableCell><Input type="number" className="text-right" defaultValue="0" /></TableCell></TableRow></TableBody>
+                           </Table>
                         </AccordionContent>
                     </AccordionItem>
 
-                     {/* ITC Reconciliation */}
                     <AccordionItem value="itc-recon">
-                        <AccordionTrigger>Part V: Reconciliation of Input Tax Credit (Table 12)</AccordionTrigger>
+                        <AccordionTrigger>Part V: Reconciliation of Input Tax Credit (ITC)</AccordionTrigger>
                         <AccordionContent>
+                             <h4 className="font-semibold text-md mb-2">Table 12: Reconciliation of Net ITC</h4>
                              <Table>
                                <TableHeader>
                                    <TableRow>
@@ -312,6 +327,11 @@ export default function Gstr9cPage() {
                                        <TableCell className="text-right font-mono">{itcDifference.toLocaleString()}</TableCell>
                                    </TableRow>
                                </TableFooter>
+                           </Table>
+                            <h4 className="font-semibold text-md mb-2 mt-6">Table 13: Reasons for un-reconciled difference in ITC</h4>
+                           <Table>
+                               <TableHeader><TableRow><TableHead className="w-3-4">Reason</TableHead><TableHead className="text-right">Amount (₹)</TableHead></TableRow></TableHeader>
+                               <TableBody><TableRow><TableCell><Input placeholder="Enter reason for difference"/></TableCell><TableCell><Input type="number" className="text-right" defaultValue="0" /></TableCell></TableRow></TableBody>
                            </Table>
                         </AccordionContent>
                     </AccordionItem>
