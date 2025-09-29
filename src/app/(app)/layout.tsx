@@ -99,6 +99,7 @@ const allMenuItems = [
     roles: ['business', 'professional'],
     subItems: [
       { href: "/gst-filings", label: "GST Filings", icon: FileSpreadsheet, roles: ['business', 'professional'] },
+      { href: "/gst-filings/gstr-9c-reconciliation", label: "GSTR-9C Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
       { href: "/reconciliation", label: "Reconciliation", icon: GitCompareArrows, roles: ['business', 'professional'] },
     ],
   },
@@ -483,3 +484,5 @@ export default function AppLayout({
     </ClientOnly>
   );
 }
+
+    

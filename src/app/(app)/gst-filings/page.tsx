@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useContext } from "react";
@@ -120,9 +121,9 @@ export default function GstFilings() {
                 </CardHeader>
             </Card>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Link href="/gst-filings/gstr-1-wizard">
-                    <Card className="hover:bg-muted/50 cursor-pointer">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Link href="/gst-filings/gstr-1-wizard" className="block">
+                    <Card className="hover:bg-muted/50 cursor-pointer h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">GSTR-1 Wizard</CardTitle>
                             <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
@@ -130,8 +131,8 @@ export default function GstFilings() {
                         <CardContent><div className="text-2xl font-bold">Prepare GSTR-1</div><p className="text-xs text-muted-foreground">Statement of outward supplies</p></CardContent>
                     </Card>
                 </Link>
-                 <Link href="/gst-filings/gstr-3b-wizard">
-                    <Card className="hover:bg-muted/50 cursor-pointer">
+                 <Link href="/gst-filings/gstr-3b-wizard" className="block">
+                    <Card className="hover:bg-muted/50 cursor-pointer h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">GSTR-3B Wizard</CardTitle>
                             <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
@@ -139,8 +140,8 @@ export default function GstFilings() {
                         <CardContent><div className="text-2xl font-bold">Prepare GSTR-3B</div><p className="text-xs text-muted-foreground">Monthly summary return</p></CardContent>
                     </Card>
                 </Link>
-                <Link href="/gst-filings/gstr-9-wizard">
-                    <Card className="hover:bg-muted/50 cursor-pointer">
+                <Link href="/gst-filings/gstr-9-wizard" className="block">
+                    <Card className="hover:bg-muted/50 cursor-pointer h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">GSTR-9 Wizard</CardTitle>
                             <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
@@ -148,13 +149,13 @@ export default function GstFilings() {
                         <CardContent><div className="text-2xl font-bold">Prepare Annual Return</div><p className="text-xs text-muted-foreground">Consolidated annual filing</p></CardContent>
                     </Card>
                 </Link>
-                 <Link href="/reconciliation/gstr-comparison">
-                     <Card className="hover:bg-muted/50 cursor-pointer">
+                 <Link href="/gst-filings/gstr-9c-reconciliation" className="block">
+                    <Card className="hover:bg-muted/50 cursor-pointer h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Compare Filings</CardTitle>
+                            <CardTitle className="text-sm font-medium">GSTR-9C Utility</CardTitle>
                             <GitCompareArrows className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent><div className="text-2xl font-bold">AI Reconciliation</div><p className="text-xs text-muted-foreground">GSTR-1 vs 3B, Books vs 2A/2B</p></CardContent>
+                        <CardContent><div className="text-2xl font-bold">Prepare GSTR-9C</div><p className="text-xs text-muted-foreground">Reconciliation Statement</p></CardContent>
                     </Card>
                 </Link>
             </div>
@@ -232,3 +233,5 @@ export default function GstFilings() {
         </div>
     );
 }
+
+    
