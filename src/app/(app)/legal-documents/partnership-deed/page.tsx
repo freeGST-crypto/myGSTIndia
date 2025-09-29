@@ -78,6 +78,7 @@ const formSchema = z.object({
         return Math.abs(totalProfitShare - 100) < 0.01;
     }, {
         message: "Total profit share for all partners must equal 100%.",
+        path: ["root"],
     }),
   
   totalCapital: z.coerce.number().min(0, "Total capital cannot be negative."),
@@ -296,10 +297,10 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
             <p>THE DEED WAS RUNNING INTO THREE PAGES AND OUT OF THEM THE FIRST PAGE WERE PRINTED ON THE NON-JUDICIAL STAMP PAPERS IN FRANKLIN DATED {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '[Date]'} WITH NO</p>
             <div className="mt-16 text-right">
                 <p>Signature of the Partners:</p>
-                {formData.partners.map((p, i) => <p key={i} className="mt-8">{i + 1}.</p>)}
+                {formData.partners.map((p, i) => (<p key={i} className="mt-8">{i + 1}.</p>))}
             </div>
         </div>
-    )
+    );
 });
 CertificateToPrint.displayName = 'CertificateToPrint';
 
@@ -323,7 +324,7 @@ const AffidavitToPrint = React.forwardRef<HTMLDivElement, { formData: FormData; 
                 </div>
             </div>
         </div>
-    )
+    );
 });
 AffidavitToPrint.displayName = 'AffidavitToPrint';
 
