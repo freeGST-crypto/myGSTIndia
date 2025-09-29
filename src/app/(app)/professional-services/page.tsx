@@ -35,9 +35,12 @@ const serviceAreas = [
 
 export default function FindProfessionalPage() {
     const router = useRouter();
+    const [selectedService, setSelectedService] = useState<string | null>(null);
+
 
     const handleBookAppointment = (proName: string, proType: string) => {
-        router.push(`/book-appointment?proName=${encodeURIComponent(proName)}&proType=${encodeURIComponent(proType)}`);
+        const serviceQuery = selectedService ? `&service=${selectedService}` : '';
+        router.push(`/book-appointment?proName=${encodeURIComponent(proName)}&proType=${encodeURIComponent(proType)}${serviceQuery}`);
     }
 
   return (
@@ -53,7 +56,7 @@ export default function FindProfessionalPage() {
         <CardHeader>
           <CardTitle>Find an Expert</CardTitle>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="grid sm:grid-cols-2 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Type of Professional</Label>
             <Select>
@@ -77,15 +80,20 @@ export default function FindProfessionalPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Select a Service</Label>
-            <Select>
-              <SelectTrigger><SelectValue placeholder="Select a Service" /></SelectTrigger>
-              <SelectContent>
-                {serviceAreas.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        </CardContent>
+         <CardContent>
+             <h3 className="text-lg font-semibold mb-4">Or Select a Service</h3>
+            <div className="flex flex-wrap gap-2">
+                {serviceAreas.map(service => (
+                    <Button 
+                        key={service.value}
+                        variant={selectedService === service.value ? "default" : "outline"}
+                        onClick={() => setSelectedService(service.value)}
+                    >
+                        {service.label}
+                    </Button>
+                ))}
+            </div>
         </CardContent>
       </Card>
 
