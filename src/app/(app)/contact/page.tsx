@@ -62,14 +62,7 @@ export default function ContactPage() {
                 <Mail className="text-primary mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold">Email</h3>
-                  <p className="text-muted-foreground">support@zenithbooks.com</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <Phone className="text-primary mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Phone</h3>
-                  <p className="text-muted-foreground">+91 98765 43210</p>
+                  <p className="text-muted-foreground">info@zenithbooks.in</p>
                 </div>
               </div>
                <div className="flex items-center gap-4 pt-4">
