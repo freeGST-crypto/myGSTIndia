@@ -17,7 +17,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { allAccounts } from "@/lib/accounts";
 import { ShortcutGuide } from "@/components/dashboard/shortcut-guide";
 import { Button } from "@/components/ui/button";
-import { QuickInvoiceDialog } from "../billing/invoices/page";
+import { QuickInvoiceDialog } from "@/components/billing/quick-invoice-dialog";
 import { MarketingCarousel } from "@/components/dashboard/marketing-carousel";
 import { ComplianceCalendar } from "@/components/dashboard/compliance-calendar";
 

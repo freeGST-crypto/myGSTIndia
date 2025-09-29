@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, FileText, IndianRupee, AlertCircle, CheckCircle, Edit, Download, Copy, Trash2, Zap, Search, MessageSquare, Printer, FileSpreadsheet } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, isPast, subDays } from 'date-fns';
 import { AccountingContext, type JournalVoucher } from "@/context/accounting-context";
