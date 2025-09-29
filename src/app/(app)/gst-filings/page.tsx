@@ -55,10 +55,10 @@ export default function GstFilings() {
     const [month, setMonth] = useState(new Date().getMonth().toString().padStart(2, '0'));
 
     const { gstr1Summary, gstr3bSummary, netGstPayable } = useMemo(() => {
-        const salesInvoices = journalVouchers.filter(v => v.id.startsWith("INV-"));
-        const creditNotes = journalVouchers.filter(v => v.id.startsWith("CN-"));
-        const purchaseBills = journalVouchers.filter(v => v.id.startsWith("BILL-"));
-        const debitNotes = journalVouchers.filter(v => v.id.startsWith("DN-"));
+        const salesInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("INV-"));
+        const creditNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("CN-"));
+        const purchaseBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("BILL-"));
+        const debitNotes = journalVouchers.filter(v => v && v.id && v.id.startsWith("DN-"));
 
         const taxableSales = salesInvoices.reduce((sum, v) => sum + (parseFloat(v.lines.find(l => l.account === '4010')?.credit || '0')), 0);
         const salesReturns = creditNotes.reduce((sum, v) => sum + (parseFloat(v.lines.find(l => l.account === '4010')?.debit || '0')), 0);

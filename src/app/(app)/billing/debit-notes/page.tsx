@@ -63,9 +63,9 @@ export default function DebitNotesPage() {
   const filteredDebitNotes = useMemo(() => {
     if (!searchTerm) return debitNotes;
     return debitNotes.filter(note =>
-        note.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.originalPurchase.toLowerCase().includes(searchTerm.toLowerCase())
+        note!.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note!.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note!.originalPurchase.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [debitNotes, searchTerm]);
 
@@ -129,13 +129,13 @@ export default function DebitNotesPage() {
             </TableHeader>
             <TableBody>
               {filteredDebitNotes.map((note) => (
-                <TableRow key={note.id}>
-                  <TableCell className="font-medium">{note.id}</TableCell>
-                  <TableCell>{note.vendor}</TableCell>
-                  <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
-                  <TableCell>{note.originalPurchase}</TableCell>
-                  <TableCell>{getStatusBadge(note.status)}</TableCell>
-                  <TableCell className="text-right">₹{note.amount.toFixed(2)}</TableCell>
+                <TableRow key={note!.id}>
+                  <TableCell className="font-medium">{note!.id}</TableCell>
+                  <TableCell>{note!.vendor}</TableCell>
+                  <TableCell>{format(new Date(note!.date), "dd MMM, yyyy")}</TableCell>
+                  <TableCell>{note!.originalPurchase}</TableCell>
+                  <TableCell>{getStatusBadge(note!.status)}</TableCell>
+                  <TableCell className="text-right">₹{note!.amount.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

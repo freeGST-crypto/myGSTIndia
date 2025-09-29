@@ -63,9 +63,9 @@ export default function CreditNotesPage() {
   const filteredCreditNotes = useMemo(() => {
     if (!searchTerm) return creditNotes;
     return creditNotes.filter(note =>
-        note.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.originalInvoice.toLowerCase().includes(searchTerm.toLowerCase())
+        note!.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note!.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        note!.originalInvoice.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [creditNotes, searchTerm]);
 
@@ -129,13 +129,13 @@ export default function CreditNotesPage() {
             </TableHeader>
             <TableBody>
               {filteredCreditNotes.map((note) => (
-                <TableRow key={note.id}>
-                  <TableCell className="font-medium">{note.id}</TableCell>
-                  <TableCell>{note.customer}</TableCell>
-                  <TableCell>{format(new Date(note.date), "dd MMM, yyyy")}</TableCell>
-                  <TableCell>{note.originalInvoice}</TableCell>
-                  <TableCell>{getStatusBadge(note.status)}</TableCell>
-                  <TableCell className="text-right">₹{note.amount.toFixed(2)}</TableCell>
+                <TableRow key={note!.id}>
+                  <TableCell className="font-medium">{note!.id}</TableCell>
+                  <TableCell>{note!.customer}</TableCell>
+                  <TableCell>{format(new Date(note!.date), "dd MMM, yyyy")}</TableCell>
+                  <TableCell>{note!.originalInvoice}</TableCell>
+                  <TableCell>{getStatusBadge(note!.status)}</TableCell>
+                  <TableCell className="text-right">₹{note!.amount.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
