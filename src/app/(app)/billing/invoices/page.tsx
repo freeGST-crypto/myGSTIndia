@@ -285,10 +285,12 @@ export default function InvoicesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsQuickInvoiceOpen(true)}>
-                <Zap className="mr-2"/>
-                Quick Invoice
-            </Button>
+            <Link href="/billing/invoices/rapid" passHref>
+                <Button variant="outline">
+                    <Zap className="mr-2"/>
+                    Rapid Entry
+                </Button>
+            </Link>
             <Link href="/billing/invoices/new" passHref>
             <Button>
                 <PlusCircle className="mr-2"/>
