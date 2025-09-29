@@ -9,18 +9,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Briefcase, Star, Users, Award } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { servicePricing } from '@/lib/on-demand-pricing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { professionals } from '@/lib/professionals';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
-const allServices = Object.values(servicePricing).flat();
+const services = [
+    "GST Registration", "Start-Up Registration", "PVT Incorporation", "OPC Incorporation",
+    "LLP Registration", "Partnership Registration", "ITR Filing", "Society Registration",
+    "GSTR Filings", "GST Notices", "Income Tax Notices", "MCA Compliance",
+    "MCA Monthly Retainership", "Virtual CFO", "Book Keeping", "Payroll Accounting"
+];
 
 export default function FindProfessionalPage() {
     const router = useRouter();
+    const [selectedService, setSelectedService] = useState<string | null>(null);
 
     const handleBookAppointment = (proName: string, proType: string) => {
-        router.push(`/book-appointment?proName=${encodeURIComponent(proName)}&proType=${encodeURIComponent(proType)}`);
+        const serviceQuery = selectedService ? `&service=${encodeURIComponent(selectedService)}` : '';
+        router.push(`/book-appointment?proName=${encodeURIComponent(proName)}&proType=${encodeURIComponent(proType)}${serviceQuery}`);
     }
 
   return (
@@ -65,22 +72,24 @@ export default function FindProfessionalPage() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="pro-service">Select a Service</Label>
-                <Select>
-                    <SelectTrigger id="pro-service">
-                        <SelectValue placeholder="e.g., GST Registration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {allServices.map(service => (
-                            <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
         </CardContent>
       </Card>
       
+        <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Or Select a Service</h2>
+            <div className="flex flex-wrap gap-2">
+                {services.map(service => (
+                    <Button 
+                        key={service} 
+                        variant={selectedService === service ? "default" : "outline"}
+                        onClick={() => setSelectedService(service === selectedService ? null : service)}
+                    >
+                        {service}
+                    </Button>
+                ))}
+            </div>
+        </div>
+
         <div>
             <h2 className="text-2xl font-semibold mb-4">4 Professionals matching your search</h2>
         </div>
