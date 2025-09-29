@@ -16,3 +16,4 @@ export const tdsSections: TdsSection[] = [
     { section: "194J", description: "Fees for Professional or Technical Services", rate: 10 },
     { section: "194Q", description: "Purchase of goods", rate: 0.1 },
 ];
+

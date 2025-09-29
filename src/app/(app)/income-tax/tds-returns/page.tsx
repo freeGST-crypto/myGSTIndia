@@ -26,8 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileDown } from "lucide-react";
+import { FileDown, Library } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { tdsSections } from "@/lib/tds-rates";
 
 type ReportRow = {
     deductee: string;
@@ -114,7 +115,7 @@ export default function TdsReturns() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">TDS &amp; TCS Returns</h1>
+        <h1 className="text-3xl font-bold">TDS &amp; TCS Reports</h1>
         <p className="text-muted-foreground">
           Generate reports for TDS deducted on payments and TCS collected on sales.
         </p>
@@ -236,6 +237,37 @@ export default function TdsReturns() {
           </Table>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Library /> TDS/TCS Rate Chart</CardTitle>
+          <CardDescription>A quick reference for common TDS sections and their rates.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Section</TableHead>
+                        <TableHead>Nature of Payment</TableHead>
+                        <TableHead className="text-right">TDS Rate (%)</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {tdsSections.map(section => (
+                        <TableRow key={section.section + section.description}>
+                            <TableCell className="font-mono">{section.section}</TableCell>
+                            <TableCell>{section.description}</TableCell>
+                            <TableCell className="text-right font-mono">{section.rate > 0 ? `${section.rate}%` : "Slab Rates"}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+        <CardFooter>
+            <p className="text-xs text-muted-foreground">Disclaimer: This chart is for informational purposes only. Please consult the Income Tax Act for the latest rates, thresholds, and conditions.</p>
+        </CardFooter>
+      </Card>
+
     </div>
   );
 }
