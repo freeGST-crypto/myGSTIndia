@@ -174,6 +174,7 @@ export default function RentalReceiptsPage() {
                  <ShareButtons 
                     contentRef={printRef}
                     fileName={`Rent_Receipt_${formData.tenantName}_${formData.rentPeriod}`}
+                    whatsappMessage={whatsappMessage}
                 />
             </CardFooter>
         </Card>

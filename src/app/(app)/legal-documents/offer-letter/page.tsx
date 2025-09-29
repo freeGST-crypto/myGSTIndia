@@ -13,7 +13,6 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "
 import { ArrowLeft, Printer } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
 import { ShareButtons } from "@/components/documents/share-buttons";
 

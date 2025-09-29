@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useReactToPrint } from "react-to-print";
 import { cn } from "@/lib/utils";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
@@ -59,11 +60,6 @@ export default function AppointmentLetterPage() {
     });
   }, [form]);
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Appointment_Letter_${form.getValues("employeeName")}`,
-    onAfterPrint: () => toast({ title: "Print Complete" }),
-  });
 
   const processStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
@@ -199,7 +195,10 @@ export default function AppointmentLetterPage() {
                 </CardContent>
                 <CardFooter className="justify-between mt-6">
                   <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                  <Button onClick={handlePrint}><Printer className="mr-2"/> Print / Save as PDF</Button>
+                  <ShareButtons 
+                    contentRef={printRef}
+                    fileName={`Appointment_Letter_${formData.employeeName}`}
+                  />
                 </CardFooter>
             </Card>
         );
