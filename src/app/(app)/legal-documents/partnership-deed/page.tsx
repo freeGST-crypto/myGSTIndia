@@ -36,12 +36,12 @@ import {
   Loader2,
   Save,
   Printer,
+  FileDown
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { suggestClausesAction } from "./actions";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShareButtons } from "@/components/documents/share-buttons";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -295,7 +295,7 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
     return (
         <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
             <h3 className="text-center font-bold">CERTIFICATE</h3>
-            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress?.split(',').pop()?.trim() || '[City]'}. DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
+            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress?.split(',').pop()?.trim() || '[City]'}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
             <p>THE DEED WAS RUNNING INTO THREE PAGES AND OUT OF THEM THE FIRST PAGE WERE PRINTED ON THE NON-JUDICIAL STAMP PAPERS IN FRANKLIN DATED {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '[Date]'} WITH NO</p>
             <div className="mt-16 text-right">
                 <p>Signature of the Partners:</p>
@@ -421,7 +421,7 @@ export default function PartnershipDeedPage() {
   }, [form, deponentId]);
 
   const formData = form.watch();
-
+  
   const handleDownloadPdf = (contentRef: React.RefObject<HTMLDivElement>, fileName: string) => {
     const element = contentRef.current;
     if (!element) {
@@ -773,17 +773,15 @@ export default function PartnershipDeedPage() {
                         <CardTitle>Final Step: Preview & Download Documents</CardTitle>
                         <CardDescription>Review and download the generated Partnership Deed and all supporting annexures required for registration.</CardDescription>
                     </CardHeader>
+                     <CardFooter className="justify-start">
+                        <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back to Edit</Button>
+                    </CardFooter>
                 </Card>
 
                 <Card>
                     <CardHeader><CardTitle>Main Document: Partnership Deed</CardTitle></CardHeader>
-                    <CardContent>
-                        <PartnershipDeedToPrint ref={printRefDeed} formData={formData} />
-                    </CardContent>
-                    <CardFooter className="justify-between">
-                        <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back to Edit</Button>
-                        <Button onClick={() => handleDownloadPdf(printRefDeed, `Partnership_Deed_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button>
-                    </CardFooter>
+                    <CardContent><PartnershipDeedToPrint ref={printRefDeed} formData={formData} /></CardContent>
+                    <CardFooter><Button onClick={() => handleDownloadPdf(printRefDeed, `Partnership_Deed_${formData.firmName}`)}><Printer className="mr-2"/> Download PDF</Button></CardFooter>
                 </Card>
 
                 <Card>
@@ -854,5 +852,3 @@ export default function PartnershipDeedPage() {
     </div>
   );
 }
-
-    
