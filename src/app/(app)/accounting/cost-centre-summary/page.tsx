@@ -134,5 +134,3 @@ export default function CostCentreSummaryPage() {
     </div>
   );
 }
-
-    
