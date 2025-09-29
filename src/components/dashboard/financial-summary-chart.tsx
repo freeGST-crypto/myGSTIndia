@@ -44,13 +44,6 @@ export function FinancialSummaryChart() {
     const data: { [key: string]: { sales: number; purchases: number; month: string } } = {};
     const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
 
-    // Get the UTC timestamp for the start of the 6-month period
-    const sixMonthsAgoTimestamp = Date.UTC(
-      sixMonthsAgo.getFullYear(),
-      sixMonthsAgo.getMonth(),
-      1
-    );
-
     // Initialize last 6 months
     for (let i = 0; i < 6; i++) {
         const monthDate = addMonths(sixMonthsAgo, i);
@@ -61,28 +54,37 @@ export function FinancialSummaryChart() {
 
     journalVouchers.forEach(voucher => {
         if (!voucher || !voucher.id || !voucher.date) return;
+        
         const [year, month, day] = voucher.date.split('-').map(Number);
+        if(isNaN(year) || isNaN(month) || isNaN(day)) return;
+
+        const voucherDate = new Date(year, month - 1, day);
+        if (voucherDate < sixMonthsAgo) return;
         
-        // Use Date.UTC to ensure timezone-consistent comparison
-        const voucherTimestamp = Date.UTC(year, month - 1, day);
+        const yearMonth = format(voucherDate, 'yyyy-MM');
         
-        if (voucherTimestamp >= sixMonthsAgoTimestamp) {
-            const yearMonth = format(new Date(year, month-1, day), 'yyyy-MM');
-            
-            if (data[yearMonth]) {
-                if (voucher.id.startsWith("INV-")) {
-                    const salesLine = voucher.lines.find(l => l.account === '4010');
-                    if (salesLine) data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
-                } else if (voucher.id.startsWith("BILL-")) {
-                    const purchaseLine = voucher.lines.find(l => l.account === '5050');
-                    if (purchaseLine) data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
-                } else if (voucher.id.startsWith("CN-")) { // Credit Note (Sales Return)
-                    const salesReturnLine = voucher.lines.find(l => l.account === '4010');
-                    if(salesReturnLine) data[yearMonth].sales -= parseFloat(salesReturnLine.debit) || 0;
-                } else if (voucher.id.startsWith("DN-")) { // Debit Note (Purchase Return)
-                    const purchaseReturnLine = voucher.lines.find(l => l.account === '5050');
-                    if(purchaseReturnLine) data[yearMonth].purchases -= parseFloat(purchaseReturnLine.credit) || 0;
-                }
+        if (data[yearMonth]) {
+            const isInvoice = voucher.id.startsWith("INV-");
+            const isBill = voucher.id.startsWith("BILL-");
+            const isCreditNote = voucher.id.startsWith("CN-");
+            const isDebitNote = voucher.id.startsWith("DN-");
+
+            if (isInvoice) {
+                // For invoices, credit to sales (4010) is the taxable value
+                const salesLine = voucher.lines.find(l => l.account === '4010');
+                if (salesLine) data[yearMonth].sales += parseFloat(salesLine.credit) || 0;
+            } else if (isCreditNote) {
+                // For credit notes, debit to sales (4010) reduces sales
+                const salesReturnLine = voucher.lines.find(l => l.account === '4010');
+                if(salesReturnLine) data[yearMonth].sales -= parseFloat(salesReturnLine.debit) || 0;
+            } else if (isBill) {
+                // For bills, debit to purchases (5050) is the taxable value
+                const purchaseLine = voucher.lines.find(l => l.account === '5050');
+                if (purchaseLine) data[yearMonth].purchases += parseFloat(purchaseLine.debit) || 0;
+            } else if (isDebitNote) {
+                 // For debit notes, credit to purchases (5050) reduces purchases
+                const purchaseReturnLine = voucher.lines.find(l => l.account === '5050');
+                if(purchaseReturnLine) data[yearMonth].purchases -= parseFloat(purchaseReturnLine.credit) || 0;
             }
         }
     });
