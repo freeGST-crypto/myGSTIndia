@@ -64,6 +64,10 @@ export default function FindProfessionalPage() {
               <SelectContent>
                 <SelectItem value="all">All Professionals</SelectItem>
                 <SelectItem value="ca">Chartered Accountant</SelectItem>
+                <SelectItem value="accountant">Accountant</SelectItem>
+                <SelectItem value="cost_accountant">Cost Accountant</SelectItem>
+                <SelectItem value="auditor">Auditor</SelectItem>
+                <SelectItem value="gst_practitioner">GST Tax Practitioner</SelectItem>
                 <SelectItem value="advocate">Advocate</SelectItem>
                 <SelectItem value="cs">Company Secretary</SelectItem>
               </SelectContent>
