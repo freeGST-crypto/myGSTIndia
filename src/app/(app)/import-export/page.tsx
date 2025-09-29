@@ -9,11 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Upload, Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { Upload, Download, FileSpreadsheet, FileText, Loader2, File, Database, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 const exportOptions = [
     { title: "Day Book", description: "All transactional vouchers.", type: "xlsx" },
@@ -30,7 +33,7 @@ export default function ImportExportPage() {
     const [isImporting, setIsImporting] = useState(false);
     const { toast } = useToast();
 
-    const handleTallyImport = async () => {
+    const handleTallyImport = async (importType: 'vouchers' | 'masters') => {
         if (!tallyFile) {
             toast({
                 variant: "destructive",
@@ -42,7 +45,7 @@ export default function ImportExportPage() {
 
         setIsImporting(true);
         toast({
-            title: "Importing Tally Data...",
+            title: `Importing Tally ${importType}...`,
             description: "This may take a few moments.",
         });
 
@@ -50,6 +53,7 @@ export default function ImportExportPage() {
         formData.append('file', tallyFile);
 
         try {
+            // In a real app, you might have different endpoints or pass the importType
             const response = await fetch('/api/import/tally', {
                 method: 'POST',
                 body: formData,
@@ -91,26 +95,64 @@ export default function ImportExportPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Upload/> Import Data</CardTitle>
-                        <CardDescription>Import data from other software like Tally.</CardDescription>
+                        <CardDescription>Import data from other software and sources.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="p-4 border rounded-lg space-y-4">
-                            <h3 className="font-semibold">Import from Tally</h3>
-                            <p className="text-sm text-muted-foreground">Upload your Day Book exported from Tally in XML format. We'll automatically create the corresponding accounting vouchers.</p>
-                            <div className="space-y-2">
-                                <Label htmlFor="tally-file">Tally Day Book (.xml)</Label>
-                                <Input 
-                                    id="tally-file" 
-                                    type="file" 
-                                    accept=".xml" 
-                                    onChange={(e) => setTallyFile(e.target.files?.[0] || null)}
-                                />
-                            </div>
-                            <Button onClick={handleTallyImport} disabled={isImporting || !tallyFile}>
-                                {isImporting ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2" />}
-                                {isImporting ? "Importing..." : "Import Vouchers"}
-                            </Button>
-                        </div>
+                        <Tabs defaultValue="tally">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="tally">Tally</TabsTrigger>
+                                <TabsTrigger value="gst">GST Portal</TabsTrigger>
+                                <TabsTrigger value="it">Income Tax</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="tally" className="pt-4">
+                                <div className="space-y-6">
+                                    <div className="p-4 border rounded-lg space-y-4">
+                                        <h3 className="font-semibold flex items-center gap-2"><File className="text-primary"/> Vouchers (Day Book)</h3>
+                                        <p className="text-sm text-muted-foreground">Upload your Day Book exported from Tally in XML format. We'll automatically create the corresponding accounting vouchers.</p>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="tally-file-vouchers">Tally Day Book (.xml)</Label>
+                                            <Input id="tally-file-vouchers" type="file" accept=".xml" onChange={(e) => setTallyFile(e.target.files?.[0] || null)} />
+                                        </div>
+                                        <Button onClick={() => handleTallyImport('vouchers')} disabled={isImporting || !tallyFile}>
+                                            {isImporting ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2" />}
+                                            Import Vouchers
+                                        </Button>
+                                    </div>
+                                     <div className="p-4 border rounded-lg space-y-4">
+                                        <h3 className="font-semibold flex items-center gap-2"><Users className="text-primary"/> Masters (Ledgers & Items)</h3>
+                                        <p className="text-sm text-muted-foreground">Upload your Masters export from Tally in XML format to import customers, vendors, and stock items.</p>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="tally-file-masters">Tally Masters (.xml)</Label>
+                                            <Input id="tally-file-masters" type="file" accept=".xml" onChange={(e) => setTallyFile(e.target.files?.[0] || null)} />
+                                        </div>
+                                        <Button onClick={() => handleTallyImport('masters')} disabled={isImporting || !tallyFile}>
+                                            {isImporting ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2" />}
+                                            Import Masters
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                             <TabsContent value="gst" className="pt-4">
+                                <div className="p-4 border rounded-lg space-y-4">
+                                    <h3 className="font-semibold flex items-center gap-2"><Database className="text-primary"/> GST Data</h3>
+                                    <p className="text-sm text-muted-foreground">Import data from the GST Portal to use in reconciliation tools.</p>
+                                     <Alert>
+                                        <AlertTitle>Coming Soon!</AlertTitle>
+                                        <AlertDescription>Direct import from the GST portal is under development. For now, please download files from the portal and upload them in the respective reconciliation sections.</AlertDescription>
+                                    </Alert>
+                                </div>
+                            </TabsContent>
+                             <TabsContent value="it" className="pt-4">
+                               <div className="p-4 border rounded-lg space-y-4">
+                                    <h3 className="font-semibold flex items-center gap-2"><Database className="text-primary"/> Income Tax Data</h3>
+                                    <p className="text-sm text-muted-foreground">Import your Form 26AS or AIS for easier tax computation and reconciliation.</p>
+                                    <Alert>
+                                        <AlertTitle>Coming Soon!</AlertTitle>
+                                        <AlertDescription>Functionality to import data from the Income Tax portal is under development.</AlertDescription>
+                                    </Alert>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                 </Card>
                  <Card>
