@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Building, Gem, Goal, Users, BrainCircuit, Rocket, ShieldCheck } from "lucide-react";
+import { Building, Gem, Goal, Users, BrainCircuit, Rocket, ShieldCheck, Eye } from "lucide-react";
 import Image from 'next/image';
 
 export default function AboutPage() {
@@ -35,6 +35,20 @@ export default function AboutPage() {
                 <CardContent>
                     <p className="text-lg text-muted-foreground leading-relaxed">
                         Our mission is to simplify financial compliance and management for businesses and professionals across India. We believe that by leveraging technology and automation, we can empower our users to focus on what they do best: growing their business. ZenithBooks is designed to be an intuitive, all-in-one platform that makes complex tasks like GST filing, accounting, and legal documentation effortless and accurate.
+                    </p>
+                </CardContent>
+            </Card>
+            
+            <Card className="shadow-lg bg-primary/5 border-primary/20">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-3xl">
+                        <Eye className="size-8 text-primary" />
+                        Our Vision
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                        Inspired by the national call to build world-class Indian firms capable of standing alongside global giants, our vision is to create a unified financial ecosystem for India. We believe the future isn't about replacing the 'Big Four', but about empowering a million smaller firms to operate with the same level of efficiency and excellence. ZenithBooks is our contribution to this dream—a platform that equips local professionals across the nation with cutting-edge tools, unifying compliance and elevating Indian enterprise to the world stage. We are not just building software; we are building a testament to Indian innovation and self-reliance.
                     </p>
                 </CardContent>
             </Card>
