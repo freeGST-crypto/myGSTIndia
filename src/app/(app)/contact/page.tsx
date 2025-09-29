@@ -55,14 +55,14 @@ export default function ContactPage() {
                 <MapPin className="text-primary mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold">Address</h3>
-                  <p className="text-muted-foreground">GSTEase Solutions Pvt. Ltd.<br/>123 Business Avenue, Commerce City,<br/>Maharashtra - 400001, India</p>
+                  <p className="text-muted-foreground">ZenithBooks Solutions Pvt. Ltd.<br/>123 Business Avenue, Commerce City,<br/>Maharashtra - 400001, India</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <Mail className="text-primary mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold">Email</h3>
-                  <p className="text-muted-foreground">support@gstease.com</p>
+                  <p className="text-muted-foreground">support@zenithbooks.com</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">

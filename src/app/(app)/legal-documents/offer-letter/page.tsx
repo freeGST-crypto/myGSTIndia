@@ -41,7 +41,7 @@ export default function OfferLetterPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      companyName: "GSTEase Solutions Pvt. Ltd.",
+      companyName: "ZenithBooks Solutions Pvt. Ltd.",
       companyAddress: "123 Business Avenue, Commerce City, Maharashtra - 400001",
       offerDate: "",
       acceptanceDeadline: "",
@@ -116,13 +116,12 @@ export default function OfferLetterPage() {
           </CardContent>
         </Card>
         
-        <div className="space-y-4">
-            <Card className="sticky top-20">
-                <CardHeader>
-                    <CardTitle>Live Preview</CardTitle>
-                    <CardDescription>The receipt will update as you type.</CardDescription>
-                </CardHeader>
-                <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg prose prose-sm dark:prose-invert max-w-none">
+        <Card className="sticky top-20">
+            <CardHeader>
+                <CardTitle>Live Preview</CardTitle>
+                <CardDescription>The receipt will update as you type.</CardDescription>
+            </CardHeader>
+            <CardContent ref={printRef} className="p-8 border-dashed border-2 rounded-lg prose prose-sm dark:prose-invert max-w-none">
                     <div className="text-center">
                         <h4 className="font-bold">{formData.companyName || '[Company Name]'}</h4>
                         <p className="text-xs">{formData.companyAddress || '[Company Address]'}</p>
@@ -161,15 +160,14 @@ export default function OfferLetterPage() {
                         <p>{formData.signerTitle || '[Signer Title]'}</p>
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <ShareButtons 
-                        contentRef={printRef}
-                        fileName={`Offer_Letter_${formData.candidateName}`}
-                        whatsappMessage={whatsappMessage}
-                    />
-                </CardFooter>
-            </Card>
-        </div>
+            <CardFooter>
+                <ShareButtons 
+                    contentRef={printRef}
+                    fileName={`Offer_Letter_${formData.candidateName}`}
+                    whatsappMessage={whatsappMessage}
+                />
+            </CardFooter>
+        </Card>
       </div>
     </div>
   );
