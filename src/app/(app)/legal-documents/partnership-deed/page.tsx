@@ -552,6 +552,7 @@ export default function PartnershipDeedPage() {
             <CardHeader><CardTitle>Step 2: Partner & Contribution Details</CardTitle><CardDescription>Add details for each partner and their contribution.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
               <FormField control={form.control} name="totalCapital" render={({ field }) => (<FormItem><FormLabel>Total Capital Contribution of Firm (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              {form.formState.errors.totalCapital && <p className="text-sm font-medium text-destructive">{form.formState.errors.totalCapital.message}</p>}
               <Separator />
               {fields.map((field, index) => (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
@@ -578,7 +579,7 @@ export default function PartnershipDeedPage() {
               ))}
               <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isDesignated: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-              {totalProfitShare !== 100 && (
+               {totalProfitShare !== 100 && !form.formState.errors.partners?.root && (
                     <div className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare.toFixed(2)}%</div>
                 )}
             </CardContent>
