@@ -139,7 +139,7 @@ export function RapidEntryForm({
                             </FormItem>
                         )}/>
                          <FormField control={form.control} name="amount" render={({ field }) => (
-                            <FormItem><FormLabel>Taxable Amount (₹)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormMessage /></FormItem>
+                            <FormItem><FormLabel>Taxable Amount (₹)</FormLabel><FormControl><Input type="number" placeholder="e.g., 50000" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
                      <div className="flex justify-end">
@@ -164,5 +164,5 @@ export function RapidEntryForm({
         </form>
       </Form>
     </div>
-  );
+  )
 }
