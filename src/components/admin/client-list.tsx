@@ -134,7 +134,7 @@ export function ClientList({ onSwitchWorkspace, activeClientId }: ClientListProp
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow className={!activeClientId ? "bg-muted/80" : ""}>
+                    <TableRow className={!activeClientId ? "bg-primary/10" : ""}>
                         <TableCell className="font-medium">My Workspace</TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground">Your own business data</TableCell>
                         <TableCell className="text-right">
@@ -150,7 +150,7 @@ export function ClientList({ onSwitchWorkspace, activeClientId }: ClientListProp
                         </TableCell>
                     </TableRow>
                     {clients.map((client) => (
-                    <TableRow key={client.id} className={activeClientId === client.id ? "bg-muted/80" : ""}>
+                    <TableRow key={client.id} className={activeClientId === client.id ? "bg-primary/10" : ""}>
                         <TableCell className="font-medium">{client.name}</TableCell>
                         <TableCell className="font-mono text-xs">
                         {client.gstin}
@@ -162,7 +162,7 @@ export function ClientList({ onSwitchWorkspace, activeClientId }: ClientListProp
                             onClick={() => handleSwitchWorkspace(client)}
                         >
                             <ArrowRightLeft className="mr-2" />
-                             {activeClientId === client.id ? "Active" : "Switch"}
+                             {activeClientId === client.id ? "Viewing" : "Manage"}
                         </Button>
                         </TableCell>
                     </TableRow>
