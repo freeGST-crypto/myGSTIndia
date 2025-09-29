@@ -112,44 +112,44 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
     const commencementDateFormatted = formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : "[Date]";
 
     return (
-        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+        <div ref={ref}>
             {/* Form No. 1 */}
-            <div className="print-section text-center space-y-2 mb-12">
+            <div className="print-section text-center space-y-2 mb-12 prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                 <h4 className="font-bold">Form No. 1</h4>
                 <p className="text-xs">Rule 4 (II)</p>
                 <h5 className="font-bold">THE INDIAN PARTNERSHIP ACT, 1932</h5>
                 <h5 className="font-bold">Application for Registration of Firm by the Name</h5>
-            </div>
-            <p>Presented or forward to the registrar of Firm and for filing by M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</p>
-            <p>We, the undersigned being the partners of the *Firm M/s {(formData.firmName || "[Firm Name]").toUpperCase()} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
-            <table className="w-full my-4">
-                <tbody>
-                    <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</td></tr>
-                    <tr className="h-4"></tr>
-                    <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress || "[Firm Address]"} <br/> (b) NIL</td></tr>
-                </tbody>
-            </table>
-            <table className="w-full my-4 border-collapse border border-black">
-                <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
-                <tbody>
-                    {formData.partners.map((p, i) => (
-                        <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
-                    ))}
-                </tbody>
-            </table>
-            <div className="flex justify-between mt-16">
-                <div>
-                    <p>Place:</p>
-                    <p>Date:</p>
-                </div>
-                <div>
-                    <p>Signatures</p>
-                    {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
+                <p>Presented or forward to the registrar of Firm and for filing by M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</p>
+                <p>We, the undersigned being the partners of the *Firm M/s {(formData.firmName || "[Firm Name]").toUpperCase()} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
+                <table className="w-full my-4">
+                    <tbody>
+                        <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</td></tr>
+                        <tr className="h-4"></tr>
+                        <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress || "[Firm Address]"} <br/> (b) NIL</td></tr>
+                    </tbody>
+                </table>
+                <table className="w-full my-4 border-collapse border border-black">
+                    <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
+                    <tbody>
+                        {formData.partners.map((p, i) => (
+                            <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div className="flex justify-between mt-16">
+                    <div>
+                        <p>Place:</p>
+                        <p>Date:</p>
+                    </div>
+                    <div>
+                        <p>Signatures</p>
+                        {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
+                    </div>
                 </div>
             </div>
 
             {/* Declaration Page */}
-            <div className="print-section break-before-page mt-16 space-y-8">
+            <div className="print-section break-before-page mt-16 space-y-8 prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                 <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
                 {formData.partners.map((p, i) => (
                     <div key={i}>
@@ -161,7 +161,7 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
             </div>
 
             {/* Photo & Fingerprints Page */}
-            <div className="print-section break-before-page">
+            <div className="print-section break-before-page prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                 <h5 className="font-bold text-center">PROFORMA</h5>
                 <p className="text-xs text-center">PHOTOGRAPHS AND FINGERPRINTS AS PER SECTION 32A OF REGISTRATION ACT,1908.</p>
                  <table className="w-full my-4 border-collapse border border-black">
@@ -189,7 +189,7 @@ const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: Form
             </div>
 
             {/* Main Deed */}
-            <div className="print-section break-before-page">
+            <div className="print-section break-before-page prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
                 <h2 className="text-center font-bold">PARTNERSHIP DEED</h2>
                 <h3 className="text-center font-bold">{(formData.firmName || "[Firm Name]").toUpperCase()}</h3>
                 
@@ -283,7 +283,7 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
     return (
         <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
             <h3 className="text-center font-bold">CERTIFICATE</h3>
-            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress.split(',').pop()?.trim()}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
+            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress?.split(',').pop()?.trim() || '[City]}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
             <p>THE DEED WAS RUNNING INTO THREE PAGES AND OUT OF THEM THE FIRST PAGE WERE PRINTED ON THE NON-JUDICIAL STAMP PAPERS IN FRANKLIN DATED {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '[Date]'} WITH NO</p>
             <div className="mt-16 text-right">
                 <p>Signature of the Partners:</p>
@@ -347,8 +347,8 @@ export default function PartnershipDeedPage() {
       commencementDate: new Date().toISOString().split("T")[0],
       partnershipDuration: "at-will",
       partners: [
-        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 50000, profitShare: 50, isWorkingPartner: true, isDesignated: true },
-        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 50000, profitShare: 50, isWorkingPartner: false, isDesignated: true },
+        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 50000, profitShare: 50, isDesignated: true },
+        { name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 50000, profitShare: 50, isDesignated: true },
       ],
       totalCapital: 100000,
       interestOnCapital: 12,
@@ -528,7 +528,7 @@ export default function PartnershipDeedPage() {
               <FormField control={form.control} name="firmName" render={({ field }) => ( <FormItem><FormLabel>Firm Name</FormLabel><FormControl><Input placeholder="e.g., Acme Innovations" {...field} /></FormControl><FormMessage /></FormItem> )}/>
               <FormField control={form.control} name="firmAddress" render={({ field }) => ( <FormItem><FormLabel>Principal Place of Business</FormLabel><FormControl><Textarea placeholder="Full registered address of the firm" {...field} /></FormControl><FormMessage /></FormItem> )}/>
               <FormField control={form.control} name="businessActivity" render={({ field }) => ( <FormItem><FormLabel>Nature of Business</FormLabel><FormControl><Textarea placeholder="e.g., Trading of textiles, providing software consultancy services, etc." {...field} /></FormControl><FormMessage /></FormItem> )}/>
-              <div className="grid md:grid-cols-2 gap-4">
+               <div className="grid md:grid-cols-2 gap-4">
                   <FormField control={form.control} name="commencementDate" render={({ field }) => ( <FormItem><FormLabel>Date of Commencement</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                    <FormField control={form.control} name="partnershipDuration" render={({ field }) => (
                     <FormItem><FormLabel>Duration of Partnership</FormLabel>
@@ -572,13 +572,13 @@ export default function PartnershipDeedPage() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <FormField control={form.control} name={`partners.${index}.designation`} render={({ field }) => ( <FormItem><FormLabel>Designation</FormLabel><FormControl><Input placeholder="President, Member..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name={`partners.${index}.isDesignated`} render={({ field }) => ( <FormItem className="flex flex-row items-center justify-start gap-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} id={`isDesignated-${index}`} /></FormControl><Label className="font-normal" htmlFor={`isDesignated-${index}`}>This is a Designated Partner</Label></FormItem> )}/>
+                    <FormField control={form.control} name={`partners.${index}.isDesignated`} render={({ field }) => ( <FormItem className="flex flex-row items-center justify-start gap-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} id={`isDesignated-${index}`} /></FormControl><Label className="font-normal" htmlFor={`isDesignated-${index}`}>Designated Partner</Label></FormItem> )}/>
                   </div>
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isWorkingPartner: false, isDesignated: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
+              <Button type="button" variant="outline" onClick={() => append({ name: "", parentage: "", age: 30, address: "", occupation: "", designation: "Partner", capitalContribution: 0, profitShare: 0, isDesignated: false })}><PlusCircle className="mr-2"/> Add Partner</Button>
               {form.formState.errors.partners?.root && <p className="text-sm font-medium text-destructive">{form.formState.errors.partners.root.message}</p>}
-               {totalProfitShare !== 100 && (
+              {totalProfitShare !== 100 && (
                     <div className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare.toFixed(2)}%</div>
                 )}
             </CardContent>
