@@ -24,7 +24,7 @@ export const samplePosts = [
             "This is where technology becomes the great equalizer. At ZenithBooks, we believe we are not just building software; we are building the digital infrastructure for this revolution. Our platform is designed to arm every local CA, advocate, and tax professional with the same cutting-edge tools that were once the exclusive domain of large corporations. By unifying compliance, automating complex processes, and providing AI-powered insights, we are empowering a distributed network of experts to deliver world-class service. The future isn't a new 'Big Four'; it's a 'Big Million', and ZenithBooks is proud to be their platform of choice."
         ],
         imageUrl: PlaceHolderImages.find(p => p.id === 'blog-4')?.imageUrl || "https://picsum.photos/seed/blog4/600/400",
-        imageHint: "Indian city",
+        imageHint: PlaceHolderImages.find(p => p.id === 'blog-4')?.imageHint || "indian leader",
         shareUrl: "/blog/4"
     },
     {
