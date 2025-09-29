@@ -45,6 +45,8 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter as TableFoot } from "@/components/ui/table";
+import { format } from "date-fns";
 
 
 const partnerSchema = z.object({
@@ -106,171 +108,178 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+
+// #region Printable Components
+
+const Form1ToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => (
+    <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+        <h4 className="font-bold text-center">Form No. 1</h4>
+        <p className="text-xs text-center">Rule 4 (II)</p>
+        <h5 className="font-bold text-center">THE INDIAN PARTNERSHIP ACT, 1932</h5>
+        <h5 className="font-bold text-center">Application for Registration of Firm by the Name</h5>
+        <p>Presented or forward to the registrar of Firm and for filing by M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</p>
+        <p>We, the undersigned being the partners of the *Firm M/s {(formData.firmName || "[Firm Name]").toUpperCase()} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
+        <table className="w-full my-4">
+            <tbody>
+                <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</td></tr>
+                <tr className="h-4"></tr>
+                <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress || "[Firm Address]"} <br/> (b) NIL</td></tr>
+            </tbody>
+        </table>
+        <table className="w-full my-4 border-collapse border border-black">
+            <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
+            <tbody>
+                {formData.partners.map((p, i) => (
+                    <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
+                ))}
+            </tbody>
+        </table>
+        <div className="flex justify-between mt-16">
+            <div>
+                <p>Place:</p>
+                <p>Date:</p>
+            </div>
+            <div>
+                <p>Signatures</p>
+                {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
+            </div>
+        </div>
+    </div>
+));
+Form1ToPrint.displayName = 'Form1ToPrint';
+
+const DeclarationToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => (
+    <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed space-y-8">
+        <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
+        {formData.partners.map((p, i) => (
+            <div key={i}>
+                <p>I {p.name}, {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
+                <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
+                <p>Witness</p>
+            </div>
+        ))}
+    </div>
+));
+DeclarationToPrint.displayName = 'DeclarationToPrint';
+
+const ProformaToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => (
+    <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+        <h5 className="font-bold text-center">PROFORMA</h5>
+        <p className="text-xs text-center">PHOTOGRAPHS AND FINGERPRINTS AS PER SECTION 32A OF REGISTRATION ACT,1908.</p>
+         <table className="w-full my-4 border-collapse border border-black">
+             <thead>
+                <tr className="bg-gray-200 text-center text-xs">
+                    <th className="border border-black p-1">FINGER PRINT S.NO: IN BLACKINK (LEFT THUMB)</th>
+                    <th className="border border-black p-1">PASSPORT SIZE PHOTOGRAPH (BLACK & WHITE)</th>
+                    <th className="border border-black p-1">NAME & PERMANENT POSTAL ADDRESS OF PRESENTANT / SELLER/ BUYER</th>
+                </tr>
+             </thead>
+             <tbody>
+                {formData.partners.map((p, i) => (
+                    <tr key={i}>
+                        <td className="border border-black h-32"></td>
+                        <td className="border border-black h-32"></td>
+                        <td className="border border-black h-32 p-1 text-xs">{p.name}<br/>{p.parentage}<br/>{p.address}</td>
+                    </tr>
+                ))}
+             </tbody>
+         </table>
+         <div className="flex justify-between mt-16 text-sm">
+            <p><strong>SIGNATURE OF WITNESSES</strong></p>
+            <p><strong>SIGNATURE OF EXECUTANTS</strong></p>
+         </div>
+    </div>
+));
+ProformaToPrint.displayName = 'ProformaToPrint';
+
+
 const PartnershipDeedToPrint = React.forwardRef<HTMLDivElement, { formData: FormData }>(({ formData }, ref) => {
     const dateOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
     const formattedDate = new Date().toLocaleDateString('en-GB', dateOptions);
     const commencementDateFormatted = formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : "[Date]";
 
     return (
-        <div ref={ref}>
-            {/* Form No. 1 */}
-            <div className="print-section text-center space-y-2 mb-12 prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
-                <h4 className="font-bold">Form No. 1</h4>
-                <p className="text-xs">Rule 4 (II)</p>
-                <h5 className="font-bold">THE INDIAN PARTNERSHIP ACT, 1932</h5>
-                <h5 className="font-bold">Application for Registration of Firm by the Name</h5>
-                <p>Presented or forward to the registrar of Firm and for filing by M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</p>
-                <p>We, the undersigned being the partners of the *Firm M/s {(formData.firmName || "[Firm Name]").toUpperCase()} hereby apply for registration of the said firm and for that purpose supply the following particulars in pursuance of section 58 of the Indian Partnership Act, 1932.</p>
-                <table className="w-full my-4">
-                    <tbody>
-                        <tr><td className="w-1/3 align-top">Name of the Firm :</td><td>M/s {(formData.firmName || "[Firm Name]").toUpperCase()}</td></tr>
-                        <tr className="h-4"></tr>
-                        <tr><td className="w-1/3 align-top">Place of Business: <br/> (a) Principal <br/> (b) Other Place</td><td>(a) {formData.firmAddress || "[Firm Address]"} <br/> (b) NIL</td></tr>
-                    </tbody>
-                </table>
-                <table className="w-full my-4 border-collapse border border-black">
-                    <thead><tr className="bg-gray-200"><th className="border border-black p-1">Name of the Partner</th><th className="border border-black p-1">Address of the Partner</th><th className="border border-black p-1">Date of Joining</th></tr></thead>
-                    <tbody>
-                        {formData.partners.map((p, i) => (
-                            <tr key={i}><td className="border border-black p-1">{p.name}</td><td className="border border-black p-1">{p.address}</td><td className="border border-black p-1">{formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN') : ''}</td></tr>
-                        ))}
-                    </tbody>
-                </table>
-                <div className="flex justify-between mt-16">
-                    <div>
-                        <p>Place:</p>
-                        <p>Date:</p>
-                    </div>
-                    <div>
-                        <p>Signatures</p>
-                        {formData.partners.map((p, i) => <p key={i} className="mt-8">({i+1})</p>)}
-                    </div>
-                </div>
-            </div>
-
-            {/* Declaration Page */}
-            <div className="print-section break-before-page mt-16 space-y-8 prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
-                <h5 className="font-bold text-center">DECLARATION BY PARTNERS</h5>
+        <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
+            <h2 className="text-center font-bold">PARTNERSHIP DEED</h2>
+            <h3 className="text-center font-bold">{(formData.firmName || "[Firm Name]").toUpperCase()}</h3>
+            
+            <p>This Deed of Partnership is executed on this the <strong>{formattedDate}</strong>, by and between:-</p>
+            
+            <ol className="list-decimal list-inside space-y-2">
                 {formData.partners.map((p, i) => (
-                    <div key={i}>
-                        <p>I {p.name} {p.parentage}, {p.age} Years of age HINDU religion do hereby declare that the above statement is true and correct to the best of my knowledge and belief.</p>
-                        <div className="flex justify-between mt-8"><span>Date:</span><span>Signature .........</span></div>
-                        <p>Witness</p>
+                <li key={i}>
+                    <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
+                </li>
+                ))}
+            </ol>
+            
+            <p>(Collectively referred to as “Partners” and individually as a “Partner”).</p>
+            <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>" under the name & style of "<strong>{(formData.firmName || "[Firm Name]").toUpperCase()}</strong>", with effect from today, i.e. the {formattedDate}.</p>
+            <p>AND WHEREAS both the Partners hereto have decided to reduce the terms and conditions of this instrument into writing so as to avoid misunderstandings, which may arise in future.</p>
+            
+            <h4 className="font-bold mt-4">NOW THIS DEED OF PARTNERSHIP WITNESSETH AS UNDER:-</h4>
+            
+            <ol className="list-decimal list-inside space-y-3">
+                <li>The Name of the partnership business shall be “<strong>{(formData.firmName || "[Firm Name]").toUpperCase()}</strong>” and such other names as the partners may decide from time to time.</li>
+                <li>The Principal place of business shall be at “<strong>{formData.firmAddress || '[Firm Address]'}</strong>” and such other places may decide from time to time.</li>
+                <li>The Partnership has come into existence with effect from today, i.e. the {commencementDateFormatted}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
+                <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>” and such other business as the partners may decide from time to time.</li>
+                <li>The capital required for the purpose of the partnership business shall be contributed and arranged by the partners from time to time as and when needed in such manner as may be mutually agreed upon.</li>
+                <li className="font-bold italic text-center my-4">(Conti.........Page 2)</li>
+                <div className="break-before-page"></div>
+                <h4 className="font-bold text-center">Page 2</h4>
+                <li>The Partners shall share the profits and bear the losses of the partnership business as under:
+                    <table className="w-full my-2 border border-black">
+                        <thead>
+                            <tr className="border-b border-black bg-gray-200">
+                                <th className="p-1 border-r border-black">S.No.</th>
+                                <th className="p-1 border-r border-black text-left">Name of the Partners</th>
+                                <th className="p-1 text-right">Share of Profit/Loss</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {formData.partners.map((p, i) => (
+                                <tr key={p.name} className="border-b border-black">
+                                    <td className="p-1 border-r border-black text-center">{i+1}.</td>
+                                    <td className="p-1 border-r border-black">{p.name}</td>
+                                    <td className="p-1 text-right">{p.profitShare}%</td>
+                                </tr>
+                            ))}
+                            <tr className="font-bold bg-gray-200">
+                                <td colSpan={2} className="p-1 border-r border-black text-right">Total</td>
+                                <td className="p-1 text-right">100%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    The divisible profits and losses shall be arrived at after providing for the interest on the accounts of the partners and remuneration to working partners as hereinafter provided for as per the terms of this partnership deed.
+                </li>
+                <li>The Partners shall be entitled for interest at the rate of <strong>{formData.interestOnCapital}% per annum</strong> or such other higher rate as may be prescribed under the Income Tax Act on the amount outstanding to their respective capital accounts. In case of Loss or lower income, the interest can be NIL or lower than aforementioned rate, as the partners may decide from time to time.</li>
+                <li>The firm shall not be dissolved on death or retirement of any one or more of the partners unless the remaining partners with mutual consent decide otherwise.</li>
+                {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
+            </ol>
+
+            <p className="mt-8">IN WITNESS WHEREOF, the Partners hereto have signed this Agreement on the day, month and year first above written.</p>
+            
+            <div className="grid grid-cols-2 gap-16 mt-16">
+                {formData.partners.map(p => (
+                    <div key={p.name} className="text-center">
+                        <p className="mb-12">_________________________</p>
+                        <p>({p.name})</p>
                     </div>
                 ))}
             </div>
-
-            {/* Photo & Fingerprints Page */}
-            <div className="print-section break-before-page prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
-                <h5 className="font-bold text-center">PROFORMA</h5>
-                <p className="text-xs text-center">PHOTOGRAPHS AND FINGERPRINTS AS PER SECTION 32A OF REGISTRATION ACT,1908.</p>
-                 <table className="w-full my-4 border-collapse border border-black">
-                     <thead>
-                        <tr className="bg-gray-200 text-center text-xs">
-                            <th className="border border-black p-1">FINGER PRINT S.NO: IN BLACKINK (LEFT THUMB)</th>
-                            <th className="border border-black p-1">PASSPORT SIZE PHOTOGRAPH (BLACK & WHITE)</th>
-                            <th className="border border-black p-1">NAME & PERMANENT POSTAL ADDRESS OF PRESENTANT / SELLER/ BUYER</th>
-                        </tr>
-                     </thead>
-                     <tbody>
-                        {formData.partners.map((p, i) => (
-                            <tr key={i}>
-                                <td className="border border-black h-32"></td>
-                                <td className="border border-black h-32"></td>
-                                <td className="border border-black h-32 p-1 text-xs">{p.name}<br/>{p.parentage}<br/>{p.address}</td>
-                            </tr>
-                        ))}
-                     </tbody>
-                 </table>
-                 <div className="flex justify-between mt-16 text-sm">
-                    <p><strong>SIGNATURE OF WITNESSES</strong></p>
-                    <p><strong>SIGNATURE OF EXECUTANTS</strong></p>
-                 </div>
-            </div>
-
-            {/* Main Deed */}
-            <div className="print-section break-before-page prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
-                <h2 className="text-center font-bold">PARTNERSHIP DEED</h2>
-                <h3 className="text-center font-bold">{(formData.firmName || "[Firm Name]").toUpperCase()}</h3>
-                
-                <p>This Deed of Partnership is executed on this the <strong>{formattedDate}</strong>, by and between:-</p>
-                
-                <ol className="list-decimal list-inside space-y-2">
-                    {formData.partners.map((p, i) => (
-                    <li key={i}>
-                        <strong>{p.name}</strong>, {p.parentage}, aged about {p.age} years, Occ: Business, R/o {p.address}. Hereinafter called the {i+1 === 1 ? '1st' : i+1 === 2 ? '2nd' : `${i+1}th`} Partner.
+            <div className="mt-16">
+                <p className="font-bold">Witnesses:</p>
+                <ol className="list-decimal list-inside mt-8 space-y-8">
+                    <li>
+                        <p>Name & Signature: _________________________</p>
+                        <p>Address: _______________________</p>
                     </li>
-                    ))}
-                </ol>
-                
-                <p>(Collectively referred to as “Partners” and individually as a “Partner”).</p>
-                <p>WHEREAS both the Partners hereinabove mentioned have mutually agreed to enter into partnership to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>" under the name & style of "<strong>{(formData.firmName || "[Firm Name]").toUpperCase()}</strong>", with effect from today, i.e. the {formattedDate}.</p>
-                <p>AND WHEREAS both the Partners hereto have decided to reduce the terms and conditions of this instrument into writing so as to avoid misunderstandings, which may arise in future.</p>
-                
-                <h4 className="font-bold mt-4">NOW THIS DEED OF PARTNERSHIP WITNESSETH AS UNDER:-</h4>
-                
-                <ol className="list-decimal list-inside space-y-3">
-                    <li>The Name of the partnership business shall be “<strong>{(formData.firmName || "[Firm Name]").toUpperCase()}</strong>” and such other names as the partners may decide from time to time.</li>
-                    <li>The Principal place of business shall be at “<strong>{formData.firmAddress || '[Firm Address]'}</strong>” and such other places may decide from time to time.</li>
-                    <li>The Partnership has come into existence with effect from today, i.e. the {commencementDateFormatted}, and the term of the partnership shall be “<strong>{formData.partnershipDuration === 'at-will' ? 'At Will' : `for a fixed term of ${formData.termYears || '...'} years`}</strong>”.</li>
-                    <li>The Objects of the Partnership shall be to do business in "<strong>{formData.businessActivity || '[Business Activity]'}</strong>” and such other business as the partners may decide from time to time.</li>
-                    <li>The capital required for the purpose of the partnership business shall be contributed and arranged by the partners from time to time as and when needed in such manner as may be mutually agreed upon.</li>
-                    <li className="font-bold italic text-center my-4">(Conti.........Page 2)</li>
-                    <div className="break-before-page"></div>
-                    <h4 className="font-bold text-center">Page 2</h4>
-                    <li>The Partners shall share the profits and bear the losses of the partnership business as under:
-                        <table className="w-full my-2 border border-black">
-                            <thead>
-                                <tr className="border-b border-black bg-gray-200">
-                                    <th className="p-1 border-r border-black">S.No.</th>
-                                    <th className="p-1 border-r border-black text-left">Name of the Partners</th>
-                                    <th className="p-1 text-right">Share of Profit/Loss</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {formData.partners.map((p, i) => (
-                                    <tr key={p.name} className="border-b border-black">
-                                        <td className="p-1 border-r border-black text-center">{i+1}.</td>
-                                        <td className="p-1 border-r border-black">{p.name}</td>
-                                        <td className="p-1 text-right">{p.profitShare}%</td>
-                                    </tr>
-                                ))}
-                                <tr className="font-bold bg-gray-200">
-                                    <td colSpan={2} className="p-1 border-r border-black text-right">Total</td>
-                                    <td className="p-1 text-right">100%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        The divisible profits and losses shall be arrived at after providing for the interest on the accounts of the partners and remuneration to working partners as hereinafter provided for as per the terms of this partnership deed.
+                    <li>
+                        <p>Name & Signature: _________________________</p>
+                        <p>Address: _______________________</p>
                     </li>
-                    <li>The Partners shall be entitled for interest at the rate of <strong>{formData.interestOnCapital}% per annum</strong> or such other higher rate as may be prescribed under the Income Tax Act on the amount outstanding to their respective capital accounts. In case of Loss or lower income, the interest can be NIL or lower than aforementioned rate, as the partners may decide from time to time.</li>
-                    <li>The firm shall not be dissolved on death or retirement of any one or more of the partners unless the remaining partners with mutual consent decide otherwise.</li>
-                    {formData.extraClauses && <li><strong>ADDITIONAL CLAUSES:</strong> {formData.extraClauses}</li>}
                 </ol>
-
-                <p className="mt-8">IN WITNESS WHEREOF, the Partners hereto have signed this Agreement on the day, month and year first above written.</p>
-                
-                <div className="grid grid-cols-2 gap-16 mt-16">
-                    {formData.partners.map(p => (
-                        <div key={p.name} className="text-center">
-                            <p className="mb-12">_________________________</p>
-                            <p>({p.name})</p>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-16">
-                    <p className="font-bold">Witnesses:</p>
-                    <ol className="list-decimal list-inside mt-8 space-y-8">
-                        <li>
-                            <p>Name & Signature: _________________________</p>
-                            <p>Address: _______________________</p>
-                        </li>
-                        <li>
-                            <p>Name & Signature: _________________________</p>
-                            <p>Address: _______________________</p>
-                        </li>
-                    </ol>
-                </div>
             </div>
         </div>
     );
@@ -290,7 +299,7 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
                 {formData.partners.map((p, i) => <p key={i} className="mt-8">{i + 1}.</p>)}
             </div>
         </div>
-    );
+    )
 });
 CertificateToPrint.displayName = 'CertificateToPrint';
 
@@ -314,10 +323,11 @@ const AffidavitToPrint = React.forwardRef<HTMLDivElement, { formData: FormData; 
                 </div>
             </div>
         </div>
-    );
+    )
 });
 AffidavitToPrint.displayName = 'AffidavitToPrint';
 
+// #endregion
 
 export default function PartnershipDeedPage() {
   const { toast } = useToast();
@@ -329,9 +339,13 @@ export default function PartnershipDeedPage() {
   const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
   const [deponentId, setDeponentId] = useState('');
   
+  const printRefForm1 = React.useRef<HTMLDivElement>(null);
+  const printRefDeclaration = React.useRef<HTMLDivElement>(null);
+  const printRefProforma = React.useRef<HTMLDivElement>(null);
   const printRefDeed = React.useRef<HTMLDivElement>(null);
   const printRefCertificate = React.useRef<HTMLDivElement>(null);
   const printRefAffidavit = React.useRef<HTMLDivElement>(null);
+
 
   const [user, authLoading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -721,59 +735,70 @@ export default function PartnershipDeedPage() {
           </Card>
         );
      case 8:
-        const whatsappMessage = `Hi, please find the attached draft Partnership Deed for ${formData.firmName || "[Firm Name]"}. Kindly review and let me know if any changes are required.`;
         const deponent = formData.partners.find(p => p.name === deponentId);
         return (
             <div className="space-y-8">
-             <Card>
-                <CardHeader><CardTitle>Final Step: Preview & Download</CardTitle><CardDescription>Review and download the generated Partnership Deed and supporting documents.</CardDescription></CardHeader>
-                <CardContent>
-                    <PartnershipDeedToPrint ref={printRefDeed} formData={formData} />
-                </CardContent>
-                <CardFooter className="justify-between mt-6"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
-                 <ShareButtons
-                    contentRef={printRefDeed}
-                    fileName={`Partnership_Deed_${formData.firmName}`}
-                    whatsappMessage={whatsappMessage}
-                  />
-                </CardFooter>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Ancillary Document: Certificate</CardTitle></CardHeader>
-                 <CardContent>
-                    <CertificateToPrint ref={printRefCertificate} formData={formData} />
-                </CardContent>
-                <CardFooter>
-                    <ShareButtons
-                        contentRef={printRefCertificate}
-                        fileName={`Certificate_of_Deed_${formData.firmName}`}
-                    />
-                </CardFooter>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Ancillary Document: Self-Affidavit</CardTitle>
-                    <CardDescription>This affidavit is for a partner who is providing their own property for the business address without rent.</CardDescription>
-                </CardHeader>
-                 <CardContent>
-                    <div className="max-w-xs mb-4">
-                        <Label>Select Deponent (Partner making the affidavit)</Label>
-                        <Select value={deponentId} onValueChange={setDeponentId}>
-                            <SelectTrigger><SelectValue placeholder="Select a Partner"/></SelectTrigger>
-                            <SelectContent>
-                                {formData.partners.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <AffidavitToPrint ref={printRefAffidavit} formData={formData} deponent={deponent} />
-                </CardContent>
-                 <CardFooter>
-                    <ShareButtons
-                        contentRef={printRefAffidavit}
-                        fileName={`Affidavit_${deponent?.name}`}
-                    />
-                </CardFooter>
-            </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Final Step: Preview & Download Documents</CardTitle>
+                        <CardDescription>Review and download the generated Partnership Deed and all supporting annexures required for registration.</CardDescription>
+                    </CardHeader>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Main Document: Partnership Deed</CardTitle></CardHeader>
+                    <CardContent>
+                        <PartnershipDeedToPrint ref={printRefDeed} formData={formData} />
+                    </CardContent>
+                    <CardFooter className="justify-between">
+                        <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back to Edit</Button>
+                        <ShareButtons contentRef={printRefDeed} fileName={`Partnership_Deed_${formData.firmName}`} />
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Annexure: Form No. 1</CardTitle><CardDescription>Application for Registration of Firm.</CardDescription></CardHeader>
+                    <CardContent><Form1ToPrint ref={printRefForm1} formData={formData} /></CardContent>
+                    <CardFooter><ShareButtons contentRef={printRefForm1} fileName={`Form1_${formData.firmName}`} /></CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Annexure: Declaration by Partners</CardTitle></CardHeader>
+                    <CardContent><DeclarationToPrint ref={printRefDeclaration} formData={formData} /></CardContent>
+                    <CardFooter><ShareButtons contentRef={printRefDeclaration} fileName={`Declaration_${formData.firmName}`} /></CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Annexure: Proforma for Photos & Fingerprints</CardTitle></CardHeader>
+                    <CardContent><ProformaToPrint ref={printRefProforma} formData={formData} /></CardContent>
+                    <CardFooter><ShareButtons contentRef={printRefProforma} fileName={`Proforma_${formData.firmName}`} /></CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader><CardTitle>Annexure: Certificate of True Copy</CardTitle></CardHeader>
+                    <CardContent><CertificateToPrint ref={printRefCertificate} formData={formData} /></CardContent>
+                    <CardFooter><ShareButtons contentRef={printRefCertificate} fileName={`Certificate_${formData.firmName}`} /></CardFooter>
+                </Card>
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Annexure: Self-Affidavit for Business Premises</CardTitle>
+                        <CardDescription>This affidavit is for a partner who is providing their own property for the business address without rent.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="max-w-xs mb-4">
+                            <Label>Select Deponent (Partner making the affidavit)</Label>
+                            <Select value={deponentId} onValueChange={setDeponentId}>
+                                <SelectTrigger><SelectValue placeholder="Select a Partner"/></SelectTrigger>
+                                <SelectContent>
+                                    {formData.partners.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <AffidavitToPrint ref={printRefAffidavit} formData={formData} deponent={deponent} />
+                    </CardContent>
+                    <CardFooter><ShareButtons contentRef={printRefAffidavit} fileName={`Affidavit_${deponent?.name}`} /></CardFooter>
+                </Card>
             </div>
         );
       default:
