@@ -137,7 +137,7 @@ function DashboardContent() {
                 loading={journalLoading || vendorsLoading}
               />
             </Link>
-            <Link href="/accounting/ledgers">
+            <Link href="/accounting/ledgers?account=2110">
               <StatCard 
                 title="GST Payable"
                 value={formatCurrency(gstPayable)}
