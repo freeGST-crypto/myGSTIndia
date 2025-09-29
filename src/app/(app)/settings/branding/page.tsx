@@ -24,19 +24,37 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, Save, Wand2 } from "lucide-react";
+import { Loader2, Upload, Save, Wand2, PlusCircle, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
-import { generateTermsAction, analyzeLogoAction } from "./actions";
+import { generateTermsAction } from "./actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import SignatureCanvas from 'react-signature-canvas';
+import { states } from "@/lib/states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
-  address: z.string().min(10, "A full address is required."),
+  address1: z.string().min(5, "Address Line 1 is required."),
+  address2: z.string().optional(),
+  city: z.string().min(2, "City is required."),
+  state: z.string().min(2, "State is required."),
+  pincode: z.string().regex(/^\d{6}$/, "Invalid pincode."),
   gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN format."),
   pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format."),
   logo: z.custom<File | null>(() => true).optional(),
+
+  invoicePrefix: z.string().default('INV-'),
+  invoiceNextNumber: z.coerce.number().int().min(1).default(1),
+  
+  bankName: z.string().optional(),
+  bankAccount: z.string().optional(),
+  bankIfsc: z.string().optional(),
+  upiId: z.string().optional(),
+
+  defaultPaymentTerms: z.string().default('net_30'),
   invoiceTerms: z.string().optional(),
 });
 
@@ -44,19 +62,29 @@ export default function BrandingPage() {
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const { toast } = useToast();
     const logoInputRef = useRef<HTMLInputElement>(null);
+    const sigCanvasRef = useRef<SignatureCanvas | null>(null);
+
     const [isSaving, setIsSaving] = useState(false);
     const [isGeneratingTerms, setIsGeneratingTerms] = useState(false);
-    const [isAnalyzingLogo, setIsAnalyzingLogo] = useState(false);
-    const [logoAnalysis, setLogoAnalysis] = useState<string | null>(null);
-
-
+    
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            companyName: "GSTEase Solutions Pvt. Ltd.",
-            address: "123 Business Avenue, Commerce City, Maharashtra - 400001",
-            gstin: "27ABCDE1234F1Z5",
+            companyName: "Acme Inc.",
+            address1: "123 Business Rd, Industrial Area",
+            address2: "Suite 456, Near Landmark",
+            city: "Commerce City",
+            state: "Maharashtra",
+            pincode: "400001",
+            gstin: "22AAAAA0000A1Z5",
             pan: "ABCDE1234F",
+            invoicePrefix: "INV-",
+            invoiceNextNumber: 1,
+            bankName: "HDFC Bank",
+            bankAccount: "1234567890",
+            bankIfsc: "HDFC0001234",
+            upiId: "yourbusiness@okhdfcbank",
+            defaultPaymentTerms: "net_30",
             invoiceTerms: "1. All payments to be made via cheque or NEFT. 2. Goods once sold will not be taken back. 3. Interest @18% p.a. will be charged on overdue bills.",
         },
     });
@@ -66,18 +94,21 @@ export default function BrandingPage() {
         if (file) {
             form.setValue("logo", file);
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setLogoPreview(reader.result as string);
-                setLogoAnalysis(null); // Clear previous analysis
-            };
+            reader.onloadend = () => setLogoPreview(reader.result as string);
             reader.readAsDataURL(file);
         }
     };
     
+    const clearSignature = () => sigCanvasRef.current?.clear();
+    const saveSignature = () => {
+        const dataUrl = sigCanvasRef.current?.getTrimmedCanvas().toDataURL('image/png');
+        console.log("Signature saved (simulated):", dataUrl);
+        toast({title: "Signature Saved!"});
+    }
+
     function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSaving(true);
         console.log(values);
-        // Simulate API call to save branding settings
         setTimeout(() => {
             setIsSaving(false);
             toast({
@@ -106,40 +137,15 @@ export default function BrandingPage() {
             setIsGeneratingTerms(false);
         }
     };
-    
-    const handleAnalyzeLogo = async () => {
-        const logoFile = form.getValues("logo");
-        if (!logoFile) {
-            toast({ variant: "destructive", title: "No Logo", description: "Please upload a logo to analyze."});
-            return;
-        }
-        setIsAnalyzingLogo(true);
-        setLogoAnalysis(null);
-        try {
-             const reader = new FileReader();
-             reader.readAsDataURL(logoFile);
-             reader.onloadend = async () => {
-                const base64data = reader.result as string;
-                const result = await analyzeLogoAction({ logoDataUri: base64data });
-                if (result?.analysis) {
-                    setLogoAnalysis(result.analysis);
-                    toast({ title: "Logo Analysis Complete" });
-                }
-             }
-        } catch (e) {
-            toast({ variant: "destructive", title: "Error", description: "Failed to analyze logo." });
-        } finally {
-            setIsAnalyzingLogo(false);
-        }
-    }
 
+    const nextInvoiceNumber = `${form.watch('invoicePrefix') || ''}${form.watch('invoiceNextNumber') || 1}`;
 
     return (
         <div className="space-y-8 max-w-4xl mx-auto">
             <div className="text-center">
                 <h1 className="text-3xl font-bold">Company Branding</h1>
                 <p className="mt-2 max-w-2xl text-muted-foreground">
-                    Manage your company details, logo, and other branding assets that appear on invoices and documents.
+                    Manage your company's branding assets and information. This will be used on invoices, reports, and other documents.
                 </p>
             </div>
             <Form {...form}>
@@ -147,96 +153,129 @@ export default function BrandingPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Company Details</CardTitle>
+                            <CardDescription>Update your company's core information.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <FormField control={form.control} name="companyName" render={({ field }) => ( <FormItem><FormLabel>Company Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Company Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <div className="grid md:grid-cols-2 gap-4">
                                 <FormField control={form.control} name="gstin" render={({ field }) => ( <FormItem><FormLabel>GSTIN</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField control={form.control} name="pan" render={({ field }) => ( <FormItem><FormLabel>PAN</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
+                            <FormField control={form.control} name="address1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="address2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <FormField control={form.control} name="city" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField control={form.control} name="state" render={({ field }) => (
+                                     <FormItem><FormLabel>State</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                            <SelectContent>{states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                     <FormMessage /></FormItem>
+                                )}/>
+                                <FormField control={form.control} name="pincode" render={({ field }) => ( <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            </div>
                         </CardContent>
                     </Card>
                     
-                     <Card>
+                    <Card>
                         <CardHeader>
-                            <CardTitle>Company Logo</CardTitle>
+                            <CardTitle>Branding Assets</CardTitle>
+                            <CardDescription>Upload your company logo and provide a signature for documents.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex flex-col sm:flex-row items-start gap-6">
-                                <div 
-                                    className="relative flex flex-col items-center justify-center w-full sm:w-48 h-48 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/75 shrink-0"
-                                    onClick={() => logoInputRef.current?.click()}
-                                >
-                                    {logoPreview ? (
-                                        <Image src={logoPreview} alt="Logo Preview" fill className="object-contain p-4 rounded-lg" />
-                                    ) : (
-                                        <div className="text-center text-muted-foreground p-4">
-                                            <Upload className="mx-auto h-8 w-8" />
-                                            <p className="mt-2 text-sm">Click to upload logo</p>
-                                        </div>
-                                    )}
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <FormLabel>Company Logo</FormLabel>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-24 h-24 border rounded-md flex items-center justify-center bg-muted/50 overflow-hidden">
+                                        {logoPreview ? <Image src={logoPreview} alt="Logo Preview" width={96} height={96} className="object-contain" /> : <span className="text-xs text-muted-foreground">Logo Preview</span>}
+                                    </div>
+                                    <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}><Upload className="mr-2"/> Upload Logo</Button>
                                 </div>
-                                <div className="w-full space-y-4">
-                                    <Button type="button" variant="secondary" onClick={handleAnalyzeLogo} disabled={isAnalyzingLogo || !form.getValues('logo')}>
-                                        {isAnalyzingLogo ? <Loader2 className="mr-2 animate-spin"/> : <Wand2 className="mr-2"/>}
-                                        Analyze Logo with AI
-                                    </Button>
-                                    {logoAnalysis && (
-                                         <Alert>
-                                            <Wand2 className="h-4 w-4" />
-                                            <AlertTitle>AI Logo Analysis</AlertTitle>
-                                            <AlertDescription>
-                                                {logoAnalysis}
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                </div>
+                                <Input ref={logoInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange}/>
+                                <p className="text-xs text-muted-foreground">Recommended: .png with transparent background, 200x200px.</p>
                             </div>
-                             <Input 
-                                ref={logoInputRef}
-                                type="file" 
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                            />
-                        </CardContent>
-                    </Card>
-
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Invoice Settings</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                             <FormField
-                                control={form.control}
-                                name="invoiceTerms"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Default Terms & Conditions</FormLabel>
-                                    <FormControl>
-                                    <Textarea
-                                        placeholder="Enter your standard terms for invoices..."
-                                        className="min-h-24"
-                                        {...field}
-                                    />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <Button type="button" variant="secondary" onClick={handleGenerateTerms} disabled={isGeneratingTerms} className="mt-4">
-                                {isGeneratingTerms ? <Loader2 className="mr-2 animate-spin"/> : <Wand2 className="mr-2"/>}
-                                Generate with AI
-                            </Button>
+                            <Separator/>
+                            <div className="space-y-2">
+                                <FormLabel>Digital Signature</FormLabel>
+                                 <div className="w-full h-48 border rounded-md bg-white">
+                                    <SignatureCanvas ref={sigCanvasRef} canvasProps={{ className: 'w-full h-full' }} />
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button type="button" variant="outline" onClick={clearSignature}>Clear</Button>
+                                    <Button type="button" onClick={saveSignature}>Save Signature</Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">Draw your signature in the box above. It will be used on documents like invoices.</p>
+                            </div>
                         </CardContent>
                     </Card>
 
                     <Card>
-                         <CardFooter className="justify-end">
+                        <CardHeader><CardTitle>Invoice & Payment Settings</CardTitle><CardDescription>Set default numbering, bank details, payment terms, and conditions for your invoices.</CardDescription></CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <h3 className="text-md font-semibold">Invoice Numbering</h3>
+                                <div className="grid md:grid-cols-2 gap-4 mt-2">
+                                    <FormField control={form.control} name="invoicePrefix" render={({ field }) => ( <FormItem><FormLabel>Invoice Prefix</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )}/>
+                                    <FormField control={form.control} name="invoiceNextNumber" render={({ field }) => ( <FormItem><FormLabel>Next Number</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem> )}/>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-2">The next invoice you create will be numbered: <strong>{nextInvoiceNumber}</strong></p>
+                            </div>
+                             <div>
+                                <h3 className="text-md font-semibold">Bank Details</h3>
+                                <div className="space-y-4 mt-2">
+                                     <FormField control={form.control} name="bankName" render={({ field }) => ( <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )}/>
+                                     <div className="grid md:grid-cols-2 gap-4">
+                                        <FormField control={form.control} name="bankAccount" render={({ field }) => ( <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )}/>
+                                        <FormField control={form.control} name="bankIfsc" render={({ field }) => ( <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )}/>
+                                     </div>
+                                      <FormField control={form.control} name="upiId" render={({ field }) => ( <FormItem><FormLabel>UPI ID</FormLabel><FormControl><Input {...field} /></FormControl></FormItem> )}/>
+                                </div>
+                            </div>
+                             <div>
+                                <h3 className="text-md font-semibold">Default Payment Terms</h3>
+                                <FormField control={form.control} name="defaultPaymentTerms" render={({ field }) => (
+                                     <FormItem className="mt-2 max-w-xs"><Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="due_on_receipt">Due on Receipt</SelectItem>
+                                            <SelectItem value="net_15">Net 15 (15 days)</SelectItem>
+                                            <SelectItem value="net_30">Net 30 (30 days)</SelectItem>
+                                            <SelectItem value="net_45">Net 45 (45 days)</SelectItem>
+                                        </SelectContent>
+                                     </Select><FormDescription>This will be the default due date for new invoices.</FormDescription></FormItem>
+                                )}/>
+                            </div>
+                             <div>
+                                <h3 className="text-md font-semibold">Default Terms & Conditions</h3>
+                                <FormField control={form.control} name="invoiceTerms" render={({ field }) => (
+                                <FormItem className="mt-2">
+                                    <FormControl><Textarea className="min-h-24" placeholder="e.g., 'Payment is due within 30 days...'" {...field} /></FormControl>
+                                </FormItem>
+                                )}/>
+                                <Button type="button" variant="secondary" onClick={handleGenerateTerms} disabled={isGeneratingTerms} className="mt-2">
+                                    {isGeneratingTerms ? <Loader2 className="mr-2 animate-spin"/> : <Wand2 className="mr-2"/>}
+                                    Generate T&C with AI
+                                </Button>
+                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Associated Professionals</CardTitle>
+                            <CardDescription>Manage contacts for your CA, Auditor, or other consultants.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <Button type="button" variant="outline"><PlusCircle className="mr-2"/> Add Professional</Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                         <CardFooter className="flex justify-end pt-6">
                             <Button type="submit" disabled={isSaving}>
                                 {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2"/>}
-                                Save Settings
+                                Save All Settings
                             </Button>
                         </CardFooter>
                     </Card>
@@ -245,3 +284,4 @@ export default function BrandingPage() {
         </div>
     );
 }
+
