@@ -118,8 +118,15 @@ const allMenuItems = [
     roles: ['business', 'professional'],
     subItems: [
       { href: "/accounting/chart-of-accounts", label: "Chart of Accounts", icon: Library, roles: ['business', 'professional'] },
-      { href: "/accounting/vouchers", label: "Receipt & Payment Vouchers", icon: Wallet, roles: ['business', 'professional'] },
-      { href: "/accounting/journal", label: "Journal Vouchers", icon: BookCopy, roles: ['business', 'professional'] },
+      { 
+        label: "Vouchers",
+        icon: BookCopy,
+        roles: ['business', 'professional'],
+        subItems: [
+             { href: "/accounting/vouchers", label: "Receipt & Payment", icon: Wallet, roles: ['business', 'professional'] },
+             { href: "/accounting/journal", label: "Journal", icon: BookCopy, roles: ['business', 'professional'] },
+        ]
+      },
       { href: "/accounting/ledgers", label: "General Ledger", icon: Book, roles: ['business', 'professional'] },
       { href: "/accounting/trial-balance", label: "Trial Balance", icon: Scale, roles: ['business', 'professional'] },
       { href: "/accounting/bank-reconciliation", label: "Bank Reconciliation", icon: Landmark, roles: ['business', 'professional'] },

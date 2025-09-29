@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { FileText, Users, Handshake, Briefcase, Landmark, Shield, BookOpen, Library, Building, FileSignature, Wallet, BadgeCheck, FileArchive, ArrowLeft } from "lucide-react";
+import { FileText, Users, Handshake, Briefcase, Landmark, Shield, BookOpen, Library, Building, FileSignature, Wallet, BadgeCheck, FileArchive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const documentTools = [
@@ -14,25 +14,25 @@ const documentTools = [
     { title: "LLP Agreement", description: "Draft an agreement for a Limited Liability Partnership.", href: "/legal-documents/llp-agreement", price: 5000, icon: Handshake },
     { title: "Rental Receipts for HRA", description: "Generate monthly rental receipts for employees.", href: "/legal-documents/rental-receipts", price: 0, icon: FileText },
     { title: "Founders’ Agreement", description: "Essential legal document for startup co-founders.", href: "/legal-documents/founders-agreement", price: 7500, icon: Handshake },
-    { title: "Loan Agreement", description: "Between partners/directors & the company.", href: "/legal-documents/loan-agreement", price: 0, icon: Wallet },
+    { title: "Loan Agreement", description: "Between partners/directors & the company.", href: "/legal-documents/loan-agreement", price: 1500, icon: Wallet },
     { title: "GST Engagement Letter", description: "Between a client and a tax consultant.", href: "/legal-documents/gst-engagement-letter", price: 0, icon: FileText },
     { title: "Accounting Engagement Letter", description: "Formalize the terms of accounting services.", href: "/legal-documents/accounting-engagement-letter", price: 0, icon: FileText },
     { title: "NDA (Non-Disclosure Agreement)", description: "Protect sensitive company information.", href: "/legal-documents/nda", price: 1000, icon: Shield },
     { title: "Consultant / Freelancer Agreement", description: "Define terms for engaging independent contractors.", href: "/legal-documents/consultant-agreement", price: 2000, icon: Briefcase },
-    { title: "Vendor Agreement", description: "Set terms with your suppliers and vendors.", href: "/legal-documents/vendor-agreement", price: 0, icon: Briefcase },
-    { title: "Service Agreement", description: "A general-purpose agreement for providing services.", href: "/legal-documents/service-agreement", price: 0, icon: Briefcase },
-    { title: "Franchise Agreement", description: "Establish the terms of a franchise relationship.", href: "/legal-documents/franchise-agreement", price: 0, icon: Handshake },
+    { title: "Vendor Agreement", description: "Set terms with your suppliers and vendors.", href: "/legal-documents/vendor-agreement", price: 2000, icon: Briefcase },
+    { title: "Service Agreement", description: "A general-purpose agreement for providing services.", href: "/legal-documents/service-agreement", price: 2000, icon: Briefcase },
+    { title: "Franchise Agreement", description: "Establish the terms of a franchise relationship.", href: "/legal-documents/franchise-agreement", price: 12000, icon: Handshake },
     { title: "Offer Letter", description: "Generate a formal job offer for prospective employees.", href: "/legal-documents/offer-letter", price: 500, icon: FileText },
-    { title: "Appointment Letter", description: "Create a detailed appointment letter for new hires.", href: "/legal-documents/appointment-letter", price: 0, icon: FileText },
+    { title: "Appointment Letter", description: "Create a detailed appointment letter for new hires.", href: "/legal-documents/appointment-letter", price: 750, icon: FileText },
     { title: "Internship Agreement", description: "Define the terms and conditions for an internship.", href: "/legal-documents/internship-agreement", price: 0, icon: FileText },
-    { title: "Board Resolutions Library", description: "Templates for common board resolutions.", href: "/legal-documents/board-resolutions", price: 750, icon: Library },
-    { title: "Shareholders’ Agreement (SHA)", description: "Define rights and obligations of shareholders.", href: "/legal-documents/shareholders-agreement", price: 0, icon: Users },
-    { title: "ESOP Trust Deed / Policy", description: "Establish an Employee Stock Option Plan.", href: "/legal-documents/esop-policy", price: 0, icon: BookOpen },
-    { title: "Convertible Note / SAFE Agreement", description: "For early-stage startup fundraising.", href: "/legal-documents/safe-agreement", price: 0, icon: FileSignature },
-    { title: "Society Registration Deed", description: "Register a new society with a formal deed.", href: "/legal-documents/society-registration-deed", price: 0, icon: Users },
-    { title: "Trust Deed", description: "Formally establish a trust with a legal deed.", href: "/legal-documents/trust-deed", price: 0, icon: Handshake },
-    { title: "MOA & AOA", description: "Memorandum and Articles of Association for companies.", href: "/legal-documents/moa-aoa", price: 0, icon: Building },
-    { title: "Statutory Registers (Co. Act)", description: "Generate mandatory statutory registers for your company.", href: "/legal-documents/statutory-registers", price: 0, icon: FileArchive },
+    { title: "Board Resolutions Library", description: "Templates for common board resolutions.", href: "/legal-documents/board-resolutions", price: 0, icon: Library },
+    { title: "Shareholders’ Agreement (SHA)", description: "Define rights and obligations of shareholders.", href: "/legal-documents/shareholders-agreement", price: 10000, icon: Users },
+    { title: "ESOP Trust Deed / Policy", description: "Establish an Employee Stock Option Plan.", href: "/legal-documents/esop-policy", price: 25000, icon: BookOpen },
+    { title: "Convertible Note / SAFE Agreement", description: "For early-stage startup fundraising.", href: "/legal-documents/safe-agreement", price: 10000, icon: FileSignature },
+    { title: "Society Registration Deed", description: "Register a new society with a formal deed.", href: "/legal-documents/society-registration-deed", price: 4500, icon: Users },
+    { title: "Trust Deed", description: "Formally establish a trust with a legal deed.", href: "/legal-documents/trust-deed", price: 4500, icon: Handshake },
+    { title: "MOA & AOA", description: "Memorandum and Articles of Association for companies.", href: "/legal-documents/moa-aoa", price: 5000, icon: Building },
+    { title: "Statutory Registers (Co. Act)", description: "Generate mandatory statutory registers for your company.", href: "/legal-documents/statutory-registers", price: 2000, icon: FileArchive },
 ];
 
 export default function LegalDocumentsPage() {
