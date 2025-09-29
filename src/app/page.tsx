@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -10,13 +11,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const features = [
-  "Quick Invoices",
-  "Easy Purchases",
+  "A Complete GST & CA SaaS Platform.",
+  "Beyond Just Books.",
+  "Quick Invoices & Purchases",
   "Automated Accounting",
   "Financial Reports",
   "GST Compliance",
-  "CA Certificates",
-  "Legal Documents",
+  "CA Certificates & Legal Docs",
   "And much more...",
 ];
 
@@ -68,7 +69,7 @@ export default function SplashScreen() {
         
         <motion.div variants={itemVariants} className="text-center">
             <h1 className="text-4xl font-bold tracking-tight">ZenithBooks</h1>
-            <p className="text-lg text-primary-foreground/80">Your Business at its Peak.</p>
+            <p className="text-lg text-primary-foreground/80">Beyond Books</p>
         </motion.div>
 
         <motion.div variants={itemVariants} className="mt-8 h-8 text-xl font-medium text-primary-foreground/90">

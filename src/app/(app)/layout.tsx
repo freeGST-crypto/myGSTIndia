@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -388,7 +389,7 @@ function MainLayout({
               <h2 className="text-xl font-bold">
                 <span className="font-bold">Zenith</span><span className="font-bold">Books</span>
               </h2>
-              <span className="text-xs text-sidebar-foreground/50 font-mono">Version 0.9 Pro</span>
+              <span className="text-xs text-sidebar-foreground/50">Beyond Books</span>
             </div>
           </SidebarHeader>
           <SidebarContent>
