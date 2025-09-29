@@ -1,15 +1,6 @@
 
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 import * as XLSX from 'xlsx';
 import { format } from "date-fns";
-
-// Extend the jsPDF interface for autoTable
-declare module "jspdf" {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
 
 // Mock company data - in a real app, this would come from a context or settings
 const companyBranding = {
@@ -17,18 +8,6 @@ const companyBranding = {
     address: "123 Business Avenue, Commerce City, Maharashtra - 400001",
     gstin: "27ABCDE1234F1Z5",
 };
-
-export const exportToPdf = (reportData: any) => {
-    // This function now uses the browser's print-to-PDF functionality
-    // which is more reliable for complex, multi-page layouts.
-    // The actual printing will be triggered from a component using useReactToPrint.
-    // This function can be a placeholder or removed if all PDF generation
-    // is handled directly by components.
-    // For now, we'll just log that it was called.
-    console.log("Preparing to generate PDF via print dialog. Trigger this from a component with useReactToPrint.");
-    window.print();
-};
-
 
 export const exportToExcel = (reportData: any) => {
     const wb = XLSX.utils.book_new();

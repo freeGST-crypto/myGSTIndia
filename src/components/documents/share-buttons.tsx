@@ -3,9 +3,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Printer, MessageSquare } from "lucide-react";
-import { useReactToPrint } from "react-to-print";
 import React from "react";
 import { useToast } from "@/hooks/use-toast";
+import html2pdf from "html2pdf.js";
 
 interface ShareButtonsProps {
   contentRef: React.RefObject<HTMLDivElement>;
@@ -16,12 +16,32 @@ interface ShareButtonsProps {
 export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareButtonsProps) {
   const { toast } = useToast();
 
-  const handlePrint = useReactToPrint({
-    content: () => contentRef.current,
-    documentTitle: fileName,
-    onAfterPrint: () => toast({ title: "Print/Save Dialog Closed" }),
-    onPrintError: () => toast({ variant: "destructive", title: "Print Error", description: "Failed to open print dialog." }),
-  });
+  const handleDownloadPdf = () => {
+    const element = contentRef.current;
+    if (!element) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not find the content to download.",
+      });
+      return;
+    }
+
+    toast({
+      title: "Generating PDF...",
+      description: "Your document is being prepared for download.",
+    });
+
+    const opt = {
+      margin: 0.5,
+      filename: `${fileName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+    };
+
+    html2pdf().from(element).set(opt).save();
+  };
 
   const handleWhatsAppShare = () => {
     if (!whatsappMessage) {
@@ -38,8 +58,8 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
 
   return (
     <div className="flex gap-2">
-      <Button variant="outline" onClick={handlePrint}>
-        <Printer className="mr-2" /> Print / Save as PDF
+      <Button variant="outline" onClick={handleDownloadPdf}>
+        <Printer className="mr-2" /> Download PDF
       </Button>
 
       {whatsappMessage && (

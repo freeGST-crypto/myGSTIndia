@@ -71,7 +71,7 @@ import {
 import { exportToExcel } from "@/lib/cma-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
-import { useReactToPrint } from "react-to-print";
+import { ShareButtons } from "@/components/documents/share-buttons";
 
 const initialAssets: FixedAsset[] = [
   { id: 1, name: "Plant & Machinery", cost: 1000000, depreciationRate: 15, additionYear: 0 },
@@ -99,11 +99,6 @@ export default function CmaReportGeneratorPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const reportPrintRef = useRef(null);
-  const handlePrint = useReactToPrint({
-      content: () => reportPrintRef.current,
-      documentTitle: "CMA_Report",
-      onAfterPrint: () => toast({ title: "Print/Save dialog closed."})
-  });
   
   const handleGenerateReport = () => {
     setIsGenerating(true);
@@ -425,7 +420,10 @@ export default function CmaReportGeneratorPage() {
                            Get AI Observations
                         </Button>
                         <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                        <Button variant="outline" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+                        <ShareButtons 
+                            contentRef={reportPrintRef}
+                            fileName="CMA_Report"
+                        />
                     </div>
                 </CardFooter>
             </Card>
@@ -469,7 +467,10 @@ export default function CmaReportGeneratorPage() {
                     <Button variant="secondary" onClick={() => setActiveTab('report')}>Back to Report</Button>
                      <div className="flex gap-2">
                         <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
-                        <Button variant="outline" onClick={handlePrint}><Printer className="mr-2"/> Print / Save PDF</Button>
+                         <ShareButtons 
+                            contentRef={reportPrintRef}
+                            fileName="CMA_Report"
+                        />
                     </div>
                 </CardFooter>
             </Card>
