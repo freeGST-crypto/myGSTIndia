@@ -75,5 +75,3 @@ export function ShareButtons({ contentRef, fileName, whatsappMessage }: ShareBut
     </div>
   );
 }
-
-    

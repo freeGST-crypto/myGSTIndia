@@ -68,10 +68,11 @@ import {
 } from "@/lib/cma-logic";
 
 // Import export helpers
-import { exportToExcel } from "@/lib/cma-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { ShareButtons } from "@/components/documents/share-buttons";
+import * as XLSX from 'xlsx';
+import { format } from "date-fns";
 
 const initialAssets: FixedAsset[] = [
   { id: 1, name: "Plant & Machinery", cost: 1000000, depreciationRate: 15, additionYear: 0 },
@@ -182,6 +183,38 @@ export default function CmaReportGeneratorPage() {
           title: "Certification Request Sent",
           description: "A request has been sent to the Admin for certification. You can track its status in the Admin panel."
       });
+  }
+
+  const handleExportToExcel = () => {
+    if (!generatedReport) return;
+    const wb = XLSX.utils.book_new();
+    const processSheet = (data: any[], sheetName: string) => {
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const colWidths = data[0].map((_: any, i: number) => {
+            let maxWidth = 0;
+            data.forEach((row: any[]) => {
+                const cellValue = row[i] ? String(row[i]) : "";
+                if (cellValue.length > maxWidth) {
+                    maxWidth = cellValue.length;
+                }
+            });
+            return { wch: maxWidth + 2 };
+        });
+        ws['!cols'] = colWidths;
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    }
+    
+    processSheet([generatedReport.operatingStatement.headers, ...generatedReport.operatingStatement.body], "Operating Statement");
+    processSheet([generatedReport.balanceSheet.headers, ...generatedReport.balanceSheet.body], "Balance Sheet");
+    processSheet([generatedReport.cashFlow.headers, ...generatedReport.cashFlow.body], "Cash Flow");
+    processSheet([generatedReport.ratioAnalysis.headers, ...generatedReport.ratioAnalysis.body], "Ratio Analysis");
+    processSheet([generatedReport.fundFlow.headers, ...generatedReport.fundFlow.body], "Fund Flow");
+    processSheet([generatedReport.mpbf.headers, ...generatedReport.mpbf.body], "MPBF");
+    if(generatedReport.repaymentSchedule.body.length > 0) {
+        processSheet([generatedReport.repaymentSchedule.headers, ...generatedReport.repaymentSchedule.body], "Repayment Schedule");
+    }
+
+    XLSX.writeFile(wb, `CMA_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   }
 
 
@@ -419,7 +452,7 @@ export default function CmaReportGeneratorPage() {
                            {isAiLoading ? <Loader2 className="mr-2 animate-spin"/> : <BrainCircuit className="mr-2" />}
                            Get AI Observations
                         </Button>
-                        <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
+                        <Button variant="outline" onClick={handleExportToExcel}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
                         <ShareButtons 
                             contentRef={reportPrintRef}
                             fileName="CMA_Report"
@@ -466,7 +499,7 @@ export default function CmaReportGeneratorPage() {
                  <CardFooter className="flex justify-between">
                     <Button variant="secondary" onClick={() => setActiveTab('report')}>Back to Report</Button>
                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => exportToExcel(generatedReport)}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
+                        <Button variant="outline" onClick={handleExportToExcel}><FileSpreadsheet className="mr-2"/> Export to Excel</Button>
                          <ShareButtons 
                             contentRef={reportPrintRef}
                             fileName="CMA_Report"

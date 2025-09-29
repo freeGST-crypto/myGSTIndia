@@ -295,7 +295,7 @@ const CertificateToPrint = React.forwardRef<HTMLDivElement, { formData: FormData
     return (
         <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none bg-white p-8 text-black leading-relaxed">
             <h3 className="text-center font-bold">CERTIFICATE</h3>
-            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress?.split(',').pop()?.trim() || '[City]'}., DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
+            <p>WE THE PARTNERS OF “{(formData.firmName || "[Firm Name]").toUpperCase()}”, {formData.firmAddress?.split(',').pop()?.trim() || '[City]'}. DO HEREBY THAT THE ATTACHED IS A COPY OF PARTNERSHIP DEED, WHICH WAS EXECUTED BY US ON {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-GB', dateOptions) : '[Date]'}.</p>
             <p>THE DEED WAS RUNNING INTO THREE PAGES AND OUT OF THEM THE FIRST PAGE WERE PRINTED ON THE NON-JUDICIAL STAMP PAPERS IN FRANKLIN DATED {formData.commencementDate ? new Date(formData.commencementDate).toLocaleDateString('en-IN', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '[Date]'} WITH NO</p>
             <div className="mt-16 text-right">
                 <p>Signature of the Partners:</p>
