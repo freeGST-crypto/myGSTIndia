@@ -158,13 +158,28 @@ export default function ImportExportPage() {
                                 </div>
                             </TabsContent>
                              <TabsContent value="it" className="pt-4">
-                               <div className="p-4 border rounded-lg space-y-4">
+                               <div className="p-4 border rounded-lg space-y-6">
                                     <h3 className="font-semibold flex items-center gap-2"><Database className="text-primary"/> Income Tax Data</h3>
-                                    <p className="text-sm text-muted-foreground">Import your Form 26AS or AIS for easier tax computation and reconciliation.</p>
-                                    <Alert>
-                                        <AlertTitle>Coming Soon!</AlertTitle>
-                                        <AlertDescription>Functionality to import data from the Income Tax portal is under development.</AlertDescription>
-                                    </Alert>
+                                    <p className="text-sm text-muted-foreground">Import pre-filled ITR JSON, AIS/TIS, or Form 26AS data to simplify your tax filing process.</p>
+                                    
+                                    <div className="space-y-4 pt-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="itr-json-upload">ITR Pre-filled JSON</Label>
+                                            <p className="text-xs text-muted-foreground">Upload the JSON from the Income Tax portal to pre-fill ITR forms.</p>
+                                            <div className="flex gap-2">
+                                                <Input id="itr-json-upload" type="file" accept=".json" />
+                                                <Button variant="outline">Import Data</Button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="ais-upload">AIS/TIS Report</Label>
+                                            <p className="text-xs text-muted-foreground">Import Annual Information Statement (AIS) or Taxpayer Information Summary (TIS).</p>
+                                            <div className="flex gap-2">
+                                                <Input id="ais-upload" type="file" accept=".pdf,.json" />
+                                                <Button variant="outline">Import Data</Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </TabsContent>
                         </Tabs>
