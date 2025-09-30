@@ -26,6 +26,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   PlusCircle,
   MoreHorizontal,
   FileText,
@@ -35,18 +44,22 @@ import {
   Users,
   Briefcase,
   Upload,
-  Download
+  Download,
+  ChevronDown,
+  FileSpreadsheet
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartyDialog } from "@/components/billing/add-new-dialogs";
 import { useRouter } from "next/navigation";
+import * as XLSX from 'xlsx';
 
 export default function PartiesPage() {
   const { toast } = useToast();
@@ -55,8 +68,10 @@ export default function PartiesPage() {
 
   const [activeTab, setActiveTab] = useState("customers");
   const [isPartyDialogOpen, setIsPartyDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   const customersQuery = user ? query(collection(db, 'customers'), where("userId", "==", user.uid)) : null;
   const [customersSnapshot, customersLoading] = useCollection(customersQuery);
@@ -101,6 +116,85 @@ export default function PartiesPage() {
       v.gstin?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [vendors, searchTerm]);
+
+  const handleExport = (type: 'customers' | 'vendors') => {
+    const dataToExport = type === 'customers' ? customers : vendors;
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport.map(p => ({
+        Name: p.name,
+        GSTIN: p.gstin,
+        Email: p.email,
+        Phone: p.phone,
+        Address: p.address1,
+        City: p.city,
+        State: p.state,
+        Pincode: p.pincode,
+    })));
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, type.charAt(0).toUpperCase() + type.slice(1));
+    XLSX.writeFile(workbook, `${type}_export.xlsx`);
+    toast({ title: "Export Successful", description: `Your ${type} list has been downloaded.` });
+  };
+  
+  const handleDownloadTemplate = () => {
+    const templateData = [{
+        Name: "Sample Customer",
+        GSTIN: "27ABCDE1234F1Z5",
+        Email: "sample@example.com",
+        Phone: "9876543210",
+        Address: "123 Sample St",
+        City: "Mumbai",
+        State: "Maharashtra",
+        Pincode: "400001",
+    }];
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    XLSX.writeFile(workbook, `parties_import_template.xlsx`);
+  };
+  
+  const handleImport = async () => {
+    if (!importFile || !user) {
+        toast({ variant: "destructive", title: "No file selected", description: "Please upload a file to import."});
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+        const collectionName = activeTab === 'customers' ? 'customers' : 'vendors';
+        const batch = writeBatch(db);
+
+        json.forEach(row => {
+            const newDocRef = doc(collection(db, collectionName));
+            batch.set(newDocRef, {
+                userId: user.uid,
+                name: row.Name || '',
+                gstin: row.GSTIN || '',
+                email: row.Email || '',
+                phone: String(row.Phone || ''),
+                address1: row.Address || '',
+                city: row.City || '',
+                state: row.State || '',
+                pincode: String(row.Pincode || ''),
+            });
+        });
+
+        try {
+            await batch.commit();
+            toast({ title: "Import Successful", description: `${json.length} parties were imported.`});
+            setIsImportDialogOpen(false);
+            setImportFile(null);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Import Failed", description: "There was an error writing to the database." });
+        }
+    };
+    reader.readAsArrayBuffer(importFile);
+  };
   
   const PartyTable = ({ parties, type, loading } : { parties: any[], type: 'Customer' | 'Vendor', loading: boolean}) => (
       <Table>
@@ -153,8 +247,18 @@ export default function PartiesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline"><Download className="mr-2"/> Export</Button>
-            <Button variant="outline"><Upload className="mr-2"/> Import</Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                        <Download className="mr-2"/> Export <ChevronDown className="ml-2"/>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={() => handleExport('customers')}><FileSpreadsheet className="mr-2"/> Export Customers</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleExport('vendors')}><FileSpreadsheet className="mr-2"/> Export Vendors</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}><Upload className="mr-2"/> Import</Button>
             <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2"/>Add New {activeTab === 'customers' ? 'Customer' : 'Vendor'}</Button>
         </div>
       </div>
@@ -204,6 +308,30 @@ export default function PartiesPage() {
         type={activeTab === 'customers' ? 'Customer' : 'Vendor'}
         party={selectedParty}
       />
+
+        <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Import {activeTab === 'customers' ? 'Customers' : 'Vendors'}</DialogTitle>
+                    <DialogDescription>
+                        Upload an Excel (.xlsx) file to bulk import parties. Make sure the file matches the template format.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="import-file">Upload File</Label>
+                        <Input id="import-file" type="file" accept=".xlsx" onChange={e => setImportFile(e.target.files?.[0] || null)} />
+                    </div>
+                     <Button variant="link" size="sm" className="p-0" onClick={handleDownloadTemplate}>
+                        <Download className="mr-2"/> Download Template
+                    </Button>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleImport} disabled={!importFile}>Import Data</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
