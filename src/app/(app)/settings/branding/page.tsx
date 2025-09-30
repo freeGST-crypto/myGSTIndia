@@ -25,16 +25,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, Save, Wand2, PlusCircle, Edit } from "lucide-react";
+import { Loader2, Upload, Save, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
 import { generateTermsAction } from "./actions";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import SignatureCanvas from 'react-signature-canvas';
 import { states } from "@/lib/states";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 
 const formSchema = z.object({
   companyName: z.string().min(3, "Company name is required."),
@@ -43,8 +41,8 @@ const formSchema = z.object({
   city: z.string().min(2, "City is required."),
   state: z.string().min(2, "State is required."),
   pincode: z.string().regex(/^\d{6}$/, "Invalid pincode."),
-  gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN format."),
-  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format."),
+  gstin: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GSTIN format.").optional().or(z.literal("")),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format.").optional().or(z.literal("")),
   logo: z.custom<File | null>(() => true).optional(),
 
   invoicePrefix: z.string().default('INV-'),
@@ -77,7 +75,7 @@ export default function BrandingPage() {
             city: "Commerce City",
             state: "Maharashtra",
             pincode: "400001",
-            gstin: "22AAAAA0000A1Z5",
+            gstin: "27ABCDE1234F1Z5",
             pan: "ABCDE1234F",
             invoicePrefix: "INV-",
             invoiceNextNumber: 1,
@@ -259,16 +257,6 @@ export default function BrandingPage() {
                                     Generate T&C with AI
                                 </Button>
                              </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Associated Professionals</CardTitle>
-                            <CardDescription>Manage contacts for your CA, Auditor, or other consultants.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                             <Button type="button" variant="outline"><PlusCircle className="mr-2"/> Add Professional</Button>
                         </CardContent>
                     </Card>
 
