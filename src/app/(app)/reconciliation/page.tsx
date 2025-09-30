@@ -1,8 +1,10 @@
+
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { GitCompareArrows, Wand2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const reconciliationTools = [
   {
@@ -23,8 +25,8 @@ const reconciliationTools = [
     title: "Books vs. GSTR-1 Reconciliation",
     description: "Automatically compare your sales data recorded in GSTEase against the data declared in your GSTR-1 to ensure there are no omissions or excess reporting of sales.",
     icon: GitCompareArrows,
-    href: "#",
-    status: "upcoming",
+    href: "/reconciliation/books-vs-gstr1",
+    status: "active",
   },
 ];
 
@@ -52,6 +54,11 @@ export default function ReconciliationPage() {
               <CardContent className="flex-grow">
                 <CardDescription>{tool.description}</CardDescription>
               </CardContent>
+                {tool.status === 'upcoming' && (
+                    <CardFooter>
+                        <Badge variant="secondary">Coming Soon</Badge>
+                    </CardFooter>
+                )}
             </Card>
           </Link>
         ))}
