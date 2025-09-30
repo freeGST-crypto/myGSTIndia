@@ -64,11 +64,41 @@ export default function UserManagementPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState(sampleUsers);
 
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserRole, setNewUserRole] = useState("viewer");
+
   const handleAction = (action: string, userId: string) => {
     toast({
         title: `Action: ${action}`,
         description: `This is a placeholder for ${action} on user ${userId}.`
     });
+  }
+
+  const handleSendInvite = () => {
+    if (!newUserEmail || !newUserRole) {
+        toast({
+            variant: "destructive",
+            title: "Missing Information",
+            description: "Please enter an email and select a role."
+        });
+        return;
+    }
+    // Simulate adding an invited user
+    const newUser = {
+        id: `user-${Date.now()}`,
+        name: "Pending Invitation",
+        email: newUserEmail,
+        role: newUserRole.charAt(0).toUpperCase() + newUserRole.slice(1),
+        status: "Invited",
+    };
+    setUsers(prev => [...prev, newUser]);
+    toast({
+        title: "Invitation Sent",
+        description: `${newUserEmail} has been invited to join as a ${newUser.role}.`
+    });
+    setIsInviteDialogOpen(false);
+    setNewUserEmail("");
+    setNewUserRole("viewer");
   }
 
   return (
@@ -97,11 +127,11 @@ export default function UserManagementPage() {
                 <div className="space-y-4 py-4">
                      <div className="space-y-2">
                         <Label htmlFor="user-email">Email Address</Label>
-                        <Input id="user-email" type="email" placeholder="name@example.com" />
+                        <Input id="user-email" type="email" placeholder="name@example.com" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="user-role">Role</Label>
-                        <Select>
+                        <Select value={newUserRole} onValueChange={setNewUserRole}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a role"/>
                             </SelectTrigger>
@@ -116,7 +146,7 @@ export default function UserManagementPage() {
                 </div>
                 <DialogFooter>
                      <Button type="button" variant="outline" onClick={() => setIsInviteDialogOpen(false)}>Cancel</Button>
-                    <Button type="submit">Send Invitation</Button>
+                    <Button type="button" onClick={handleSendInvite}>Send Invitation</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
