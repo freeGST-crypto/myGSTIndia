@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch, setDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch, setDoc, orderBy } from "firebase/firestore";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
@@ -48,7 +48,7 @@ export const AccountingProvider = ({ children }: { children: ReactNode }) => {
     const [user] = useAuthState(auth);
 
     const journalVouchersRef = collection(db, "journalVouchers");
-    const journalVouchersQuery = user ? query(journalVouchersRef, where("userId", "==", user.uid)) : null;
+    const journalVouchersQuery = user ? query(journalVouchersRef, where("userId", "==", user.uid), orderBy("date", "desc")) : null;
     const [journalVouchersSnapshot, loading, error] = useCollection(journalVouchersQuery);
 
     const journalVouchers: JournalVoucher[] = journalVouchersSnapshot?.docs.map(doc => ({ ...doc.data() } as JournalVoucher)) || [];
