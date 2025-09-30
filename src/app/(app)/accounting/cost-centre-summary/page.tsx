@@ -22,6 +22,10 @@ import { Button } from "@/components/ui/button";
 import { FileDown, PieChart } from "lucide-react";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts, costCentres } from "@/lib/accounts";
+import * as XLSX from 'xlsx';
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+
 
 const formatCurrency = (value: number) => {
     if (Math.abs(value) < 0.01) value = 0;
@@ -30,6 +34,7 @@ const formatCurrency = (value: number) => {
 
 export default function CostCentreSummaryPage() {
     const { journalVouchers, loading } = useContext(AccountingContext)!;
+    const { toast } = useToast();
 
     const costCentreData = useMemo(() => {
         const summary: Record<string, { income: number, expense: number, name: string }> = {};
@@ -71,6 +76,43 @@ export default function CostCentreSummaryPage() {
         }), { income: 0, expense: 0, net: 0 });
     }, [costCentreData]);
 
+    const handleExport = () => {
+        if (costCentreData.length === 0) {
+            toast({ variant: "destructive", title: "No data to export" });
+            return;
+        }
+
+        const dataToExport = costCentreData.map(item => ({
+            "Cost Centre": item.name,
+            "Total Income (₹)": item.income,
+            "Total Expenses (₹)": item.expense,
+            "Net Profit / (Loss) (₹)": item.net,
+        }));
+        
+        const totalRow = {
+            "Cost Centre": "Total",
+            "Total Income (₹)": totals.income,
+            "Total Expenses (₹)": totals.expense,
+            "Net Profit / (Loss) (₹)": totals.net,
+        };
+        dataToExport.push(totalRow);
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Cost Centre Summary");
+
+        // Set column widths
+        worksheet['!cols'] = [
+            { wch: 30 }, // Cost Centre
+            { wch: 20 }, // Total Income
+            { wch: 20 }, // Total Expenses
+            { wch: 25 }, // Net Profit / (Loss)
+        ];
+        
+        XLSX.writeFile(workbook, `Cost_Centre_Summary_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+        toast({ title: "Export Successful", description: "Cost Centre Summary has been exported to Excel." });
+    };
+
 
   return (
     <div className="space-y-8">
@@ -81,7 +123,7 @@ export default function CostCentreSummaryPage() {
             A summary of income, expenses, and profitability for each cost centre.
           </p>
         </div>
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleExport} disabled={costCentreData.length === 0}>
           <FileDown className="mr-2"/>
           Export Report
         </Button>
