@@ -451,7 +451,7 @@ export default function BankReconciliationPage() {
           <CardHeader>
              <div className="flex justify-between items-start">
                  <div>
-                    <CardTitle>GSTEase Transactions</CardTitle>
+                    <CardTitle>ZenithBooks Transactions</CardTitle>
                     <CardDescription>Receipts and payments from your books.</CardDescription>
                 </div>
              </div>
@@ -635,5 +635,7 @@ function TransactionTable({ transactions, selectedTxs, onToggle, type, onAddEntr
         </div>
     );
 }
+
+    
 
     

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -69,7 +70,7 @@ export default function BrandingPage() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            companyName: "Acme Inc.",
+            companyName: "ZenithBooks Inc.",
             address1: "123 Business Rd, Industrial Area",
             address2: "Suite 456, Near Landmark",
             city: "Commerce City",
@@ -273,3 +274,5 @@ export default function BrandingPage() {
         </div>
     );
 }
+
+    

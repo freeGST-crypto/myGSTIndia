@@ -50,7 +50,7 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
     const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState('');
 
     const customerDetails = customers.find(c => c.id === invoice.raw.customerId);
-    const companyDetails = { name: "GSTEase Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234", upiId: "gstease@okhdfcbank" };
+    const companyDetails = { name: "ZenithBooks Solutions Pvt. Ltd.", address: "123 Business Avenue, Commerce City, Maharashtra - 400001", gstin: "27ABCDE1234F1Z5", pan: "ABCDE1234F", bankName: "HDFC Bank", bankAccount: "1234567890", bankIfsc: "HDFC0001234", upiId: "zenithbooks@okhdfcbank" };
 
     const salesLine = invoice.raw.lines.find((l: any) => l.account === '4010');
     const taxLine = invoice.raw.lines.find((l: any) => l.account === '2110');
@@ -178,3 +178,5 @@ export const InvoicePreview = React.forwardRef<HTMLDivElement, InvoicePreviewPro
 );
 
 InvoicePreview.displayName = "InvoicePreview";
+
+    

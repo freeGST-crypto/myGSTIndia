@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useContext, useRef } from "react";
@@ -193,7 +194,7 @@ export default function InvoicesPage() {
     };
     
     const companyInfo = {
-        name: "GSTEase Solutions Pvt. Ltd.",
+        name: "ZenithBooks Solutions Pvt. Ltd.",
     };
 
     const handleAction = async (action: string, invoice: Invoice) => {
@@ -433,3 +434,5 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+    
