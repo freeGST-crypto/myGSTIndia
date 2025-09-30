@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -48,10 +47,12 @@ export default function ServicePricingPage() {
   };
   
   const handleSaveChanges = () => {
+      // In a real app, this would be an API call to update the database.
+      // For this prototype, we're simulating the save action.
       console.log("Saving new prices:", services);
       toast({
           title: "Prices Updated",
-          description: "The new service prices have been saved successfully."
+          description: "The new service prices have been saved successfully. User-facing pages will now reflect these changes."
       });
   }
 

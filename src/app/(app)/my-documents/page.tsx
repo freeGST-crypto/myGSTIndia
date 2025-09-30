@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, deleteDoc, doc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -45,6 +45,9 @@ export default function MyDocumentsPage() {
         'foreign-remittance-certificate': '/ca-certificates/foreign-remittance',
         'general-attestation-certificate': '/ca-certificates/general-attestation',
         'partnership-deed': '/legal-documents/partnership-deed',
+        'turnover-certificate': '/ca-certificates/turnover',
+        'visa-immigration-certificate': '/ca-certificates/visa-immigration',
+        // Add other mappings here as they become available
     }
     
     const handleEdit = (doc: any) => {
@@ -55,6 +58,17 @@ export default function MyDocumentsPage() {
             toast({ variant: 'destructive', title: 'Cannot Edit', description: 'This document type does not support editing.' });
         }
     }
+
+     const handleDelete = async (docId: string, docName: string) => {
+        try {
+            await deleteDoc(doc(db, "userDocuments", docId));
+            toast({ title: "Draft Deleted", description: `"${docName}" has been removed.` });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the document draft.' });
+            console.error("Error deleting document: ", error);
+        }
+    };
+
 
     return (
         <div className="space-y-8">
@@ -104,7 +118,23 @@ export default function MyDocumentsPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem onClick={() => handleEdit(doc)}><Edit className="mr-2"/> Edit Draft</DropdownMenuItem>
                                                     {doc.status === 'Certified' && <DropdownMenuItem><Download className="mr-2"/> Download Certified Copy</DropdownMenuItem>}
-                                                     <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2"/> Delete Draft</DropdownMenuItem>
+                                                     <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                          <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:text-destructive"><Trash2 className="mr-2"/> Delete</DropdownMenuItem>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                          <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                              This action cannot be undone. This will permanently delete the draft for "{doc.documentName}".
+                                                            </AlertDialogDescription>
+                                                          </AlertDialogHeader>
+                                                          <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(doc.id, doc.documentName)}>Delete</AlertDialogAction>
+                                                          </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                      </AlertDialog>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
