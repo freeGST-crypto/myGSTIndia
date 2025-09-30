@@ -35,7 +35,7 @@ export default function PurchaseAnalysis() {
   const vendors = useMemo(() => vendorsSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [vendorsSnapshot]);
 
   const analysisData = useMemo(() => {
-    const purchaseBills = journalVouchers.filter(v => v.id.startsWith("BILL-"));
+    const purchaseBills = journalVouchers.filter(v => v && v.id && v.id.startsWith("BILL-"));
     
     // Monthly Analysis
     const monthlyData: { [key: string]: { month: string, amount: number } } = {};
