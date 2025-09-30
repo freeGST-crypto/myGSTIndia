@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useContext, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -12,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calculator, Library } from "lucide-react";
+import { Calculator, Library, Info } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -24,6 +25,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccountingContext } from "@/context/accounting-context";
+import { allAccounts } from "@/lib/accounts";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { formatCurrency } from "@/lib/utils";
 
 
 type EntityType = "individual_new" | "individual_old" | "company" | "firm";
@@ -49,10 +54,45 @@ const taxSlabs = {
 
 export default function AdvanceTax() {
   const { toast } = useToast();
+  const { journalVouchers } = useContext(AccountingContext)!;
+  
   const [estimatedIncome, setEstimatedIncome] = useState<number>(0);
   const [deductions, setDeductions] = useState<number>(0);
   const [taxLiability, setTaxLiability] = useState<number | null>(null);
   const [entityType, setEntityType] = useState<EntityType>("individual_new");
+
+  const projectedAnnualIncome = useMemo(() => {
+    const balances: Record<string, number> = {};
+    allAccounts.forEach(acc => { balances[acc.code] = 0; });
+
+    journalVouchers.forEach(voucher => {
+      voucher.lines.forEach(line => {
+        if (balances.hasOwnProperty(line.account)) {
+          balances[line.account] += parseFloat(line.debit) - parseFloat(line.credit);
+        }
+      });
+    });
+
+    const revenue = allAccounts.filter(a => a.type === 'Revenue' || a.type === 'Other Income').reduce((sum, acc) => sum - balances[acc.code], 0);
+    const expenses = allAccounts.filter(a => a.type === 'Expense' || a.type === 'Cost of Goods Sold').reduce((sum, acc) => sum + balances[acc.code], 0);
+    const currentPBT = revenue - expenses;
+    
+    // Annualize the PBT
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+    const financialYearStartMonth = 4; // April
+    const monthsPassed = currentMonth >= financialYearStartMonth 
+        ? currentMonth - financialYearStartMonth + 1 
+        : currentMonth + (12 - financialYearStartMonth + 1);
+        
+    return monthsPassed > 0 ? (currentPBT / monthsPassed) * 12 : 0;
+  }, [journalVouchers]);
+
+  useEffect(() => {
+    if (projectedAnnualIncome > 0) {
+        setEstimatedIncome(Math.round(projectedAnnualIncome));
+    }
+  }, [projectedAnnualIncome]);
+
 
   const calculateTax = () => {
     if (estimatedIncome <= 0) {
@@ -117,43 +157,52 @@ export default function AdvanceTax() {
           <CardTitle>Income & Deductions</CardTitle>
           <CardDescription>Enter your estimated annual income, total deductions, and assessee type.</CardDescription>
         </CardHeader>
-        <CardContent className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-                <Label htmlFor="entity-type">Type of Entity</Label>
-                <Select value={entityType} onValueChange={(value) => setEntityType(value as EntityType)}>
-                    <SelectTrigger id="entity-type">
-                        <SelectValue placeholder="Select an entity type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="individual_new">Individual (New Regime)</SelectItem>
-                        <SelectItem value="individual_old">Individual (Old Regime)</SelectItem>
-                        <SelectItem value="company">Company</SelectItem>
-                        <SelectItem value="firm">Partnership Firm / LLP</SelectItem>
-                    </SelectContent>
-                </Select>
+        <CardContent className="space-y-6">
+            <Alert>
+                <Info className="h-4 w-4"/>
+                <AlertTitle>Income Auto-Filled</AlertTitle>
+                <AlertDescription>
+                    We've estimated your annual income as <strong>{formatCurrency(projectedAnnualIncome)}</strong> based on your current year's accounting data. You can adjust this value if needed.
+                </AlertDescription>
+            </Alert>
+            <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="entity-type">Type of Entity</Label>
+                    <Select value={entityType} onValueChange={(value) => setEntityType(value as EntityType)}>
+                        <SelectTrigger id="entity-type">
+                            <SelectValue placeholder="Select an entity type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="individual_new">Individual (New Regime)</SelectItem>
+                            <SelectItem value="individual_old">Individual (Old Regime)</SelectItem>
+                            <SelectItem value="company">Company</SelectItem>
+                            <SelectItem value="firm">Partnership Firm / LLP</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+              <div className="space-y-2">
+                <Label htmlFor="income">Estimated Annual Income (₹)</Label>
+                <Input
+                  id="income"
+                  type="number"
+                  placeholder="e.g., 1500000"
+                  value={estimatedIncome || ""}
+                  onChange={(e) => setEstimatedIncome(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deductions">Total Deductions (e.g., 80C)</Label>
+                <Input
+                  id="deductions"
+                  type="number"
+                  placeholder="e.g., 150000"
+                  value={deductions || ""}
+                  onChange={(e) => setDeductions(Number(e.target.value))}
+                  disabled={!entityType.startsWith("individual")}
+                />
+                 {!entityType.startsWith("individual") && <p className="text-xs text-muted-foreground">Deductions are generally not applicable for this entity type in this calculation.</p>}
+              </div>
             </div>
-          <div className="space-y-2">
-            <Label htmlFor="income">Estimated Annual Income (₹)</Label>
-            <Input
-              id="income"
-              type="number"
-              placeholder="e.g., 1500000"
-              value={estimatedIncome || ""}
-              onChange={(e) => setEstimatedIncome(Number(e.target.value))}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="deductions">Total Deductions (e.g., 80C)</Label>
-            <Input
-              id="deductions"
-              type="number"
-              placeholder="e.g., 150000"
-              value={deductions || ""}
-              onChange={(e) => setDeductions(Number(e.target.value))}
-              disabled={!entityType.startsWith("individual")}
-            />
-             {!entityType.startsWith("individual") && <p className="text-xs text-muted-foreground">Deductions are generally not applicable for this entity type in this calculation.</p>}
-          </div>
         </CardContent>
         <CardFooter>
           <Button onClick={calculateTax}>
