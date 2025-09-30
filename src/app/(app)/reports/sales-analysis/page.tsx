@@ -37,7 +37,7 @@ export default function SalesAnalysis() {
   const customers = useMemo(() => customersSnapshot?.docs.map(doc => ({ id: doc.id, name: doc.data().name })) || [], [customersSnapshot]);
 
   const analysisData = useMemo(() => {
-    const salesInvoices = journalVouchers.filter(v => v.id.startsWith("INV-"));
+    const salesInvoices = journalVouchers.filter(v => v && v.id && v.id.startsWith("INV-"));
     
     // Monthly Analysis
     const monthlyData: { [key: string]: { month: string, amount: number } } = {};
