@@ -12,6 +12,8 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from "
 import { ArrowLeft, ArrowRight, FileDown, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const shareholderSchema = z.object({
   name: z.string().min(2, "Shareholder name is required."),

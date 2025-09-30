@@ -88,7 +88,7 @@ export default function SafeAgreement() {
               <FormField control={form.control} name="discountRate" render={({ field }) => ( <FormItem><FormLabel>Discount Rate (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
             </CardContent>
             <CardFooter className="justify-between">
-              <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="ml-2"/> Back</Button>
+              <Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button>
               <Button type="button" onClick={processStep}>Preview Document <ArrowRight className="ml-2"/></Button>
             </CardFooter>
           </Card>
