@@ -35,9 +35,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 // Sample Data
 const sampleGodowns = [
-    { id: "loc-001", name: "Main Warehouse - Mumbai" },
-    { id: "loc-002", name: "Retail Outlet - Delhi" },
-    { id: "loc-003", name: "Damaged Goods Area" },
+    { id: "loc-001", name: "Main Warehouse - Mumbai", address: "Gala No. 1, MIDC, Andheri East", inCharge: "Ramesh Kumar", contact: "9876543210" },
+    { id: "loc-002", name: "Retail Outlet - Delhi", address: "Shop No. 5, Karol Bagh", inCharge: "Suresh Singh", contact: "9876543211" },
+    { id: "loc-003", name: "Damaged Goods Area", address: "Backside, Main Warehouse", inCharge: "Ramesh Kumar", contact: "9876543210" },
 ];
 
 export default function GodownsPage() {
@@ -81,6 +81,18 @@ export default function GodownsPage() {
                         <Label htmlFor="g-name">Godown Name</Label>
                         <Input id="g-name" placeholder="e.g., Bengaluru Warehouse" />
                      </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="g-address">Address</Label>
+                        <Input id="g-address" placeholder="Full address of the location" />
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="g-incharge">In-Charge Name</Label>
+                        <Input id="g-incharge" placeholder="e.g., Sunil Varma" />
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="g-contact">Contact Number</Label>
+                        <Input id="g-contact" placeholder="e.g., 9988776655" />
+                     </div>
                 </div>
                 <DialogFooter>
                     <Button type="submit">Save Godown</Button>
@@ -98,7 +110,10 @@ export default function GodownsPage() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Godown / Location Name</TableHead>
+                        <TableHead>Location Name</TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead>In-Charge</TableHead>
+                        <TableHead>Contact</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -106,6 +121,9 @@ export default function GodownsPage() {
                     {godowns.map((g) => (
                         <TableRow key={g.id}>
                             <TableCell className="font-medium">{g.name}</TableCell>
+                            <TableCell>{g.address}</TableCell>
+                            <TableCell>{g.inCharge}</TableCell>
+                            <TableCell className="font-mono text-xs">{g.contact}</TableCell>
                             <TableCell className="text-right">
                                <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -128,4 +146,3 @@ export default function GodownsPage() {
     </div>
   );
 }
-
