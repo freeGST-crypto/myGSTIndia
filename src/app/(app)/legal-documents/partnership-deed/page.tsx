@@ -627,7 +627,7 @@ export default function PartnershipDeedPage() {
                     <div className="text-sm font-medium text-destructive">Total profit share must be 100%. Current total: {totalProfitShare.toFixed(2)}%</div>
                 )}
             </CardContent>
-            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+            <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
           </Card>
         );
       case 3:
@@ -652,7 +652,7 @@ export default function PartnershipDeedPage() {
                         </FormItem>
                     )}/>
                 </CardContent>
-                <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+                <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
             </Card>
           );
       case 4:
@@ -689,7 +689,7 @@ export default function PartnershipDeedPage() {
                    )}/>
                )}
             </CardContent>
-             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+             <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
           </Card>
         );
       case 5:
@@ -719,7 +719,7 @@ export default function PartnershipDeedPage() {
                         </FormItem>
                     )}/>
                 </CardContent>
-                 <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+                 <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
             </Card>
         );
        case 6:
@@ -741,7 +741,7 @@ export default function PartnershipDeedPage() {
                         )}/>
                     )}
                 </CardContent>
-                <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="ml-2"/></Button></CardFooter>
+                <CardFooter className="justify-between"><Button type="button" variant="outline" onClick={handleBack}><ArrowLeft className="mr-2"/> Back</Button><Button type="button" onClick={processStep}>Next <ArrowRight className="mr-2"/></Button></CardFooter>
             </Card>
         );
      case 7:

@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Library, Landmark, UserPlus, FileSignature, Wallet, Building2, BadgeCheck } from "lucide-react";
+import { Library, Landmark, UserPlus, FileSignature, Wallet, Building2, BadgeCheck, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const resolutionTemplates = [
