@@ -32,6 +32,9 @@ import { Save, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AccountingContext } from "@/context/accounting-context";
 import { allAccounts } from "@/lib/accounts";
+import * as XLSX from 'xlsx';
+import { format } from "date-fns";
+
 
 // Generates a list of financial years, e.g., "2024-2025"
 const getFinancialYears = () => {
@@ -85,6 +88,33 @@ export default function BudgetsPage() {
             description: `Your budget for the financial year ${financialYear} has been saved.`,
         });
     };
+
+    const handleExportBudget = () => {
+        if (budgetData.length === 0) {
+            toast({ variant: "destructive", title: "No data to export" });
+            return;
+        }
+
+        const dataToExport = budgetData.map(item => ({
+            "Account Code": item.accountCode,
+            "Account Name": item.accountName,
+            "Budget Amount (₹)": item.budgetAmount,
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, `Budget_${financialYear}`);
+
+        // Set column widths
+        worksheet['!cols'] = [
+            { wch: 15 }, // Account Code
+            { wch: 40 }, // Account Name
+            { wch: 20 }, // Budget Amount
+        ];
+        
+        XLSX.writeFile(workbook, `Budget_${financialYear}.xlsx`);
+        toast({ title: "Export Successful", description: `Budget for ${financialYear} has been exported to Excel.` });
+    };
     
     return (
         <div className="space-y-8">
@@ -96,7 +126,7 @@ export default function BudgetsPage() {
                 </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline"><FileSpreadsheet className="mr-2"/>Export Budget</Button>
+                    <Button variant="outline" onClick={handleExportBudget}><FileSpreadsheet className="mr-2"/>Export Budget</Button>
                     <Button onClick={handleSaveBudget}><Save className="mr-2"/>Save Budget</Button>
                 </div>
             </div>
