@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -30,7 +30,8 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  UserPlus
+  UserPlus,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -51,21 +52,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, query, where } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
-
-const sampleUsers = [
-  { id: "user-001", name: "Rohan Sharma", email: "rohan.sharma@example.com", role: "Admin", status: "Active" },
-  { id: "user-002", name: "Priya Mehta", email: "priya.mehta@example.com", role: "Accountant", status: "Active" },
-  { id: "user-003", name: "Anjali Singh", email: "anjali.singh@example.com", role: "Sales Manager", status: "Invited" },
-];
 
 export default function UserManagementPage() {
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const { toast } = useToast();
-  const [users, setUsers] = useState(sampleUsers);
+  const [user] = useAuthState(auth);
+  
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isInviting, setIsInviting] = useState(false);
 
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState("viewer");
+
+  const invitesQuery = user ? query(collection(db, 'userInvites'), where("invitedBy", "==", user.uid)) : null;
+  const [invitesSnapshot, invitesLoading] = useCollection(invitesQuery);
+
+  const users = useMemo(() => {
+    return invitesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data()})) || [];
+  }, [invitesSnapshot]);
 
   const handleAction = (action: string, userId: string) => {
     toast({
@@ -74,7 +82,7 @@ export default function UserManagementPage() {
     });
   }
 
-  const handleSendInvite = () => {
+  const handleSendInvite = async () => {
     if (!newUserEmail || !newUserRole) {
         toast({
             variant: "destructive",
@@ -83,22 +91,40 @@ export default function UserManagementPage() {
         });
         return;
     }
-    // Simulate adding an invited user
-    const newUser = {
-        id: `user-${Date.now()}`,
-        name: "Pending Invitation",
-        email: newUserEmail,
-        role: newUserRole.charAt(0).toUpperCase() + newUserRole.slice(1),
-        status: "Invited",
-    };
-    setUsers(prev => [...prev, newUser]);
-    toast({
-        title: "Invitation Sent",
-        description: `${newUserEmail} has been invited to join as a ${newUser.role}.`
-    });
-    setIsInviteDialogOpen(false);
-    setNewUserEmail("");
-    setNewUserRole("viewer");
+
+    if (!user) {
+        toast({ variant: "destructive", title: "Not Authenticated" });
+        return;
+    }
+
+    setIsInviting(true);
+    try {
+        await addDoc(collection(db, "userInvites"), {
+            email: newUserEmail,
+            role: newUserRole,
+            status: "Invited",
+            invitedBy: user.uid,
+            invitedAt: new Date(),
+        });
+
+        toast({
+            title: "Invitation Recorded",
+            description: `${newUserEmail} has been invited as a ${newUserRole}. They need to sign up to accept.`
+        });
+
+        setIsInviteDialogOpen(false);
+        setNewUserEmail("");
+        setNewUserRole("viewer");
+
+    } catch(error: any) {
+         toast({
+            variant: "destructive",
+            title: "Failed to send invite",
+            description: error.message || "Could not save the invitation to the database."
+        });
+    } finally {
+        setIsInviting(false);
+    }
   }
 
   return (
@@ -121,7 +147,7 @@ export default function UserManagementPage() {
                 <DialogHeader>
                     <DialogTitle>Invite a New User</DialogTitle>
                     <DialogDescription>
-                        Enter the user's email and assign them a role. They will receive an email invitation to join.
+                        The user will need to sign up with this email to join your organization.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -146,7 +172,10 @@ export default function UserManagementPage() {
                 </div>
                 <DialogFooter>
                      <Button type="button" variant="outline" onClick={() => setIsInviteDialogOpen(false)}>Cancel</Button>
-                    <Button type="button" onClick={handleSendInvite}>Send Invitation</Button>
+                    <Button type="button" onClick={handleSendInvite} disabled={isInviting}>
+                        {isInviting && <Loader2 className="mr-2 animate-spin"/>}
+                        Send Invitation
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -154,30 +183,35 @@ export default function UserManagementPage() {
       
       <Card>
           <CardHeader>
-              <CardTitle>User List</CardTitle>
+              <CardTitle>Invited & Active Users</CardTitle>
               <CardDescription>A list of all users with access to this organization.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>User</TableHead>
+                        <TableHead>User Email</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {users.map((user) => (
-                        <TableRow key={user.id}>
+                    {invitesLoading ? (
+                        <TableRow><TableCell colSpan={4} className="h-24 text-center">Loading users...</TableCell></TableRow>
+                    ) : users.length === 0 ? (
+                         <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No users have been invited yet.</TableCell></TableRow>
+                    ) : (
+                        users.map((u: any) => (
+                        <TableRow key={u.id}>
                             <TableCell>
-                                <div className="font-medium">{user.name}</div>
-                                <div className="text-sm text-muted-foreground">{user.email}</div>
+                                <div className="font-medium">{u.name || u.email}</div>
+                                {u.name && <div className="text-sm text-muted-foreground">{u.email}</div>}
                             </TableCell>
-                            <TableCell>{user.role}</TableCell>
+                            <TableCell>{u.role}</TableCell>
                              <TableCell>
-                                <Badge variant={user.status === "Active" ? "default" : "secondary"} className={user.status === "Active" ? "bg-green-600" : ""}>
-                                    {user.status}
+                                <Badge variant={u.status === "Active" ? "default" : "secondary"} className={u.status === "Active" ? "bg-green-600" : ""}>
+                                    {u.status}
                                 </Badge>
                              </TableCell>
                             <TableCell className="text-right">
@@ -186,15 +220,15 @@ export default function UserManagementPage() {
                                         <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => handleAction("Edit", user.id)}><Edit className="mr-2"/>Edit Role</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", user.id)}>
+                                        <DropdownMenuItem onSelect={() => handleAction("Edit", u.id)}><Edit className="mr-2"/>Edit Role</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive" onSelect={() => handleAction("Delete", u.id)}>
                                             <Trash2 className="mr-2"/>Remove User
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
                         </TableRow>
-                    ))}
+                    )))}
                 </TableBody>
             </Table>
           </CardContent>
