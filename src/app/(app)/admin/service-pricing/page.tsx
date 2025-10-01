@@ -20,10 +20,11 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreditCard, Save, Search } from "lucide-react";
+import { CreditCard, Save, Search, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from '@/components/ui/separator';
 import { servicePricing as initialServices } from '@/lib/on-demand-pricing';
+import { saveServicePricingAction } from './actions';
 
 type Service = {
     id: string;
@@ -38,6 +39,7 @@ export default function ServicePricingPage() {
   const { toast } = useToast();
   const [services, setServices] = useState(initialServices);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const handlePriceChange = (category: ServiceCategories, id: string, newPrice: number) => {
       setServices(prev => ({
@@ -46,14 +48,23 @@ export default function ServicePricingPage() {
       }));
   };
   
-  const handleSaveChanges = () => {
-      // In a real app, this would be an API call to update the database.
-      // For this prototype, we're simulating the save action.
-      console.log("Saving new prices:", services);
-      toast({
+  const handleSaveChanges = async () => {
+      setIsSaving(true);
+      const result = await saveServicePricingAction(services);
+      setIsSaving(false);
+      
+      if (result.success) {
+        toast({
           title: "Prices Updated",
-          description: "The new service prices have been saved successfully. User-facing pages will now reflect these changes."
-      });
+          description: "The new service prices have been saved successfully. Changes will be live for all users."
+        });
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Save Failed",
+            description: "Could not update the pricing file. Please check server logs."
+        });
+      }
   }
 
   const filteredServices = useMemo(() => {
@@ -167,8 +178,9 @@ export default function ServicePricingPage() {
             {renderServiceCategory("Accounting", "accounting_documents")}
         </CardContent>
         <CardFooter className="justify-end">
-            <Button onClick={handleSaveChanges}>
-                <Save className="mr-2"/>Save Changes
+            <Button onClick={handleSaveChanges} disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 animate-spin"/> : <Save className="mr-2"/>}
+                Save Changes
             </Button>
         </CardFooter>
       </Card>

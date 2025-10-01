@@ -59,9 +59,9 @@ const certificateTools = [
   },
 ];
 
-const allCertServices = servicePricing.ca_certs;
 
 export default function CACertificatesPage() {
+  const allCertServices = servicePricing.ca_certs;
   return (
     <div className="space-y-8">
       <div className="text-center">
