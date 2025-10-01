@@ -345,5 +345,3 @@ export const generateCma = (
     repaymentSchedule: { headers: ["Month", "EMI", "Principal", "Interest", "Outstanding Balance"], body: repaymentScheduleBody },
   };
 };
-
-    
